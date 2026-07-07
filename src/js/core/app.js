@@ -1,0 +1,152 @@
+import { Router } from './router.js';
+import { GameState } from './state.js';
+import { Events } from './events.js';
+import { Audio } from './audio.js';
+import { DialogueEngine } from '../systems/dialogue.js';
+import { Investigation } from '../systems/investigation.js';
+
+/**
+ * Точка входа в приложение.
+ * Инициализирует все системы и запускает игру.
+ */
+async function init() {
+  console.log('═══════════════════════════════');
+  console.log('🕵️  МЁРТВЫЙ ШТИЛЬ v0.8.0');
+  console.log('   Детективный триллер');
+  console.log('═══════════════════════════════');
+
+  // 1. Инициализируем ядро
+  Router.init();
+  console.log('[App] Ядро инициализировано. Сохранение НЕ загружено.');
+  console.log('[App] Память NPC: пусто');
+  console.log('[App] Улики: 0');
+  console.log('[App] Ждём действий игрока...');
+
+  // 2. Загружаем систему диалогов
+  try {
+    await DialogueEngine.init();
+    console.log('[App] Система диалогов готова');
+  } catch (error) {
+    console.error('[App] Ошибка загрузки диалогов:', error);
+  }
+
+  // 3. Загружаем систему расследования
+  try {
+    await Investigation.init();
+    console.log('[App] Система расследования готова');
+  } catch (error) {
+    console.error('[App] Ошибка загрузки расследования:', error);
+  }
+
+  // 4. Регистрируем Service Worker для PWA
+  if ('serviceWorker' in navigator) {
+    try {
+      await navigator.serviceWorker.register('/sw.js');
+      console.log('[App] Service Worker зарегистрирован');
+    } catch (error) {
+      console.warn('[App] Service Worker не зарегистрирован:', error);
+    }
+  }
+
+  // 5. Глобальные слушатели событий
+  
+  // Изменение состояния
+  Events.on('state:changed', function(data) {
+    console.log('[State] Изменение: ' + data.key);
+  });
+
+  // Добавление улики
+  Events.on('clue:added', function(clue) {
+    console.log('[Clue] Получена улика: ' + clue.name);
+  });
+
+  // Изменение отношений с NPC
+  Events.on('relationship:changed', function(data) {
+    var emoji = data.delta > 0 ? '👍' : data.delta < 0 ? '👎' : '➡️';
+    console.log('[NPC] ' + data.npcId + ': доверие ' + data.trust + '% ' + emoji);
+  });
+
+  // Смена сцены
+  Events.on('scene:changed', function(data) {
+    console.log('[Scene] Переход: ' + data.scene);
+  });
+
+  // Сброс состояния (новая игра)
+  Events.on('state:reset', function() {
+    DialogueEngine.reset();
+    console.log('[App] ⚠️ Состояние полностью сброшено');
+  });
+
+  // Завершение таймлайна
+  Events.on('timeline:completed', function(data) {
+    console.log('[Timeline] Хронология восстановлена! Счёт: ' + data.score + '%');
+  });
+
+  // Завершение мини-игры
+  Events.on('minigame:completed', function(data) {
+    console.log('[Minigame] Пройдена: ' + data.type);
+  });
+
+  Events.on('minigame:failed', function(data) {
+    console.log('[Minigame] Провалена: ' + data.type);
+  });
+
+  // 6. Обработка видимости страницы (пауза/возобновление)
+  document.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      Audio.suspend();
+      console.log('[App] Игра приостановлена (вкладка неактивна)');
+    } else {
+      Audio.resume();
+      console.log('[App] Игра возобновлена');
+    }
+  });
+
+  // 7. Обработка свайпов (назад — только на мобилке)
+  var touchStartX = 0;
+  document.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+  });
+
+  document.addEventListener('touchend', function(e) {
+    var touchEndX = e.changedTouches[0].clientX;
+    var diff = touchEndX - touchStartX;
+
+    // Свайп вправо > 100px — назад
+    if (diff > 100 && Router.getCurrentScene() !== 'main-menu') {
+      Events.emit('navigate', { scene: 'office' });
+    }
+  });
+
+  // 8. Прячем Splash Screen и запускаем игру
+  setTimeout(function() {
+    var splash = document.getElementById('splash-screen');
+    var gameRoot = document.getElementById('game-root');
+
+    if (splash) {
+      splash.style.opacity = '0';
+
+      setTimeout(function() {
+        splash.remove();
+
+        if (gameRoot) {
+          gameRoot.classList.remove('hidden');
+          gameRoot.style.opacity = '1';
+        }
+
+        // Запускаем главное меню
+        Router.goTo('main-menu');
+        console.log('[App] Игра запущена');
+      }, 1000);
+    }
+  }, 2000);
+
+  console.log('[App] Инициализация завершена');
+}
+
+// Запуск после загрузки DOM
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}

@@ -1,0 +1,16 @@
+{
+  "title": "Мёртвый штиль",
+  "version": "0.1.0",
+  "author": "Ты",
+  "year": 2024,
+  "settings": {
+    "defaultMusicVolume": 0.5,
+    "defaultSfxVolume": 0.7,
+    "defaultTextSpeed": "normal",
+    "autosaveInterval": 60
+  },
+  "display": {
+    "typewriterSpeed": 40,
+    "fadeTransitionMs": 400
+  }
+}

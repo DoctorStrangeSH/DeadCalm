@@ -1,0 +1,92 @@
+{
+  "office": {
+    "id": "office",
+    "name": "Кабинет детектива",
+    "type": "base",
+    "description": "Ваш временный кабинет в участке Блэкфорда. Пахнет старым кофе и пылью.",
+    "icon": "🏠",
+    "unlocked": true,
+    "position": { "x": 50, "y": 50 }
+  },
+  "morgue": {
+    "id": "morgue",
+    "name": "Морг",
+    "type": "investigation",
+    "description": "Подвал городской больницы. Холодно, стерильно, пахнет формалином.",
+    "icon": "⚕️",
+    "unlocked": true,
+    "position": { "x": 30, "y": 65 },
+    "npc": "npc_lydia_winter"
+  },
+  "crime_scene_court": {
+    "id": "crime_scene_court",
+    "name": "Зал суда",
+    "type": "crime_scene",
+    "description": "Место убийства судьи. Всё ещё оцеплено. На стене надпись: «СЛЕПОЕ ПРАВОСУДИЕ».",
+    "icon": "⚖️",
+    "unlocked": true,
+    "position": { "x": 70, "y": 40 }
+  },
+  "police_station": {
+    "id": "police_station",
+    "name": "Полицейский участок",
+    "type": "investigation",
+    "description": "Центральный участок Блэкфорда. Детектив Морган здесь почти круглосуточно.",
+    "icon": "🚔",
+    "unlocked": true,
+    "position": { "x": 55, "y": 30 },
+    "npc": "npc_ray_morgan"
+  },
+  "bar_rusty_anchor": {
+    "id": "bar_rusty_anchor",
+    "name": "Бар «Ржавый якорь»",
+    "type": "social",
+    "description": "Грязный портовый бар. Здесь можно найти информаторов и неприятности.",
+    "icon": "🍺",
+    "unlocked": true,
+    "position": { "x": 20, "y": 80 },
+    "npc": "npc_marta_hayes"
+  },
+  "church": {
+    "id": "church",
+    "name": "Церковь Святой Марии",
+    "type": "investigation",
+    "description": "Старая церковь в центре города. Здесь служил убитый священник.",
+    "icon": "⛪",
+    "unlocked": false,
+    "unlock_condition": "day_2",
+    "position": { "x": 60, "y": 55 },
+    "npc": "npc_father_thomas"
+  },
+  "blackwood_mansion": {
+    "id": "blackwood_mansion",
+    "name": "Особняк Блэквуда",
+    "type": "social",
+    "description": "Роскошный особняк на холме. Блэквуд приглашает вас на разговор.",
+    "icon": "🏰",
+    "unlocked": false,
+    "unlock_condition": "day_3",
+    "position": { "x": 85, "y": 15 }
+  },
+  "holt_house": {
+    "id": "holt_house",
+    "name": "Дом Холтов",
+    "type": "investigation",
+    "description": "Дом вашего покойного наставника. Анна Холт всё ещё там.",
+    "icon": "🏚️",
+    "unlocked": false,
+    "unlock_condition": "met_anna",
+    "position": { "x": 40, "y": 20 },
+    "npc": "npc_anna_holt"
+  },
+  "port": {
+    "id": "port",
+    "name": "Порт",
+    "type": "danger",
+    "description": "Заброшенный порт. Опасно. Здесь заканчиваются многие расследования.",
+    "icon": "⚓",
+    "unlocked": false,
+    "unlock_condition": "day_5",
+    "position": { "x": 10, "y": 50 }
+  }
+}

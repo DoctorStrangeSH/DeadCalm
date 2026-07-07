@@ -1,0 +1,155 @@
+import { GameState } from '../core/state.js';
+import { Events } from '../core/events.js';
+
+/**
+ * Система дневника детектива.
+ * Хранит заметки, важную информацию и автоматические записи.
+ */
+export var Notebook = {
+  /**
+   * Добавить заметку в дневник
+   */
+  addNote(note) {
+    if (!GameState.notebook) GameState.notebook = [];
+
+    // Проверяем, нет ли уже такой заметки
+    var exists = GameState.notebook.some(function(n) {
+      return n.title === note.title;
+    });
+
+    if (exists) {
+      console.log('[Notebook] Заметка уже существует: ' + note.title);
+      return false;
+    }
+
+    GameState.notebook.push({
+      title: note.title,
+      text: note.text,
+      category: note.category || 'общее',
+      timestamp: new Date().toISOString(),
+      day: note.day || 1,
+      source: note.source || 'Заметки детектива',
+      pinned: note.pinned || false
+    });
+
+    GameState.save();
+    Events.emit('notebook:note_added', note);
+    console.log('[Notebook] 📝 Добавлена заметка: ' + note.title);
+    return true;
+  },
+
+  /**
+   * Получить все заметки
+   */
+  getAllNotes() {
+    return GameState.notebook || [];
+  },
+
+  /**
+   * Получить заметки по категории
+   */
+  getNotesByCategory(category) {
+    var notes = this.getAllNotes();
+    return notes.filter(function(n) {
+      return n.category === category;
+    });
+  },
+
+  /**
+   * Получить заметки по дню
+   */
+  getNotesByDay(day) {
+    var notes = this.getAllNotes();
+    return notes.filter(function(n) {
+      return n.day === day;
+    });
+  },
+
+  /**
+   * Получить важные заметки
+   */
+  getImportantNotes() {
+    var notes = this.getAllNotes();
+    return notes.filter(function(n) {
+      return n.category === 'важное' || n.pinned;
+    });
+  },
+
+  /**
+   * Закрепить/открепить заметку
+   */
+  togglePin(title) {
+    var notes = GameState.notebook;
+    for (var i = 0; i < notes.length; i++) {
+      if (notes[i].title === title) {
+        notes[i].pinned = !notes[i].pinned;
+        GameState.save();
+        Events.emit('notebook:updated');
+        return true;
+      }
+    }
+    return false;
+  },
+
+  /**
+   * Удалить заметку
+   */
+  removeNote(title) {
+    var notes = GameState.notebook;
+    for (var i = 0; i < notes.length; i++) {
+      if (notes[i].title === title) {
+        notes.splice(i, 1);
+        GameState.save();
+        Events.emit('notebook:note_removed', title);
+        return true;
+      }
+    }
+    return false;
+  },
+
+  /**
+   * Получить статистику
+   */
+  getStats() {
+    var notes = this.getAllNotes();
+    var categories = {};
+    var days = {};
+
+    notes.forEach(function(n) {
+      categories[n.category] = (categories[n.category] || 0) + 1;
+      days[n.day] = (days[n.day] || 0) + 1;
+    });
+
+    return {
+      total: notes.length,
+      categories: categories,
+      days: days,
+      important: this.getImportantNotes().length
+    };
+  },
+
+  /**
+   * Экспорт дневника в текст
+   */
+  exportToText() {
+    var notes = this.getAllNotes();
+    var text = '=== ДНЕВНИК ДЕТЕКТИВА ДЖОНА РИВЕРСА ===\n\n';
+
+    var days = {};
+    notes.forEach(function(n) {
+      if (!days[n.day]) days[n.day] = [];
+      days[n.day].push(n);
+    });
+
+    for (var day in days) {
+      text += '\n--- ДЕНЬ ' + day + ' ---\n\n';
+      days[day].forEach(function(n) {
+        text += '[' + n.category.toUpperCase() + '] ' + n.title + '\n';
+        text += n.text + '\n';
+        text += '---\n\n';
+      });
+    }
+
+    return text;
+  }
+};

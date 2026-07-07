@@ -1,0 +1,122 @@
+{
+  "autopsy_report_01": {
+    "id": "autopsy_report_01",
+    "name": "Отчёт о вскрытии",
+    "category": "document",
+    "description": "Судья Гаррисон умер от отравления экстрактом белладонны. На теле — следы связывания и надрез в форме буквы 'К'.",
+    "location": "morgue",
+    "day": 1,
+    "source": "Доктор Лидия Винтер",
+    "connections_to": ["poison_vial_info", "letter_k_mark"]
+  },
+  "poison_vial_info": {
+    "id": "poison_vial_info",
+    "name": "Информация о яде",
+    "category": "information",
+    "description": "Экстракт белладонны — редкий яд. В Блэкфорде его можно достать только через портовую аптеку или на чёрном рынке.",
+    "location": "morgue",
+    "day": 1,
+    "source": "Доктор Лидия Винтер",
+    "connections_to": ["autopsy_report_01", "pharmacy_lead"]
+  },
+  "letter_k_mark": {
+    "id": "letter_k_mark",
+    "name": "Буква 'К' на теле",
+    "category": "observation",
+    "description": "На груди судьи вырезана буква 'К'. Возможно, это подпись убийцы или инициал.",
+    "location": "morgue",
+    "day": 1,
+    "source": "Доктор Лидия Винтер",
+    "connections_to": ["autopsy_report_01", "kalliopa_name"]
+  },
+  "kalliopa_name": {
+    "id": "kalliopa_name",
+    "name": "Имя: Каллиопа",
+    "category": "information",
+    "description": "Девушка, убитая 20 лет назад. Её имя начинается на 'К'. Возможно, буква 'К' на теле судьи — отсылка к ней.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Детектив Рэй Морган",
+    "connections_to": ["letter_k_mark", "old_case_details"]
+  },
+  "old_case_details": {
+    "id": "old_case_details",
+    "name": "Дело 20-летней давности",
+    "category": "information",
+    "description": "20 лет назад в порту нашли тело Каллиопы. Дело закрыли за три дня как несчастный случай. Судья Гаррисон, священник Мэтьюс и мэр Коллинз участвовали в расследовании.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Детектив Рэй Морган",
+    "connections_to": ["kalliopa_name", "suspect_list_01"]
+  },
+  "judge_notes": {
+    "id": "judge_notes",
+    "name": "Дневник судьи",
+    "category": "document",
+    "description": "Последняя запись: «Он вернулся. Спустя 20 лет. Боюсь, что справедливость настигнет нас всех». Судья знал, что за ним придут.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Осмотр места преступления",
+    "connections_to": ["old_case_details", "wall_inscription"]
+  },
+  "wall_inscription": {
+    "id": "wall_inscription",
+    "name": "Надпись на стене",
+    "category": "observation",
+    "description": "«СЛЕПОЕ ПРАВОСУДИЕ» — написано кровью жертвы. Отсылка к Фемиде, богине правосудия с завязанными глазами.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Осмотр места преступления",
+    "connections_to": ["judge_notes", "broken_scales"]
+  },
+  "broken_scales": {
+    "id": "broken_scales",
+    "name": "Сломанные весы",
+    "category": "object",
+    "description": "Весы Фемиды разбиты. На одной чаше — отпечаток пальца. Убийца оставил его намеренно.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Осмотр места преступления",
+    "connections_to": ["wall_inscription", "fingerprint"]
+  },
+  "fingerprint": {
+    "id": "fingerprint",
+    "name": "Отпечаток пальца",
+    "category": "evidence",
+    "description": "Отпечаток с разбитых весов. Отправлен на анализ. Возможно, совпадёт с кем-то из базы данных.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Осмотр места преступления",
+    "connections_to": ["broken_scales", "suspect_list_01"]
+  },
+  "suspect_list_01": {
+    "id": "suspect_list_01",
+    "name": "Список подозреваемых",
+    "category": "document",
+    "description": "Все жертвы были связаны с делом Каллиопы 20 лет назад. Возможный убийца — тот, кто пострадал от их решения.",
+    "location": "office",
+    "day": 1,
+    "source": "Анализ детектива",
+    "connections_to": ["old_case_details", "gabriel_identity"]
+  },
+  "gabriel_identity": {
+    "id": "gabriel_identity",
+    "name": "Габриэль — брат Лидии",
+    "category": "important",
+    "description": "Брат Лидии Винтер — Габриэль. 20 лет назад убили его невесту Каллиопу. Он провёл 20 лет в психиатрической клинике. У него есть мотив для мести.",
+    "location": "morgue",
+    "day": 1,
+    "source": "Доктор Лидия Винтер",
+    "connections_to": ["suspect_list_01", "kalliopa_name"]
+  },
+  "body_examination": {
+    "id": "body_examination",
+    "name": "Осмотр тела судьи",
+    "category": "observation",
+    "description": "Судья был отравлен. Запястья стёрты верёвками. Глаза завязаны при жизни. Убийца хотел, чтобы он знал, что умирает.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Осмотр места преступления",
+    "connections_to": ["autopsy_report_01", "wall_inscription"]
+  }
+}

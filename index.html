@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="ru" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#111111" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.json" />
+  <title>Мёртвый штиль</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          screens: {
+            'mobile': { 'max': '768px' },
+            'desktop': { 'min': '769px' }
+          },
+          colors: {
+            noir: {
+              950: '#050505',
+              900: '#0a0a0a',
+              800: '#111111',
+              700: '#1a1a1a',
+              600: '#222222'
+            },
+            blood: {
+              DEFAULT: '#8b0000',
+              light: '#a01010'
+            },
+            gold: {
+              DEFAULT: '#c5a572',
+              light: '#d4b87a'
+            }
+          },
+          fontFamily: {
+            'typewriter': ['Courier New', 'Courier', 'monospace'],
+            'noir': ['Georgia', 'Times New Roman', 'serif']
+          },
+          animation: {
+            'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+            'fade-in': 'fadeIn 0.6s ease-out',
+            'slide-up': 'slideUp 0.5s ease-out'
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="src/css/main.css" />
+  <link rel="stylesheet" href="src/css/animations.css" />
+</head>
+
+<body class="bg-noir-950 text-gray-300 font-noir overflow-hidden h-screen w-full select-none">
+
+  <!-- ===== SPLASH SCREEN ===== -->
+  <div id="splash-screen" class="fixed inset-0 z-50 flex flex-col items-center justify-center bg-noir-950 transition-opacity duration-1000">
+    <div class="text-center">
+      <h1 class="text-5xl md:text-7xl text-gold tracking-[0.3em] font-typewriter mb-6 animate-pulse-slow">
+        МЁРТВЫЙ ШТИЛЬ
+      </h1>
+      <div class="w-32 h-px bg-blood mx-auto mb-8"></div>
+      <p class="text-gray-600 text-sm tracking-[0.2em] font-typewriter">Загрузка...</p>
+    </div>
+  </div>
+
+  <!-- ===== ИГРОВОЙ КОНТЕЙНЕР ===== -->
+  <main id="game-root" class="relative w-full h-full hidden">
+    <!-- Сцены рендерятся здесь -->
+  </main>
+
+  <!-- ===== ОВЕРЛЕИ ===== -->
+  <div id="overlay-container" class="fixed inset-0 z-40 pointer-events-none">
+    <div id="notification-area" class="absolute top-4 right-4 left-4 md:left-auto md:right-8 md:w-96 flex flex-col gap-2"></div>
+  </div>
+
+  <script type="module" src="src/js/core/app.js"></script>
+</body>
+</html>

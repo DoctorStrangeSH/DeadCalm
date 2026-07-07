@@ -1,0 +1,214 @@
+import { Events } from './events.js';
+import { Storage } from './storage.js';
+
+export var GameState = {
+  player: {
+    name: 'Джон Риверс',
+    reputation: 50,
+  },
+
+  currentCase: {
+    id: 'case_001',
+    clues: [],
+    suspects: [],
+    timeline: [],
+  },
+
+  flags: {},
+  relationships: {},
+  npcMemory: {},
+  notebook: [],
+
+  settings: {
+    musicVolume: 0.5,
+    sfxVolume: 0.7,
+    textSpeed: 'normal',
+  },
+
+  init() {
+    var saved = Storage.load('gameState');
+    if (saved) {
+      this.player = saved.player || this.player;
+      this.currentCase = saved.currentCase || this.currentCase;
+      this.flags = saved.flags || {};
+      this.relationships = saved.relationships || {};
+      this.npcMemory = saved.npcMemory || {};
+      this.notebook = saved.notebook || [];
+      this.settings = saved.settings || this.settings;
+      console.log('[State] Состояние загружено');
+      console.log('[State] - npcMemory: ' + Object.keys(this.npcMemory).length + ' NPC');
+      console.log('[State] - clues: ' + this.currentCase.clues.length);
+      console.log('[State] - notebook: ' + this.notebook.length);
+    } else {
+      console.log('[State] Новое состояние (без сохранения)');
+    }
+  },
+
+  update(key, value) {
+    var keys = key.split('.');
+    var obj = this;
+    for (var i = 0; i < keys.length - 1; i++) {
+      if (!obj[keys[i]]) obj[keys[i]] = {};
+      obj = obj[keys[i]];
+    }
+    obj[keys[keys.length - 1]] = value;
+    Events.emit('state:changed', { key: key, value: value });
+    this.save();
+  },
+
+  setFlag(flagName, value) {
+    if (value === undefined) value = true;
+    this.flags[flagName] = value;
+    Events.emit('flag:set', { flag: flagName, value: value });
+    this.save();
+  },
+
+  hasFlag(flagName) {
+    return !!this.flags[flagName];
+  },
+
+  clearFlag(flagName) {
+    delete this.flags[flagName];
+    Events.emit('flag:cleared', { flag: flagName });
+    this.save();
+  },
+
+  addClue(clue) {
+    if (this.currentCase.clues.find(function(c) { return c.id === clue.id; })) {
+      return;
+    }
+    this.currentCase.clues.push({
+      id: clue.id,
+      name: clue.name,
+      category: clue.category,
+      description: clue.description,
+      location: clue.location,
+      day: clue.day,
+      foundAt: new Date().toISOString()
+    });
+    Events.emit('clue:added', clue);
+    this.save();
+  },
+
+  hasClue(clueId) {
+    return this.currentCase.clues.some(function(c) { return c.id === clueId; });
+  },
+
+  getClue(clueId) {
+    return this.currentCase.clues.find(function(c) { return c.id === clueId; }) || null;
+  },
+
+  updateRelationship(npcId, delta) {
+    if (!this.relationships[npcId]) {
+      this.relationships[npcId] = { trust: 50, met: false };
+    }
+    var oldTrust = this.relationships[npcId].trust;
+    this.relationships[npcId].trust = Math.max(0, Math.min(100,
+      this.relationships[npcId].trust + delta
+    ));
+    this.relationships[npcId].met = true;
+    Events.emit('relationship:changed', {
+      npcId: npcId,
+      trust: this.relationships[npcId].trust,
+      delta: delta,
+      oldTrust: oldTrust
+    });
+    this.save();
+  },
+
+  getRelationship(npcId) {
+    return this.relationships[npcId] || { trust: 50, met: false };
+  },
+
+  addSuspect(suspect) {
+    if (this.currentCase.suspects.find(function(s) { return s.id === suspect.id; })) return;
+    this.currentCase.suspects.push(suspect);
+    Events.emit('suspect:added', suspect);
+    this.save();
+  },
+
+  addTimelineEvent(event) {
+    if (this.currentCase.timeline.find(function(e) { return e.id === event.id; })) return;
+    this.currentCase.timeline.push({
+      id: event.id,
+      title: event.title,
+      description: event.description,
+      time: event.time,
+      addedAt: new Date().toISOString()
+    });
+    Events.emit('timeline:updated', this.currentCase.timeline);
+    this.save();
+  },
+
+  save() {
+    Storage.save('gameState', {
+      player: this.player,
+      currentCase: this.currentCase,
+      flags: this.flags,
+      relationships: this.relationships,
+      npcMemory: this.npcMemory,
+      notebook: this.notebook,
+      settings: this.settings,
+    });
+  },
+
+  /**
+   * ПОЛНЫЙ СБРОС
+   */
+  reset() {
+    console.log('═══════════════════════════════');
+    console.log('[State] ⚠️ ПОЛНЫЙ СБРОС');
+    console.log('[State] До:');
+    console.log('[State] - npcMemory: ' + Object.keys(this.npcMemory).length + ' NPC');
+    console.log('[State] - relationships: ' + Object.keys(this.relationships).length);
+    console.log('[State] - clues: ' + this.currentCase.clues.length);
+    console.log('[State] - notebook: ' + this.notebook.length);
+    console.log('[State] - flags: ' + Object.keys(this.flags).length);
+    
+    // Сбрасываем
+    this.player = { name: 'Джон Риверс', reputation: 50 };
+    this.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
+    this.flags = {};
+    this.relationships = {};
+    this.npcMemory = {};
+    this.notebook = [];
+    this.settings = { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
+    
+    // Очищаем localStorage
+    Storage.clearAll();
+    
+    // Сохраняем пустое
+    this.save();
+    
+    Events.emit('state:reset');
+    
+    console.log('[State] После:');
+    console.log('[State] - npcMemory: ' + Object.keys(this.npcMemory).length + ' NPC');
+    console.log('[State] - relationships: ' + Object.keys(this.relationships).length);
+    console.log('[State] - clues: ' + this.currentCase.clues.length);
+    console.log('[State] - notebook: ' + this.notebook.length);
+    console.log('[State] ✅ Сброс завершён');
+    console.log('═══════════════════════════════');
+  },
+
+  hasSave() {
+    return Storage.exists('gameState');
+  },
+
+  export() {
+    return {
+      player: Object.assign({}, this.player),
+      currentCase: {
+        id: this.currentCase.id,
+        clues: this.currentCase.clues.slice(),
+        suspects: this.currentCase.suspects.slice(),
+        timeline: this.currentCase.timeline.slice()
+      },
+      flags: Object.assign({}, this.flags),
+      relationships: Object.assign({}, this.relationships),
+      npcMemory: JSON.parse(JSON.stringify(this.npcMemory)),
+      notebook: this.notebook.slice(),
+      settings: Object.assign({}, this.settings)
+    };
+  }
+};
