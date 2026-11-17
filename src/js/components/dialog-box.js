@@ -2,6 +2,11 @@ import { DialogueEngine } from '../systems/dialogue.js';
 import { Events } from '../core/events.js';
 import { escapeHtml } from '../utils/helpers.js';
 
+const CHARACTER_PORTRAITS = Object.freeze({
+  'Доктор Лидия Винтер': 'lydia-winter.webp',
+  'Детектив Рэй Морган': 'ray-morgan.webp'
+});
+
 export class DialogBox {
   constructor() {
     this.isTyping = false;
@@ -45,8 +50,9 @@ export class DialogBox {
     var trustEmoji = this._getTrustEmoji(node.trust);
     var trustColor = this._getTrustColor(node.trust);
     var typeLabel = this._getTypeLabel(node.type);
-    const portrait = node.speaker === 'Доктор Лидия Винтер'
-      ? '<img class="portrait-image" src="src/assets/portraits/lydia-winter.webp" alt="" loading="eager">'
+    const portraitFile = CHARACTER_PORTRAITS[node.speaker];
+    const portrait = portraitFile
+      ? `<img class="portrait-image" src="src/assets/portraits/${portraitFile}" alt="" loading="eager">`
       : `<span class="portrait-silhouette"></span><span class="portrait-initial">${escapeHtml(node.speaker.charAt(0))}</span>`;
 
     this.container.innerHTML = `
