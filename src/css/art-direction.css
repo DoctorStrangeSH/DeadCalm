@@ -13,6 +13,10 @@ body { background:#071015; color:#d3d5cc; }
 .card:hover { border-color:#d4b57b; background:#213338; }
 .title-scene { isolation:isolate; background:#09151a; min-height:100%; overflow:hidden; }
 .title-art { position:absolute; inset:0; z-index:-1; overflow:hidden; background:linear-gradient(180deg,#071116 0%,#192b32 36%,#3b4b4c 55%,#101b21 60%,#071116 100%); }
+/* Painted Blackford harbor: optimized WebP, with CSS atmosphere layered above. */
+.title-art { background:#071519 url('../assets/backgrounds/blackford-harbor.webp') center center / cover no-repeat; }
+.title-art .title-moon,.title-art .title-horizon,.title-art .title-cityline,.title-art .title-pier,.title-art .title-water { display:none; }
+.title-art .title-vignette { background:linear-gradient(90deg,#061115af,transparent 35%,transparent 65%,#061115a8),linear-gradient(180deg,#07111772,#0b1a207a 65%,#061014a8); }
 .title-art::before { content:""; position:absolute; inset:-30%; background:radial-gradient(ellipse at 55% 42%,#b8b39c48 0%,#78939312 22%,transparent 50%); animation:fog-drift 14s ease-in-out infinite alternate; }
 .title-moon { position:absolute; width:min(24vw,240px); aspect-ratio:1; top:13%; right:19%; border-radius:50%; background:radial-gradient(circle at 42% 37%,#e6e5d4,#a5b6ae 62%,#697e7d); filter:blur(1px); box-shadow:0 0 90px 25px #aec5ba46; opacity:.8; }
 .title-horizon { position:absolute; inset:52% 0 auto; height:14%; background:linear-gradient(180deg,#52625e7d,#0b171c); filter:blur(18px); }
