@@ -1,6 +1,7 @@
 import { GameState } from '../core/state.js';
 import { Events } from '../core/events.js';
 import { NPCMemory } from './npc-memory.js';
+import { resolveDialogueReaction } from './dialogue-reactions.js';
 
 export var DialogueEngine = {
   _dialogues: null,
@@ -58,13 +59,13 @@ export var DialogueEngine = {
       console.warn('[Dialogue] Движок не инициализирован');
       return null;
     }
-    
+
     this._currentNPC = npcId;
-    
+
     // Загружаем сохранённые данные
     this._askedQuestions = NPCMemory.getAskedQuestions(npcId);
     this._unlockedTopics = NPCMemory.getUnlockedTopics(npcId);
-    
+
     var npcData = this._dialogues?.[npcId];
     if (!npcData) {
       console.warn('[Dialogue] Нет данных для NPC: ' + npcId);
@@ -89,12 +90,12 @@ export var DialogueEngine = {
     }
 
     var hasMet = NPCMemory.hasMet(npcId);
-    
+
     // ПЕРВАЯ ВСТРЕЧА
     if (!hasMet) {
       console.log('[Dialogue] Первая встреча!');
       NPCMemory.markMet(npcId);
-      
+
       var firstNode = npcData.first_meeting;
       if (firstNode && firstNode.unlocks_topics) {
         this._unlockedTopics = firstNode.unlocks_topics.slice();
@@ -106,12 +107,12 @@ export var DialogueEngine = {
 
     // ПОВТОРНАЯ ВСТРЕЧА
     console.log('[Dialogue] Повторная встреча');
-    
+
     // Проверяем доступные темы
     var availableTopics = this._getAvailableTopics(npcData);
     console.log('[Dialogue] Доступные темы: ' + availableTopics.length);
     console.log('[Dialogue] Список: ' + availableTopics.join(', '));
-    
+
     if (availableTopics.length === 0) {
       console.log('[Dialogue] Все темы исчерпаны → exhausted');
       var exhaustedNode = npcData.all_topics_exhausted;
@@ -134,33 +135,33 @@ export var DialogueEngine = {
 
   _getAvailableTopics(npcData) {
     var self = this;
-    
+
     // Проверяем, есть ли вообще topics у NPC
     if (!npcData.topics) {
       console.warn('[Dialogue] У NPC нет тем!');
       return [];
     }
-    
+
     console.log('[Dialogue] _getAvailableTopics:');
     console.log('[Dialogue] - Разблокировано: ' + self._unlockedTopics.join(', '));
     console.log('[Dialogue] - Задано вопросов: ' + self._askedQuestions.length);
-    
+
     // Фильтруем темы, где остались незаданные вопросы
     var available = self._unlockedTopics.filter(function(topicId) {
       var topic = npcData.topics[topicId];
-      
+
       // Если тема не существует в данных — пропускаем
       if (!topic) {
         console.warn('[Dialogue] Тема не найдена в данных: ' + topicId);
         return false;
       }
-      
+
       // Если у темы нет вопросов — пропускаем
       if (!topic.responses || topic.responses.length === 0) {
         console.warn('[Dialogue] У темы нет вопросов: ' + topicId);
         return false;
       }
-      
+
       // Считаем, сколько вопросов уже задано в этой теме
       var askedInTopic = 0;
       topic.responses.forEach(function(r) {
@@ -168,23 +169,23 @@ export var DialogueEngine = {
           askedInTopic++;
         }
       });
-      
+
       var totalInTopic = topic.responses.length;
       var allAsked = askedInTopic >= totalInTopic;
-      
+
       console.log('[Dialogue]   Тема ' + topicId + ': задано ' + askedInTopic + '/' + totalInTopic + ' (исчерпана: ' + allAsked + ')');
-      
+
       // Возвращаем тему, если не все вопросы заданы
       return !allAsked;
     });
-    
+
     return available;
   },
 
   selectTopic(topicId) {
     var npcData = this._dialogues?.[this._currentNPC];
     if (!npcData) return null;
-    
+
     var topic = npcData.topics?.[topicId];
     if (!topic) {
       console.warn('[Dialogue] Тема не найдена: ' + topicId);
@@ -201,8 +202,8 @@ export var DialogueEngine = {
     if (unansweredQuestions.length === 0) {
       // Все вопросы заданы — возвращаемся к выбору тем
       return this._formatTopicSelection(
-        this._currentNPC, 
-        this._getAvailableTopics(npcData), 
+        this._currentNPC,
+        this._getAvailableTopics(npcData),
         npcData
       );
     }
@@ -226,7 +227,7 @@ export var DialogueEngine = {
         }
       }
     }
-    
+
     if (!foundResponse) {
       console.warn('[Dialogue] Ответ не найден для вопроса: ' + questionId);
       return null;
@@ -255,7 +256,7 @@ export var DialogueEngine = {
     if (foundResponse.triggers_critical) {
       var criticalNode = npcData[foundResponse.triggers_critical];
       var flagName = 'critical_' + foundResponse.triggers_critical;
-      
+
       if (criticalNode && !NPCMemory.hasFlag(this._currentNPC, flagName)) {
         NPCMemory.setFlag(this._currentNPC, flagName);
         console.log('[Dialogue] 🔴 КРИТИЧЕСКИЙ ВЫБОР!');
@@ -276,7 +277,8 @@ export var DialogueEngine = {
         var choice = node.choices.find(function(c) { return c.id === choiceId; });
         if (choice) {
           console.log('[Dialogue] Критический выбор: ' + choiceId);
-          
+          var trustBefore = NPCMemory.getTrust(this._currentNPC);
+
           if (choice.effects?.trust) {
             NPCMemory.changeTrust(this._currentNPC, choice.effects.trust);
           }
@@ -297,7 +299,11 @@ export var DialogueEngine = {
             if (nextNode.memory_set) {
               NPCMemory.setFlag(this._currentNPC, nextNode.memory_set);
             }
-            return this._formatCriticalResult(nextNode);
+            return this._formatCriticalResult(nextNode, {
+              type: 'critical_result',
+              tone: choice.tone,
+              trustDelta: NPCMemory.getTrust(this._currentNPC) - trustBefore
+            });
           }
           return null;
         }
@@ -405,13 +411,14 @@ export var DialogueEngine = {
       speaker: character?.name || this._currentNPC,
       speakerRole: character?.role || '',
       trust: NPCMemory.getTrust(this._currentNPC),
+      reaction: resolveDialogueReaction({ type: 'critical_choice' }),
       choices: node.choices.map(function(c) {
         return { id: c.id, text: c.text, tone: c.tone || 'neutral' };
       })
     };
   },
 
-  _formatCriticalResult(node) {
+  _formatCriticalResult(node, context = {}) {
     var character = this.getCharacter(this._currentNPC);
     return {
       type: 'critical_result',
@@ -419,6 +426,7 @@ export var DialogueEngine = {
       speaker: character?.name || this._currentNPC,
       speakerRole: character?.role || '',
       trust: NPCMemory.getTrust(this._currentNPC),
+      reaction: resolveDialogueReaction(context),
       addedNote: node.adds_note || null,
       isEnd: !!node.end
     };

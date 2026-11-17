@@ -36,6 +36,7 @@ test('PWA cache includes visual styles, map data and the new image assets', () =
   const sw = read('sw.js');
   for (const resource of [
     'src/css/art-direction.css', 'src/data/locations.json',
+    'src/js/systems/dialogue-reactions.js',
     'blackford-city-atlas.webp', 'blackford-courtroom.webp',
     'blackford-precinct.webp', 'blackford-morgue.webp', 'blackford-rusty-anchor.webp',
     'lydia-winter.webp', 'ray-morgan.webp', 'anna-holt.webp', 'marta-hayes.webp',

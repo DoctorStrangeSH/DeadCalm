@@ -217,6 +217,12 @@ body { background:#071015; color:#d3d5cc; }
 .cinematic-dialog.dialog-critical { border-color:#bc7b69; box-shadow:0 32px 90px #000e,inset 0 0 32px #742e251f; }
 .cinematic-dialog.dialog-critical .cinematic-portrait { border-color:#ac7063; box-shadow:0 0 0 1px #e1a58a,0 0 24px #a047353b; }
 .cinematic-dialog.dialog-critical .dialog-text { border-left-color:#c77b68; }
+.cinematic-dialog.dialog-reaction-tension .portrait-image { filter:contrast(1.12) saturate(.76); }
+.cinematic-dialog.dialog-reaction-withdrawal .portrait-image { filter:brightness(.72) saturate(.62); }
+.cinematic-dialog.dialog-reaction-withdrawal .dialog-trust { border-color:#a26960; color:#e0a394; }
+.cinematic-dialog.dialog-reaction-warmth .portrait-image { filter:brightness(1.12) sepia(.13); }
+.cinematic-dialog.dialog-reaction-warmth .dialog-trust { border-color:#76a58b; color:#abd7b4; }
+@media (prefers-reduced-motion:no-preference) { .cinematic-dialog .portrait-image { transition:filter .4s ease; } }
 .cinematic-dialog .dialog-choices { display:grid; grid-template-columns:1fr; gap:8px; }
 .cinematic-dialog .dialog-btn { display:flex; align-items:center; width:100%; min-height:48px; padding:11px 16px; text-align:left; color:#d7d8c8; background:#203236; border:1px solid #516662; font:14px Georgia,serif; line-height:1.4; transition:background .18s,border-color .18s,transform .18s; }
 .cinematic-dialog .dialog-btn::after { content:'↗'; margin-left:auto; padding-left:18px; color:#bca477; }

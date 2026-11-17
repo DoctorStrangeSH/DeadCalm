@@ -56,12 +56,17 @@ export class DialogBox {
     var trustEmoji = this._getTrustEmoji(node.trust);
     var trustColor = this._getTrustColor(node.trust);
     var typeLabel = this._getTypeLabel(node.type);
+    const reaction = ['tension', 'warmth', 'withdrawal'].includes(node.reaction)
+      ? node.reaction : 'neutral';
     const portraitFile = CHARACTER_PORTRAITS[node.speaker];
     const portrait = portraitFile
       ? `<img class="portrait-image" src="src/assets/portraits/${portraitFile}" alt="" loading="eager">`
       : `<span class="portrait-silhouette"></span><span class="portrait-initial">${escapeHtml(node.speaker.charAt(0))}</span>`;
 
     this.container.classList.toggle('dialog-critical', node.type === 'critical_choice' || node.type === 'critical_result');
+    for (const state of ['tension', 'warmth', 'withdrawal']) {
+      this.container.classList.toggle(`dialog-reaction-${state}`, reaction === state);
+    }
     this.container.innerHTML = `
       <div class="dialog-content cinematic-dialog-content">
         <div class="cinematic-dialog-overline"><span>BLACKFORD · ЗАПИСЬ БЕСЕДЫ</span><span>ДЕЛО 001</span></div>
