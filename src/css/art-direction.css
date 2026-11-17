@@ -283,3 +283,24 @@ body { background:#071015; color:#d3d5cc; }
 .court-zone-card:focus-visible { outline:2px solid #f3d4a0; outline-offset:2px; }
 .court-clues-panel { padding:17px 19px; border:1px solid #667367; background:#172729; }
 @media(max-width:650px) { .court-hotspot em { display:none; } .court-hotspot span { width:32px; height:32px; font-size:10px; } .court-scan-hint { font-size:9px; } }
+
+/* Rusty Anchor: painted dockside tavern and bartender testimony. */
+.blackford-bar-scene { background:radial-gradient(ellipse at 50% 0%,#302c29,#111b1d 75%); }
+.blackford-bar-scene .scene-header { display:flex; align-items:center; justify-content:space-between; gap:15px; }
+.blackford-bar-art { position:relative; height:clamp(260px,39vw,500px); margin-bottom:22px; border:1px solid #796750; background:#211d1b url('../assets/backgrounds/blackford-rusty-anchor.webp') center/cover no-repeat; box-shadow:0 16px 28px #0009,inset 0 0 0 5px #201b19; overflow:hidden; }
+.blackford-bar-art::after { content:""; position:absolute; inset:44% 0 0; background:linear-gradient(transparent,#100d0ae8); pointer-events:none; }
+.blackford-bar-caption { position:absolute; bottom:20px; left:clamp(15px,3vw,35px); right:15px; z-index:1; display:flex; flex-direction:column; gap:6px; text-shadow:0 2px 8px #000; }
+.blackford-bar-caption span { color:#d5c3a8; font:10px 'Courier New',monospace; letter-spacing:.18em; }
+.blackford-bar-caption strong { color:#f3d5a1; font:clamp(21px,2.7vw,32px) Georgia,serif; font-weight:normal; }
+.blackford-bar-description { padding:18px clamp(16px,2.5vw,28px); background:#211f1d; border:1px solid #685c4b; border-left:3px solid #bc9461; }
+.blackford-bar-description p { line-height:1.75; }
+.blackford-bar-action { padding:19px 22px; background:linear-gradient(110deg,#35312c,#202826); border:1px solid #827057; transition:border-color .18s,transform .18s,background .18s; }
+.blackford-bar-action:hover { border-color:#e3bc83; transform:translateY(-2px); background:#42372d; }
+.blackford-bar-action .card-title { display:flex; align-items:center; justify-content:space-between; gap:12px; color:#f3d6a5; font:15px Georgia,serif; letter-spacing:.06em; }
+.blackford-bar-action .card-title span { color:#d9b37b; font-size:22px; }
+.blackford-bar-action .card-subtitle { margin-top:9px; color:#bcb9ab; font:13px Georgia,serif; }
+.blackford-bar-action:focus-visible { outline:2px solid #f0d5a2; outline-offset:3px; }
+.blackford-bar-testimony { padding:clamp(18px,3vw,28px); border:1px solid #8a7559; border-left:4px solid #d1af77; background:linear-gradient(135deg,#29302c,#171f20); box-shadow:0 15px 24px #0008; }
+.blackford-bar-testimony-label { margin-bottom:17px; padding-bottom:12px; border-bottom:1px solid #647063; color:#d8b887; font:10px 'Courier New',monospace; letter-spacing:.13em; }
+.blackford-bar-testimony p:not(.blackford-bar-testimony-label) { line-height:1.75; }
+@media(max-width:600px) { .blackford-bar-art { height:255px; background-position:55% 50%; } .blackford-bar-action { padding:16px; } .blackford-bar-action .card-title { font-size:13px; } }
