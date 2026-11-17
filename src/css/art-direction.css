@@ -88,3 +88,51 @@ body { background:#071015; color:#d3d5cc; }
 @media(max-width:900px) { .office-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
 @media(max-width:540px) { .office-grid { grid-template-columns:1fr; } .office-environment { height:190px; min-height:190px; } .office-lamp { left:9%; transform:scale(.65) rotate(-20deg); } .office-weather { display:none; } .office-card { min-height:85px; } .office-card .hidden { display:none; } .office-section-heading { font-size:9px; } }
 @media(prefers-reduced-motion:reduce) { .office-rain { animation:none; } }
+
+/* Case wall — archival paper, cork, brass tacks, evidence strings. */
+#board-container { min-height:0; }
+.investigation-board { gap:0; min-height:520px; }
+.investigation-board .board-header { display:grid; grid-template-columns:1fr auto; column-gap:1.5rem; align-items:center; margin-bottom:0; padding:1rem 1.3rem; background:linear-gradient(100deg,#1d2929,#0e191c); border:1px solid #52605a; border-bottom:0; }
+.board-title-row { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+.investigation-board .board-title { font:clamp(13px,1.45vw,20px) Georgia,serif; letter-spacing:.12em; color:#e3c995; }
+.board-classified { font:9px 'Courier New',monospace; color:#ba6756; letter-spacing:.12em; border:1px solid #754b43; padding:4px 6px; }
+.investigation-board .board-subtitle { color:#a9b5ae; font-size:12px; margin-top:.5rem; }
+.investigation-board .board-progress { grid-column:2; grid-row:1 / span 2; color:#d5bf8d; font:12px 'Courier New',monospace; padding:10px; border-left:1px solid #536059; }
+.investigation-board .board-canvas { flex:0 0 auto; height:var(--board-content-height,500px); min-height:350px; border:12px solid #403228; outline:1px solid #867050; outline-offset:-6px; background:radial-gradient(ellipse at 60% 40%,#70563b 0%,#483423 80%),repeating-linear-gradient(32deg,#704f33 0 3px,#4a3424 4px 6px); box-shadow:inset 0 0 45px #1b1009a8,0 20px 35px #0007; }
+.investigation-board .board-canvas::before { content:""; position:absolute; inset:0; opacity:.24; pointer-events:none; background:repeating-linear-gradient(45deg,transparent 0 7px,#a1805d 8px 9px,transparent 10px 17px); }
+.investigation-board .board-clues { position:absolute; inset:0; }
+.investigation-board .board-clue-card { width:27%; height:119px; position:absolute; display:flex; gap:9px; align-items:flex-start; padding:16px 11px 10px; border:1px solid #90846a; border-radius:1px; color:#3e352d; white-space:normal; text-align:left; background:linear-gradient(145deg,#e0d2b2,#bcae8e); box-shadow:2px 3px 0 #76664d,4px 8px 16px #1b100a8c; transform:rotate(-1deg); transition:transform .18s,box-shadow .18s; }
+.investigation-board .board-clue-card:nth-child(3n + 2) { transform:rotate(1.3deg); background:linear-gradient(145deg,#d6cba9,#a9a083); }
+.investigation-board .board-clue-card:nth-child(3n) { transform:rotate(-.5deg); background:linear-gradient(145deg,#d9d9cb,#abae9e); }
+.investigation-board .board-clue-card:hover, .investigation-board .board-clue-card:focus-visible { z-index:5; transform:rotate(0) translateY(-4px); box-shadow:3px 10px 19px #130a08ab; border-color:#d7bd8a; }
+.investigation-board .board-clue-card.board-clue-selected { background:#f4dfaf!important; color:#322a20!important; border:3px solid #a34232!important; z-index:6; }
+.investigation-board .board-clue-card.board-clue-connected { border-color:#7d9c7b!important; box-shadow:0 0 0 3px #a0b59e,2px 7px 18px #17110bcc; }
+.clue-card-pin { position:absolute; top:4px; left:50%; width:11px; height:11px; border-radius:50%; background:radial-gradient(circle at 35% 28%,#ecb3a4,#863f38 65%,#402822); box-shadow:1px 3px 3px #0008; transform:translateX(-50%); }
+.investigation-board .clue-card-icon { display:grid; flex:0 0 32px; place-items:center; height:42px; background:#9288706b; color:#514737; font:25px Georgia,serif; }
+.clue-card-content { display:flex; min-width:0; flex-direction:column; gap:7px; }
+.clue-card-label { font:9px 'Courier New',monospace; letter-spacing:.1em; color:#775846; }
+.clue-card-name { font:bold 13px Georgia,serif; line-height:1.18; overflow-wrap:anywhere; }
+.clue-card-source { font:10px Georgia,serif; color:#665b4a; line-height:1.2; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.investigation-board .connection-line { stroke:#ad342b; stroke-width:2.2; stroke-dasharray:none; opacity:.9; filter:drop-shadow(1px 2px 1px #3017129c); }
+.investigation-board .board-footer { background:#142226; border:1px solid #4b5a52; border-top:0; margin-top:0; padding:13px 17px; }
+.investigation-board .board-hint { color:#bfcbc1; font-size:12px; }
+.investigation-board .board-hint-active { color:#d8bf8e; }
+.investigation-board .board-hint-success { color:#a6d1a4; }
+.investigation-board .board-hint-fail { color:#e6a398; }
+.investigation-board #btn-clear-selection { min-width:0; width:auto; font-size:11px; padding:.65rem 1rem; }
+.noir-board-empty { position:relative; display:flex; flex-direction:column; justify-content:center; align-items:center; min-height:430px; border:13px solid #4d3727; background:repeating-linear-gradient(35deg,#69513b 0 2px,#604932 3px 8px); box-shadow:inset 0 0 60px #21170f; }
+.noir-board-empty::before { content:""; position:absolute; inset:20px; border:1px dashed #ab8964; opacity:.45; pointer-events:none; }
+.noir-board-empty > * { position:relative; }
+.empty-case-stamp { border:3px double #bca783; border-radius:50%; width:100px; height:100px; display:grid; place-items:center; font:75px Georgia,serif; color:#ddcba7; margin-bottom:20px; }
+.noir-board-empty .board-title { color:#f2dba6; }
+@media(max-width:700px) {
+  .investigation-board .board-header { display:block; padding:.85rem; }
+  .investigation-board .board-progress { border:0; padding:9px 0 0; }
+  .investigation-board .board-canvas { height:auto; min-height:0; }
+  .investigation-board .board-clues { position:relative; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px 9px; padding:22px 11px 24px; }
+  .investigation-board .board-clue-card { position:relative; top:auto!important; left:auto!important; width:100%; height:auto; min-height:120px; }
+  .investigation-board .board-lines { display:none; }
+  .investigation-board .board-footer { align-items:stretch; flex-direction:column; }
+  .investigation-board #btn-clear-selection { width:100%; }
+}
+@media(max-width:420px) { .investigation-board .board-clues { grid-template-columns:1fr; padding:16px; }.investigation-board .board-clue-card { min-height:95px; } }

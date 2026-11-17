@@ -22,23 +22,27 @@ export class InvestigationBoard {
 
     if (clues.length === 0) {
       this.container.innerHTML = `
-        <div class="board-empty">
-          <p class="text-gray-500 text-sm">У вас пока нет улик.</p>
-          <p class="text-gray-600 text-xs mt-2">Отправляйтесь на место преступления и соберите улики.</p>
+        <div class="board-empty noir-board-empty">
+          <div class="empty-case-stamp" aria-hidden="true">?</div>
+          <p class="board-title">ДОСЬЕ ПОКА ПУСТО</p>
+          <p class="text-gray-400 text-sm mt-3">Любое расследование начинается с первой улики.</p>
+          <p class="text-gray-500 text-xs mt-2">Отправляйтесь на место преступления и осмотрите его.</p>
+          <button id="board-go-map" class="btn-noir mt-6 mx-auto">ОТКРЫТЬ КАРТУ ГОРОДА ↗</button>
         </div>
       `;
+      this.container.querySelector('#board-go-map').addEventListener('click', () => Events.emit('navigate', { scene: 'city-map' }));
       return;
     }
 
     this.container.innerHTML = `
       <div class="investigation-board">
         <div class="board-header">
-          <p class="board-title">📌 ДОСКА РАССЛЕДОВАНИЯ</p>
-          <p class="board-subtitle">Соединяйте улики, чтобы найти связи</p>
+          <div class="board-title-row"><span class="board-title">ДОСЬЕ № 001 / УБИЙСТВО СУДЬИ</span><span class="board-classified">● СЕКРЕТНО</span></div>
+          <p class="board-subtitle">Выберите два документа, чтобы проверить связь между ними</p>
           <p class="board-progress">Прогресс: ${Investigation.getProgress().percentage}% (${this.connections.length} связей)</p>
         </div>
         
-        <div class="board-canvas" id="board-canvas">
+        <div class="board-canvas" id="board-canvas" style="--board-content-height:${Math.max(390, Math.ceil(clues.length / 3) * 155 + 60)}px">
           <!-- SVG для линий -->
           <svg class="board-lines" id="board-lines"></svg>
           
@@ -46,13 +50,14 @@ export class InvestigationBoard {
           <div class="board-clues" id="board-clues">
             ${clues.map(function(clue, index) {
               return `
-                <div class="board-clue-card" 
+                <button type="button" class="board-clue-card category-${self._safeCategory(clue.category)}"
                      data-clue-id="${clue.id}" 
-                     style="left: ${10 + (index % 3) * 30}%; top: ${10 + Math.floor(index / 3) * 30}%;"
+                     style="left: ${5 + (index % 3) * 32}%; top: ${28 + Math.floor(index / 3) * 155}px;"
                      draggable="true">
+                  <span class="clue-card-pin" aria-hidden="true"></span>
                   <span class="clue-card-icon">${self._getIcon(clue.category)}</span>
-                  <span class="clue-card-name">${clue.name}</span>
-                </div>
+                  <span class="clue-card-content"><span class="clue-card-label">УЛИКА · ${String(index + 1).padStart(2, '0')}</span><span class="clue-card-name">${self._escapeHtml(clue.name)}</span><span class="clue-card-source">${self._escapeHtml(clue.source || 'Источник неизвестен')}</span></span>
+                </button>
               `;
             }).join('')}
           </div>
@@ -68,6 +73,7 @@ export class InvestigationBoard {
     this._setupDragAndDrop();
     this._setupClickHandlers();
     this._drawConnectionLines();
+    this._observeBoardSize();
   }
 
   _setupClickHandlers() {
@@ -104,10 +110,11 @@ export class InvestigationBoard {
       var connection = Investigation.checkConnection(this.selectedClue.id, clueId);
 
       if (connection) {
+        const alreadyFound = this.connections.some(c => c.id === connection.id);
         Investigation.saveConnection(connection);
-        this.connections.push(connection);
+        // this.connections references Investigation's collection; saveConnection updates it.
         this._drawConnectionLines();
-        hint.textContent = '✅ Связь найдена: ' + connection.description;
+        hint.textContent = (alreadyFound ? 'Эта связь уже обнаружена: ' : 'Связь найдена: ') + connection.description;
         hint.className = 'board-hint board-hint-success';
         
         // Анимация успеха
@@ -185,8 +192,26 @@ export class InvestigationBoard {
     });
   }
 
+  _observeBoardSize() {
+    const canvas = this.container.querySelector('.board-canvas');
+    if (typeof ResizeObserver === 'undefined' || !canvas) return;
+    const observer = new ResizeObserver(() => {
+      if (!canvas.isConnected) return observer.disconnect();
+      this._drawConnectionLines();
+    });
+    observer.observe(canvas);
+  }
+
+  _escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, char => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[char]);
+  }
+
+  _safeCategory(value) {
+    return String(value || 'unknown').replace(/[^a-z0-9-]/gi, '');
+  }
+
   _drawConnectionLines() {
-    var svg = document.getElementById('board-lines');
+    var svg = this.container.querySelector('#board-lines');
     if (!svg) return;
 
     var lines = '';
@@ -215,13 +240,13 @@ export class InvestigationBoard {
 
   _getIcon(category) {
     var icons = {
-      document: '📄',
-      observation: '👁️',
-      object: '🔧',
-      information: '💬',
-      evidence: '🔬',
-      important: '⭐'
+      document: '▤',
+      observation: '◎',
+      object: '◆',
+      information: '✎',
+      evidence: '⌕',
+      important: '★'
     };
-    return icons[category] || '📎';
+    return icons[category] || '•';
   }
 }
