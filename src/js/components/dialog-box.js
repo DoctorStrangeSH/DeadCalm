@@ -1,12 +1,13 @@
 import { DialogueEngine } from '../systems/dialogue.js';
 import { Events } from '../core/events.js';
-import { typewriterEffect } from '../utils/helpers.js';
+import { escapeHtml } from '../utils/helpers.js';
 
 export class DialogBox {
   constructor() {
     this.isTyping = false;
     this.overlay = null;
     this.container = null;
+    this.renderToken = 0;
   }
 
   async show(npcId) {
@@ -19,12 +20,12 @@ export class DialogBox {
   }
 
   _createOverlay() {
-    // Удаляем старый если есть
-    this.close();
+    // Удаляем старый слой без ложного события завершения беседы.
+    if (this.overlay) this.overlay.remove();
     
     this.overlay = document.createElement('div');
-    this.overlay.className = 'dialog-overlay';
-    this.overlay.innerHTML = '<div class="dialog-modal" id="dialog-modal"></div>';
+    this.overlay.className = 'dialog-overlay cinematic-dialog-overlay';
+    this.overlay.innerHTML = '<div class="dialog-modal cinematic-dialog" id="dialog-modal" role="dialog" aria-modal="true" aria-label="Разговор с персонажем"></div>';
     document.body.appendChild(this.overlay);
     
     this.container = this.overlay.querySelector('#dialog-modal');
@@ -40,21 +41,23 @@ export class DialogBox {
 
   async render(node) {
     var self = this;
+    const token = ++this.renderToken;
     var trustEmoji = this._getTrustEmoji(node.trust);
     var trustColor = this._getTrustColor(node.trust);
     var typeLabel = this._getTypeLabel(node.type);
 
     this.container.innerHTML = `
-      <div class="dialog-content">
+      <div class="dialog-content cinematic-dialog-content">
+        <div class="cinematic-dialog-overline"><span>BLACKFORD · ЗАПИСЬ БЕСЕДЫ</span><span>ДЕЛО 001</span></div>
         <!-- Заголовок -->
         <div class="dialog-header">
-          <div class="dialog-avatar">${node.speaker.charAt(0)}</div>
+          <div class="dialog-avatar cinematic-portrait" aria-hidden="true"><span class="portrait-silhouette"></span><span class="portrait-initial">${escapeHtml(node.speaker.charAt(0))}</span></div>
           <div class="dialog-speaker-info">
-            <p class="dialog-speaker-name">${node.speaker}</p>
-            <p class="dialog-speaker-role">${node.speakerRole}</p>
+            <p class="dialog-speaker-name">${escapeHtml(node.speaker)}</p>
+            <p class="dialog-speaker-role">${escapeHtml(node.speakerRole)}</p>
           </div>
           <div class="dialog-trust ${trustColor}">
-            <span>${trustEmoji} ${node.trust}%</span>
+            <span>${trustEmoji} ДОВЕРИЕ · ${node.trust}%</span>
           </div>
         </div>
 
@@ -62,7 +65,7 @@ export class DialogBox {
         ${typeLabel ? '<p class="dialog-type-label">' + typeLabel + '</p>' : ''}
 
         <!-- Текст -->
-        <div class="dialog-text" id="dialog-text"></div>
+        <div class="dialog-text" id="dialog-text" aria-live="polite"></div>
 
         <!-- Выборы -->
         <div class="dialog-choices" id="dialog-choices"></div>
@@ -72,7 +75,14 @@ export class DialogBox {
     // Печатаем текст
     var textEl = this.container.querySelector('#dialog-text');
     this.isTyping = true;
-    await typewriterEffect(textEl, node.text, 25);
+    textEl.textContent = '';
+    const fullText = String(node.text || '');
+    for (let i = 0; i < fullText.length; i++) {
+      if (token !== this.renderToken || !textEl.isConnected) return;
+      textEl.textContent += fullText[i];
+      await new Promise(resolve => setTimeout(resolve, 25));
+    }
+    if (token !== this.renderToken || !this.container) return;
     this.isTyping = false;
 
     // Рендерим кнопки
@@ -106,7 +116,7 @@ export class DialogBox {
         node.choices.forEach(function(choice) {
           var btn = document.createElement('button');
           btn.className = 'dialog-btn critical-btn';
-          btn.innerHTML = '<span class="tone-icon">' + self._getToneIcon(choice.tone) + '</span> ' + choice.text;
+          btn.innerHTML = '<span class="tone-icon">' + self._getToneIcon(choice.tone) + '</span> ' + escapeHtml(choice.text);
           btn.addEventListener('click', async function() {
             var nextNode = DialogueEngine.makeCriticalChoice(choice.id);
             if (nextNode) await self.render(nextNode);
@@ -162,7 +172,7 @@ export class DialogBox {
         node.topics.forEach(function(topic) {
           var btnTopic = document.createElement('button');
           btnTopic.className = 'dialog-btn topic-btn';
-          btnTopic.textContent = '📋 ' + topic.label;
+          btnTopic.textContent = '▤ ' + topic.label;
           btnTopic.addEventListener('click', async function() {
             var nextNode = DialogueEngine.selectTopic(topic.id);
             if (nextNode) await self.render(nextNode);
@@ -186,7 +196,7 @@ export class DialogBox {
         node.questions.forEach(function(q) {
           var btnQ = document.createElement('button');
           btnQ.className = 'dialog-btn question-btn';
-          btnQ.textContent = '❓ ' + q.text;
+          btnQ.textContent = '◇ ' + q.text;
           btnQ.addEventListener('click', async function() {
             var nextNode = DialogueEngine.askQuestion(q.id);
             if (nextNode) await self.render(nextNode);
@@ -238,23 +248,25 @@ export class DialogBox {
   }
 
   close() {
+    this.renderToken++;
+    this.isTyping = false;
     if (this.overlay) {
-      this.overlay.style.opacity = '0';
-      var self = this;
+      const closingOverlay = this.overlay;
+      closingOverlay.style.opacity = '0';
+      this.overlay = null;
+      this.container = null;
       setTimeout(function() {
-        if (self.overlay) self.overlay.remove();
-        self.overlay = null;
-        self.container = null;
+        closingOverlay.remove();
       }, 300);
+      Events.emit('dialogue:closed');
     }
-    Events.emit('dialogue:closed');
   }
 
   _getTrustEmoji(trust) {
-    if (trust >= 70) return '😊';
-    if (trust >= 40) return '😐';
-    if (trust >= 20) return '😒';
-    return '😠';
+    if (trust >= 70) return '◆';
+    if (trust >= 40) return '◇';
+    if (trust >= 20) return '△';
+    return '✕';
   }
 
   _getTrustColor(trust) {
@@ -265,7 +277,7 @@ export class DialogBox {
   }
 
   _getToneIcon(tone) {
-    var icons = { kind: '😇', aggressive: '😠', logical: '🧠', sarcastic: '😏', neutral: '💬' };
-    return icons[tone] || '💬';
+    var icons = { kind: '♡', aggressive: '!', logical: '◇', sarcastic: '≈', neutral: '•' };
+    return icons[tone] || '•';
   }
 }

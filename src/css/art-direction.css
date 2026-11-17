@@ -181,3 +181,35 @@ body { background:#071015; color:#d3d5cc; }
 .evidence-archive .inventory-empty { color:#d0c3a7; border:1px dashed #7d8b7b; }
 .evidence-archive .inventory-hint { color:#9cae9e; padding-top:10px; }
 @media(max-width:650px) { .dossier-notebook .notebook-list { grid-template-columns:1fr; } .dossier-notebook .notebook-card { min-height:130px; } .evidence-archive .inventory-title { font-size:19px; } }
+
+/* Cinematic interrogation panel — lighting, silhouettes and readable choices. */
+.cinematic-dialog-overlay { background:radial-gradient(ellipse at 50% 35%,#152629c7,#010507ed 76%); backdrop-filter:blur(8px); }
+.cinematic-dialog { width:min(92vw,860px); max-height:min(90dvh,900px); overflow-y:auto; border:1px solid #a18b63; background:linear-gradient(145deg,#23363a,#0a171b 75%); box-shadow:0 32px 90px #000e,inset 0 1px #b7c3a226; }
+.cinematic-dialog-content { position:relative; padding:clamp(18px,3vw,34px); }
+.cinematic-dialog-content::before { content:""; position:absolute; inset:8px; border:1px solid #7c77563c; pointer-events:none; }
+.cinematic-dialog-overline { display:flex; justify-content:space-between; color:#8ea69f; font:10px 'Courier New',monospace; letter-spacing:.19em; padding-bottom:17px; margin-bottom:18px; border-bottom:1px solid #58675c; }
+.cinematic-dialog .dialog-header { display:flex; align-items:center; gap:20px; background:transparent; padding:0 0 19px; border-bottom:1px solid #57665d; }
+.cinematic-portrait { position:relative; flex:0 0 110px; width:110px; height:136px; border:5px solid #706450; background:radial-gradient(circle at 45% 24%,#668383,#22383d 60%,#0c1c20); box-shadow:0 0 0 1px #c0a779,5px 8px 20px #0008; overflow:hidden; border-radius:0; }
+.portrait-silhouette { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 37%,#111d21 0 24%,transparent 25%),radial-gradient(ellipse at 50% 115%,#0b171b 0 55%,transparent 56%); filter:drop-shadow(0 0 8px #000); }
+.portrait-initial { position:absolute; bottom:5px; right:7px; font:15px Georgia,serif; color:#b5a88a; }
+.cinematic-dialog .dialog-speaker-info { min-width:0; flex:1; }
+.cinematic-dialog .dialog-speaker-name { color:#f0d7a4; font:clamp(20px,3vw,32px) Georgia,serif; line-height:1.2; }
+.cinematic-dialog .dialog-speaker-role { color:#9daea7; font:12px Georgia,serif; letter-spacing:.07em; margin-top:8px; }
+.cinematic-dialog .dialog-trust { flex-shrink:0; border:1px solid #6c725e; color:#d1c5a4; background:#17262a; padding:7px 10px; font:10px 'Courier New',monospace; letter-spacing:.09em; }
+.cinematic-dialog .dialog-trust.trust-high { color:#abd7b4; border-color:#5e9179; }
+.cinematic-dialog .dialog-trust.trust-low,.cinematic-dialog .dialog-trust.trust-bad { color:#e0a394; border-color:#a26960; }
+.cinematic-dialog .dialog-type-label { color:#ba9b69; margin-top:18px; font:11px 'Courier New',monospace; letter-spacing:.15em; }
+.cinematic-dialog .dialog-text { min-height:90px; margin:22px 0; color:#eee8d9; font:clamp(16px,2vw,20px)/1.7 Georgia,serif; border-left:2px solid #bd9869; padding:0 0 0 19px; white-space:pre-wrap; }
+.cinematic-dialog .dialog-choices { display:grid; grid-template-columns:1fr; gap:8px; }
+.cinematic-dialog .dialog-btn { display:flex; align-items:center; width:100%; min-height:48px; padding:11px 16px; text-align:left; color:#d7d8c8; background:#203236; border:1px solid #516662; font:14px Georgia,serif; line-height:1.4; transition:background .18s,border-color .18s,transform .18s; }
+.cinematic-dialog .dialog-btn::after { content:'↗'; margin-left:auto; padding-left:18px; color:#bca477; }
+.cinematic-dialog .dialog-btn:hover { color:#fff2d8; background:#31464a; border-color:#c3a16c; transform:translateX(3px); }
+.cinematic-dialog .dialog-btn:focus-visible { outline:2px solid #f4d49a; outline-offset:2px; }
+.cinematic-dialog .dialog-btn.primary-btn { color:#1b2523; background:#cdb17d; border-color:#e6c88e; }
+.cinematic-dialog .dialog-btn.primary-btn:hover { background:#eed4a0; color:#111a19; }
+.cinematic-dialog .dialog-btn.critical-btn { border-color:#9f5b4f; background:#362925; }
+.cinematic-dialog .dialog-btn.leave-btn,.cinematic-dialog .dialog-btn.back-btn { color:#aab7b0; background:transparent; }
+.cinematic-dialog .tone-icon { display:inline-grid; place-items:center; width:27px; min-width:27px; height:27px; margin-right:12px; border:1px solid #786c56; color:#ddbd85; font:bold 17px Georgia,serif; }
+.cinematic-dialog .critical-warning { padding:12px; background:#4c2a254d; border:1px solid #965d52; color:#e0a89b; font:12px Georgia,serif; }
+.cinematic-dialog .note-added { color:#e4ca96; background:#29392f; border-left:3px solid #9cba8e; padding:12px; }
+@media(max-width:600px) { .cinematic-dialog { width:100vw; max-height:95dvh; border-left:0; border-right:0; } .cinematic-dialog .dialog-header { gap:12px; flex-wrap:wrap; } .cinematic-portrait { flex-basis:75px; width:75px; height:95px; } .cinematic-dialog .dialog-trust { width:100%; } .cinematic-dialog-overline { font-size:8px; } .cinematic-dialog .dialog-text { margin:15px 0; } .cinematic-dialog .dialog-btn { min-height:52px; } }
