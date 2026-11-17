@@ -1,9 +1,10 @@
-const CACHE_NAME = 'dead-calm-v1';
+const CACHE_NAME = 'dead-calm-visual-v2';
 const ASSETS = [
   '/',
   '/index.html',
   '/src/css/main.css',
   '/src/css/animations.css',
+  '/src/css/art-direction.css',
   '/src/js/core/app.js',
   '/src/js/core/events.js',
   '/src/js/core/state.js',
@@ -13,12 +14,36 @@ const ASSETS = [
   '/src/js/utils/helpers.js',
   '/src/js/scenes/main-menu.js',
   '/src/js/scenes/office.js',
+  '/src/js/scenes/city-map.js',
+  '/src/js/components/map.js',
+  '/src/js/scenes/crime-scene.js',
+  '/src/js/scenes/police-station.js',
+  '/src/js/scenes/morgue.js',
+  '/src/js/scenes/bar.js',
+  '/src/assets/backgrounds/blackford-harbor.webp',
+  '/src/assets/backgrounds/holt-office.webp',
+  '/src/assets/backgrounds/blackford-city-atlas.webp',
+  '/src/assets/backgrounds/blackford-courtroom.webp',
+  '/src/assets/backgrounds/blackford-precinct.webp',
+  '/src/assets/backgrounds/blackford-morgue.webp',
+  '/src/assets/backgrounds/blackford-rusty-anchor.webp',
+  '/src/data/locations.json',
+  '/src/data/dialogues.json',
   '/src/data/game.json'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(key => key.startsWith('dead-calm-') && key !== CACHE_NAME)
+        .map(key => caches.delete(key))
+    )).then(() => self.clients.claim())
   );
 });
 

@@ -61,7 +61,7 @@ export const Router = {
       }
 
       // Рендерим сцену
-      module.render(this._root, data);
+      await module.render(this._root, data);
 
       // Сохраняем текущую сцену
       this._currentScene = sceneName;
