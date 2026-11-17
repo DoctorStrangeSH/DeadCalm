@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dead-calm-visual-v11';
+const CACHE_NAME = 'dead-calm-visual-v12';
 const ASSETS = [
   '/',
   '/index.html',
@@ -29,6 +29,7 @@ const ASSETS = [
   '/src/assets/backgrounds/blackford-morgue.webp',
   '/src/assets/backgrounds/blackford-rusty-anchor.webp',
   '/src/assets/portraits/lydia-winter.webp',
+  '/src/assets/portraits/lydia-winter-tension.webp',
   '/src/assets/portraits/lydia-winter-withdrawal.webp',
   '/src/assets/portraits/ray-morgan.webp',
   '/src/assets/portraits/anna-holt.webp',

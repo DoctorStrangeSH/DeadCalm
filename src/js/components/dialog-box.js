@@ -13,6 +13,7 @@ const CHARACTER_PORTRAITS = Object.freeze({
 
 const CHARACTER_REACTION_PORTRAITS = Object.freeze({
   'Доктор Лидия Винтер': Object.freeze({
+    tension: 'lydia-winter-tension.webp',
     withdrawal: 'lydia-winter-withdrawal.webp'
   })
 });
