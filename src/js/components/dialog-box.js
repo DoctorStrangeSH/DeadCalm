@@ -16,6 +16,9 @@ const CHARACTER_REACTION_PORTRAITS = Object.freeze({
     tension: 'lydia-winter-tension.webp',
     warmth: 'lydia-winter-warmth.webp',
     withdrawal: 'lydia-winter-withdrawal.webp'
+  }),
+  'Детектив Рэй Морган': Object.freeze({
+    tension: 'ray-morgan-tension.webp'
   })
 });
 
