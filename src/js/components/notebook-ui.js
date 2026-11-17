@@ -1,5 +1,6 @@
 import { Notebook } from '../systems/notebook.js';
 import { Events } from '../core/events.js';
+import { escapeHtml } from '../utils/helpers.js';
 
 /**
  * UI-компонент дневника.
@@ -43,20 +44,21 @@ export class NotebookUI {
     });
 
     this.container.innerHTML = `
-      <div class="notebook-container">
+      <div class="notebook-container dossier-notebook">
         <!-- Заголовок и статистика -->
         <div class="notebook-header">
           <div class="notebook-title-row">
-            <p class="notebook-title">📓 ДНЕВНИК ДЕТЕКТИВА</p>
-            <p class="notebook-stats">Всего: ${stats.total} | Важных: ${stats.important}</p>
+            <p class="notebook-title"><span class="dossier-seal">MH</span> ЛИЧНЫЙ ЖУРНАЛ / М. ХОЛТ</p>
+            <p class="notebook-stats">ЗАПИСЕЙ: ${stats.total} · ВАЖНЫХ: ${stats.important}</p>
           </div>
           
           <!-- Поиск -->
           <div class="notebook-search">
             <input type="text" id="notebook-search-input" 
                    class="notebook-search-input" 
-                   placeholder="🔍 Поиск по заметкам..." 
-                   value="${this.searchQuery}">
+                   aria-label="Поиск по заметкам"
+                   placeholder="Найти запись по слову или имени..."
+                   value="${escapeHtml(this.searchQuery)}">
           </div>
 
           <!-- Фильтры -->
@@ -65,13 +67,13 @@ export class NotebookUI {
               Все (${stats.total})
             </button>
             <button class="notebook-filter ${this.filter === 'important' ? 'active' : ''}" data-filter="important">
-              ⭐ Важные
+              ★ Важные
             </button>
             <button class="notebook-filter ${this.filter === 'day1' ? 'active' : ''}" data-filter="day1">
-              📅 День 1
+              День 1
             </button>
             <button class="notebook-filter ${this.filter === 'расследование' ? 'active' : ''}" data-filter="расследование">
-              🔍 Расследование
+              Расследование
             </button>
           </div>
         </div>
@@ -85,7 +87,7 @@ export class NotebookUI {
 
         <!-- Действия -->
         <div class="notebook-actions">
-          <button id="btn-export-notes" class="btn-noir text-xs py-2">📤 ЭКСПОРТ</button>
+          <button id="btn-export-notes" class="btn-noir text-xs py-2">↓ СОХРАНИТЬ ЗАПИСИ</button>
         </div>
       </div>
     `;
@@ -111,19 +113,19 @@ export class NotebookUI {
     };
 
     return `
-      <div class="notebook-card ${note.pinned ? 'notebook-card-pinned' : ''}" data-title="${note.title}">
+      <button type="button" class="notebook-card ${note.pinned ? 'notebook-card-pinned' : ''}" data-title="${escapeHtml(note.title)}">
         <div class="notebook-card-header">
-          <span class="notebook-category ${categoryColors[note.category] || ''}">${note.category}</span>
-          ${note.pinned ? '<span class="notebook-pin">📌</span>' : ''}
+          <span class="notebook-category ${categoryColors[note.category] || ''}">${escapeHtml(note.category)}</span>
+          ${note.pinned ? '<span class="notebook-pin">◆ ЗАКРЕПЛЕНО</span>' : ''}
           <span class="notebook-day">День ${note.day}</span>
         </div>
-        <p class="notebook-card-title">${note.title}</p>
-        <p class="notebook-card-text">${note.text.substring(0, 120)}${note.text.length > 120 ? '...' : ''}</p>
+        <p class="notebook-card-title">${escapeHtml(note.title)}</p>
+        <p class="notebook-card-text">${escapeHtml(note.text.substring(0, 180))}${note.text.length > 180 ? '…' : ''}</p>
         <div class="notebook-card-footer">
-          <span class="notebook-date">${dateStr}</span>
-          <span class="notebook-source">${note.source}</span>
+          <span class="notebook-date">${escapeHtml(dateStr)}</span>
+          <span class="notebook-source">${escapeHtml(note.source)}</span>
         </div>
-      </div>
+      </button>
     `;
   }
 
@@ -137,7 +139,7 @@ export class NotebookUI {
 
     return `
       <div class="notebook-empty">
-        <p class="notebook-empty-icon">📖</p>
+        <p class="notebook-empty-icon">✎</p>
         <p class="notebook-empty-text">${msg}</p>
       </div>
     `;
@@ -150,8 +152,12 @@ export class NotebookUI {
     var searchInput = document.getElementById('notebook-search-input');
     if (searchInput) {
       searchInput.addEventListener('input', function() {
+        const caret = this.selectionStart;
         self.searchQuery = this.value;
         self.render();
+        const updated = self.container.querySelector('#notebook-search-input');
+        updated.focus();
+        updated.setSelectionRange(caret, caret);
       });
     }
 
@@ -210,26 +216,26 @@ export class NotebookUI {
         <div class="dialog-content">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <p class="dialog-type-label">${note.category.toUpperCase()} — ДЕНЬ ${note.day}</p>
-              <h3 class="text-gold text-lg mt-1">${note.pinned ? '📌 ' : ''}${note.title}</h3>
+              <p class="dialog-type-label">${escapeHtml(note.category.toUpperCase())} — ДЕНЬ ${note.day}</p>
+              <h3 class="text-gold text-lg mt-1">${note.pinned ? '◆ ' : ''}${escapeHtml(note.title)}</h3>
             </div>
             <div class="flex gap-2">
-              <button class="notebook-action-btn btn-pin" data-title="${note.title}">
-                ${note.pinned ? '📌' : '📌'}
+              <button class="notebook-action-btn btn-pin" aria-label="Закрепить или открепить заметку">
+                ${note.pinned ? '◆' : '◇'}
               </button>
             </div>
           </div>
 
-          <p class="text-gray-400 text-sm leading-relaxed mb-4">${note.text}</p>
+          <p class="text-gray-400 text-sm leading-relaxed mb-4">${escapeHtml(note.text)}</p>
 
           <div class="text-gray-600 text-xs space-y-1 mb-4">
-            <p>📅 ${dateStr}</p>
-            <p>👤 ${note.source}</p>
+            <p>Дата: ${escapeHtml(dateStr)}</p>
+            <p>Источник: ${escapeHtml(note.source)}</p>
           </div>
 
           <div class="flex gap-2">
             <button class="dialog-btn primary-btn close-detail">ЗАКРЫТЬ</button>
-            <button class="dialog-btn leave-btn delete-note" data-title="${note.title}">🗑 УДАЛИТЬ</button>
+            <button class="dialog-btn leave-btn delete-note">УДАЛИТЬ ЗАПИСЬ</button>
           </div>
         </div>
       </div>

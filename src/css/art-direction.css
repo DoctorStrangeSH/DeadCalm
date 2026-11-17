@@ -136,3 +136,48 @@ body { background:#071015; color:#d3d5cc; }
   .investigation-board #btn-clear-selection { width:100%; }
 }
 @media(max-width:420px) { .investigation-board .board-clues { grid-template-columns:1fr; padding:16px; }.investigation-board .board-clue-card { min-height:95px; } }
+
+/* Personal journal: a working detective's paper notebook. */
+.dossier-notebook { border:1px solid #72654f; padding:clamp(12px,2vw,25px); background:linear-gradient(90deg,#b09d79 0 5px,#d6c6a5 5px 6px,#cbbd9d 6px); box-shadow:8px 11px 0 #0b1315,0 18px 40px #0008; color:#3c332c; height:auto; min-height:520px; }
+.dossier-notebook .notebook-header { border-bottom:2px solid #8e7555; padding-bottom:18px; }
+.dossier-notebook .notebook-title-row { gap:12px; flex-wrap:wrap; }
+.dossier-notebook .notebook-title { display:flex; gap:10px; align-items:center; color:#40382d; font:bold clamp(14px,1.6vw,20px) Georgia,serif; letter-spacing:.06em; }
+.dossier-seal { display:grid; place-items:center; width:39px; height:39px; border:2px solid #915447; color:#915447; border-radius:50%; font:14px Georgia,serif; transform:rotate(-9deg); }
+.dossier-notebook .notebook-stats { color:#776c59; font:11px 'Courier New',monospace; letter-spacing:.08em; }
+.dossier-notebook .notebook-search-input { color:#3a322b; border:1px solid #96876b; background:#e5d9bb; font:14px Georgia,serif; padding:12px; }
+.dossier-notebook .notebook-search-input::placeholder { color:#847760; }
+.dossier-notebook .notebook-search-input:focus { border-color:#a35b48; box-shadow:0 0 0 2px #b86b5033; }
+.dossier-notebook .notebook-filter { background:#bdaf90; color:#504538; border:1px solid #958267; padding:7px 11px; font:11px Georgia,serif; }
+.dossier-notebook .notebook-filter:hover,.dossier-notebook .notebook-filter.active { background:#493f33; color:#f2dfb6; border-color:#493f33; }
+.dossier-notebook .notebook-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; overflow:visible; margin:0 0 16px; }
+.dossier-notebook .notebook-card { display:block; width:100%; min-height:157px; margin:0; padding:14px 17px; text-align:left; background:repeating-linear-gradient(180deg,transparent 0 27px,#9e9c8b3b 28px 29px),#e7dec7; border:1px solid #ab9e81; color:#352e27; box-shadow:2px 3px 6px #6e624d5c; transform:rotate(-.45deg); }
+.dossier-notebook .notebook-card:nth-child(2n) { transform:rotate(.65deg); background:repeating-linear-gradient(180deg,transparent 0 27px,#a7a38a47 28px 29px),#ded5be; }
+.dossier-notebook .notebook-card:hover { transform:rotate(0) translateY(-3px); border-color:#8e503f; box-shadow:3px 7px 13px #594a346e; }
+.dossier-notebook .notebook-card-pinned { border-left:5px solid #974f3e; }
+.dossier-notebook .notebook-category { color:#6c4b3f; border-color:#a38c72; font:10px 'Courier New',monospace; }
+.dossier-notebook .notebook-pin,.dossier-notebook .notebook-day { color:#93503f; font:10px 'Courier New',monospace; }
+.dossier-notebook .notebook-card-title { color:#3e3029; font:bold 17px Georgia,serif; margin-bottom:9px; }
+.dossier-notebook .notebook-card-text { color:#574d3e; font:13px/1.5 Georgia,serif; }
+.dossier-notebook .notebook-card-footer { border-color:#b5a889; color:#6a6255; gap:8px; font:10px Georgia,serif; }
+.dossier-notebook .notebook-empty { grid-column:1/-1; color:#584c3e; padding:4rem 1rem; border:1px dashed #958567; }
+.dossier-notebook .notebook-empty-text { color:#534838; }
+.dossier-notebook .notebook-actions { display:flex; justify-content:flex-end; border-top:1px solid #98896c; padding-top:14px; }
+.dossier-notebook .notebook-actions .btn-noir { min-width:0; }
+
+/* Evidence archive: numbered police collection envelopes. */
+.evidence-archive { width:min(100%,650px); max-height:min(85vh,850px); padding:clamp(16px,3vw,28px); background:linear-gradient(135deg,#283a3b,#101e22); border:1px solid #9b835e; box-shadow:0 22px 55px #000b; overflow:hidden; }
+.archive-overline { color:#8eaca2; font:10px 'Courier New',monospace; letter-spacing:.14em; }
+.evidence-archive .inventory-header { border-color:#667063; padding-bottom:16px; }
+.evidence-archive .inventory-title { color:#e5c996; font:24px Georgia,serif; margin-top:5px; }
+.evidence-archive .inventory-title span { font:13px 'Courier New',monospace; color:#a4b7ac; }
+.evidence-archive .inventory-close { border:1px solid #69756d; width:38px; height:38px; color:#ebd8b2; }
+.evidence-archive .inventory-list { max-height:60vh; overflow-y:auto; padding:3px 5px 3px 0; }
+.evidence-archive .inventory-item { width:100%; text-align:left; gap:15px; padding:13px 16px; background:#cbbd9e; border:1px solid #807153; box-shadow:inset 0 1px #ede2c7; }
+.evidence-archive .inventory-item:hover { background:#e0d0ad; border-color:#bda074; transform:translateX(3px); }
+.evidence-archive .inventory-item-icon { display:grid; place-items:center; flex:0 0 43px; height:43px; border:1px solid #98866b; color:#615341; font:28px Georgia,serif; }
+.evidence-archive .inventory-item-name { color:#362f29; font:bold 15px Georgia,serif; }
+.evidence-archive .inventory-item-source { color:#685949; font:12px Georgia,serif; margin-top:5px; }
+.archive-item-arrow { color:#826848; margin-left:auto; }
+.evidence-archive .inventory-empty { color:#d0c3a7; border:1px dashed #7d8b7b; }
+.evidence-archive .inventory-hint { color:#9cae9e; padding-top:10px; }
+@media(max-width:650px) { .dossier-notebook .notebook-list { grid-template-columns:1fr; } .dossier-notebook .notebook-card { min-height:130px; } .evidence-archive .inventory-title { font-size:19px; } }

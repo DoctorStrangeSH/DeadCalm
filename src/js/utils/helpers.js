@@ -7,6 +7,13 @@ export function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+/** Безопасный вывод пользовательских записей внутри HTML-шаблонов. */
+export function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[char]);
+}
+
 /** Показать уведомление на экране */
 export function showNotification(message, type = 'info') {
   const area = document.getElementById('notification-area');
