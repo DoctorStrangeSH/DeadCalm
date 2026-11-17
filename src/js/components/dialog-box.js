@@ -21,6 +21,9 @@ const CHARACTER_REACTION_PORTRAITS = Object.freeze({
     tension: 'ray-morgan-tension.webp',
     warmth: 'ray-morgan-warmth.webp',
     withdrawal: 'ray-morgan-withdrawal.webp'
+  }),
+  'Анна Холт': Object.freeze({
+    tension: 'anna-holt-tension.webp'
   })
 });
 
