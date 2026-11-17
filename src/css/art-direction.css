@@ -240,3 +240,18 @@ body { background:#071015; color:#d3d5cc; }
 .precinct-action .card-subtitle { color:#aab9ae; margin-top:8px; font:13px Georgia,serif; }
 .precinct-action:focus-visible { outline:2px solid #ebce96; outline-offset:3px; }
 @media(max-width:600px) { .precinct-art { height:255px; background-position:45% 50%; } .precinct-art-caption strong { font-size:20px; } .precinct-action { padding:17px; } .precinct-action .card-title { font-size:13px; } }
+
+/* City morgue: cold forensic stillness, painted raster backdrop. */
+.morgue-scene { background:radial-gradient(ellipse at 50% 0%,#213536,#0b181a 78%); }
+.morgue-scene .scene-header { display:flex; align-items:center; justify-content:space-between; gap:15px; }
+.morgue-art { position:relative; height:clamp(260px,39vw,500px); margin-bottom:22px; background:#152528 url('../assets/backgrounds/blackford-morgue.webp') center/cover no-repeat; border:1px solid #617675; box-shadow:0 16px 28px #0009,inset 0 0 0 5px #132122; overflow:hidden; }
+.morgue-art::after { content:""; position:absolute; inset:48% 0 0; pointer-events:none; background:linear-gradient(transparent,#071719ed); }
+.morgue-art-caption { position:absolute; bottom:19px; left:clamp(15px,3vw,35px); right:15px; z-index:1; display:flex; flex-direction:column; gap:6px; text-shadow:0 2px 8px #000; }
+.morgue-art-caption span { color:#b5d0c9; font:10px 'Courier New',monospace; letter-spacing:.2em; }
+.morgue-art-caption strong { color:#e9d7b6; font:clamp(20px,2.7vw,30px) Georgia,serif; font-weight:normal; }
+.morgue-description { background:#102326; border:1px solid #405e5d; border-left:3px solid #a5c0b9; color:#bacbc5; padding:18px clamp(16px,2.5vw,27px); font:italic 15px/1.75 Georgia,serif; }
+.morgue-action { display:flex; justify-content:space-between; align-items:center; gap:18px; width:100%; padding:20px 22px; border:1px solid #607f79; background:linear-gradient(110deg,#223b3b,#13272a); color:#ecdab9; text-align:left; letter-spacing:.08em; font:15px Georgia,serif; transition:transform .18s,border-color .18s,background .18s; }
+.morgue-action:hover { background:#2d4847; border-color:#d1b88c; transform:translateY(-2px); }
+.morgue-action span:last-child { color:#c6b18a; font-size:23px; }
+.morgue-action:focus-visible { outline:2px solid #e4d1a3; outline-offset:3px; }
+@media(max-width:600px) { .morgue-art { height:255px; background-position:50% 50%; } .morgue-action { padding:16px; font-size:13px; } }
