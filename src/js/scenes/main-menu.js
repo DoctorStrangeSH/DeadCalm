@@ -37,7 +37,7 @@ export function render(container) {
 
       <!-- Основной контент -->
       <div class="relative z-10 w-full max-w-3xl mx-auto title-content">
-        <p class="title-eyebrow">BLACKFORD · 1947 <span>—</span> ДЕЛО № 01</p>
+        <p class="title-eyebrow">BLACKFORD · 1987 <span>—</span> ДЕЛО № 01</p>
 
         <!-- Название игры -->
         <div class="title-lockup text-center mb-12">
@@ -55,9 +55,9 @@ export function render(container) {
           </button>
 
           <!-- Продолжить (неактивна, если нет сохранения) -->
-          <button 
-            id="btn-continue" 
-            class="btn-noir py-3 md:py-4 px-6 md:px-10 ${hasSave ? '' : 'opacity-40'}" 
+          <button
+            id="btn-continue"
+            class="btn-noir py-3 md:py-4 px-6 md:px-10 ${hasSave ? '' : 'opacity-40'}"
             ${hasSave ? '' : 'disabled'}
           >
             <span>02</span> ПРОДОЛЖИТЬ <b>↗</b>
@@ -71,8 +71,8 @@ export function render(container) {
         </div>
 
         <!-- Информация о сохранении -->
-        ${hasSave 
-          ? '<p class="text-center text-gray-600 text-xs mt-6">' + saveInfo + '</p>' 
+        ${hasSave
+          ? '<p class="text-center text-gray-600 text-xs mt-6">' + saveInfo + '</p>'
           : '<p class="text-center text-gray-700 text-xs mt-6">Нет сохранений</p>'
         }
 

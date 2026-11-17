@@ -22,7 +22,7 @@ export class Map {
 
     this.container.innerHTML = `
       <div class="map-container atlas-frame relative w-full">
-        <div class="atlas-caption"><span>АРХИВ ПОЛИЦИИ БЛЭКФОРДА</span><span>СЕКРЕТНО · 1947</span></div>
+        <div class="atlas-caption"><span>АРХИВ ПОЛИЦИИ БЛЭКФОРДА</span><span>СЕКРЕТНО · 1987</span></div>
         <!-- SVG-карта -->
         <svg class="atlas-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Интерактивная карта Блэкфорда">
           <defs>
@@ -35,7 +35,7 @@ export class Map {
           <path d="M0 0H25Q18 12 22 24T14 49Q21 61 14 72T23 100H0Z" fill="#738f92" opacity=".8"/>
           <path d="M0 0H25Q18 12 22 24T14 49Q21 61 14 72T23 100H0Z" fill="url(#atlas-water)" />
           <path d="M25 0Q18 12 22 24T14 49Q21 61 14 72T23 100" fill="none" stroke="#eee1bd" stroke-width="1.1"/>
-          
+
           <!-- Сетка улиц -->
           ${this._renderGrid()}
           <g fill="#826f56" opacity=".6" font-size="2.2" font-family="Georgia" letter-spacing=".2">
@@ -50,13 +50,13 @@ export class Map {
             <path d="M26 5L33 28L50 50L70 40L92 22M26 80L30 65L50 50L60 55L82 77M40 20L55 30L70 40L90 58M20 80L50 50"/>
           </g>
           <g stroke="#796b54" stroke-width=".23" fill="none" stroke-dasharray="1 1" opacity=".6"><path d="M26 5L33 28L50 50L70 40L92 22M26 80L30 65L50 50L60 55L82 77M40 20L55 30L70 40L90 58"/></g>
-          
+
           <!-- Локации -->
           ${allLocations.map(loc => this._renderLocation(loc)).join('')}
         </svg>
         <div class="atlas-footer"><span>СЕВЕР ↑</span><span>МАСШТАБ 1:12 000</span><span>BLACKFORD COUNTY</span></div>
       </div>
-      
+
       <!-- Информация о выбранной локации -->
       <div id="location-info" class="atlas-info mt-4 p-4 min-h-[100px]">
         <p class="text-gray-500 text-xs text-center">Выберите локацию на карте</p>
@@ -86,9 +86,9 @@ export class Map {
     const x = loc.position.x;
     const y = loc.position.y;
     const isLocked = !loc.unlocked;
-    
+
     return `
-      <g class="map-location" data-location="${loc.id}" 
+      <g class="map-location" data-location="${loc.id}"
          style="cursor: pointer; transition: transform 0.2s;">
         <!-- Подсветка -->
         <circle cx="${x}" cy="${y}" r="4.1"
@@ -96,23 +96,23 @@ export class Map {
                 stroke="${isLocked ? '#776e5f' : '#efe0b8'}"
                 stroke-width=".7"
                 class="location-circle" />
-        
+
         <!-- Иконка -->
-        <text x="${x}" y="${y + 0.5}" 
-              text-anchor="middle" 
+        <text x="${x}" y="${y + 0.5}"
+              text-anchor="middle"
               fill="#f2dfb3"
               font-size="2.7"
               class="location-icon">${isLocked ? '✕' : this._symbolFor(loc.id)}</text>
-        
+
         <!-- Название -->
-        <text x="${x}" y="${y + 6}" 
-              text-anchor="middle" 
+        <text x="${x}" y="${y + 6}"
+              text-anchor="middle"
               fill="${isLocked ? '#716758' : '#332b23'}"
               font-size="2.25"
               font-family="Georgia"
               font-weight="bold" paint-order="stroke" stroke="#c5b89b" stroke-width=".55"
               class="location-name">${loc.name}</text>
-        
+
         <!-- Замок для закрытых -->
       </g>
     `;
@@ -177,7 +177,7 @@ export class Map {
 
     // Открытая локация
     const npcInfo = loc.npc ? `<p class="text-gray-500 text-xs mt-2">👤 Здесь можно поговорить с персонажем</p>` : '';
-    
+
     infoEl.innerHTML = `
       <div class="flex items-start gap-3">
         <span class="text-2xl">${loc.icon}</span>

@@ -52,3 +52,39 @@ body { background:#071015; color:#d3d5cc; }
 @keyframes fog-drift { from { transform:translateX(-5%); opacity:.7; } to { transform:translateX(5%); opacity:1; } }
 @media(max-width:768px) { .title-moon { right:5%; top:18%; width:150px; } .title-content { padding-top:3rem; } .title-logo { font-size:clamp(2.7rem,11vw,5rem); } .title-subtitle { letter-spacing:.18em; font-size:10px; } .title-eyebrow { letter-spacing:.19em; } .atlas-frame { border-width:5px; } .atlas-caption,.atlas-footer { padding:5px 7px; font-size:8px; } .atlas-svg { padding:24px 0 22px; } }
 @media(prefers-reduced-motion:reduce) { .title-art::before { animation:none; } .btn-noir { transition:none; } }
+
+/* Detective's office: illustrated panoramic hub, with navigable case-file cards. */
+.office-scene { background:radial-gradient(ellipse at 50% 0%,#243336,#0a1519 72%); }
+.office-scene .scene-header { display:flex; align-items:end; justify-content:space-between; gap:1rem; margin-bottom:1.25rem; }
+.office-kicker { color:#839994; font:10px 'Courier New',monospace; letter-spacing:.19em; margin-bottom:.65rem; }
+.office-weather { color:#90a9a4; font:10px 'Courier New',monospace; letter-spacing:.1em; white-space:nowrap; }
+.office-environment { position:relative; min-height:205px; height:clamp(205px,31vh,335px); flex-shrink:0; overflow:hidden; border:1px solid #53605a; box-shadow:inset 0 0 75px #000,0 14px 30px #0006; background:radial-gradient(ellipse at 58% 43%,#405051,#17282c 56%,#091418 100%); isolation:isolate; }
+.office-environment::before { content:""; position:absolute; inset:0; background:repeating-linear-gradient(90deg,#111d20ad 0 2px,transparent 3px 25%),linear-gradient(90deg,#071317 0%,transparent 28%,transparent 76%,#071317 100%); opacity:.23; }
+.office-window { position:absolute; left:33%; top:-8%; width:34%; height:84%; border:13px solid #0a1517; box-shadow:0 0 0 2px #53615a,0 0 65px #afbcaa26; background:linear-gradient(180deg,#5a696a,#243941 66%,#141f25); overflow:hidden; }
+.office-window::after { content:""; position:absolute; inset:0; border-left:8px solid #101b1d; border-right:8px solid #101b1d; background:linear-gradient(90deg,transparent 47%,#0d171a 47% 51%,transparent 51%),linear-gradient(180deg,transparent 57%,#0d171a 57% 61%,transparent 61%); }
+.office-skyline { position:absolute; inset:22% 0 0; background:#14282d; clip-path:polygon(0 60%,13% 60%,13% 20%,16% 20%,16% 62%,27% 62%,27% 37%,37% 37%,37% 57%,49% 57%,49% 8%,51% 8%,51% 55%,62% 55%,62% 28%,77% 28%,77% 63%,90% 63%,90% 35%,100% 35%,100% 100%,0 100%); }
+.office-rain { position:absolute; inset:0; opacity:.32; background:repeating-linear-gradient(101deg,transparent 0 18px,#b8cbc3 19px 20px,transparent 21px 34px); animation:office-rain 3s linear infinite; }
+.office-lamp { position:absolute; left:15%; top:9%; width:160px; height:180px; border-left:4px solid #7b6745; transform:rotate(-20deg); transform-origin:bottom; }
+.office-lamp::before { content:""; position:absolute; top:-8px; left:-53px; width:110px; height:54px; background:linear-gradient(180deg,#88744f,#302f28); clip-path:polygon(35% 0,65% 0,100% 100%,0 100%); border-radius:8px; box-shadow:0 15px 55px #d8b87f25; }
+.office-lamp span { position:absolute; top:41px; left:-15px; width:110px; height:135px; background:conic-gradient(from 148deg at 16% 0%,transparent 0 44deg,#ead3a523 50deg 76deg,transparent 84deg); filter:blur(8px); }
+.office-desk { position:absolute; bottom:-14%; left:-6%; width:112%; height:37%; background:linear-gradient(173deg,#4c4131 0 9%,#241e19 12% 44%,#0d1517 66%); box-shadow:0 -10px 22px #090f12; transform:skewY(-2deg); }
+.office-desk-paper { position:absolute; width:155px; height:110px; left:52%; top:5%; transform:rotate(-9deg) skewY(2deg); background:repeating-linear-gradient(0deg,transparent 0 15px,#6f624b42 16px 17px),#a79a7b; box-shadow:6px 6px 15px #0008; }
+.office-desk-paper::after { content:"CASE 001"; position:absolute; top:15px; left:15px; color:#5e4739; font:12px 'Courier New',monospace; }
+.office-cup { position:absolute; width:43px; height:24px; left:26%; top:8%; border-radius:50%; background:radial-gradient(ellipse,#251b16 0 43%,#9b9381 48% 65%,#352d27 70%); box-shadow:0 10px 10px #0008; }
+.office-environment-caption { position:absolute; bottom:13px; left:18px; right:18px; font:italic 12px Georgia,serif; color:#d3bf93; letter-spacing:.04em; text-shadow:0 2px 10px #000; }
+.office-section-heading { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin:1.3rem 0 .65rem; color:#b8a783; font:10px 'Courier New',monospace; letter-spacing:.2em; }
+.office-section-heading span:last-child { color:#83918b; }
+.office-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:11px; flex:0 0 auto; }
+.office-card { position:relative; padding:1.1rem 1.2rem 1.1rem 3.7rem; min-height:113px; border-color:#3e514e; background:linear-gradient(125deg,#1e3134,#101f23); overflow:hidden; }
+.office-card::after { content:'↗'; position:absolute; bottom:12px; right:13px; font-size:16px; color:#8c9c95; opacity:0; transition:opacity .2s,transform .2s; }
+.office-card:hover::after, .office-card:focus-visible::after { opacity:1; transform:translate(2px,-2px); }
+.office-card-icon { position:absolute; top:18px; left:14px; display:grid; place-items:center; width:32px; height:32px; border:1px solid #7c745d; border-radius:50%; color:#dfc48e; font:23px Georgia,serif; }
+.office-card-number { position:absolute; right:13px; top:9px; font:10px 'Courier New',monospace; color:#768782; }
+.office-card .card-title { padding-right:18px; font-family:Georgia,serif; font-size:clamp(12px,1.1vw,15px); letter-spacing:.1em; }
+.office-card .card-subtitle { margin-top:8px; color:#a7b2ac; font-size:12px; line-height:1.4; }
+.office-card .text-gray-600 { color:#7d928c; }
+.office-scene .status-bar { border-top:1px solid #50605a; border-bottom:1px solid #32413d; padding:.9rem 0; }
+@keyframes office-rain { to { transform:translate(-28px,28px); } }
+@media(max-width:900px) { .office-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media(max-width:540px) { .office-grid { grid-template-columns:1fr; } .office-environment { height:190px; min-height:190px; } .office-lamp { left:9%; transform:scale(.65) rotate(-20deg); } .office-weather { display:none; } .office-card { min-height:85px; } .office-card .hidden { display:none; } .office-section-heading { font-size:9px; } }
+@media(prefers-reduced-motion:reduce) { .office-rain { animation:none; } }
