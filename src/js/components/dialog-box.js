@@ -11,6 +11,16 @@ const CHARACTER_PORTRAITS = Object.freeze({
   'Себастьян Блэквуд': 'sebastian-blackwood.webp'
 });
 
+const CHARACTER_REACTION_PORTRAITS = Object.freeze({
+  'Доктор Лидия Винтер': Object.freeze({
+    withdrawal: 'lydia-winter-withdrawal.webp'
+  })
+});
+
+export function resolvePortraitFile(speaker, reaction = 'neutral') {
+  return CHARACTER_REACTION_PORTRAITS[speaker]?.[reaction] || CHARACTER_PORTRAITS[speaker] || null;
+}
+
 export class DialogBox {
   constructor() {
     this.isTyping = false;
@@ -58,7 +68,7 @@ export class DialogBox {
     var typeLabel = this._getTypeLabel(node.type);
     const reaction = ['tension', 'warmth', 'withdrawal'].includes(node.reaction)
       ? node.reaction : 'neutral';
-    const portraitFile = CHARACTER_PORTRAITS[node.speaker];
+    const portraitFile = resolvePortraitFile(node.speaker, reaction);
     const portrait = portraitFile
       ? `<img class="portrait-image" src="src/assets/portraits/${portraitFile}" alt="" loading="eager">`
       : `<span class="portrait-silhouette"></span><span class="portrait-initial">${escapeHtml(node.speaker.charAt(0))}</span>`;
