@@ -21,26 +21,44 @@ export class Map {
     const allLocations = [...unlocked, ...locked];
 
     this.container.innerHTML = `
-      <div class="map-container relative w-full" style="padding-bottom: 100%;">
+      <div class="map-container atlas-frame relative w-full">
+        <div class="atlas-caption"><span>АРХИВ ПОЛИЦИИ БЛЭКФОРДА</span><span>СЕКРЕТНО · 1947</span></div>
         <!-- SVG-карта -->
-        <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet">
+        <svg class="atlas-svg" viewBox="0 0 100 100" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Интерактивная карта Блэкфорда">
+          <defs>
+            <pattern id="atlas-grain" width="5" height="5" patternUnits="userSpaceOnUse"><path d="M0 0L5 5M5 0L0 5" stroke="#ac9b7c" stroke-width=".07"/></pattern>
+            <pattern id="atlas-water" width="8" height="5" patternUnits="userSpaceOnUse"><path d="M0 2Q2 1 4 2T8 2" stroke="#8fa09c" stroke-width=".15" fill="none"/></pattern>
+          </defs>
           <!-- Фон -->
-          <rect width="100" height="100" fill="#0a0a0a" rx="2" />
+          <rect width="100" height="100" fill="#c5b89b" />
+          <rect width="100" height="100" fill="url(#atlas-grain)" />
+          <path d="M0 0H25Q18 12 22 24T14 49Q21 61 14 72T23 100H0Z" fill="#738f92" opacity=".8"/>
+          <path d="M0 0H25Q18 12 22 24T14 49Q21 61 14 72T23 100H0Z" fill="url(#atlas-water)" />
+          <path d="M25 0Q18 12 22 24T14 49Q21 61 14 72T23 100" fill="none" stroke="#eee1bd" stroke-width="1.1"/>
           
           <!-- Сетка улиц -->
           ${this._renderGrid()}
-          
-          <!-- Река/порт -->
-          <path d="M0 55 Q10 50, 20 55 Q30 60, 40 55" stroke="#1a3a3a" stroke-width="0.5" fill="none" />
-          <text x="5" y="58" fill="#1a3a3a" font-size="2" font-family="Georgia">ПОРТ</text>
+          <g fill="#826f56" opacity=".6" font-size="2.2" font-family="Georgia" letter-spacing=".2">
+            <text x="2" y="30" transform="rotate(-90 2 30)">ЗАЛИВ БЛЭКФОРД</text>
+            <text x="73" y="69">СТАРЫЙ ГОРОД</text><text x="47" y="12">СЕВЕРНЫЙ ХОЛМ</text>
+            <text x="27" y="92">ПОРТОВЫЙ КВАРТАЛ</text>
+          </g>
+          <g stroke="#8d7d61" stroke-width=".25" opacity=".6" fill="#b0a181">
+            <path d="M27 10h13v9H27zM46 7h14v12H46zM68 10h11v12H68zM83 24h11v14H83zM29 34h11v11H29zM80 44h14v15H80zM36 72h12v12H36zM64 78h17v9H64z" />
+          </g>
+          <g stroke="#f0e4c6" stroke-width="1.9" opacity=".7" fill="none" stroke-linecap="round">
+            <path d="M26 5L33 28L50 50L70 40L92 22M26 80L30 65L50 50L60 55L82 77M40 20L55 30L70 40L90 58M20 80L50 50"/>
+          </g>
+          <g stroke="#796b54" stroke-width=".23" fill="none" stroke-dasharray="1 1" opacity=".6"><path d="M26 5L33 28L50 50L70 40L92 22M26 80L30 65L50 50L60 55L82 77M40 20L55 30L70 40L90 58"/></g>
           
           <!-- Локации -->
           ${allLocations.map(loc => this._renderLocation(loc)).join('')}
         </svg>
+        <div class="atlas-footer"><span>СЕВЕР ↑</span><span>МАСШТАБ 1:12 000</span><span>BLACKFORD COUNTY</span></div>
       </div>
       
       <!-- Информация о выбранной локации -->
-      <div id="location-info" class="mt-4 p-3 bg-noir-950 border border-noir-600 min-h-[100px]">
+      <div id="location-info" class="atlas-info mt-4 p-4 min-h-[100px]">
         <p class="text-gray-500 text-xs text-center">Выберите локацию на карте</p>
       </div>
     `;
@@ -54,9 +72,9 @@ export class Map {
    */
   _renderGrid() {
     let grid = '';
-    for (let i = 20; i < 100; i += 20) {
-      grid += `<line x1="${i}" y1="0" x2="${i}" y2="100" stroke="#1a1a1a" stroke-width="0.3" />`;
-      grid += `<line x1="0" y1="${i}" x2="100" y2="${i}" stroke="#1a1a1a" stroke-width="0.3" />`;
+    for (let i = 10; i < 100; i += 10) {
+      grid += `<line x1="${i}" y1="0" x2="${i}" y2="100" stroke="#796f5b" stroke-width="0.09" opacity=".4" />`;
+      grid += `<line x1="0" y1="${i}" x2="100" y2="${i}" stroke="#796f5b" stroke-width="0.09" opacity=".4" />`;
     }
     return grid;
   }
@@ -73,36 +91,36 @@ export class Map {
       <g class="map-location" data-location="${loc.id}" 
          style="cursor: pointer; transition: transform 0.2s;">
         <!-- Подсветка -->
-        <circle cx="${x}" cy="${y}" r="4" 
-                fill="${isLocked ? '#111' : '#1a1a1a'}" 
-                stroke="${isLocked ? '#333' : '#c5a572'}" 
-                stroke-width="${isLocked ? '0.3' : '0.6'}"
+        <circle cx="${x}" cy="${y}" r="4.1"
+                fill="${isLocked ? '#908774' : '#243d43'}"
+                stroke="${isLocked ? '#776e5f' : '#efe0b8'}"
+                stroke-width=".7"
                 class="location-circle" />
         
         <!-- Иконка -->
         <text x="${x}" y="${y + 0.5}" 
               text-anchor="middle" 
-              fill="${isLocked ? '#555' : '#c5a572'}" 
-              font-size="2.5"
-              class="location-icon">${loc.icon}</text>
+              fill="#f2dfb3"
+              font-size="2.7"
+              class="location-icon">${isLocked ? '✕' : this._symbolFor(loc.id)}</text>
         
         <!-- Название -->
         <text x="${x}" y="${y + 6}" 
               text-anchor="middle" 
-              fill="${isLocked ? '#555' : '#888'}" 
-              font-size="2"
+              fill="${isLocked ? '#716758' : '#332b23'}"
+              font-size="2.25"
               font-family="Georgia"
+              font-weight="bold" paint-order="stroke" stroke="#c5b89b" stroke-width=".55"
               class="location-name">${loc.name}</text>
         
         <!-- Замок для закрытых -->
-        ${isLocked ? `
-        <text x="${x}" y="${y - 4.5}" 
-              text-anchor="middle" 
-              fill="#555" 
-              font-size="2">🔒</text>
-        ` : ''}
       </g>
     `;
+  }
+
+  _symbolFor(id) {
+    const symbols = { office: '⌂', morgue: '✚', crime_scene_court: '⚖', police_station: '★', bar_rusty_anchor: '⚓', church: '✝', blackwood_mansion: '◆', holt_house: '⌂', port: '⚓' };
+    return symbols[id] || '●';
   }
 
   /**
@@ -122,14 +140,7 @@ export class Map {
       }
     });
 
-    // Для мобильных — также touch события
-    svg.addEventListener('touchend', (event) => {
-      const locationEl = event.target.closest('.map-location');
-      if (locationEl) {
-        const locId = locationEl.getAttribute('data-location');
-        this._selectLocation(locId);
-      }
-    });
+    // Синтетический click уже обрабатывает касания: исключаем двойной вызов.
   }
 
   /**
@@ -196,8 +207,9 @@ export class Map {
   _highlightLocation(locId) {
     // Сбрасываем все подсветки
     this.container.querySelectorAll('.location-circle').forEach(circle => {
-      circle.setAttribute('stroke', '#1a1a1a');
-      circle.setAttribute('stroke-width', '0.3');
+      const locked = !this.locations[circle.closest('[data-location]').dataset.location]?.unlocked;
+      circle.setAttribute('stroke', locked ? '#776e5f' : '#efe0b8');
+      circle.setAttribute('stroke-width', '0.7');
     });
 
     // Подсвечиваем выбранную
@@ -205,8 +217,8 @@ export class Map {
     if (selectedEl) {
       const circle = selectedEl.querySelector('.location-circle');
       if (circle) {
-        circle.setAttribute('stroke', '#c5a572');
-        circle.setAttribute('stroke-width', '0.8');
+        circle.setAttribute('stroke', '#a73f35');
+        circle.setAttribute('stroke-width', '1.3');
       }
     }
   }

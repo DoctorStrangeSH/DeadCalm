@@ -21,7 +21,12 @@ export function render(container) {
   }
 
   container.innerHTML = `
-    <div class="scene items-center justify-center relative">
+    <div class="scene title-scene items-center justify-center relative">
+      <div class="title-art" aria-hidden="true">
+        <div class="title-moon"></div><div class="title-horizon"></div>
+        <div class="title-cityline"></div><div class="title-pier"></div>
+        <div class="title-water"></div><div class="title-vignette"></div>
+      </div>
 
       <!-- Декоративный дождь (только на десктопе) -->
       <div class="hidden md:block absolute inset-0 overflow-hidden pointer-events-none opacity-5">
@@ -31,28 +36,22 @@ export function render(container) {
       </div>
 
       <!-- Основной контент -->
-      <div class="relative z-10 w-full max-w-2xl mx-auto">
+      <div class="relative z-10 w-full max-w-3xl mx-auto title-content">
+        <p class="title-eyebrow">BLACKFORD · 1947 <span>—</span> ДЕЛО № 01</p>
 
         <!-- Название игры -->
-        <div class="text-center mb-12">
-          <h1 class="text-4xl md:text-7xl text-gold tracking-[0.2em] md:tracking-[0.3em] font-typewriter mb-2 md:mb-4">
-            МЁРТВЫЙ
-          </h1>
-          <h1 class="text-4xl md:text-7xl text-gold tracking-[0.2em] md:tracking-[0.3em] font-typewriter">
-            ШТИЛЬ
-          </h1>
-          <div class="w-16 md:w-32 h-px bg-blood mx-auto mt-4 md:mt-8"></div>
-          <p class="text-gray-500 text-xs md:text-sm tracking-[0.2em] md:tracking-[0.3em] mt-4 md:mt-6">
-            ДЕТЕКТИВНЫЙ ТРИЛЛЕР
-          </p>
+        <div class="title-lockup text-center mb-12">
+          <span class="title-rule"></span>
+          <h1 class="title-logo"><span>МЁРТВЫЙ</span><span>ШТИЛЬ</span></h1>
+          <p class="title-subtitle">ТАЙНЫ ПОРТОВОГО ГОРОДА</p>
         </div>
 
         <!-- Кнопки меню -->
-        <div class="flex flex-col md:flex-row gap-3 md:gap-6 justify-center px-4 md:px-0">
+        <div class="title-actions flex flex-col gap-3 justify-center px-4 md:px-0">
 
           <!-- Новая игра -->
-          <button id="btn-new-game" class="btn-noir py-3 md:py-4 px-6 md:px-10">
-            НОВАЯ ИГРА
+          <button id="btn-new-game" class="btn-noir title-primary py-3 md:py-4 px-6 md:px-10">
+            <span>01</span> НОВОЕ РАССЛЕДОВАНИЕ <b>↗</b>
           </button>
 
           <!-- Продолжить (неактивна, если нет сохранения) -->
@@ -61,12 +60,12 @@ export function render(container) {
             class="btn-noir py-3 md:py-4 px-6 md:px-10 ${hasSave ? '' : 'opacity-40'}" 
             ${hasSave ? '' : 'disabled'}
           >
-            ПРОДОЛЖИТЬ
+            <span>02</span> ПРОДОЛЖИТЬ <b>↗</b>
           </button>
 
           <!-- Настройки -->
           <button id="btn-settings" class="btn-noir py-3 md:py-4 px-6 md:px-10 opacity-70">
-            НАСТРОЙКИ
+            <span>03</span> НАСТРОЙКИ <b>↗</b>
           </button>
 
         </div>
@@ -78,7 +77,7 @@ export function render(container) {
         }
 
         <!-- Цитата (только на десктопе) -->
-        <div class="hidden md:block text-center mt-16">
+        <div class="hidden md:block text-center mt-10 title-quote">
           <p class="text-gray-600 italic text-sm tracking-wider">
             «В этом городе правда тонет быстрее, чем ложь успевает доплыть до берега»
           </p>
@@ -89,7 +88,7 @@ export function render(container) {
 
       <!-- Версия игры -->
       <p class="absolute bottom-4 md:bottom-8 text-gray-700 text-xs tracking-widest">
-        v 0.8.0 — ЭТАП 8
+        МЁРТВЫЙ ШТИЛЬ · ВИЗУАЛЬНОЕ ИЗДАНИЕ
       </p>
     </div>
   `;
