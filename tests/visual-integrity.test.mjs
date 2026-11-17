@@ -39,13 +39,15 @@ test('PWA cache includes visual styles, map data and the new image assets', () =
     'blackford-city-atlas.webp', 'blackford-courtroom.webp',
     'blackford-precinct.webp', 'blackford-morgue.webp', 'blackford-rusty-anchor.webp',
     'lydia-winter.webp', 'ray-morgan.webp', 'anna-holt.webp', 'marta-hayes.webp',
-    'father-thomas.webp'
+    'father-thomas.webp', 'sebastian-blackwood.webp'
   ]) assert.ok(sw.includes(resource), `cache missing ${resource}`);
   assert.ok(sw.includes("self.addEventListener('activate'"), 'old PWA caches should be cleared');
 });
 
 test('character portraits are optimized and rendered in dialogue with fallback for other speakers', () => {
-  for (const name of ['lydia-winter', 'ray-morgan', 'anna-holt', 'marta-hayes', 'father-thomas']) {
+  for (const name of [
+    'lydia-winter', 'ray-morgan', 'anna-holt', 'marta-hayes', 'father-thomas', 'sebastian-blackwood'
+  ]) {
     const file = resolve(root, `src/assets/portraits/${name}.webp`);
     assert.ok(existsSync(file), `${name} must exist`);
     assert.ok(statSync(file).size < 300_000, `${name} should be compact enough for mobile`);
@@ -57,6 +59,7 @@ test('character portraits are optimized and rendered in dialogue with fallback f
   assert.ok(dialog.includes('anna-holt.webp'));
   assert.ok(dialog.includes('marta-hayes.webp'));
   assert.ok(dialog.includes('father-thomas.webp'));
+  assert.ok(dialog.includes('sebastian-blackwood.webp'));
   assert.ok(dialog.includes('portrait-silhouette'), 'other characters retain their fallback');
 });
 

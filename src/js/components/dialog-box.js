@@ -7,7 +7,8 @@ const CHARACTER_PORTRAITS = Object.freeze({
   'Детектив Рэй Морган': 'ray-morgan.webp',
   'Анна Холт': 'anna-holt.webp',
   'Марта Хейз': 'marta-hayes.webp',
-  'Отец Томас': 'father-thomas.webp'
+  'Отец Томас': 'father-thomas.webp',
+  'Себастьян Блэквуд': 'sebastian-blackwood.webp'
 });
 
 export class DialogBox {
