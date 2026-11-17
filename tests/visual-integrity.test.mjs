@@ -63,6 +63,17 @@ test('character portraits are optimized and rendered in dialogue with fallback f
   assert.ok(dialog.includes('portrait-silhouette'), 'other characters retain their fallback');
 });
 
+test('dialogue supports readable pacing, skip and critical visual focus', () => {
+  const dialog = read('src/js/components/dialog-box.js');
+  const styles = read('src/css/art-direction.css');
+  assert.ok(dialog.includes('id="dialog-skip"'), 'dialogue must offer a skip control');
+  assert.ok(dialog.includes('this.skipTyping'), 'skip control should terminate the typewriter effect');
+  assert.ok(dialog.includes('prefers-reduced-motion'), 'respect reduced motion preference');
+  assert.ok(dialog.includes("node.type === 'critical_choice'"), 'critical choices should be visually distinct');
+  assert.ok(styles.includes('.cinematic-dialog.dialog-critical'), 'critical dialogue treatment must exist');
+  assert.ok(styles.includes('.dialog-skip:focus-visible'), 'keyboard focus must remain visible');
+});
+
 test('all locations referenced by scene images resolve in the repository', () => {
   const scenes = ['city-map', 'crime-scene', 'bar', 'morgue', 'police-station'];
   for (const scene of scenes) {

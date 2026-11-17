@@ -17,6 +17,7 @@ export class DialogBox {
     this.overlay = null;
     this.container = null;
     this.renderToken = 0;
+    this.skipTyping = false;
   }
 
   async show(npcId) {
@@ -51,6 +52,7 @@ export class DialogBox {
   async render(node) {
     var self = this;
     const token = ++this.renderToken;
+    this.skipTyping = false;
     var trustEmoji = this._getTrustEmoji(node.trust);
     var trustColor = this._getTrustColor(node.trust);
     var typeLabel = this._getTypeLabel(node.type);
@@ -59,6 +61,7 @@ export class DialogBox {
       ? `<img class="portrait-image" src="src/assets/portraits/${portraitFile}" alt="" loading="eager">`
       : `<span class="portrait-silhouette"></span><span class="portrait-initial">${escapeHtml(node.speaker.charAt(0))}</span>`;
 
+    this.container.classList.toggle('dialog-critical', node.type === 'critical_choice' || node.type === 'critical_result');
     this.container.innerHTML = `
       <div class="dialog-content cinematic-dialog-content">
         <div class="cinematic-dialog-overline"><span>BLACKFORD · ЗАПИСЬ БЕСЕДЫ</span><span>ДЕЛО 001</span></div>
@@ -79,6 +82,7 @@ export class DialogBox {
 
         <!-- Текст -->
         <div class="dialog-text" id="dialog-text" aria-live="polite"></div>
+        <button class="dialog-skip" type="button" id="dialog-skip" aria-label="Показать реплику полностью">Показать текст целиком ↳</button>
 
         <!-- Выборы -->
         <div class="dialog-choices" id="dialog-choices"></div>
@@ -87,16 +91,29 @@ export class DialogBox {
 
     // Печатаем текст
     var textEl = this.container.querySelector('#dialog-text');
+    const skipButton = this.container.querySelector('#dialog-skip');
+    skipButton.addEventListener('click', () => { this.skipTyping = true; });
     this.isTyping = true;
     textEl.textContent = '';
     const fullText = String(node.text || '');
-    for (let i = 0; i < fullText.length; i++) {
-      if (token !== this.renderToken || !textEl.isConnected) return;
-      textEl.textContent += fullText[i];
-      await new Promise(resolve => setTimeout(resolve, 25));
+    const reducedMotion = typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reducedMotion) {
+      textEl.textContent = fullText;
+    } else {
+      for (let i = 0; i < fullText.length; i++) {
+        if (token !== this.renderToken || !textEl.isConnected) return;
+        if (this.skipTyping) {
+          textEl.textContent = fullText;
+          break;
+        }
+        textEl.textContent += fullText[i];
+        await new Promise(resolve => setTimeout(resolve, 25));
+      }
     }
     if (token !== this.renderToken || !this.container) return;
     this.isTyping = false;
+    skipButton.hidden = true;
 
     // Рендерим кнопки
     var choicesEl = this.container.querySelector('#dialog-choices');
@@ -263,6 +280,7 @@ export class DialogBox {
   close() {
     this.renderToken++;
     this.isTyping = false;
+    this.skipTyping = false;
     if (this.overlay) {
       const closingOverlay = this.overlay;
       closingOverlay.style.opacity = '0';
