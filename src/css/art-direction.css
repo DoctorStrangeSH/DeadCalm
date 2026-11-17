@@ -255,3 +255,31 @@ body { background:#071015; color:#d3d5cc; }
 .morgue-action span:last-child { color:#c6b18a; font-size:23px; }
 .morgue-action:focus-visible { outline:2px solid #e4d1a3; outline-offset:3px; }
 @media(max-width:600px) { .morgue-art { height:255px; background-position:50% 50%; } .morgue-action { padding:16px; font-size:13px; } }
+
+/* Investigable courthouse: raster environment with accessible evidence markers. */
+.court-crime-scene { background:radial-gradient(ellipse at 50% 0%,#293539,#0b161a 80%); }
+.court-crime-scene .scene-header { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+.court-art { position:relative; overflow:hidden; border:1px solid #726b5c; background:#122126; box-shadow:0 14px 32px #0009; }
+.court-art > img { display:block; width:100%; height:auto; aspect-ratio:16/9; object-fit:cover; }
+.court-art::after { content:""; position:absolute; inset:0; background:linear-gradient(transparent 78%,#07131875); pointer-events:none; }
+.court-hotspots { position:absolute; inset:0; z-index:1; }
+.court-hotspot { position:absolute; display:flex; flex-direction:column; align-items:center; gap:3px; transform:translate(-50%,-50%); background:none; border:0; color:#f4e2ba; text-shadow:0 2px 4px #000; cursor:pointer; }
+.court-hotspot span { display:grid; place-items:center; width:clamp(31px,3.4vw,44px); height:clamp(31px,3.4vw,44px); border:2px solid #efd3a0; border-radius:50%; background:#172729e8; box-shadow:0 0 0 5px #e1c58d44,0 0 16px #000a; font:bold 12px 'Courier New',monospace; transition:background .2s,transform .2s; }
+.court-hotspot em { padding:3px 7px; color:#ffedc6; background:#0c191bdf; border:1px solid #877e66; font:normal 11px Georgia,serif; white-space:nowrap; }
+.court-hotspot:hover span,.court-hotspot:focus-visible span { background:#957243; transform:scale(1.12); }
+.court-hotspot:focus-visible { outline:2px solid #fff0b9; outline-offset:8px; }
+.court-hotspot.is-found span { border-color:#9ec7ac; background:#204639; box-shadow:0 0 0 5px #76a98a44; }
+.court-hotspot-body { left:56%; top:70%; }
+.court-hotspot-wall { left:64%; top:23%; }
+.court-hotspot-scales { left:35%; top:77%; }
+.court-hotspot-desk { left:69%; top:40%; }
+.court-scan-hint { padding:13px 16px; margin-bottom:19px; border:1px solid #435955; border-top:0; color:#aebbb3; background:#182b2c; font:10px/1.5 'Courier New',monospace; letter-spacing:.08em; }
+.court-narrative { padding:20px clamp(16px,2.5vw,28px); background:#111f22; border:1px solid #425551; border-left:3px solid #b89c75; }
+.court-narrative p { line-height:1.7; }
+.court-zone-card { background:linear-gradient(115deg,#263638,#17262a); border:1px solid #526a64; padding:18px; transition:border-color .18s,transform .18s; }
+.court-zone-card:hover { border-color:#d7b789; transform:translateY(-2px); }
+.court-zone-card .card-title { color:#efd8ac; font:14px Georgia,serif; letter-spacing:.08em; }
+.court-zone-card .card-subtitle { color:#a9bcb1; margin-top:9px; font:12px Georgia,serif; }
+.court-zone-card:focus-visible { outline:2px solid #f3d4a0; outline-offset:2px; }
+.court-clues-panel { padding:17px 19px; border:1px solid #667367; background:#172729; }
+@media(max-width:650px) { .court-hotspot em { display:none; } .court-hotspot span { width:32px; height:32px; font-size:10px; } .court-scan-hint { font-size:9px; } }

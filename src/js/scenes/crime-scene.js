@@ -5,7 +5,7 @@ export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
 
   container.innerHTML = `
-    <div class="scene">
+    <div class="scene court-crime-scene">
       <div class="scene-header mb-4">
         <div>
           <h2 class="text-gold text-lg md:text-2xl tracking-widest">${location.name}</h2>
@@ -18,40 +18,51 @@ export function render(container, data) {
 
       <div class="divider mb-4 md:mb-6"></div>
 
-      <div class="bg-noir-950 border border-noir-700 p-4 mb-6">
+      <div class="court-art">
+        <img src="src/assets/backgrounds/blackford-courtroom.webp" alt="Пустой зал суда после убийства: контур тела на полу, разбитые весы, судейский стол и следы на стене" loading="eager" />
+        <div class="court-hotspots" aria-label="Зоны осмотра места преступления">
+          <button type="button" class="court-hotspot court-hotspot-body" data-trigger="btn-zone-body" aria-label="Осмотреть контур тела"><span>01</span><em>Контур тела</em></button>
+          <button type="button" class="court-hotspot court-hotspot-wall" data-trigger="btn-zone-wall" aria-label="Изучить надпись на стене"><span>02</span><em>Надпись</em></button>
+          <button type="button" class="court-hotspot court-hotspot-scales" data-trigger="btn-zone-scales" aria-label="Осмотреть сломанные весы"><span>03</span><em>Весы</em></button>
+          <button type="button" class="court-hotspot court-hotspot-desk" data-trigger="btn-zone-desk" aria-label="Осмотреть стол судьи"><span>04</span><em>Стол судьи</em></button>
+        </div>
+      </div>
+      <p class="court-scan-hint">ОСМОТР МЕСТА ПРЕСТУПЛЕНИЯ · Выберите отметку на изображении или улику из списка</p>
+
+      <div class="court-narrative mb-6">
         <p class="text-gray-400 text-sm italic">
-          Вы переступаете через жёлтую ленту. В зале суда тихо — так тихо, что слышно, как где-то капает вода. 
+          Вы переступаете через жёлтую ленту. В зале суда тихо — так тихо, что слышно, как где-то капает вода.
           Воздух густой, спёртый, с металлическим привкусом. Так пахнут места, где произошло что-то непоправимое.
         </p>
         <p class="text-gray-400 text-sm italic mt-2">
-          На полу — меловой контур тела. Руки раскинуты, ноги неестественно вывернуты. Судья умер не сразу — мел зафиксировал его последнюю позу, позу человека, который пытался ползти. 
+          На полу — меловой контур тела. Руки раскинуты, ноги неестественно вывернуты. Судья умер не сразу — мел зафиксировал его последнюю позу, позу человека, который пытался ползти.
           На стене, над судейским креслом, алеет надпись: <span class="text-blood">«СЛЕПОЕ ПРАВОСУДИЕ»</span>. Буквы неровные, выведены пальцем. Кровь уже потемнела, но послание всё ещё кричит.
         </p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-        <button id="btn-zone-body" class="card text-left">
-          <p class="card-title">🔍 ТЕЛО СУДЬИ</p>
+      <div class="court-zone-list grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
+        <button id="btn-zone-body" class="card text-left court-zone-card">
+          <p class="card-title">01 / ТЕЛО СУДЬИ</p>
           <p class="card-subtitle">Очерченный мелом силуэт на полу</p>
         </button>
 
-        <button id="btn-zone-wall" class="card text-left">
-          <p class="card-title">🔍 НАДПИСЬ НА СТЕНЕ</p>
+        <button id="btn-zone-wall" class="card text-left court-zone-card">
+          <p class="card-title">02 / НАДПИСЬ НА СТЕНЕ</p>
           <p class="card-subtitle">«СЛЕПОЕ ПРАВОСУДИЕ» — послание убийцы</p>
         </button>
 
-        <button id="btn-zone-scales" class="card text-left">
-          <p class="card-title">🔍 СЛОМАННЫЕ ВЕСЫ</p>
+        <button id="btn-zone-scales" class="card text-left court-zone-card">
+          <p class="card-title">03 / СЛОМАННЫЕ ВЕСЫ</p>
           <p class="card-subtitle">Весы Фемиды разбиты</p>
         </button>
 
-        <button id="btn-zone-desk" class="card text-left">
-          <p class="card-title">🔍 СТОЛ СУДЬИ</p>
+        <button id="btn-zone-desk" class="card text-left court-zone-card">
+          <p class="card-title">04 / СТОЛ СУДЬИ</p>
           <p class="card-subtitle">Ящики, бумаги, личные вещи</p>
         </button>
       </div>
 
-      <div class="bg-noir-950 border border-noir-700 p-4">
+      <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
       </div>
@@ -59,6 +70,12 @@ export function render(container, data) {
   `;
 
   updateCluesList();
+
+  container.querySelectorAll('.court-hotspot').forEach(function(button) {
+    button.addEventListener('click', function() {
+      container.querySelector('#' + button.dataset.trigger)?.click();
+    });
+  });
 
   document.getElementById('btn-zone-body').addEventListener('click', function() {
     if (!GameState.hasClue('body_examination')) {
@@ -169,7 +186,12 @@ export function render(container, data) {
   function updateCluesList() {
     var cluesEl = document.getElementById('found-clues');
     if (cluesEl) {
-      var clues = GameState.currentCase.clues;
+      var clueIds = ['body_examination', 'wall_inscription', 'broken_scales', 'judge_notes'];
+      var clues = GameState.currentCase.clues.filter(function(clue) { return clueIds.includes(clue.id); });
+      container.querySelectorAll('.court-hotspot').forEach(function(button) {
+        var index = ['btn-zone-body', 'btn-zone-wall', 'btn-zone-scales', 'btn-zone-desk'].indexOf(button.dataset.trigger);
+        button.classList.toggle('is-found', GameState.hasClue(clueIds[index]));
+      });
       if (clues.length === 0) {
         cluesEl.innerHTML = '<span class="text-gray-600">Пока ничего не найдено</span>';
       } else {
