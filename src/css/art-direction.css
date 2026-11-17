@@ -304,3 +304,33 @@ body { background:#071015; color:#d3d5cc; }
 .blackford-bar-testimony-label { margin-bottom:17px; padding-bottom:12px; border-bottom:1px solid #647063; color:#d8b887; font:10px 'Courier New',monospace; letter-spacing:.13em; }
 .blackford-bar-testimony p:not(.blackford-bar-testimony-label) { line-height:1.75; }
 @media(max-width:600px) { .blackford-bar-art { height:255px; background-position:55% 50%; } .blackford-bar-action { padding:16px; } .blackford-bar-action .card-title { font-size:13px; } }
+
+/* Blackford city atlas: painted raster map, keyboard-accessible pins and directory. */
+.blackford-map-scene { background:radial-gradient(ellipse at 45% 0%,#253235,#0b1518 75%); }
+.blackford-map-scene .scene-header { display:flex; align-items:center; justify-content:space-between; gap:14px; }
+.blackford-atlas { position:relative; max-width:1100px; padding:31px 0 28px; background:#263436; border-color:#4f4235; }
+.blackford-atlas .atlas-caption,.blackford-atlas .atlas-footer { background:#302b24; color:#e0cba3; border-color:#82715a; }
+.atlas-painting { position:relative; background:#17262a; }
+.atlas-painting > img { display:block; width:100%; height:auto; aspect-ratio:16/9; object-fit:cover; }
+.atlas-pins { position:absolute; inset:0; }
+.atlas-pin { position:absolute; display:flex; align-items:center; flex-direction:column; gap:4px; transform:translate(-50%,-50%); padding:0; color:#f7e6be; background:transparent; border:0; text-shadow:0 2px 5px #000; cursor:pointer; z-index:1; }
+.atlas-pin-dot { display:grid; place-items:center; width:clamp(27px,3.2vw,42px); height:clamp(27px,3.2vw,42px); background:#182e31e8; border:2px solid #eccb8d; border-radius:50%; color:#f1d8a5; box-shadow:0 0 0 4px #e1c28c55,0 3px 9px #000b; font:13px Georgia,serif; transition:transform .2s,background .2s; }
+.atlas-pin-label { max-width:150px; padding:3px 7px; color:#f5e4bd; background:#101c1ee8; border:1px solid #887d65; font:11px Georgia,serif; line-height:1.2; text-align:center; white-space:nowrap; }
+.atlas-pin:hover,.atlas-pin:focus-visible,.atlas-pin.is-selected { z-index:3; }
+.atlas-pin:hover .atlas-pin-dot,.atlas-pin:focus-visible .atlas-pin-dot,.atlas-pin.is-selected .atlas-pin-dot { background:#a17242; transform:scale(1.12); }
+.atlas-pin:focus-visible { outline:2px solid #fbe6ad; outline-offset:5px; }
+.atlas-pin.is-locked .atlas-pin-dot { color:#a3a9a1; background:#343e3ccf; border-color:#7b8074; box-shadow:0 0 0 4px #8b948944; }
+.atlas-pin.is-locked .atlas-pin-label { color:#b1b7ac; }
+.atlas-directory { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; width:min(100%,1100px); margin:16px auto 0; }
+.atlas-directory-item { display:flex; align-items:center; gap:10px; padding:13px 12px; min-height:51px; background:#1b2d2f; border:1px solid #4e645d; text-align:left; color:#e5d5b6; font:13px Georgia,serif; transition:background .18s,border-color .18s; }
+.atlas-directory-item:hover,.atlas-directory-item.is-selected { background:#31403d; border-color:#cfad79; }
+.atlas-directory-symbol { flex:0 0 18px; color:#c6a573; }
+.atlas-directory-item small { color:#9fb2a7; margin-left:auto; font:9px 'Courier New',monospace; letter-spacing:.04em; }
+.atlas-directory-item.is-locked { color:#a8b0a5; background:#1b2628; border-color:#394b48; }
+.atlas-directory-item:focus-visible { outline:2px solid #f2d6a4; outline-offset:2px; }
+.blackford-map-scene .atlas-info { max-width:1100px; border:1px solid #687968; background:linear-gradient(110deg,#213538,#142327); }
+.atlas-location-detail { display:flex; align-items:flex-start; gap:17px; }
+.atlas-detail-seal { display:grid; place-items:center; flex:0 0 43px; height:43px; border:1px solid #ae946e; color:#dec18e; font:22px Georgia,serif; }
+.atlas-detail-content { flex:1; min-width:0; }
+@media(max-width:850px) { .atlas-directory { grid-template-columns:repeat(2,minmax(0,1fr)); } .atlas-pin-label { display:none; } }
+@media(max-width:520px) { .blackford-atlas { border-width:5px; padding:23px 0 20px; } .atlas-directory { grid-template-columns:1fr; gap:6px; } .atlas-directory-item { min-height:46px; padding:10px 13px; } .atlas-pin-dot { width:27px; height:27px; font-size:10px; } .blackford-map-scene .atlas-info { padding:14px; } }
