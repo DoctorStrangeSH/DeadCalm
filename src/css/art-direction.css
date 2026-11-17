@@ -222,3 +222,21 @@ body { background:#071015; color:#d3d5cc; }
 .cinematic-dialog .critical-warning { padding:12px; background:#4c2a254d; border:1px solid #965d52; color:#e0a89b; font:12px Georgia,serif; }
 .cinematic-dialog .note-added { color:#e4ca96; background:#29392f; border-left:3px solid #9cba8e; padding:12px; }
 @media(max-width:600px) { .cinematic-dialog { width:100vw; max-height:95dvh; border-left:0; border-right:0; } .cinematic-dialog .dialog-header { gap:12px; flex-wrap:wrap; } .cinematic-portrait { flex-basis:75px; width:75px; height:95px; } .cinematic-dialog .dialog-trust { width:100%; } .cinematic-dialog-overline { font-size:8px; } .cinematic-dialog .dialog-text { margin:15px 0; } .cinematic-dialog .dialog-btn { min-height:52px; } }
+
+/* Blackford precinct: raster-painted location, restrained investigation UI. */
+.precinct-scene { background:radial-gradient(ellipse at 45% 0%,#253638,#0c171a 78%); }
+.precinct-scene .scene-header { display:flex; align-items:center; justify-content:space-between; gap:15px; }
+.precinct-art { position:relative; height:clamp(250px,39vw,500px); margin-bottom:22px; border:1px solid #64716b; background:#15272a url('../assets/backgrounds/blackford-precinct.webp') center 48%/cover no-repeat; box-shadow:0 16px 28px #0008,inset 0 0 0 5px #101b1d; overflow:hidden; }
+.precinct-art::after { content:""; position:absolute; inset:48% 0 0; background:linear-gradient(transparent,#071416e8); pointer-events:none; }
+.precinct-art-caption { position:absolute; bottom:18px; left:clamp(15px,3vw,35px); right:15px; z-index:1; display:flex; flex-direction:column; gap:6px; text-shadow:0 2px 8px #000; }
+.precinct-art-caption span { color:#b4c6bf; font:10px 'Courier New',monospace; letter-spacing:.23em; }
+.precinct-art-caption strong { color:#f3d8aa; font:clamp(19px,2.6vw,30px) Georgia,serif; font-weight:normal; }
+.precinct-description { padding:17px clamp(16px,2.5vw,28px); background:#102024; border:1px solid #3f5450; border-left:3px solid #b99b6d; }
+.precinct-description p { line-height:1.7; }
+.precinct-action { padding:19px 22px; background:linear-gradient(110deg,#21383a,#142428); border:1px solid #657269; transition:border-color .18s,background .18s,transform .18s; }
+.precinct-action:hover { border-color:#d5b883; background:#293f40; transform:translateY(-2px); }
+.precinct-action .card-title { display:flex; justify-content:space-between; gap:12px; align-items:center; color:#eddbb7; font:15px Georgia,serif; letter-spacing:.06em; }
+.precinct-action .card-title span { font-size:22px; color:#c9a978; }
+.precinct-action .card-subtitle { color:#aab9ae; margin-top:8px; font:13px Georgia,serif; }
+.precinct-action:focus-visible { outline:2px solid #ebce96; outline-offset:3px; }
+@media(max-width:600px) { .precinct-art { height:255px; background-position:45% 50%; } .precinct-art-caption strong { font-size:20px; } .precinct-action { padding:17px; } .precinct-action .card-title { font-size:13px; } }
