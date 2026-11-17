@@ -13,7 +13,7 @@ export class DialogBox {
   async show(npcId) {
     var node = DialogueEngine.startDialogue(npcId);
     if (!node) return;
-    
+
     // Создаём оверлей
     this._createOverlay();
     await this.render(node);
@@ -22,14 +22,14 @@ export class DialogBox {
   _createOverlay() {
     // Удаляем старый слой без ложного события завершения беседы.
     if (this.overlay) this.overlay.remove();
-    
+
     this.overlay = document.createElement('div');
     this.overlay.className = 'dialog-overlay cinematic-dialog-overlay';
     this.overlay.innerHTML = '<div class="dialog-modal cinematic-dialog" id="dialog-modal" role="dialog" aria-modal="true" aria-label="Разговор с персонажем"></div>';
     document.body.appendChild(this.overlay);
-    
+
     this.container = this.overlay.querySelector('#dialog-modal');
-    
+
     // Закрытие по клику на фон (только если диалог завершён)
     var self = this;
     this.overlay.addEventListener('click', function(e) {
@@ -45,13 +45,16 @@ export class DialogBox {
     var trustEmoji = this._getTrustEmoji(node.trust);
     var trustColor = this._getTrustColor(node.trust);
     var typeLabel = this._getTypeLabel(node.type);
+    const portrait = node.speaker === 'Доктор Лидия Винтер'
+      ? '<img class="portrait-image" src="src/assets/portraits/lydia-winter.webp" alt="" loading="eager">'
+      : `<span class="portrait-silhouette"></span><span class="portrait-initial">${escapeHtml(node.speaker.charAt(0))}</span>`;
 
     this.container.innerHTML = `
       <div class="dialog-content cinematic-dialog-content">
         <div class="cinematic-dialog-overline"><span>BLACKFORD · ЗАПИСЬ БЕСЕДЫ</span><span>ДЕЛО 001</span></div>
         <!-- Заголовок -->
         <div class="dialog-header">
-          <div class="dialog-avatar cinematic-portrait" aria-hidden="true"><span class="portrait-silhouette"></span><span class="portrait-initial">${escapeHtml(node.speaker.charAt(0))}</span></div>
+          <div class="dialog-avatar cinematic-portrait" aria-hidden="true">${portrait}</div>
           <div class="dialog-speaker-info">
             <p class="dialog-speaker-name">${escapeHtml(node.speaker)}</p>
             <p class="dialog-speaker-role">${escapeHtml(node.speakerRole)}</p>
@@ -111,7 +114,7 @@ export class DialogBox {
     // КРИТИЧЕСКИЙ ВЫБОР
     if (node.type === 'critical_choice') {
       choicesEl.innerHTML = '<p class="critical-warning">Этот выбор изменит отношение персонажа к вам навсегда</p>';
-      
+
       if (node.choices) {
         node.choices.forEach(function(choice) {
           var btn = document.createElement('button');

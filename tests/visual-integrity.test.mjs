@@ -37,9 +37,20 @@ test('PWA cache includes visual styles, map data and the new image assets', () =
   for (const resource of [
     'src/css/art-direction.css', 'src/data/locations.json',
     'blackford-city-atlas.webp', 'blackford-courtroom.webp',
-    'blackford-precinct.webp', 'blackford-morgue.webp', 'blackford-rusty-anchor.webp'
+    'blackford-precinct.webp', 'blackford-morgue.webp', 'blackford-rusty-anchor.webp',
+    'lydia-winter.webp'
   ]) assert.ok(sw.includes(resource), `cache missing ${resource}`);
   assert.ok(sw.includes("self.addEventListener('activate'"), 'old PWA caches should be cleared');
+});
+
+test('Lydia portrait is optimized and rendered in dialogue with fallback for other speakers', () => {
+  const file = resolve(root, 'src/assets/portraits/lydia-winter.webp');
+  assert.ok(existsSync(file));
+  assert.ok(statSync(file).size < 300_000, 'portrait should be compact enough for mobile');
+  assert.equal(readFileSync(file).toString('ascii', 8, 12), 'WEBP');
+  const dialog = read('src/js/components/dialog-box.js');
+  assert.ok(dialog.includes('lydia-winter.webp'));
+  assert.ok(dialog.includes('portrait-silhouette'), 'other characters retain their fallback');
 });
 
 test('all locations referenced by scene images resolve in the repository', () => {
