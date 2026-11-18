@@ -1,6 +1,7 @@
 import { GameState } from '../core/state.js';
 import { Investigation } from '../systems/investigation.js';
 import { Events } from '../core/events.js';
+import { HYPOTHESIS_STATUS_LABELS } from '../systems/hypotheses.js';
 
 /**
  * Доска расследования.
@@ -67,6 +68,19 @@ export class InvestigationBoard {
           <p id="board-hint" class="board-hint">Выберите две улики, чтобы проверить связь</p>
           <button id="btn-clear-selection" class="btn-noir text-xs py-2">СБРОСИТЬ ВЫБОР</button>
         </div>
+        <section class="board-hypotheses" aria-label="Архив гипотез">
+          <h3>АРХИВ ГИПОТЕЗ</h3>
+          <p>Запишите свою версию событий. Гипотеза — предположение детектива, а не установленный факт.</p>
+          <form id="hypothesis-create-form" class="hypothesis-form">
+            <label>НАЗВАНИЕ ВЕРСИИ <input name="title" maxlength="100" required placeholder="Кто мог быть причастен?" /></label>
+            <label>ОБОСНОВАНИЕ <textarea name="reasoning" maxlength="2000" required rows="3" placeholder="Что заставляет вас так думать?"></textarea></label>
+            <fieldset><legend>ОПОРНЫЕ УЛИКИ</legend>
+              ${clues.map(clue => `<label class="hypothesis-clue"><input type="checkbox" name="clue" value="${self._escapeHtml(clue.id)}" /> ${self._escapeHtml(clue.name)}</label>`).join('')}
+            </fieldset>
+            <button type="submit" class="btn-noir">СОХРАНИТЬ ВЕРСИЮ</button>
+          </form>
+          <div id="hypothesis-list" aria-live="polite"></div>
+        </section>
       </div>
     `;
 
@@ -74,6 +88,45 @@ export class InvestigationBoard {
     this._setupClickHandlers();
     this._drawConnectionLines();
     this._observeBoardSize();
+    this._setupHypotheses();
+  }
+
+  _setupHypotheses() {
+    const form = this.container.querySelector('#hypothesis-create-form');
+    form.addEventListener('submit', event => {
+      event.preventDefault();
+      const data = new FormData(form);
+      try {
+        GameState.addHypothesis({ title: data.get('title'), reasoning: data.get('reasoning'), clueIds: data.getAll('clue') });
+        form.reset();
+        this._renderHypotheses();
+      } catch (error) {
+        this.container.querySelector('#board-hint').textContent = error.message;
+      }
+    });
+    this.container.querySelector('#hypothesis-list').addEventListener('change', event => {
+      const select = event.target.closest('[data-hypothesis-id]');
+      if (!select) return;
+      GameState.reviseHypothesis(select.dataset.hypothesisId, { status: select.value });
+      this._renderHypotheses();
+    });
+    this._renderHypotheses();
+  }
+
+  _renderHypotheses() {
+    const list = this.container.querySelector('#hypothesis-list');
+    const hypotheses = GameState.currentCase.hypotheses || [];
+    list.innerHTML = hypotheses.length ? hypotheses.map(item => `
+      <article class="hypothesis-entry">
+        <h4>${this._escapeHtml(item.title)}</h4>
+        <p>${this._escapeHtml(item.reasoning)}</p>
+        <p class="hypothesis-meta">УЛИКИ: ${(item.clueIds || []).length} · ИЗМЕНЕНИЙ: ${Math.max(0, (item.history || []).length - 1)}</p>
+        <label>ОЦЕНКА ДЕТЕКТИВА
+          <select data-hypothesis-id="${this._escapeHtml(item.id)}" aria-label="Статус гипотезы ${this._escapeHtml(item.title)}">
+            ${Object.entries(HYPOTHESIS_STATUS_LABELS).map(([value, label]) => `<option value="${value}" ${item.status === value ? 'selected' : ''}>${label}</option>`).join('')}
+          </select>
+        </label>
+      </article>`).join('') : '<p class="hypothesis-empty">Пока нет версий. Начните с наблюдения.</p>';
   }
 
   _setupClickHandlers() {

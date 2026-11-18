@@ -1,5 +1,6 @@
 import { Events } from './events.js';
 import { Storage } from './storage.js';
+import { createHypothesis, reviseHypothesis } from '../systems/hypotheses.js';
 
 export var GameState = {
   player: {
@@ -89,6 +90,28 @@ export var GameState = {
     });
     Events.emit('clue:added', clue);
     this.save();
+  },
+
+  addHypothesis(input) {
+    if (!Array.isArray(this.currentCase.hypotheses)) this.currentCase.hypotheses = [];
+    const hypothesis = createHypothesis({ ...input,
+      id: 'hyp_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8)
+    }, this.currentCase.clues);
+    this.currentCase.hypotheses.push(hypothesis);
+    this.save();
+    Events.emit('hypothesis:created', hypothesis);
+    return hypothesis;
+  },
+
+  reviseHypothesis(id, change) {
+    const hypotheses = this.currentCase.hypotheses || [];
+    const index = hypotheses.findIndex(item => item.id === id);
+    if (index === -1) return null;
+    const revised = reviseHypothesis(hypotheses[index], change, this.currentCase.clues);
+    hypotheses[index] = revised;
+    this.save();
+    Events.emit('hypothesis:revised', revised);
+    return revised;
   },
 
   hasClue(clueId) {
