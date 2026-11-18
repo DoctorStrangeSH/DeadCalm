@@ -30,12 +30,28 @@ test('authored contradiction references real clues and a discoverable dialogue r
   const catalog = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
   const dialogues = JSON.parse(readFileSync(new URL('../src/data/dialogues.json', import.meta.url), 'utf8'));
   const authored = JSON.parse(readFileSync(new URL('../src/data/contradictions.json', import.meta.url), 'utf8'));
-  assert.equal(authored.length, 1);
+  assert.equal(authored.length, 2);
   const rule = authored[0];
   for (const id of rule.clueIds) assert.ok(catalog[id], `${id} missing from clue catalog`);
   assert.equal(dialogues.npc_ray_morgan.topics.about_case.responses.find(r => r.id === 'initial_report').gives_clue, 'patrol_initial_report');
   assert.deepEqual(findContradictions({ clueIds: rule.clueIds }, rule.clueIds.map(id => catalog[id]), authored).map(r => r.id), [rule.id]);
   assert.deepEqual(findContradictions({ clueIds: rule.clueIds }, [catalog.autopsy_report_01], authored), []);
+});
+
+test('court telephone discrepancy needs both discovered documents in a single hypothesis', () => {
+  const catalog = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
+  const rules = JSON.parse(readFileSync(new URL('../src/data/contradictions.json', import.meta.url), 'utf8'));
+  const court = rules.find(rule => rule.id === 'court_room_access_vs_call');
+  assert.deepEqual(court.clueIds, ['court_phone_register_copy', 'court_access_ledger']);
+  const all = [catalog.court_phone_register_copy, catalog.court_access_ledger];
+  assert.deepEqual(findContradictions({ clueIds: court.clueIds }, all, rules).map(r => r.id), [court.id]);
+  assert.deepEqual(findContradictions({ clueIds: court.clueIds }, all.slice(0, 1), rules), []);
+  assert.deepEqual(findContradictions({ clueIds: ['court_phone_register_copy'] }, all, rules), []);
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /hasClue\('court_phone_register_copy'\)/);
+  assert.match(scene, /btn-court-directory/);
+  assert.match(scene, /btn-court-access/);
+  assert.match(scene, /GameState\.addClue\(catalog\[clueId\]\)/);
 });
 
 test('Ray follow-up stays locked before deduction and unlocks on a saved hypothesis', () => {

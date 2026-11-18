@@ -62,6 +62,18 @@ export function render(container, data) {
         </button>
       </div>
 
+      <div id="court-records" class="mb-6" ${GameState.hasClue('court_phone_register_copy') ? '' : 'hidden'}>
+        <p class="text-gold text-xs tracking-widest mb-3">ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА · НОМЕР 17</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-court-directory" class="card text-left" ${GameState.hasClue('court_extension_directory') ? 'disabled' : ''}>
+            <p class="card-title">СПРАВОЧНИК ВНУТРЕННИХ НОМЕРОВ</p><p class="card-subtitle">Выяснить, где установлен телефон 17.</p>
+          </button>
+          <button id="btn-court-access" class="card text-left" ${GameState.hasClue('court_access_ledger') ? 'disabled' : ''}>
+            <p class="card-title">ЖУРНАЛ КЛЮЧЕЙ ОХРАНЫ</p><p class="card-subtitle">Проверить, кто мог попасть в комнату.</p>
+          </button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -159,6 +171,33 @@ export function render(container, data) {
     } else {
       showNarrative('Вы перечитываете записи судьи. Двадцать лет. Дело, которое пытались похоронить. Кто "она"? И кто "он"?');
     }
+  });
+
+  async function inspectCourtRecord(buttonId, clueId, narrative) {
+    if (!GameState.hasClue('court_phone_register_copy') || GameState.hasClue(clueId)) return;
+    const button = container.querySelector('#' + buttonId);
+    button.disabled = true;
+    try {
+      const response = await fetch('src/data/clues.json');
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const catalog = await response.json();
+      if (!catalog[clueId]) throw new Error('Не найдена запись в каталоге');
+      GameState.addClue(catalog[clueId]);
+      showNarrative(narrative, catalog[clueId].name);
+    } catch (error) {
+      button.disabled = false;
+      console.error('[Court] Не удалось открыть документ:', error);
+      showNarrative('Документ пока не удалось получить. Повторите проверку.', 'АРХИВ НЕДОСТУПЕН');
+    }
+  }
+
+  container.querySelector('#btn-court-directory').addEventListener('click', function() {
+    inspectCourtRecord('btn-court-directory', 'court_extension_directory',
+      'В старом справочнике под номером 17 значится общая комната секретарей. Не кабинет судьи и не личный телефон. Сотрудники могли пользоваться аппаратом по очереди — нужна проверка доступа.');
+  });
+  container.querySelector('#btn-court-access').addEventListener('click', function() {
+    inspectCourtRecord('btn-court-access', 'court_access_ledger',
+      'Охрана записала: ключ от комнаты секретарей вернули в 19:40, до 22:00 доступ закрыт. Но в 20:15 с номера 17 кто-то звонил в участок. Ошибка в журнале? Запасной ключ? Пока это только расхождение документов.');
   });
 
   document.getElementById('btn-leave').addEventListener('click', function() {

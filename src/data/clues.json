@@ -37,7 +37,27 @@
     "location": "police_station",
     "day": 1,
     "source": "Заверенная копия регистрационной книги суда",
-    "connections_to": ["court_switchboard_log"]
+    "connections_to": ["court_switchboard_log", "court_extension_directory", "court_access_ledger"]
+  },
+  "court_extension_directory": {
+    "id": "court_extension_directory",
+    "name": "Список внутренних номеров суда",
+    "category": "document",
+    "description": "В справочнике суда внутренний номер 17 закреплён не за конкретным человеком, а за общей комнатой судебных секретарей. Телефоном пользовались разные сотрудники; по одному номеру нельзя назвать звонящего.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Служебный телефонный справочник",
+    "connections_to": ["court_phone_register_copy", "court_access_ledger"]
+  },
+  "court_access_ledger": {
+    "id": "court_access_ledger",
+    "name": "Журнал выдачи ключей от комнаты секретарей",
+    "category": "document",
+    "description": "На странице за день убийства дежурный отметил, что ключ от комнаты секретарей с телефоном 17 был возвращён в 19:40, после чего доступ закрыли до 22:00. При этом регистрационная книга фиксирует исходящий звонок с номера 17 в 20:15. Запись о ключе может быть неполной; причина расхождения неизвестна.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Журнал ключей судебной охраны",
+    "connections_to": ["court_extension_directory", "court_phone_register_copy"]
   },
   "poison_vial_info": {
     "id": "poison_vial_info",
