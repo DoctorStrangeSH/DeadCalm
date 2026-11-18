@@ -98,6 +98,11 @@ test('dialogue supports readable pacing, skip and critical visual focus', () => 
   assert.ok(dialog.includes("node.type === 'critical_choice'"), 'critical choices should be visually distinct');
   assert.ok(styles.includes('.cinematic-dialog.dialog-critical'), 'critical dialogue treatment must exist');
   assert.ok(styles.includes('.dialog-skip:focus-visible'), 'keyboard focus must remain visible');
+  assert.ok(dialog.includes('previousSpeaker === node.speaker'), 'crossfade must only occur for the same character');
+  assert.ok(dialog.includes('!reducedMotion && previousSpeaker'), 'reduced motion must disable portrait crossfade');
+  assert.ok(styles.includes('.portrait-image-enter'), 'new emotion portrait needs a reveal');
+  assert.ok(styles.includes('.portrait-image-exit'), 'previous emotion portrait needs a farewell');
+  assert.ok(styles.includes('@keyframes portrait-focus'), 'critical dialogue should gain a restrained visual focus');
 });
 
 test('all locations referenced by scene images resolve in the repository', () => {

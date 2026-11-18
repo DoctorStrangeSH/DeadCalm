@@ -96,10 +96,21 @@ export class DialogBox {
     const reaction = ['tension', 'warmth', 'withdrawal'].includes(node.reaction)
       ? node.reaction : 'neutral';
     const portraitFile = resolvePortraitFile(node.speaker, reaction);
+    const previousPortrait = this.container.querySelector('.portrait-image');
+    const previousSpeaker = this.container.dataset.portraitSpeaker;
+    const reducedMotion = typeof window.matchMedia === 'function'
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const shouldCrossfade = !reducedMotion && previousSpeaker === node.speaker
+      && previousPortrait && portraitFile
+      && previousPortrait.getAttribute('src') !== `src/assets/portraits/${portraitFile}`;
     const portrait = portraitFile
-      ? `<img class="portrait-image" src="src/assets/portraits/${portraitFile}" alt="" loading="eager">`
+      ? `<img class="portrait-image${shouldCrossfade ? ' portrait-image-enter' : ''}" src="src/assets/portraits/${portraitFile}" alt="" loading="eager">`
       : `<span class="portrait-silhouette"></span><span class="portrait-initial">${escapeHtml(node.speaker.charAt(0))}</span>`;
+    const previousPortraitMarkup = shouldCrossfade
+      ? `<img class="portrait-image portrait-image-exit" src="${previousPortrait.getAttribute('src')}" alt="" aria-hidden="true">`
+      : '';
 
+    this.container.dataset.portraitSpeaker = node.speaker;
     this.container.classList.toggle('dialog-critical', node.type === 'critical_choice' || node.type === 'critical_result');
     for (const state of ['tension', 'warmth', 'withdrawal']) {
       this.container.classList.toggle(`dialog-reaction-${state}`, reaction === state);
@@ -109,7 +120,7 @@ export class DialogBox {
         <div class="cinematic-dialog-overline"><span>BLACKFORD · ЗАПИСЬ БЕСЕДЫ</span><span>ДЕЛО 001</span></div>
         <!-- Заголовок -->
         <div class="dialog-header">
-          <div class="dialog-avatar cinematic-portrait" aria-hidden="true">${portrait}</div>
+          <div class="dialog-avatar cinematic-portrait" aria-hidden="true">${portrait}${previousPortraitMarkup}</div>
           <div class="dialog-speaker-info">
             <p class="dialog-speaker-name">${escapeHtml(node.speaker)}</p>
             <p class="dialog-speaker-role">${escapeHtml(node.speakerRole)}</p>
@@ -138,8 +149,6 @@ export class DialogBox {
     this.isTyping = true;
     textEl.textContent = '';
     const fullText = String(node.text || '');
-    const reducedMotion = typeof window.matchMedia === 'function'
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reducedMotion) {
       textEl.textContent = fullText;
     } else {
