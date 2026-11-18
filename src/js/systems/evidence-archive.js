@@ -24,3 +24,21 @@ export function selectEvidence(clues, { category = 'all', sort = 'newest', query
     return sort === 'oldest' ? left - right : right - left;
   });
 }
+
+/** Resolve known relations without exposing names or descriptions of locked clues. */
+export function resolveEvidenceLinks(clue, foundClues, catalog = {}) {
+  const found = new Map(foundClues.filter(item => item.id).map(item => [item.id, item]));
+  const definition = catalog[clue.id] || {};
+  const relatedIds = new Set([
+    ...(definition.connections_to || clue.connections_to || []),
+    ...Object.values(catalog)
+      .filter(item => (item.connections_to || []).includes(clue.id))
+      .map(item => item.id)
+  ]);
+  relatedIds.delete(clue.id);
+  return [...relatedIds].filter(Boolean).map(id => ({
+    id,
+    found: found.has(id),
+    name: found.has(id) ? found.get(id).name : null
+  }));
+}

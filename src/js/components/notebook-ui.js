@@ -1,7 +1,24 @@
 import { Notebook } from '../systems/notebook.js';
 import { Events } from '../core/events.js';
 import { escapeHtml } from '../utils/helpers.js';
-import { evidenceCategoryLabel, selectEvidence } from '../systems/evidence-archive.js';
+import { evidenceCategoryLabel, resolveEvidenceLinks, selectEvidence } from '../systems/evidence-archive.js';
+
+let clueCatalogRequest;
+function loadClueCatalog() {
+  if (!clueCatalogRequest) {
+    clueCatalogRequest = fetch('src/data/clues.json')
+      .then(response => {
+        if (!response.ok) throw new Error(`Каталог улик: ${response.status}`);
+        return response.json();
+      })
+      .catch(error => {
+        console.warn('[Notebook] Каталог связей недоступен:', error);
+        clueCatalogRequest = null;
+        return {};
+      });
+  }
+  return clueCatalogRequest;
+}
 
 /**
  * UI-компонент дневника.
@@ -243,9 +260,12 @@ export class NotebookUI {
     }
   }
 
-  _showClueDetail(title) {
-    const clue = Notebook.getAllClues().find(c => c.name === title);
+  async _showClueDetail(title, returnFocus = document.activeElement) {
+    const foundClues = Notebook.getAllClues();
+    const clue = foundClues.find(c => c.id === title || c.name === title);
     if (!clue) return;
+    const catalog = await loadClueCatalog();
+    const links = resolveEvidenceLinks(clue, foundClues, catalog);
     const overlay = document.createElement('div');
     overlay.className = 'dialog-overlay';
     overlay.innerHTML = `
@@ -255,20 +275,32 @@ export class NotebookUI {
           <h3 class="notebook-evidence-title">${escapeHtml(clue.name || '')}</h3>
           <p class="notebook-evidence-description">${escapeHtml(clue.description || '')}</p>
           <p class="notebook-evidence-source">${escapeHtml(clue.location || 'Источник не указан')}</p>
+          ${links.length ? `<section class="notebook-evidence-links" aria-label="Связанные материалы">
+            <p class="notebook-evidence-links-title">СВЯЗАННЫЕ МАТЕРИАЛЫ · ${links.filter(link => link.found).length}/${links.length}</p>
+            <ul>${links.map(link => `<li>${link.found
+              ? `<button type="button" class="notebook-evidence-link" data-clue-id="${escapeHtml(link.id)}"><span>◇ ${escapeHtml(link.name || 'Без названия')}</span><span>ОТКРЫТЬ →</span></button>`
+              : '<span class="notebook-evidence-locked"><span>◇ Неизвестный материал</span><span>НЕ НАЙДЕНО</span></span>'}</li>`).join('')}</ul>
+          </section>` : ''}
           <button type="button" class="dialog-btn primary-btn close-detail">ЗАКРЫТЬ</button>
         </div>
       </div>`;
     document.body.appendChild(overlay);
-    const returnFocus = document.activeElement;
-    const close = () => {
+    const close = (restoreFocus = true) => {
       overlay.removeEventListener('keydown', onKeydown);
       overlay.remove();
-      if (returnFocus?.isConnected) returnFocus.focus();
+      if (restoreFocus && returnFocus?.isConnected) returnFocus.focus();
     };
     const onKeydown = event => { if (event.key === 'Escape') close(); };
     overlay.addEventListener('keydown', onKeydown);
-    overlay.querySelector('.close-detail').addEventListener('click', close);
+    overlay.querySelector('.close-detail').addEventListener('click', () => close());
     overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
+    overlay.querySelectorAll('[data-clue-id]').forEach(button => {
+      button.addEventListener('click', () => {
+        const relatedId = button.getAttribute('data-clue-id');
+        close(false);
+        this._showClueDetail(relatedId, returnFocus);
+      });
+    });
     overlay.querySelector('.close-detail').focus();
   }
 

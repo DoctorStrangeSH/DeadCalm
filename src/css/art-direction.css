@@ -181,6 +181,16 @@ body { background:#071015; color:#d3d5cc; }
 .notebook-evidence-detail .notebook-evidence-title { margin:14px 0; color:#ecd5a3; font:clamp(22px,4vw,32px) Georgia,serif; }
 .notebook-evidence-detail .notebook-evidence-description { margin-bottom:20px; color:#e1ded1; font:16px/1.65 Georgia,serif; white-space:pre-wrap; }
 .notebook-evidence-detail .notebook-evidence-source { margin-bottom:20px; color:#a9a798; font:12px 'Courier New',monospace; }
+.notebook-evidence-detail .cinematic-dialog-content { max-height:min(80vh,780px); overflow-y:auto; }
+.notebook-evidence-links { margin:18px 0 22px; border-top:1px solid #655d4e; padding-top:15px; }
+.notebook-evidence-links-title { margin-bottom:10px; color:#d7b77f; font:11px 'Courier New',monospace; letter-spacing:.1em; }
+.notebook-evidence-links ul { list-style:none; padding:0; margin:0; display:grid; gap:7px; }
+.notebook-evidence-link,.notebook-evidence-locked { display:flex; align-items:center; justify-content:space-between; gap:14px; min-height:44px; padding:10px 12px; border:1px solid #706656; font:13px Georgia,serif; text-align:left; }
+.notebook-evidence-link { width:100%; color:#eee0bb; background:#3c3b32; cursor:pointer; }
+.notebook-evidence-link:hover,.notebook-evidence-link:focus-visible { border-color:#e7c58c; background:#514b3a; outline-offset:2px; }
+.notebook-evidence-link span:last-child,.notebook-evidence-locked span:last-child { flex-shrink:0; font:10px 'Courier New',monospace; letter-spacing:.04em; }
+.notebook-evidence-locked { color:#a8a396; background:#22272a; border-style:dashed; }
+@media(max-width:430px) { .notebook-evidence-link,.notebook-evidence-locked { align-items:flex-start; flex-direction:column; gap:6px; } }
 
 /* Evidence archive: numbered police collection envelopes. */
 .evidence-archive { width:min(100%,650px); max-height:min(85vh,850px); padding:clamp(16px,3vw,28px); background:linear-gradient(135deg,#283a3b,#101e22); border:1px solid #9b835e; box-shadow:0 22px 55px #000b; overflow:hidden; }

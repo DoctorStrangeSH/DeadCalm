@@ -84,6 +84,7 @@ export var GameState = {
       description: clue.description,
       location: clue.location,
       day: clue.day,
+      connections_to: Array.isArray(clue.connections_to) ? [...clue.connections_to] : [],
       foundAt: new Date().toISOString()
     });
     Events.emit('clue:added', clue);
