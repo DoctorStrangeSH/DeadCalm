@@ -189,6 +189,7 @@ export var DialogueEngine = {
   },
 
   _isResponseAvailable(response) {
+    if (response.requires_question && !this._askedQuestions.includes(response.requires_question)) return false;
     return hasDiscoveredContradiction(response.requires_contradiction,
       GameState.currentCase.hypotheses, GameState.currentCase.clues, this._contradictionRules);
   },

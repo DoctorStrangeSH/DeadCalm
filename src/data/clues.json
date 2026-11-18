@@ -17,7 +17,17 @@
     "location": "police_station",
     "day": 1,
     "source": "Первичный рапорт дежурного",
-    "connections_to": ["autopsy_report_01"]
+    "connections_to": ["autopsy_report_01", "court_switchboard_log"]
+  },
+  "court_switchboard_log": {
+    "id": "court_switchboard_log",
+    "name": "Выписка из журнала звонков",
+    "category": "document",
+    "description": "В день обнаружения судьи в участок поступил звонок с внутреннего коммутатора суда. Имя звонившего в журнале не указано. Выписка не позволяет установить, кто именно сообщил о смерти и на чём основывался первоначальный вывод дежурного.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Журнал входящих сообщений участка",
+    "connections_to": ["patrol_initial_report"]
   },
   "poison_vial_info": {
     "id": "poison_vial_info",

@@ -87,3 +87,25 @@ test('Ray response adjusts to trust without changing the discovered contradictio
     GameState.relationships = previousRelationships;
   }
 });
+
+test('phone log appears only after confronting Ray and rewards the documented clue', () => {
+  const dialogues = JSON.parse(readFileSync(new URL('../src/data/dialogues.json', import.meta.url), 'utf8'));
+  const clues = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
+  const questions = dialogues.npc_ray_morgan.topics.about_case.responses;
+  const followUp = questions.find(r => r.id === 'inspect_incoming_calls');
+  assert.equal(followUp.requires_question, 'confront_report_timing');
+  assert.equal(followUp.gives_clue, 'court_switchboard_log');
+  assert.ok(clues[followUp.gives_clue]);
+  const oldAsked = DialogueEngine._askedQuestions;
+  const oldCase = GameState.currentCase;
+  try {
+    DialogueEngine._askedQuestions = ['initial_report'];
+    GameState.currentCase = { clues: [], hypotheses: [] };
+    assert.equal(DialogueEngine._isResponseAvailable(followUp), false);
+    DialogueEngine._askedQuestions.push('confront_report_timing');
+    assert.equal(DialogueEngine._isResponseAvailable(followUp), true);
+  } finally {
+    DialogueEngine._askedQuestions = oldAsked;
+    GameState.currentCase = oldCase;
+  }
+});
