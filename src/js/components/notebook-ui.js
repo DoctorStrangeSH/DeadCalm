@@ -14,8 +14,18 @@ export class NotebookUI {
   }
 
   render() {
-    var notes = Notebook.getAllNotes();
+    var notes = this.filter === 'clues' ? Notebook.getAllClues().map(clue => ({
+      ...clue,
+      title: clue.name || 'Без названия',
+      text: clue.description || '',
+      timestamp: clue.foundAt || '',
+      day: clue.day || 1,
+      source: clue.location || 'Материалы дела',
+      category: 'улика',
+      isClue: true
+    })) : Notebook.getAllNotes();
     var stats = Notebook.getStats();
+    var clueCount = Notebook.getAllClues().length;
     var self = this;
 
     // Применяем фильтр
@@ -23,7 +33,7 @@ export class NotebookUI {
       notes = Notebook.getImportantNotes();
     } else if (this.filter === 'day1') {
       notes = Notebook.getNotesByDay(1);
-    } else if (this.filter !== 'all') {
+    } else if (this.filter !== 'all' && this.filter !== 'clues') {
       notes = Notebook.getNotesByCategory(this.filter);
     }
 
@@ -32,7 +42,8 @@ export class NotebookUI {
       var query = this.searchQuery.toLowerCase();
       notes = notes.filter(function(n) {
         return n.title.toLowerCase().indexOf(query) !== -1 ||
-               n.text.toLowerCase().indexOf(query) !== -1;
+               n.text.toLowerCase().indexOf(query) !== -1 ||
+               (n.source || '').toLowerCase().includes(query);
       });
     }
 
@@ -49,13 +60,13 @@ export class NotebookUI {
         <div class="notebook-header">
           <div class="notebook-title-row">
             <p class="notebook-title"><span class="dossier-seal">MH</span> ЛИЧНЫЙ ЖУРНАЛ / М. ХОЛТ</p>
-            <p class="notebook-stats">ЗАПИСЕЙ: ${stats.total} · ВАЖНЫХ: ${stats.important}</p>
+            <p class="notebook-stats">ЗАПИСЕЙ: ${stats.total} · УЛИК: ${clueCount} · ВАЖНЫХ: ${stats.important}</p>
           </div>
-          
+
           <!-- Поиск -->
           <div class="notebook-search">
-            <input type="text" id="notebook-search-input" 
-                   class="notebook-search-input" 
+            <input type="text" id="notebook-search-input"
+                   class="notebook-search-input"
                    aria-label="Поиск по заметкам"
                    placeholder="Найти запись по слову или имени..."
                    value="${escapeHtml(this.searchQuery)}">
@@ -68,6 +79,9 @@ export class NotebookUI {
             </button>
             <button class="notebook-filter ${this.filter === 'important' ? 'active' : ''}" data-filter="important">
               ★ Важные
+            </button>
+            <button class="notebook-filter ${this.filter === 'clues' ? 'active' : ''}" data-filter="clues">
+              ◇ Улики (${clueCount})
             </button>
             <button class="notebook-filter ${this.filter === 'day1' ? 'active' : ''}" data-filter="day1">
               День 1
@@ -113,11 +127,11 @@ export class NotebookUI {
     };
 
     return `
-      <button type="button" class="notebook-card ${note.pinned ? 'notebook-card-pinned' : ''}" data-title="${escapeHtml(note.title)}">
+      <button type="button" class="notebook-card ${note.pinned ? 'notebook-card-pinned' : ''}" data-title="${escapeHtml(note.title)}" data-kind="${note.isClue ? 'clue' : 'note'}">
         <div class="notebook-card-header">
           <span class="notebook-category ${categoryColors[note.category] || ''}">${escapeHtml(note.category)}</span>
           ${note.pinned ? '<span class="notebook-pin">◆ ЗАКРЕПЛЕНО</span>' : ''}
-          <span class="notebook-day">День ${note.day}</span>
+          <span class="notebook-day">${note.isClue ? 'УЛИКА' : `День ${note.day || 1}`}</span>
         </div>
         <p class="notebook-card-title">${escapeHtml(note.title)}</p>
         <p class="notebook-card-text">${escapeHtml(note.text.substring(0, 180))}${note.text.length > 180 ? '…' : ''}</p>
@@ -173,7 +187,8 @@ export class NotebookUI {
     this.container.querySelectorAll('.notebook-card').forEach(function(card) {
       card.addEventListener('click', function() {
         var title = this.getAttribute('data-title');
-        self._showNoteDetail(title);
+        if (this.getAttribute('data-kind') === 'clue') self._showClueDetail(title);
+        else self._showNoteDetail(title);
       });
     });
 
@@ -191,6 +206,35 @@ export class NotebookUI {
         URL.revokeObjectURL(url);
       });
     }
+  }
+
+  _showClueDetail(title) {
+    const clue = Notebook.getAllClues().find(c => c.name === title);
+    if (!clue) return;
+    const overlay = document.createElement('div');
+    overlay.className = 'dialog-overlay';
+    overlay.innerHTML = `
+      <div class="dialog-modal cinematic-dialog notebook-evidence-detail" role="dialog" aria-modal="true" aria-label="Материалы дела">
+        <div class="dialog-content cinematic-dialog-content">
+          <p class="dialog-type-label">◇ УЛИКА · МАТЕРИАЛЫ ДЕЛА</p>
+          <h3 class="notebook-evidence-title">${escapeHtml(clue.name || '')}</h3>
+          <p class="notebook-evidence-description">${escapeHtml(clue.description || '')}</p>
+          <p class="notebook-evidence-source">${escapeHtml(clue.location || 'Источник не указан')}</p>
+          <button type="button" class="dialog-btn primary-btn close-detail">ЗАКРЫТЬ</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const returnFocus = document.activeElement;
+    const close = () => {
+      overlay.removeEventListener('keydown', onKeydown);
+      overlay.remove();
+      if (returnFocus?.isConnected) returnFocus.focus();
+    };
+    const onKeydown = event => { if (event.key === 'Escape') close(); };
+    overlay.addEventListener('keydown', onKeydown);
+    overlay.querySelector('.close-detail').addEventListener('click', close);
+    overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
+    overlay.querySelector('.close-detail').focus();
   }
 
   _showNoteDetail(title) {

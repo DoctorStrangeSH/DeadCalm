@@ -172,6 +172,11 @@ body { background:#071015; color:#d3d5cc; }
 .dossier-notebook .notebook-empty-text { color:#534838; }
 .dossier-notebook .notebook-actions { display:flex; justify-content:flex-end; border-top:1px solid #98896c; padding-top:14px; }
 .dossier-notebook .notebook-actions .btn-noir { min-width:0; }
+.dossier-notebook .notebook-filters { display:flex; flex-wrap:wrap; gap:7px; }
+.dossier-notebook .notebook-card[data-kind="clue"] { border-left:4px solid #8c6139; }
+.notebook-evidence-detail .notebook-evidence-title { margin:14px 0; color:#ecd5a3; font:clamp(22px,4vw,32px) Georgia,serif; }
+.notebook-evidence-detail .notebook-evidence-description { margin-bottom:20px; color:#e1ded1; font:16px/1.65 Georgia,serif; white-space:pre-wrap; }
+.notebook-evidence-detail .notebook-evidence-source { margin-bottom:20px; color:#a9a798; font:12px 'Courier New',monospace; }
 
 /* Evidence archive: numbered police collection envelopes. */
 .evidence-archive { width:min(100%,650px); max-height:min(85vh,850px); padding:clamp(16px,3vw,28px); background:linear-gradient(135deg,#283a3b,#101e22); border:1px solid #9b835e; box-shadow:0 22px 55px #000b; overflow:hidden; }
