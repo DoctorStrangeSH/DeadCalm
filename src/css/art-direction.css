@@ -234,6 +234,13 @@ body { background:#071015; color:#d3d5cc; }
 .cinematic-dialog.dialog-reaction-warmth .dialog-trust { border-color:#76a58b; color:#abd7b4; }
 @media (prefers-reduced-motion:no-preference) { .cinematic-dialog .portrait-image { transition:filter .4s ease; } }
 .cinematic-dialog .dialog-choices { display:grid; grid-template-columns:1fr; gap:8px; }
+@media (prefers-reduced-motion:no-preference) {
+  .cinematic-dialog .dialog-choices-revealed > * { animation:dialog-choice-reveal .3s ease-out both; }
+  .cinematic-dialog .dialog-choices-revealed > :nth-child(2) { animation-delay:45ms; }
+  .cinematic-dialog .dialog-choices-revealed > :nth-child(3) { animation-delay:90ms; }
+  .cinematic-dialog .dialog-choices-revealed > :nth-child(n+4) { animation-delay:120ms; }
+}
+@keyframes dialog-choice-reveal { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
 .cinematic-dialog .dialog-btn { display:flex; align-items:center; width:100%; min-height:48px; padding:11px 16px; text-align:left; color:#d7d8c8; background:#203236; border:1px solid #516662; font:14px Georgia,serif; line-height:1.4; transition:background .18s,border-color .18s,transform .18s; }
 .cinematic-dialog .dialog-btn::after { content:'↗'; margin-left:auto; padding-left:18px; color:#bca477; }
 .cinematic-dialog .dialog-btn:hover { color:#fff2d8; background:#31464a; border-color:#c3a16c; transform:translateX(3px); }

@@ -103,6 +103,10 @@ test('dialogue supports readable pacing, skip and critical visual focus', () => 
   assert.ok(styles.includes('.portrait-image-enter'), 'new emotion portrait needs a reveal');
   assert.ok(styles.includes('.portrait-image-exit'), 'previous emotion portrait needs a farewell');
   assert.ok(styles.includes('@keyframes portrait-focus'), 'critical dialogue should gain a restrained visual focus');
+  assert.ok(dialog.includes("node.type === 'critical_result' && !reducedMotion && !this.skipTyping"), 'critical result pause must be skippable and accessible');
+  assert.ok(dialog.includes("skipButton.addEventListener('click', finish"), 'skip action must dismiss dramatic pause');
+  assert.ok(dialog.includes("choicesEl.classList.add('dialog-choices-revealed')"), 'choices should reveal after text completes');
+  assert.ok(styles.includes('@keyframes dialog-choice-reveal'), 'choices should enter gently');
 });
 
 test('all locations referenced by scene images resolve in the repository', () => {

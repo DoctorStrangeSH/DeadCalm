@@ -163,12 +163,26 @@ export class DialogBox {
       }
     }
     if (token !== this.renderToken || !this.container) return;
+    // Оставляем короткую паузу после решающего ответа — её можно пропустить.
+    if (node.type === 'critical_result' && !reducedMotion && !this.skipTyping) {
+      await new Promise(resolve => {
+        const finish = () => {
+          clearTimeout(timer);
+          skipButton.removeEventListener('click', finish);
+          resolve();
+        };
+        const timer = setTimeout(finish, 320);
+        skipButton.addEventListener('click', finish, { once: true });
+      });
+    }
+    if (token !== this.renderToken || !textEl.isConnected) return;
     this.isTyping = false;
     skipButton.hidden = true;
 
     // Рендерим кнопки
     var choicesEl = this.container.querySelector('#dialog-choices');
     this._renderChoices(node, choicesEl);
+    if (!reducedMotion) choicesEl.classList.add('dialog-choices-revealed');
   }
 
   _getTypeLabel(type) {
