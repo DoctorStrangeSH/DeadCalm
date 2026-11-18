@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { assessIndependentAccounts, canTraceSecretary } from '../src/js/systems/witness-provenance.js';
+import { assessIndependentAccounts, canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation } from '../src/js/systems/witness-provenance.js';
 import { findContradictions } from '../src/js/systems/contradictions.js';
 
 const clues = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
@@ -45,4 +45,21 @@ test('Orlov has a falsifiable badge discrepancy without conflating two different
   assert.match(scene, /function inspectOrlov/);
   assert.match(scene, /'orlov_evening_statement'/);
   assert.match(scene, /'orlov_badge_scan'/);
+});
+
+test('Orlov confrontation requires discovered contradiction and both tones preserve evidence', () => {
+  const hypothesis = { clueIds: ['orlov_evening_statement', 'orlov_badge_scan'] };
+  const evidence = [clues.orlov_evening_statement, clues.orlov_badge_scan];
+  assert.equal(canConfrontOrlov({ clues: evidence, hypotheses: [] }, rules), false);
+  assert.equal(canConfrontOrlov({ clues: evidence.slice(0, 1), hypotheses: [hypothesis] }, rules), false);
+  assert.equal(canConfrontOrlov({ clues: evidence, hypotheses: [hypothesis] }, []), false);
+  assert.equal(canConfrontOrlov({ clues: evidence, hypotheses: [hypothesis] }, rules), true);
+  assert.ok(resolveOrlovConfrontation('patient').trustDelta > 0);
+  assert.ok(resolveOrlovConfrontation('pressure').trustDelta < 0);
+  assert.equal(resolveOrlovConfrontation('invalid'), null);
+  assert.match(clues.orlov_badge_handover.description, /не удостоверяет/);
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /canConfrontOrlov\(GameState\.currentCase, rules\)/);
+  assert.match(scene, /GameState\.addClue\(catalog\.orlov_badge_handover\)/);
+  assert.match(scene, /GameState\.setFlag\('court_orlov_interview_tone', tone\)/);
 });

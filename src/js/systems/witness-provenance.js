@@ -5,6 +5,23 @@ export function canTraceSecretary(currentCase, rules) {
     currentCase?.hypotheses, currentCase?.clues || [], rules);
 }
 
+export function canConfrontOrlov(currentCase, rules) {
+  return hasDiscoveredContradiction('orlov_departure_vs_badge',
+    currentCase?.hypotheses, currentCase?.clues || [], rules);
+}
+
+export function resolveOrlovConfrontation(tone) {
+  if (tone === 'patient') return {
+    trustDelta: 5,
+    text: 'Орлов теребит манжету: «Да, карточку после ухода я оставил в канцелярии для проверки считывателя. Это нарушение инструкции — потому и не сказал сразу. В журнале передачи должна быть расписка. Я не знаю, кто затем ей воспользовался». Он сам указывает на ведомость.'
+  };
+  if (tone === 'pressure') return {
+    trustDelta: -15,
+    text: 'При виде распечатки Орлов замолкает: «Это моя карточка, но не доказывает, что я был там». Он требует адвоката и прекращает разговор. По служебному запросу вам всё же выдают ведомость передачи карточек из канцелярии.'
+  };
+  return null;
+}
+
 // A repeated account isn't independent corroboration when both reports share one source.
 export function assessIndependentAccounts(accounts) {
   const sources = new Set();

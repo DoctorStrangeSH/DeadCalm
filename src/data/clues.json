@@ -147,7 +147,17 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Система служебных пропусков суда",
-    "connections_to": ["orlov_evening_statement", "pass_041_counterfoil"]
+    "connections_to": ["orlov_evening_statement", "pass_041_counterfoil", "orlov_badge_handover"]
+  },
+  "orlov_badge_handover": {
+    "id": "orlov_badge_handover",
+    "name": "Ведомость временной передачи карточки Орлова",
+    "category": "document",
+    "description": "В канцелярской ведомости в 19:50 отмечена передача служебной карточки Орлова на проверку считывателя. В графе получателя стоят инициалы «Н. К.» без разборчивой фамилии; подпись Орлова присутствует. Документ даёт возможное объяснение поздним проходам карточки, но не удостоверяет, кто использовал её в 20:02 и 20:47, и не связывает её с гостевым пропуском № 041.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Журнал передачи служебных карточек",
+    "connections_to": ["orlov_badge_scan", "orlov_evening_statement"]
   },
   "poison_vial_info": {
     "id": "poison_vial_info",

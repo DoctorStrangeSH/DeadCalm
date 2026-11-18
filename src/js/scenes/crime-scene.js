@@ -1,7 +1,7 @@
 import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { canChallengeGuard, resolveGuardChallenge } from '../systems/court-guard.js';
-import { canTraceSecretary } from '../systems/witness-provenance.js';
+import { canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation } from '../systems/witness-provenance.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -133,6 +133,15 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="orlov-confrontation" class="card p-4 mb-6" hidden>
+        <p class="card-title">ПРОВЕРКА АЛИБИ · ПОВТОРНЫЙ ДОПРОС ОРЛОВА</p>
+        <p class="card-subtitle mt-2 mb-3">Карточка отмечена на входе после предполагаемого ухода Орлова. Как предъявить несостыковку?</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-orlov-patient" class="btn-noir text-xs py-3">УТОЧНИТЬ СУДЬБУ КАРТОЧКИ</button>
+          <button id="btn-orlov-pressure" class="btn-noir text-xs py-3">ОБВИНИТЬ В СОКРЫТИИ</button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -154,6 +163,9 @@ export function render(container, data) {
     }
     if (canTraceSecretary(GameState.currentCase, rules)) {
       container.querySelector('#secretary-follow-up').hidden = false;
+    }
+    if (!GameState.hasClue('orlov_badge_handover') && canConfrontOrlov(GameState.currentCase, rules)) {
+      container.querySelector('#orlov-confrontation').hidden = false;
     }
   }).catch(error => console.warn('[Court] Не удалось проверить основания для повторного опроса:', error));
 
@@ -342,6 +354,36 @@ export function render(container, data) {
       'Считыватель служебного входа зарегистрировал карточку Орлова в 20:02 и 20:47. Значит, карточка находилась в здании после его предполагаемого ухода. Но данные считывателя не устанавливают лицо, использовавшее карточку. Пропуск № 041 — другой документ.',
     );
   });
+
+  async function confrontOrlov(tone) {
+    if (GameState.hasClue('orlov_badge_handover')) return;
+    const outcome = resolveOrlovConfrontation(tone);
+    if (!outcome) return;
+    const panel = container.querySelector('#orlov-confrontation');
+    const buttons = panel.querySelectorAll('button');
+    buttons.forEach(button => { button.disabled = true; });
+    try {
+      const rules = await loadCourtRules();
+      if (!canConfrontOrlov(GameState.currentCase, rules)) return;
+      const response = await fetch('src/data/clues.json');
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const catalog = await response.json();
+      if (!catalog.orlov_badge_handover) throw new Error('Не найдена ведомость передачи карточек');
+      GameState.addClue(catalog.orlov_badge_handover);
+      GameState.setFlag('court_orlov_interview_tone', tone);
+      GameState.updateRelationship('npc_pavel_orlov', outcome.trustDelta);
+      panel.hidden = true;
+      showNarrative(outcome.text + ' Документ добавлен в архив улик.', 'ПОВТОРНЫЙ ДОПРОС ОРЛОВА');
+    } catch (error) {
+      console.error('[Court] Не удалось провести повторный допрос Орлова:', error);
+      showNarrative('Документ сейчас недоступен. Вы сможете вернуться к этому вопросу.', 'ДОПРОС ПРЕРВАН');
+    } finally {
+      buttons.forEach(button => { button.disabled = false; });
+    }
+  }
+
+  container.querySelector('#btn-orlov-patient').addEventListener('click', () => confrontOrlov('patient'));
+  container.querySelector('#btn-orlov-pressure').addEventListener('click', () => confrontOrlov('pressure'));
 
   async function challengeGuard(tone) {
     if (GameState.hasClue('guard_round_sheet')) return;
