@@ -1,6 +1,7 @@
 import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { canChallengeGuard, resolveGuardChallenge } from '../systems/court-guard.js';
+import { canTraceSecretary } from '../systems/witness-provenance.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -108,6 +109,18 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="secretary-follow-up" class="mb-6" hidden>
+        <p class="text-gold text-xs tracking-widest mb-3">ПРОВЕРКА ИСТОЧНИКОВ · ПРОПУСК № 041</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-secretary-source" class="card text-left" ${GameState.hasClue('secretary_source_statement') ? 'disabled' : ''}>
+            <p class="card-title">ВЫЯСНИТЬ ИСТОЧНИК СЛОВ САВЕЛЬЕВОЙ</p><p class="card-subtitle">Кто рассказал ей о ночном доступе?</p>
+          </button>
+          <button id="btn-pass-counterfoil" class="card text-left" ${GameState.hasClue('pass_041_counterfoil') ? 'disabled' : ''}>
+            <p class="card-title">ПРОВЕРИТЬ КОРЕШОК ПРОПУСКА</p><p class="card-subtitle">Есть ли независимая регистрация № 041?</p>
+          </button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -117,18 +130,20 @@ export function render(container, data) {
 
   updateCluesList();
 
-  async function loadGuardChallengeRules() {
-    if (GameState.hasClue('guard_round_sheet')) return null;
+  async function loadCourtRules() {
     const response = await fetch('src/data/contradictions.json');
     if (!response.ok) throw new Error('HTTP ' + response.status);
     return await response.json();
   }
 
-  loadGuardChallengeRules().then(rules => {
-    if (rules && canChallengeGuard(GameState.currentCase, rules)) {
+  loadCourtRules().then(rules => {
+    if (!GameState.hasClue('guard_round_sheet') && canChallengeGuard(GameState.currentCase, rules)) {
       container.querySelector('#guard-follow-up').hidden = false;
     }
-  }).catch(error => console.warn('[Court] Не удалось проверить основания для допроса:', error));
+    if (canTraceSecretary(GameState.currentCase, rules)) {
+      container.querySelector('#secretary-follow-up').hidden = false;
+    }
+  }).catch(error => console.warn('[Court] Не удалось проверить основания для повторного опроса:', error));
 
   container.querySelectorAll('.court-hotspot').forEach(function(button) {
     button.addEventListener('click', function() {
@@ -268,6 +283,36 @@ export function render(container, data) {
       'guard_round_sheet');
   });
 
+  async function traceSecretary(buttonId, clueId, narrative) {
+    const button = container.querySelector('#' + buttonId);
+    if (GameState.hasClue(clueId)) return;
+    button.disabled = true;
+    try {
+      const rules = await loadCourtRules();
+      if (!canTraceSecretary(GameState.currentCase, rules)) return;
+      const response = await fetch('src/data/clues.json');
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const catalog = await response.json();
+      if (!catalog[clueId]) throw new Error('Не найдена запись в каталоге');
+      GameState.addClue(catalog[clueId]);
+      showNarrative(narrative, catalog[clueId].name);
+    } catch (error) {
+      console.error('[Court] Не удалось проверить источник:', error);
+      showNarrative('Дополнительная проверка временно недоступна. Попробуйте ещё раз.', 'ПОИСК ПРЕРВАН');
+    } finally {
+      if (!GameState.hasClue(clueId)) button.disabled = false;
+    }
+  }
+
+  container.querySelector('#btn-secretary-source').addEventListener('click', function() {
+    traceSecretary('btn-secretary-source', 'secretary_source_statement',
+      '«Мне позвонил Павел Орлов, старший делопроизводитель», — поясняет Савельева. «Он ссылался на Белла. Я сама вечернюю книгу не видела». Следовательно, два похожих рассказа не подтверждают друг друга: оба восходят к одному охраннику.');
+  });
+  container.querySelector('#btn-pass-counterfoil').addEventListener('click', function() {
+    traceSecretary('btn-pass-counterfoil', 'pass_041_counterfoil',
+      'В корешковой книге сохранился № 041 со штампом 20:08. Зона допуска совпадает с журналом, но строки для имени остались пустыми. Выдача зарегистрирована дважды; кому достался пропуск, по этим бумагам всё ещё неизвестно.');
+  });
+
   async function challengeGuard(tone) {
     if (GameState.hasClue('guard_round_sheet')) return;
     const choice = resolveGuardChallenge(tone);
@@ -276,7 +321,7 @@ export function render(container, data) {
     const buttons = panel.querySelectorAll('button');
     buttons.forEach(button => { button.disabled = true; });
     try {
-      const rules = await loadGuardChallengeRules();
+      const rules = await loadCourtRules();
       if (!canChallengeGuard(GameState.currentCase, rules)) return;
       const response = await fetch('src/data/clues.json');
       if (!response.ok) throw new Error('HTTP ' + response.status);

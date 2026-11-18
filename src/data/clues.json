@@ -107,7 +107,27 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Елена Савельева, судебный секретарь",
-    "connections_to": ["court_visitor_log", "court_extension_directory"]
+    "connections_to": ["court_visitor_log", "court_extension_directory", "secretary_source_statement"]
+  },
+  "secretary_source_statement": {
+    "id": "secretary_source_statement",
+    "name": "Уточнение источника показаний Савельевой",
+    "category": "testimony",
+    "description": "Елена Савельева признаёт, что не присутствовала на посту после 20:00. О закрытом коридоре ей по телефону рассказал старший делопроизводитель Павел Орлов, который, в свою очередь, сослался на слова охранника Белла. Это зависимая цепочка пересказов, а не новое независимое наблюдение.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Повторные показания Елены Савельевой",
+    "connections_to": ["secretary_access_testimony", "guard_key_testimony"]
+  },
+  "pass_041_counterfoil": {
+    "id": "pass_041_counterfoil",
+    "name": "Отрывной корешок пропуска № 041",
+    "category": "document",
+    "description": "В пронумерованной книге выдачи найден корешок пропуска № 041 со штампом 20:08 и отметкой «коридор секретарей». Имя получателя и здесь не внесено. Корешок подтверждает оформление пропуска в журнале, но не личность предъявителя и не время фактического прохода.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Корешковая книга поста охраны суда",
+    "connections_to": ["court_visitor_log", "secretary_source_statement"]
   },
   "poison_vial_info": {
     "id": "poison_vial_info",
