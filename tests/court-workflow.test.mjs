@@ -11,7 +11,7 @@ test('court workflow separates actionable, completed and locked phases', () => {
     { unlocked: false, completed: true }
   ];
   assert.deepEqual(summarizeCourtStages(states), { actionable: 1, completed: 1, locked: 2 });
-  assert.equal(COURT_STAGE_IDS.length, 8);
+  assert.equal(COURT_STAGE_IDS.length, 9);
   assert.equal(new Set(COURT_STAGE_IDS).size, COURT_STAGE_IDS.length);
 });
 

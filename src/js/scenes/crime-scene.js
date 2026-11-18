@@ -164,6 +164,18 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="reader-verification" class="mb-6" ${GameState.hasClue('court_nk_staff_index') && GameState.hasClue('reader_service_ticket') ? '' : 'hidden'}>
+        <p class="text-gold text-xs tracking-widest mb-3">РЕМОНТ СЧИТЫВАТЕЛЯ · ПРОВЕРКА ПРИСУТСТВИЯ</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-reader-access" class="card text-left" ${GameState.hasClue('reader_maintenance_access_log') ? 'disabled' : ''}>
+            <p class="card-title">ПРОВЕРИТЬ ЖУРНАЛ ТЕХНИЧЕСКОГО ПОМЕЩЕНИЯ</p><p class="card-subtitle">Был ли зафиксирован проход к считывателю?</p>
+          </button>
+          <button id="btn-reader-signoff" class="card text-left" ${GameState.hasClue('reader_service_signoff') ? 'disabled' : ''}>
+            <p class="card-title">НАЙТИ АКТ ЗАВЕРШЕНИЯ РАБОТ</p><p class="card-subtitle">Кто и когда закрыл ремонтный наряд?</p>
+          </button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -294,6 +306,9 @@ export function render(container, data) {
       if (!catalog[clueId]) throw new Error('Не найдена запись в каталоге');
       GameState.addClue(catalog[clueId]);
       if (clueId === 'court_access_ledger') container.querySelector('#court-witnesses').hidden = false;
+      if (GameState.hasClue('court_nk_staff_index') && GameState.hasClue('reader_service_ticket')) {
+        container.querySelector('#reader-verification').hidden = false;
+      }
       refreshCourtWorkflow();
       showNarrative(narrative, catalog[clueId].name);
     } catch (error) {
@@ -390,6 +405,20 @@ export function render(container, data) {
     inspectCourtRecord('btn-nk-service', 'reader_service_ticket',
       'В ремонтном журнале найден наряд с 19:55 до 20:30 на проверку считывателя. Ответственным назначен Николай Климов. Это правдоподобная причина передать ему карточку, но наряд не подтверждает, что он действительно явился на работу.',
       'orlov_badge_handover');
+  });
+
+  function inspectReaderRecord(buttonId, clueId, narrative) {
+    if (!GameState.hasClue('court_nk_staff_index') || !GameState.hasClue('reader_service_ticket')) return;
+    inspectCourtRecord(buttonId, clueId, narrative, 'reader_service_ticket');
+  }
+
+  container.querySelector('#btn-reader-access').addEventListener('click', function() {
+    inspectReaderRecord('btn-reader-access', 'reader_maintenance_access_log',
+      'В журнале технического помещения запись о входе Климова отсутствует. В 20:06 зафиксирован вход по универсальному ключу без имени. Журнал заполнялся вручную и не доказывает, что Климов там не был, а безымянная отметка не устанавливает личность посетителя.');
+  });
+  container.querySelector('#btn-reader-signoff').addEventListener('click', function() {
+    inspectReaderRecord('btn-reader-signoff', 'reader_service_signoff',
+      'Наряд закрыт отметкой «считыватель проверен» в 20:52. Подпись исполнителя неразборчива, поле проверки руководителем пустое. Время закрытия позже планового окна работ и выхода карточки Орлова в 20:47: это повод проверить исполнителя, но не доказательство подлога.');
   });
 
   async function confrontOrlov(tone) {

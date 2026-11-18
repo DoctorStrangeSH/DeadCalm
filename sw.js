@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dead-calm-visual-v45';
+const CACHE_NAME = 'dead-calm-visual-v46';
 const ASSETS = [
   '/',
   '/index.html',

@@ -77,3 +77,15 @@ test('N. K. initials yield two candidates and an assignment, not an identified c
   assert.match(scene, /'court_nk_staff_index'[^;]*'orlov_badge_handover'/s);
   assert.match(scene, /'reader_service_ticket'[^;]*'orlov_badge_handover'/s);
 });
+
+test('reader maintenance requires both prior records and does not assert the technician was present', () => {
+  assert.match(clues.reader_maintenance_access_log.description, /не доказывает отсутствие Климова/);
+  assert.match(clues.reader_service_signoff.description, /не доказывает, кто подписал/);
+  assert.match(clues.reader_service_signoff.description, /20:52/);
+  assert.ok(clues.reader_service_ticket.connections_to.includes('reader_service_signoff'));
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /id="reader-verification"[^>]*hasClue\('court_nk_staff_index'\) && GameState\.hasClue\('reader_service_ticket'\)/);
+  assert.match(scene, /function inspectReaderRecord/);
+  assert.match(scene, /'reader_maintenance_access_log'/);
+  assert.match(scene, /'reader_service_signoff'/);
+});
