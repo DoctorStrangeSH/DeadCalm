@@ -30,7 +30,7 @@ test('authored contradiction references real clues and a discoverable dialogue r
   const catalog = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
   const dialogues = JSON.parse(readFileSync(new URL('../src/data/dialogues.json', import.meta.url), 'utf8'));
   const authored = JSON.parse(readFileSync(new URL('../src/data/contradictions.json', import.meta.url), 'utf8'));
-  assert.equal(authored.length, 3);
+  assert.equal(authored.length, 4);
   const rule = authored[0];
   for (const id of rule.clueIds) assert.ok(catalog[id], `${id} missing from clue catalog`);
   assert.equal(dialogues.npc_ray_morgan.topics.about_case.responses.find(r => r.id === 'initial_report').gives_clue, 'patrol_initial_report');
@@ -66,6 +66,21 @@ test('night guard denial is challenged only by discovered spare-key records', ()
   assert.match(scene, /id="court-witnesses"[^>]*hasClue\('court_access_ledger'\)/);
   assert.match(scene, /'guard_key_testimony'[^;]*'court_access_ledger'/s);
   assert.match(scene, /'spare_key_inventory'[^;]*'court_access_ledger'/s);
+});
+
+test('secretary statement conflicts with a late pass, not with the identity of its holder', () => {
+  const catalog = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
+  const rules = JSON.parse(readFileSync(new URL('../src/data/contradictions.json', import.meta.url), 'utf8'));
+  const rule = rules.find(item => item.id === 'secretary_vs_late_pass');
+  assert.deepEqual(rule.clueIds, ['secretary_access_testimony', 'court_visitor_log']);
+  const found = rule.clueIds.map(id => catalog[id]);
+  assert.deepEqual(findContradictions({ clueIds: rule.clueIds }, found, rules).map(r => r.id), [rule.id]);
+  assert.deepEqual(findContradictions({ clueIds: rule.clueIds }, found.slice(0, 1), rules), []);
+  assert.match(catalog.court_visitor_log.description, /имене?м|именем|имя|имени/);
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /id="court-visitors"[^>]*hasClue\('guard_round_sheet'\)/);
+  assert.match(scene, /'court_visitor_log'[^;]*'guard_round_sheet'/s);
+  assert.match(scene, /'secretary_access_testimony'[^;]*'guard_round_sheet'/s);
 });
 
 test('Ray follow-up stays locked before deduction and unlocks on a saved hypothesis', () => {

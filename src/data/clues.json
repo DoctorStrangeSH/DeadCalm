@@ -87,7 +87,27 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Журнал служебных обходов охраны",
-    "connections_to": ["guard_key_testimony", "court_phone_register_copy", "court_access_ledger"]
+    "connections_to": ["guard_key_testimony", "court_phone_register_copy", "court_access_ledger", "court_visitor_log"]
+  },
+  "court_visitor_log": {
+    "id": "court_visitor_log",
+    "name": "Журнал посетителей суда",
+    "category": "document",
+    "description": "В журнале служебных пропусков после 19:30 есть строка: 20:08, пропуск № 041, допуск в коридор секретарей. Поле с именем получателя затёрто, подпись о возврате отсутствует. Запись не удостоверяет личность посетителя и могла быть внесена позже.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Пост контроля доступа суда",
+    "connections_to": ["guard_round_sheet", "secretary_access_testimony"]
+  },
+  "secretary_access_testimony": {
+    "id": "secretary_access_testimony",
+    "name": "Показания секретаря Елены Савельевой",
+    "category": "testimony",
+    "description": "Секретарь Елена Савельева говорит, что после 19:30 новые служебные пропуска никому не выдавались. По её словам, последний сотрудник сдал пропуск в 19:25. Сама Савельева ушла до восьми и не проверяла книгу ночного поста лично.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Елена Савельева, судебный секретарь",
+    "connections_to": ["court_visitor_log", "court_extension_directory"]
   },
   "poison_vial_info": {
     "id": "poison_vial_info",

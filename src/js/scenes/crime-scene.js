@@ -96,6 +96,18 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="court-visitors" class="mb-6" ${GameState.hasClue('guard_round_sheet') ? '' : 'hidden'}>
+        <p class="text-gold text-xs tracking-widest mb-3">НОЧНОЙ ДОСТУП · ЧУЖИЕ СЛЕДЫ</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-visitor-log" class="card text-left" ${GameState.hasClue('court_visitor_log') ? 'disabled' : ''}>
+            <p class="card-title">ЖУРНАЛ СЛУЖЕБНЫХ ПРОПУСКОВ</p><p class="card-subtitle">Проверить выдачу пропусков во время обхода охраны.</p>
+          </button>
+          <button id="btn-secretary-testimony" class="card text-left" ${GameState.hasClue('secretary_access_testimony') ? 'disabled' : ''}>
+            <p class="card-title">ОПРОСИТЬ СЕКРЕТАРЯ САВЕЛЬЕВУ</p><p class="card-subtitle">Выяснить, кто оставался в суде после закрытия.</p>
+          </button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -245,6 +257,16 @@ export function render(container, data) {
       'В хозяйственной описи значится запасной ключ от комнаты секретарей. Он числится в опечатанном шкафу, но отметки о проверке пломбы в тот день нет. Это ещё не доказательство вскрытия шкафа — однако слова охранника о единственном ключе неверны.',
       'court_access_ledger');
   });
+  container.querySelector('#btn-visitor-log').addEventListener('click', function() {
+    inspectCourtRecord('btn-visitor-log', 'court_visitor_log',
+      'Вы листаете журнал поста. В 20:08 выписан пропуск № 041 с допуском к коридору секретарей. Имя в графе получателя затёрто, подписи о возврате нет. Это может быть след, ошибка или поздняя запись: сначала нужно проверить источник.',
+      'guard_round_sheet');
+  });
+  container.querySelector('#btn-secretary-testimony').addEventListener('click', function() {
+    inspectCourtRecord('btn-secretary-testimony', 'secretary_access_testimony',
+      'Елена Савельева складывает руки: «После половины восьмого пропуска больше не выдавали. Последний вернули ещё в 19:25». Вы уточняете, была ли она на ночном посту. «Нет, я ушла до восьми. Мне так передали». Её уверенность опирается на чужие слова.',
+      'guard_round_sheet');
+  });
 
   async function challengeGuard(tone) {
     if (GameState.hasClue('guard_round_sheet')) return;
@@ -264,6 +286,7 @@ export function render(container, data) {
       GameState.setFlag('court_guard_interview_tone', tone);
       GameState.updateRelationship('npc_viktor_bell', choice.trustDelta);
       panel.hidden = true;
+      container.querySelector('#court-visitors').hidden = false;
       showNarrative(choice.text + ' Маршрутный лист добавлен в архив улик.', 'ПОВТОРНЫЙ ДОПРОС');
     } catch (error) {
       console.error('[Court] Ошибка повторного допроса:', error);
