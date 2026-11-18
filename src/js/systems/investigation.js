@@ -8,6 +8,7 @@ import { Events } from '../core/events.js';
 export var Investigation = {
   _cluesData: null,
   _connections: [],
+  _contradictionRules: [],
   _initialized: false,
 
   async init() {
@@ -16,6 +17,16 @@ export var Investigation = {
       var response = await fetch('src/data/clues.json');
       if (!response.ok) throw new Error('HTTP ' + response.status);
       this._cluesData = await response.json();
+      // Optional authored rules; absence must never break an investigation.
+      try {
+        const rulesResponse = await fetch('src/data/contradictions.json');
+        if (rulesResponse.ok) {
+          const rules = await rulesResponse.json();
+          this._contradictionRules = Array.isArray(rules) ? rules : [];
+        }
+      } catch (error) {
+        console.warn('[Investigation] Правила противоречий недоступны:', error);
+      }
       this._initialized = true;
       console.log('[Investigation] Данные улик загружены');
     } catch (error) {

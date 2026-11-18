@@ -209,6 +209,10 @@ body { background:#071015; color:#d3d5cc; }
 .hypothesis-audit strong { color:#b5d3c0; font:11px 'Courier New',monospace; letter-spacing:.08em; }
 .hypothesis-audit p { margin:8px 0; color:#ded9cb; font:13px/1.5 Georgia,serif; }
 .hypothesis-audit small { color:#97aaa3; font:11px/1.5 Georgia,serif; }
+.hypothesis-contradictions { margin:12px 0; padding:12px 14px; border-left:3px solid #bc785f; background:#392a28; }
+.hypothesis-contradictions strong { color:#f0bb9b; font:11px 'Courier New',monospace; letter-spacing:.08em; }
+.hypothesis-contradictions p { margin:9px 0; color:#f3e0cf; font:14px/1.5 Georgia,serif; }
+.hypothesis-contradictions small { color:#d2b5a6; font:12px/1.5 Georgia,serif; }
 .notebook-evidence-detail .cinematic-dialog-content { max-height:min(80vh,780px); overflow-y:auto; }
 .notebook-evidence-links { margin:18px 0 22px; border-top:1px solid #655d4e; padding-top:15px; }
 .notebook-evidence-links-title { margin-bottom:10px; color:#d7b77f; font:11px 'Courier New',monospace; letter-spacing:.1em; }

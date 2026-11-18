@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dead-calm-visual-v34';
+const CACHE_NAME = 'dead-calm-visual-v35';
 const ASSETS = [
   '/',
   '/index.html',
@@ -13,6 +13,10 @@ const ASSETS = [
   '/src/js/core/audio.js',
   '/src/js/systems/dialogue-reactions.js',
   '/src/js/systems/evidence-archive.js',
+  '/src/js/systems/hypotheses.js',
+  '/src/js/systems/contradictions.js',
+  '/src/js/systems/investigation.js',
+  '/src/js/components/investigation-board.js',
   '/src/js/utils/helpers.js',
   '/src/js/scenes/main-menu.js',
   '/src/js/scenes/office.js',
@@ -55,6 +59,8 @@ const ASSETS = [
   '/src/assets/portraits/sebastian-blackwood-withdrawal.webp',
   '/src/data/locations.json',
   '/src/data/dialogues.json',
+  '/src/data/clues.json',
+  '/src/data/contradictions.json',
   '/src/data/game.json'
 ];
 

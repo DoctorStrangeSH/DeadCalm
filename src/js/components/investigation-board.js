@@ -2,6 +2,7 @@ import { GameState } from '../core/state.js';
 import { Investigation } from '../systems/investigation.js';
 import { Events } from '../core/events.js';
 import { HYPOTHESIS_STATUS_LABELS, auditHypothesisEvidence } from '../systems/hypotheses.js';
+import { findContradictions } from '../systems/contradictions.js';
 
 /**
  * Доска расследования.
@@ -135,6 +136,7 @@ export class InvestigationBoard {
     const clueNames = new Map(clues.map(clue => [clue.id, clue.name]));
     list.innerHTML = hypotheses.length ? hypotheses.map(item => {
       const audit = auditHypothesisEvidence(item, clues, Investigation._cluesData || {});
+      const contradictions = findContradictions(item, clues, Investigation._contradictionRules);
       return `
       <article class="hypothesis-entry">
         <h4>${this._escapeHtml(item.title)}</h4>
@@ -150,6 +152,11 @@ export class InvestigationBoard {
           ${audit.missing ? `<p>Недоступных материалов: ${audit.missing}. Перепроверьте состав гипотезы.</p>` : ''}
           <small>Это проверка связности материалов, а не доказательство истинности версии.</small>
         </aside>
+        ${contradictions.length ? `<aside class="hypothesis-contradictions" aria-label="Обнаруженные противоречия">
+          <strong>ТРЕБУЮТ ПРОВЕРКИ · ${contradictions.length}</strong>
+          ${contradictions.map(rule => `<p>${this._escapeHtml(rule.summary)}</p>
+            ${rule.followUp ? `<small>${this._escapeHtml(rule.followUp)}</small>` : ''}`).join('')}
+        </aside>` : ''}
         <label>ОЦЕНКА ДЕТЕКТИВА
           <select data-hypothesis-id="${this._escapeHtml(item.id)}" aria-label="Статус гипотезы ${this._escapeHtml(item.title)}">
             ${Object.entries(HYPOTHESIS_STATUS_LABELS).map(([value, label]) => `<option value="${value}" ${item.status === value ? 'selected' : ''}>${label}</option>`).join('')}
