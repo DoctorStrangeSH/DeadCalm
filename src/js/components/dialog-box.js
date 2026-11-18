@@ -38,7 +38,8 @@ const CHARACTER_REACTION_PORTRAITS = Object.freeze({
     withdrawal: 'father-thomas-withdrawal.webp'
   }),
   'Себастьян Блэквуд': Object.freeze({
-    tension: 'sebastian-blackwood-tension.webp'
+    tension: 'sebastian-blackwood-tension.webp',
+    warmth: 'sebastian-blackwood-warmth.webp'
   })
 });
 
