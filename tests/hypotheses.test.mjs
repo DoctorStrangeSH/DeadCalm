@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHypothesis, reviseHypothesis } from '../src/js/systems/hypotheses.js';
+import { auditHypothesisEvidence, createHypothesis, reviseHypothesis } from '../src/js/systems/hypotheses.js';
 
 const evidence = [{ id: 'autopsy' }, { id: 'letter' }];
 
@@ -33,4 +33,30 @@ test('editing title and evidence preserves past snapshots and avoids duplicate r
   assert.deepEqual(second.history[1].clueIds, ['letter']);
   assert.equal(reviseHypothesis(second, {}, evidence), second);
   assert.throws(() => reviseHypothesis(second, { title: ' ' }, evidence));
+});
+
+test('audit recognizes indirect supporting chains without declaring a hypothesis true', () => {
+  const clues = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+  const catalog = {
+    a: { connections_to: ['b'] },
+    b: { connections_to: ['c'] },
+    c: { connections_to: [] }
+  };
+  const result = auditHypothesisEvidence({ clueIds: ['a', 'b', 'c'] }, clues, catalog);
+  assert.equal(result.attached, 3);
+  assert.equal(result.connections.length, 2);
+  assert.equal(result.groups.length, 1);
+  assert.equal(result.needsReview, false);
+  assert.equal('confirmed' in result, false);
+});
+
+test('audit spots evidence islands and unavailable references without plot spoilers', () => {
+  const result = auditHypothesisEvidence({ clueIds: ['a', 'b', 'lost'] }, [
+    { id: 'a', connections_to: [] }, { id: 'b', connections_to: [] }
+  ]);
+  assert.equal(result.attached, 2);
+  assert.equal(result.missing, 1);
+  assert.equal(result.groups.length, 2);
+  assert.equal(result.needsReview, true);
+  assert.equal(JSON.stringify(result).includes('lost'), false);
 });

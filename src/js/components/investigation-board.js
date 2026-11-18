@@ -1,7 +1,7 @@
 import { GameState } from '../core/state.js';
 import { Investigation } from '../systems/investigation.js';
 import { Events } from '../core/events.js';
-import { HYPOTHESIS_STATUS_LABELS } from '../systems/hypotheses.js';
+import { HYPOTHESIS_STATUS_LABELS, auditHypothesisEvidence } from '../systems/hypotheses.js';
 
 /**
  * Доска расследования.
@@ -133,12 +133,23 @@ export class InvestigationBoard {
     const hypotheses = GameState.currentCase.hypotheses || [];
     const clues = GameState.currentCase.clues || [];
     const clueNames = new Map(clues.map(clue => [clue.id, clue.name]));
-    list.innerHTML = hypotheses.length ? hypotheses.map(item => `
+    list.innerHTML = hypotheses.length ? hypotheses.map(item => {
+      const audit = auditHypothesisEvidence(item, clues, Investigation._cluesData || {});
+      return `
       <article class="hypothesis-entry">
         <h4>${this._escapeHtml(item.title)}</h4>
         <p>${this._escapeHtml(item.reasoning)}</p>
         <p class="hypothesis-meta">УЛИКИ: ${(item.clueIds || []).length} · ИЗМЕНЕНИЙ: ${Math.max(0, (item.history || []).length - 1)}</p>
         <p class="hypothesis-evidence">${(item.clueIds || []).map(id => `<span>◇ ${this._escapeHtml(clueNames.get(id) || 'Материал недоступен')}</span>`).join('') || 'Улики пока не прикреплены'}</p>
+        <aside class="hypothesis-audit" aria-label="Проверка опорных улик">
+          <strong>АНАЛИЗ ДОКАЗАТЕЛЬСТВ</strong>
+          <p>${audit.attached === 0 ? 'Пока нет опорных улик: версия требует проверки.'
+            : audit.attached === 1 ? 'Приложена одна улика. Для проверки вывода полезны независимые подтверждения.'
+            : audit.needsReview ? `Связанные группы улик: ${audit.groups.length}. Между некоторыми материалами нет установленной связи — проверьте промежуточные факты.`
+            : `Все ${audit.attached} прикреплённые улики входят в одну цепочку известных связей.`}</p>
+          ${audit.missing ? `<p>Недоступных материалов: ${audit.missing}. Перепроверьте состав гипотезы.</p>` : ''}
+          <small>Это проверка связности материалов, а не доказательство истинности версии.</small>
+        </aside>
         <label>ОЦЕНКА ДЕТЕКТИВА
           <select data-hypothesis-id="${this._escapeHtml(item.id)}" aria-label="Статус гипотезы ${this._escapeHtml(item.title)}">
             ${Object.entries(HYPOTHESIS_STATUS_LABELS).map(([value, label]) => `<option value="${value}" ${item.status === value ? 'selected' : ''}>${label}</option>`).join('')}
@@ -161,7 +172,8 @@ export class InvestigationBoard {
             <small>Улик: ${(entry.clueIds || []).length}</small>
           </li>`).join('')}</ol>
         </details>
-      </article>`).join('') : '<p class="hypothesis-empty">Пока нет версий. Начните с наблюдения.</p>';
+      </article>`;
+    }).join('') : '<p class="hypothesis-empty">Пока нет версий. Начните с наблюдения.</p>';
   }
 
   _setupClickHandlers() {

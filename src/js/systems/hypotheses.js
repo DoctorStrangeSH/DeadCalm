@@ -32,3 +32,38 @@ export const HYPOTHESIS_STATUS_LABELS = Object.freeze({
   unchecked: 'Не проверена', probable: 'Вероятна', contradicted: 'Есть противоречия',
   confirmed: 'Подтверждена', rejected: 'Отвергнута'
 });
+
+/** An evidence-link audit, not an automatic judgment about a theory's truth. */
+export function auditHypothesisEvidence(hypothesis, availableClues, catalog = {}) {
+  const found = new Map(availableClues.filter(clue => clue.id).map(clue => [clue.id, clue]));
+  const ids = [...new Set(hypothesis.clueIds || [])].filter(id => found.has(id));
+  const graph = new Map(ids.map(id => [id, new Set()]));
+  const connections = [];
+  for (let i = 0; i < ids.length; i++) {
+    for (let j = i + 1; j < ids.length; j++) {
+      const [a, b] = [ids[i], ids[j]];
+      const first = catalog[a]?.connections_to || found.get(a).connections_to || [];
+      const second = catalog[b]?.connections_to || found.get(b).connections_to || [];
+      if (first.includes(b) || second.includes(a)) {
+        graph.get(a).add(b);
+        graph.get(b).add(a);
+        connections.push({ a, b });
+      }
+    }
+  }
+  const unseen = new Set(ids);
+  const groups = [];
+  while (unseen.size) {
+    const group = [];
+    const pending = [unseen.values().next().value];
+    while (pending.length) {
+      const id = pending.pop();
+      if (!unseen.delete(id)) continue;
+      group.push(id);
+      for (const neighbor of graph.get(id)) if (unseen.has(neighbor)) pending.push(neighbor);
+    }
+    groups.push(group);
+  }
+  return { attached: ids.length, missing: (hypothesis.clueIds || []).filter(id => !found.has(id)).length,
+    connections, groups, needsReview: groups.length > 1 };
+}
