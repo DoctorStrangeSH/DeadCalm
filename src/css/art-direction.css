@@ -194,6 +194,17 @@ body { background:#071015; color:#d3d5cc; }
 .hypothesis-entry h4 { color:#ecd3a7; font:18px Georgia,serif; }
 .hypothesis-entry > p { margin:9px 0; white-space:pre-wrap; overflow-wrap:anywhere; font:14px/1.5 Georgia,serif; }
 .hypothesis-entry .hypothesis-meta,.hypothesis-empty { color:#a9a393; font:11px 'Courier New',monospace; }
+.hypothesis-evidence { display:flex; flex-wrap:wrap; gap:6px; color:#d2c09e; }
+.hypothesis-evidence span { padding:5px 9px; border:1px solid #655d4d; background:#36362f; font:12px Georgia,serif; }
+.hypothesis-edit,.hypothesis-history { margin-top:12px; border-top:1px solid #5e5849; padding-top:10px; }
+.hypothesis-edit summary,.hypothesis-history summary { cursor:pointer; color:#dec396; font:12px 'Courier New',monospace; padding:8px 2px; }
+.hypothesis-edit .hypothesis-form { padding:10px 0; }
+.hypothesis-history ol { padding-left:25px; max-height:270px; overflow-y:auto; }
+.hypothesis-history li { padding:10px 0; border-bottom:1px dashed #55564e; font:12px/1.6 Georgia,serif; }
+.hypothesis-history li span { display:block; color:#e7d4ad; }
+.hypothesis-history li p { white-space:pre-wrap; overflow-wrap:anywhere; }
+.hypothesis-history li small { color:#a9a393; }
+.hypothesis-edit-error { color:#ecb3a0; }
 .notebook-evidence-detail .cinematic-dialog-content { max-height:min(80vh,780px); overflow-y:auto; }
 .notebook-evidence-links { margin:18px 0 22px; border-top:1px solid #655d4e; padding-top:15px; }
 .notebook-evidence-links-title { margin-bottom:10px; color:#d7b77f; font:11px 'Courier New',monospace; letter-spacing:.1em; }

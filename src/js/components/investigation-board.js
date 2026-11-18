@@ -110,22 +110,57 @@ export class InvestigationBoard {
       GameState.reviseHypothesis(select.dataset.hypothesisId, { status: select.value });
       this._renderHypotheses();
     });
+    this.container.querySelector('#hypothesis-list').addEventListener('submit', event => {
+      const form = event.target.closest('.hypothesis-edit-form');
+      if (!form) return;
+      event.preventDefault();
+      const data = new FormData(form);
+      try {
+        GameState.reviseHypothesis(form.dataset.hypothesisId, {
+          title: data.get('title'), reasoning: data.get('reasoning'), clueIds: data.getAll('clue')
+        });
+        this._renderHypotheses();
+      } catch (error) {
+        const message = form.querySelector('.hypothesis-edit-error');
+        message.textContent = error.message;
+      }
+    });
     this._renderHypotheses();
   }
 
   _renderHypotheses() {
     const list = this.container.querySelector('#hypothesis-list');
     const hypotheses = GameState.currentCase.hypotheses || [];
+    const clues = GameState.currentCase.clues || [];
+    const clueNames = new Map(clues.map(clue => [clue.id, clue.name]));
     list.innerHTML = hypotheses.length ? hypotheses.map(item => `
       <article class="hypothesis-entry">
         <h4>${this._escapeHtml(item.title)}</h4>
         <p>${this._escapeHtml(item.reasoning)}</p>
         <p class="hypothesis-meta">УЛИКИ: ${(item.clueIds || []).length} · ИЗМЕНЕНИЙ: ${Math.max(0, (item.history || []).length - 1)}</p>
+        <p class="hypothesis-evidence">${(item.clueIds || []).map(id => `<span>◇ ${this._escapeHtml(clueNames.get(id) || 'Материал недоступен')}</span>`).join('') || 'Улики пока не прикреплены'}</p>
         <label>ОЦЕНКА ДЕТЕКТИВА
           <select data-hypothesis-id="${this._escapeHtml(item.id)}" aria-label="Статус гипотезы ${this._escapeHtml(item.title)}">
             ${Object.entries(HYPOTHESIS_STATUS_LABELS).map(([value, label]) => `<option value="${value}" ${item.status === value ? 'selected' : ''}>${label}</option>`).join('')}
           </select>
         </label>
+        <details class="hypothesis-edit"><summary>ИЗМЕНИТЬ ВЕРСИЮ</summary>
+          <form class="hypothesis-form hypothesis-edit-form" data-hypothesis-id="${this._escapeHtml(item.id)}">
+            <label>НАЗВАНИЕ <input name="title" maxlength="100" required value="${this._escapeHtml(item.title)}" /></label>
+            <label>ОБОСНОВАНИЕ <textarea name="reasoning" maxlength="2000" required rows="3">${this._escapeHtml(item.reasoning)}</textarea></label>
+            <fieldset><legend>ОПОРНЫЕ УЛИКИ</legend>${clues.map(clue => `<label class="hypothesis-clue"><input type="checkbox" name="clue" value="${this._escapeHtml(clue.id)}" ${(item.clueIds || []).includes(clue.id) ? 'checked' : ''} /> ${this._escapeHtml(clue.name)}</label>`).join('')}</fieldset>
+            <p class="hypothesis-edit-error" role="alert"></p>
+            <button type="submit" class="btn-noir">СОХРАНИТЬ ИЗМЕНЕНИЯ</button>
+          </form>
+        </details>
+        <details class="hypothesis-history"><summary>ИСТОРИЯ ВЕРСИИ (${(item.history || []).length})</summary>
+          <ol>${(item.history || []).map(entry => `<li>
+            <time>${this._escapeHtml(new Date(entry.at).toLocaleString('ru-RU'))}</time> · ${entry.type === 'created' ? 'Создана' : 'Пересмотрена'} · ${this._escapeHtml(HYPOTHESIS_STATUS_LABELS[entry.status] || 'Не проверена')}
+            ${entry.title ? `<span>${this._escapeHtml(entry.title)}</span>` : ''}
+            ${entry.reasoning ? `<p>${this._escapeHtml(entry.reasoning)}</p>` : ''}
+            <small>Улик: ${(entry.clueIds || []).length}</small>
+          </li>`).join('')}</ol>
+        </details>
       </article>`).join('') : '<p class="hypothesis-empty">Пока нет версий. Начните с наблюдения.</p>';
   }
 

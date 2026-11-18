@@ -23,3 +23,14 @@ test('changing a theory retains its earlier reasoning and revisions', () => {
   assert.equal(second.history[1].reasoning, 'Теперь сомневаюсь');
   assert.throws(() => reviseHypothesis(second, { status: 'solved' }, evidence));
 });
+
+test('editing title and evidence preserves past snapshots and avoids duplicate revisions', () => {
+  const first = createHypothesis({ id: 'h', title: 'Старая', reasoning: 'Запись', clueIds: ['autopsy'] }, evidence, '2026-01-01');
+  const second = reviseHypothesis(first, { title: 'Новая', clueIds: ['letter'] }, evidence, '2026-01-02');
+  assert.equal(second.title, 'Новая');
+  assert.equal(second.history[0].title, 'Старая');
+  assert.deepEqual(second.history[0].clueIds, ['autopsy']);
+  assert.deepEqual(second.history[1].clueIds, ['letter']);
+  assert.equal(reviseHypothesis(second, {}, evidence), second);
+  assert.throws(() => reviseHypothesis(second, { title: ' ' }, evidence));
+});

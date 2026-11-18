@@ -8,7 +8,7 @@ export function createHypothesis({ id, title, reasoning, clueIds = [] }, availab
   const evidence = [...new Set(clueIds)].filter(clueId => allowed.has(clueId));
   return { id, title: cleanTitle, reasoning: cleanReasoning, clueIds: evidence,
     status: 'unchecked', createdAt: now, updatedAt: now,
-    history: [{ at: now, type: 'created', status: 'unchecked', clueIds: evidence }] };
+    history: [{ at: now, type: 'created', status: 'unchecked', clueIds: [...evidence], reasoning: cleanReasoning, title: cleanTitle }] };
 }
 
 export function reviseHypothesis(hypothesis, change, availableClues, now = new Date().toISOString()) {
@@ -18,9 +18,13 @@ export function reviseHypothesis(hypothesis, change, availableClues, now = new D
   const clueIds = [...new Set(change.clueIds ?? hypothesis.clueIds)].filter(id => allowed.has(id));
   const reasoning = String(change.reasoning ?? hypothesis.reasoning).trim().slice(0, 2000);
   if (!reasoning) throw new Error('Обоснование не может быть пустым');
-  const next = { ...hypothesis, status, clueIds, reasoning, updatedAt: now };
+  const title = String(change.title ?? hypothesis.title).trim().slice(0, 100);
+  if (!title) throw new Error('Название не может быть пустым');
+  if (status === hypothesis.status && title === hypothesis.title && reasoning === hypothesis.reasoning &&
+      JSON.stringify(clueIds) === JSON.stringify(hypothesis.clueIds || [])) return hypothesis;
+  const next = { ...hypothesis, title, status, clueIds, reasoning, updatedAt: now };
   next.history = [...(hypothesis.history || []), { at: now, type: 'revised', status,
-    clueIds: [...clueIds], reasoning }];
+    clueIds: [...clueIds], reasoning, title }];
   return next;
 }
 

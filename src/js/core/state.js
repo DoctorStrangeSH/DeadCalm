@@ -108,6 +108,7 @@ export var GameState = {
     const index = hypotheses.findIndex(item => item.id === id);
     if (index === -1) return null;
     const revised = reviseHypothesis(hypotheses[index], change, this.currentCase.clues);
+    if (revised === hypotheses[index]) return revised;
     hypotheses[index] = revised;
     this.save();
     Events.emit('hypothesis:revised', revised);
