@@ -1,5 +1,6 @@
 /* DEAD CALM — Blackford Noir visual language. CSS-drawn environments remain crisp at every resolution. */
 :root { --ink:#07151a; --navy:#10262c; --brass:#d4b57b; --paper:#c5b89b; --fog:#8fa7a4; }
+[hidden] { display:none !important; }
 body { background:#071015; color:#d3d5cc; }
 .scene { background:radial-gradient(ellipse at 50% 0%,#1a2a2d 0%,#0b1519 54%,#080e11 100%); }
 .scene:not(.title-scene)::before { content:""; position:fixed; inset:0; pointer-events:none; opacity:.15; background:repeating-linear-gradient(0deg,transparent 0 3px,#7d9592 4px 4.3px); z-index:0; }
@@ -11,6 +12,18 @@ body { background:#071015; color:#d3d5cc; }
 .btn-noir:focus-visible, .map-location:focus-visible { outline:2px solid #f8d795; outline-offset:4px; }
 .card, .notification, .atlas-info { background:linear-gradient(145deg,#1a2b2e,#101d21); border:1px solid #45534e; box-shadow:0 12px 30px #0003; }
 .card:hover { border-color:#d4b57b; background:#213338; }
+.court-workflow-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; margin:18px 0 15px; padding:15px 17px; border:1px solid #65705f; background:linear-gradient(110deg,#253638,#101d21); }
+.court-workflow-overline { color:#dabd85; font:10px 'Courier New',monospace; letter-spacing:.14em; }
+.court-workflow-status { margin-top:6px; color:#b9c7bc; font:12px/1.45 Georgia,serif; }
+.court-workflow-toggle { min-height:42px; padding:9px 13px; font:10px/1.4 'Courier New',monospace; }
+.court-workflow-stages { min-width:0; }
+.court-workflow-stages:not(.court-show-completed) .court-stage-complete { display:none; }
+.court-workflow-stage { margin-bottom:14px; padding:12px; border:1px solid #42544f; background:linear-gradient(135deg,#1a2a2d,#0d1b20); }
+.court-workflow-stage > .grid { margin-top:10px; }
+.court-workflow-stage .card { min-width:0; padding:15px; text-wrap:pretty; }
+.court-workflow-stage .card:disabled { cursor:default; opacity:.6; }
+.court-workflow-stage button:focus-visible,.court-workflow-toggle:focus-visible { outline:2px solid #f5d394; outline-offset:3px; }
+@media(max-width:600px) { .court-workflow-toolbar { align-items:stretch; padding:12px; } .court-workflow-toggle { width:100%; } .court-workflow-stage { padding:10px; } }
 .title-scene { isolation:isolate; background:#09151a; min-height:100%; overflow:hidden; }
 .title-art { position:absolute; inset:0; z-index:-1; overflow:hidden; background:linear-gradient(180deg,#071116 0%,#192b32 36%,#3b4b4c 55%,#101b21 60%,#071116 100%); }
 /* Painted Blackford harbor: optimized WebP, with CSS atmosphere layered above. */

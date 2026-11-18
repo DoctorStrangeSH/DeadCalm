@@ -2,6 +2,7 @@ import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { canChallengeGuard, resolveGuardChallenge } from '../systems/court-guard.js';
 import { canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation } from '../systems/witness-provenance.js';
+import { setupCourtWorkflow } from '../systems/court-workflow.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -63,6 +64,15 @@ export function render(container, data) {
           <p class="card-subtitle">Ящики, бумаги, личные вещи</p>
         </button>
       </div>
+
+      <div class="court-workflow-toolbar" aria-label="Ход расследования в суде">
+        <div>
+          <p class="court-workflow-overline">МАТЕРИАЛЫ ДЕЛА · ПРОВЕРКИ</p>
+          <p id="court-workflow-status" class="court-workflow-status" role="status" aria-live="polite"></p>
+        </div>
+        <button id="court-show-completed" class="btn-noir court-workflow-toggle" hidden>ПОКАЗАТЬ ЗАВЕРШЁННЫЕ</button>
+      </div>
+      <div id="court-workflow-stages" class="court-workflow-stages"></div>
 
       <div id="court-records" class="mb-6" ${GameState.hasClue('court_phone_register_copy') ? '' : 'hidden'}>
         <p class="text-gold text-xs tracking-widest mb-3">ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА · НОМЕР 17</p>
@@ -150,6 +160,7 @@ export function render(container, data) {
   `;
 
   updateCluesList();
+  const refreshCourtWorkflow = setupCourtWorkflow(container);
 
   async function loadCourtRules() {
     const response = await fetch('src/data/contradictions.json');
@@ -167,6 +178,7 @@ export function render(container, data) {
     if (!GameState.hasClue('orlov_badge_handover') && canConfrontOrlov(GameState.currentCase, rules)) {
       container.querySelector('#orlov-confrontation').hidden = false;
     }
+    refreshCourtWorkflow();
   }).catch(error => console.warn('[Court] Не удалось проверить основания для повторного опроса:', error));
 
   container.querySelectorAll('.court-hotspot').forEach(function(button) {
@@ -270,6 +282,7 @@ export function render(container, data) {
       if (!catalog[clueId]) throw new Error('Не найдена запись в каталоге');
       GameState.addClue(catalog[clueId]);
       if (clueId === 'court_access_ledger') container.querySelector('#court-witnesses').hidden = false;
+      refreshCourtWorkflow();
       showNarrative(narrative, catalog[clueId].name);
     } catch (error) {
       button.disabled = false;
@@ -322,6 +335,7 @@ export function render(container, data) {
       if (GameState.hasClue('secretary_source_statement') && GameState.hasClue('pass_041_counterfoil')) {
         container.querySelector('#orlov-inquiry').hidden = false;
       }
+      refreshCourtWorkflow();
       showNarrative(narrative, catalog[clueId].name);
     } catch (error) {
       console.error('[Court] Не удалось проверить источник:', error);
@@ -373,6 +387,7 @@ export function render(container, data) {
       GameState.setFlag('court_orlov_interview_tone', tone);
       GameState.updateRelationship('npc_pavel_orlov', outcome.trustDelta);
       panel.hidden = true;
+      refreshCourtWorkflow();
       showNarrative(outcome.text + ' Документ добавлен в архив улик.', 'ПОВТОРНЫЙ ДОПРОС ОРЛОВА');
     } catch (error) {
       console.error('[Court] Не удалось провести повторный допрос Орлова:', error);
@@ -404,6 +419,7 @@ export function render(container, data) {
       GameState.updateRelationship('npc_viktor_bell', choice.trustDelta);
       panel.hidden = true;
       container.querySelector('#court-visitors').hidden = false;
+      refreshCourtWorkflow();
       showNarrative(choice.text + ' Маршрутный лист добавлен в архив улик.', 'ПОВТОРНЫЙ ДОПРОС');
     } catch (error) {
       console.error('[Court] Ошибка повторного допроса:', error);
