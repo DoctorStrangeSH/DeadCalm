@@ -2,11 +2,13 @@ import { GameState } from '../core/state.js';
 import { Events } from '../core/events.js';
 import { NPCMemory } from './npc-memory.js';
 import { resolveDialogueReaction } from './dialogue-reactions.js';
+import { hasDiscoveredContradiction } from './contradictions.js';
 
 export var DialogueEngine = {
   _dialogues: null,
   _characters: null,
   _clues: null,
+  _contradictionRules: [],
   _currentNPC: null,
   _currentNode: null,
   _unlockedTopics: [],
@@ -19,11 +21,13 @@ export var DialogueEngine = {
       var results = await Promise.all([
         this._loadJSON('src/data/dialogues.json'),
         this._loadJSON('src/data/characters.json'),
-        this._loadJSON('src/data/clues.json')
+        this._loadJSON('src/data/clues.json'),
+        this._loadJSON('src/data/contradictions.json').catch(() => [])
       ]);
       this._dialogues = results[0];
       this._characters = results[1];
       this._clues = results[2];
+      this._contradictionRules = Array.isArray(results[3]) ? results[3] : [];
       this._initialized = true;
       console.log('[Dialogue] Система диалогов готова');
       console.log('[Dialogue] NPC с диалогами: ' + Object.keys(this._dialogues).length);
@@ -32,6 +36,7 @@ export var DialogueEngine = {
       this._dialogues = {};
       this._characters = {};
       this._clues = {};
+      this._contradictionRules = [];
       this._initialized = true;
     }
   },
@@ -164,13 +169,14 @@ export var DialogueEngine = {
 
       // Считаем, сколько вопросов уже задано в этой теме
       var askedInTopic = 0;
-      topic.responses.forEach(function(r) {
+      const accessibleResponses = topic.responses.filter(r => self._isResponseAvailable(r));
+      accessibleResponses.forEach(function(r) {
         if (self._askedQuestions.indexOf(r.id) !== -1) {
           askedInTopic++;
         }
       });
 
-      var totalInTopic = topic.responses.length;
+      var totalInTopic = accessibleResponses.length;
       var allAsked = askedInTopic >= totalInTopic;
 
       console.log('[Dialogue]   Тема ' + topicId + ': задано ' + askedInTopic + '/' + totalInTopic + ' (исчерпана: ' + allAsked + ')');
@@ -180,6 +186,11 @@ export var DialogueEngine = {
     });
 
     return available;
+  },
+
+  _isResponseAvailable(response) {
+    return hasDiscoveredContradiction(response.requires_contradiction,
+      GameState.currentCase.hypotheses, GameState.currentCase.clues, this._contradictionRules);
   },
 
   selectTopic(topicId) {
@@ -194,7 +205,7 @@ export var DialogueEngine = {
 
     var self = this;
     var unansweredQuestions = topic.responses.filter(function(r) {
-      return self._askedQuestions.indexOf(r.id) === -1;
+      return self._askedQuestions.indexOf(r.id) === -1 && self._isResponseAvailable(r);
     });
 
     console.log('[Dialogue] Выбрана тема: ' + topicId + ', незаданных вопросов: ' + unansweredQuestions.length);
@@ -228,7 +239,7 @@ export var DialogueEngine = {
       }
     }
 
-    if (!foundResponse) {
+    if (!foundResponse || !this._isResponseAvailable(foundResponse)) {
       console.warn('[Dialogue] Ответ не найден для вопроса: ' + questionId);
       return null;
     }
@@ -402,12 +413,14 @@ export var DialogueEngine = {
 
   _formatAnswer(response, context = {}) {
     var character = this.getCharacter(this._currentNPC);
+    const trust = NPCMemory.getTrust(this._currentNPC);
     return {
       type: 'answer',
-      text: response.answer,
+      text: trust < 40 && response.answer_low_trust ? response.answer_low_trust :
+        trust >= 60 && response.answer_high_trust ? response.answer_high_trust : response.answer,
       speaker: character?.name || this._currentNPC,
       speakerRole: character?.role || '',
-      trust: NPCMemory.getTrust(this._currentNPC),
+      trust,
       addedNote: context.addedNote || null,
       addedClue: context.addedClue || null,
       canContinue: true

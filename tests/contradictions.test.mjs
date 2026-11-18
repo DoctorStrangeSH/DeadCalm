@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { findContradictions } from '../src/js/systems/contradictions.js';
+import { findContradictions, hasDiscoveredContradiction } from '../src/js/systems/contradictions.js';
+import { DialogueEngine } from '../src/js/systems/dialogue.js';
+import { GameState } from '../src/js/core/state.js';
 import { readFileSync } from 'node:fs';
 
 const rules = [{ id: 'timeline_conflict', clueIds: ['a', 'b'],
@@ -34,4 +36,54 @@ test('authored contradiction references real clues and a discoverable dialogue r
   assert.equal(dialogues.npc_ray_morgan.topics.about_case.responses.find(r => r.id === 'initial_report').gives_clue, 'patrol_initial_report');
   assert.deepEqual(findContradictions({ clueIds: rule.clueIds }, rule.clueIds.map(id => catalog[id]), authored).map(r => r.id), [rule.id]);
   assert.deepEqual(findContradictions({ clueIds: rule.clueIds }, [catalog.autopsy_report_01], authored), []);
+});
+
+test('Ray follow-up stays locked before deduction and unlocks on a saved hypothesis', () => {
+  const catalog = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
+  const dialogues = JSON.parse(readFileSync(new URL('../src/data/dialogues.json', import.meta.url), 'utf8'));
+  const authored = JSON.parse(readFileSync(new URL('../src/data/contradictions.json', import.meta.url), 'utf8'));
+  const question = dialogues.npc_ray_morgan.topics.about_case.responses.find(r => r.id === 'confront_report_timing');
+  assert.equal(question.requires_contradiction, 'report_vs_autopsy_timing');
+  const oldCase = GameState.currentCase;
+  const oldRules = DialogueEngine._contradictionRules;
+  const oldUnlocked = DialogueEngine._unlockedTopics;
+  const oldAsked = DialogueEngine._askedQuestions;
+  try {
+    GameState.currentCase = { clues: [catalog.autopsy_report_01, catalog.patrol_initial_report], hypotheses: [] };
+    DialogueEngine._contradictionRules = authored;
+    DialogueEngine._unlockedTopics = ['about_case'];
+    DialogueEngine._askedQuestions = ['case_details', 'initial_report', 'old_case'];
+    assert.equal(DialogueEngine._isResponseAvailable(question), false);
+    assert.deepEqual(DialogueEngine._getAvailableTopics(dialogues.npc_ray_morgan), []);
+    GameState.currentCase.hypotheses = [{ clueIds: ['autopsy_report_01', 'patrol_initial_report'] }];
+    assert.equal(DialogueEngine._isResponseAvailable(question), true);
+    assert.deepEqual(DialogueEngine._getAvailableTopics(dialogues.npc_ray_morgan), ['about_case']);
+    GameState.currentCase.clues = [catalog.autopsy_report_01];
+    assert.equal(DialogueEngine._isResponseAvailable(question), false);
+    assert.equal(hasDiscoveredContradiction('unknown', [], [], authored), false);
+  } finally {
+    GameState.currentCase = oldCase;
+    DialogueEngine._contradictionRules = oldRules;
+    DialogueEngine._unlockedTopics = oldUnlocked;
+    DialogueEngine._askedQuestions = oldAsked;
+  }
+});
+
+test('Ray response adjusts to trust without changing the discovered contradiction', () => {
+  const dialogues = JSON.parse(readFileSync(new URL('../src/data/dialogues.json', import.meta.url), 'utf8'));
+  const question = dialogues.npc_ray_morgan.topics.about_case.responses.find(r => r.id === 'confront_report_timing');
+  const previousNPC = DialogueEngine._currentNPC;
+  const previousRelationships = GameState.relationships;
+  try {
+    DialogueEngine._currentNPC = 'npc_ray_morgan';
+    GameState.relationships = { npc_ray_morgan: { trust: 20 } };
+    assert.equal(DialogueEngine._formatAnswer(question).text, question.answer_low_trust);
+    GameState.relationships.npc_ray_morgan.trust = 50;
+    assert.equal(DialogueEngine._formatAnswer(question).text, question.answer);
+    GameState.relationships.npc_ray_morgan.trust = 80;
+    assert.equal(DialogueEngine._formatAnswer(question).text, question.answer_high_trust);
+  } finally {
+    DialogueEngine._currentNPC = previousNPC;
+    GameState.relationships = previousRelationships;
+  }
 });

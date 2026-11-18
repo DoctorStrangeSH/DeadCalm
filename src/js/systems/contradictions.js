@@ -17,3 +17,9 @@ export function findContradictions(hypothesis, discoveredClues, rules = []) {
   }).map(rule => ({ id: rule.id, summary: rule.summary, followUp: rule.followUp || null,
     clueIds: [...rule.clueIds] }));
 }
+
+export function hasDiscoveredContradiction(ruleId, hypotheses, discoveredClues, rules = []) {
+  if (!ruleId) return true;
+  return (hypotheses || []).some(hypothesis =>
+    findContradictions(hypothesis, discoveredClues, rules).some(rule => rule.id === ruleId));
+}
