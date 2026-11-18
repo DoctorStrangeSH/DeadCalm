@@ -28,7 +28,8 @@ const CHARACTER_REACTION_PORTRAITS = Object.freeze({
     withdrawal: 'anna-holt-withdrawal.webp'
   }),
   'Марта Хейз': Object.freeze({
-    tension: 'marta-hayes-tension.webp'
+    tension: 'marta-hayes-tension.webp',
+    warmth: 'marta-hayes-warmth.webp'
   })
 });
 
