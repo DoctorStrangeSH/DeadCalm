@@ -79,6 +79,16 @@
     "source": "Хозяйственная служба суда",
     "connections_to": ["guard_key_testimony", "court_access_ledger"]
   },
+  "guard_round_sheet": {
+    "id": "guard_round_sheet",
+    "name": "Маршрутный лист ночной охраны",
+    "category": "document",
+    "description": "В подписанном маршрутном листе Белла указан обход западной лестницы с 20:05 до 20:25. В 20:15, когда с телефона № 17 звонили в участок, охранник не находился у коридора секретарей. Лист подтверждает запланированный обход, но не позволяет установить, кто вошёл в комнату.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Журнал служебных обходов охраны",
+    "connections_to": ["guard_key_testimony", "court_phone_register_copy", "court_access_ledger"]
+  },
   "poison_vial_info": {
     "id": "poison_vial_info",
     "name": "Информация о яде",

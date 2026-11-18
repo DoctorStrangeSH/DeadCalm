@@ -1,5 +1,6 @@
 import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
+import { canChallengeGuard, resolveGuardChallenge } from '../systems/court-guard.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -86,6 +87,15 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="guard-follow-up" class="card p-4 mb-6" hidden>
+        <p class="card-title">ПОВТОРНЫЙ ДОПРОС ВИКТОРА БЕЛЛА</p>
+        <p class="card-subtitle mt-2 mb-3">Вы доказали, что дубликат ключа существует. Как предъявить охраннику противоречие?</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-guard-patient" class="btn-noir text-xs py-3">СПОКОЙНО ПРЕДЪЯВИТЬ ОПИСЬ</button>
+          <button id="btn-guard-pressure" class="btn-noir text-xs py-3">ПОТРЕБОВАТЬ ОБЪЯСНЕНИЙ</button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -94,6 +104,19 @@ export function render(container, data) {
   `;
 
   updateCluesList();
+
+  async function loadGuardChallengeRules() {
+    if (GameState.hasClue('guard_round_sheet')) return null;
+    const response = await fetch('src/data/contradictions.json');
+    if (!response.ok) throw new Error('HTTP ' + response.status);
+    return await response.json();
+  }
+
+  loadGuardChallengeRules().then(rules => {
+    if (rules && canChallengeGuard(GameState.currentCase, rules)) {
+      container.querySelector('#guard-follow-up').hidden = false;
+    }
+  }).catch(error => console.warn('[Court] Не удалось проверить основания для допроса:', error));
 
   container.querySelectorAll('.court-hotspot').forEach(function(button) {
     button.addEventListener('click', function() {
@@ -222,6 +245,36 @@ export function render(container, data) {
       'В хозяйственной описи значится запасной ключ от комнаты секретарей. Он числится в опечатанном шкафу, но отметки о проверке пломбы в тот день нет. Это ещё не доказательство вскрытия шкафа — однако слова охранника о единственном ключе неверны.',
       'court_access_ledger');
   });
+
+  async function challengeGuard(tone) {
+    if (GameState.hasClue('guard_round_sheet')) return;
+    const choice = resolveGuardChallenge(tone);
+    if (!choice) return;
+    const panel = container.querySelector('#guard-follow-up');
+    const buttons = panel.querySelectorAll('button');
+    buttons.forEach(button => { button.disabled = true; });
+    try {
+      const rules = await loadGuardChallengeRules();
+      if (!canChallengeGuard(GameState.currentCase, rules)) return;
+      const response = await fetch('src/data/clues.json');
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const catalog = await response.json();
+      if (!catalog.guard_round_sheet) throw new Error('Нет маршрутного листа в каталоге');
+      GameState.addClue(catalog.guard_round_sheet);
+      GameState.setFlag('court_guard_interview_tone', tone);
+      GameState.updateRelationship('npc_viktor_bell', choice.trustDelta);
+      panel.hidden = true;
+      showNarrative(choice.text + ' Маршрутный лист добавлен в архив улик.', 'ПОВТОРНЫЙ ДОПРОС');
+    } catch (error) {
+      console.error('[Court] Ошибка повторного допроса:', error);
+      showNarrative('Проверка документов временно недоступна. Попробуйте повторить разговор.', 'ДОПРОС ПРЕРВАН');
+    } finally {
+      buttons.forEach(button => { button.disabled = false; });
+    }
+  }
+
+  container.querySelector('#btn-guard-patient').addEventListener('click', () => challengeGuard('patient'));
+  container.querySelector('#btn-guard-pressure').addEventListener('click', () => challengeGuard('pressure'));
 
   document.getElementById('btn-leave').addEventListener('click', function() {
     Events.emit('navigate', { scene: 'city-map' });
