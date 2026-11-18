@@ -30,7 +30,7 @@ test('authored contradiction references real clues and a discoverable dialogue r
   const catalog = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
   const dialogues = JSON.parse(readFileSync(new URL('../src/data/dialogues.json', import.meta.url), 'utf8'));
   const authored = JSON.parse(readFileSync(new URL('../src/data/contradictions.json', import.meta.url), 'utf8'));
-  assert.equal(authored.length, 4);
+  assert.equal(authored.length, 5);
   const rule = authored[0];
   for (const id of rule.clueIds) assert.ok(catalog[id], `${id} missing from clue catalog`);
   assert.equal(dialogues.npc_ray_morgan.topics.about_case.responses.find(r => r.id === 'initial_report').gives_clue, 'patrol_initial_report');

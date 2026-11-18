@@ -117,7 +117,7 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Повторные показания Елены Савельевой",
-    "connections_to": ["secretary_access_testimony", "guard_key_testimony"]
+    "connections_to": ["secretary_access_testimony", "guard_key_testimony", "orlov_evening_statement"]
   },
   "pass_041_counterfoil": {
     "id": "pass_041_counterfoil",
@@ -127,7 +127,27 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Корешковая книга поста охраны суда",
-    "connections_to": ["court_visitor_log", "secretary_source_statement"]
+    "connections_to": ["court_visitor_log", "secretary_source_statement", "orlov_badge_scan"]
+  },
+  "orlov_evening_statement": {
+    "id": "orlov_evening_statement",
+    "name": "Показания Павла Орлова о вечернем звонке",
+    "category": "testimony",
+    "description": "Павел Орлов говорит, что покинул суд в 19:45 и позвонил Савельевой из дома около 20:40. Сообщение о закрытом коридоре, по его словам, он узнал от охранника Белла. Орлов отрицает, что после ухода возвращался в здание.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Павел Орлов, старший делопроизводитель",
+    "connections_to": ["secretary_source_statement", "orlov_badge_scan"]
+  },
+  "orlov_badge_scan": {
+    "id": "orlov_badge_scan",
+    "name": "Выписка проходов служебной карточки Орлова",
+    "category": "document",
+    "description": "Контроллер служебного входа зафиксировал карточку, закреплённую за Павлом Орловым, при входе в 20:02 и выходе в 20:47. Запись противоречит его утверждению, что он ушёл в 19:45 и не возвращался. Но контроллер считывает карточку, а не личность владельца; использование её другим человеком не исключено.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Система служебных пропусков суда",
+    "connections_to": ["orlov_evening_statement", "pass_041_counterfoil"]
   },
   "poison_vial_info": {
     "id": "poison_vial_info",

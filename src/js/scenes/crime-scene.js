@@ -121,6 +121,18 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="orlov-inquiry" class="mb-6" ${GameState.hasClue('secretary_source_statement') && GameState.hasClue('pass_041_counterfoil') ? '' : 'hidden'}>
+        <p class="text-gold text-xs tracking-widest mb-3">ПАВЕЛ ОРЛОВ · ПРОВЕРКА АЛИБИ</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-orlov-statement" class="card text-left" ${GameState.hasClue('orlov_evening_statement') ? 'disabled' : ''}>
+            <p class="card-title">ОПРОСИТЬ ПАВЛА ОРЛОВА</p><p class="card-subtitle">Почему он сообщил Савельевой о ночном закрытии?</p>
+          </button>
+          <button id="btn-orlov-badge" class="card text-left" ${GameState.hasClue('orlov_badge_scan') ? 'disabled' : ''}>
+            <p class="card-title">ПРОВЕРИТЬ СЛУЖЕБНУЮ КАРТОЧКУ</p><p class="card-subtitle">Сопоставить слова Орлова с системой прохода.</p>
+          </button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -295,6 +307,9 @@ export function render(container, data) {
       const catalog = await response.json();
       if (!catalog[clueId]) throw new Error('Не найдена запись в каталоге');
       GameState.addClue(catalog[clueId]);
+      if (GameState.hasClue('secretary_source_statement') && GameState.hasClue('pass_041_counterfoil')) {
+        container.querySelector('#orlov-inquiry').hidden = false;
+      }
       showNarrative(narrative, catalog[clueId].name);
     } catch (error) {
       console.error('[Court] Не удалось проверить источник:', error);
@@ -311,6 +326,21 @@ export function render(container, data) {
   container.querySelector('#btn-pass-counterfoil').addEventListener('click', function() {
     traceSecretary('btn-pass-counterfoil', 'pass_041_counterfoil',
       'В корешковой книге сохранился № 041 со штампом 20:08. Зона допуска совпадает с журналом, но строки для имени остались пустыми. Выдача зарегистрирована дважды; кому достался пропуск, по этим бумагам всё ещё неизвестно.');
+  });
+
+  function inspectOrlov(buttonId, clueId, narrative) {
+    if (!GameState.hasClue('secretary_source_statement') || !GameState.hasClue('pass_041_counterfoil')) return;
+    inspectCourtRecord(buttonId, clueId, narrative, 'secretary_source_statement');
+  }
+
+  container.querySelector('#btn-orlov-statement').addEventListener('click', function() {
+    inspectOrlov('btn-orlov-statement', 'orlov_evening_statement',
+      'Павел Орлов поправляет галстук: «Я ушёл в 19:45. В суд не возвращался. Около 20:40 позвонил Савельевой из дома: Белл говорил, что коридор был закрыт». На уточнение о пропуске № 041 он отвечает: «Не мой номер. Моя карточка служебная». Утверждения стоит проверить по регистрации входа.');
+  });
+  container.querySelector('#btn-orlov-badge').addEventListener('click', function() {
+    inspectOrlov('btn-orlov-badge', 'orlov_badge_scan',
+      'Считыватель служебного входа зарегистрировал карточку Орлова в 20:02 и 20:47. Значит, карточка находилась в здании после его предполагаемого ухода. Но данные считывателя не устанавливают лицо, использовавшее карточку. Пропуск № 041 — другой документ.',
+    );
   });
 
   async function challengeGuard(tone) {
