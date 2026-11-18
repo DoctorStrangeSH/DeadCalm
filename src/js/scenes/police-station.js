@@ -1,5 +1,6 @@
 import { Events } from '../core/events.js';
 import { DialogBox } from '../components/dialog-box.js';
+import { GameState } from '../core/state.js';
 
 export function render(container, data) {
   container.innerHTML = `
@@ -36,8 +37,13 @@ export function render(container, data) {
           <p class="card-title">ПОГОВОРИТЬ С ДЕТЕКТИВОМ МОРГАНОМ <span aria-hidden="true">↗</span></p>
           <p class="card-subtitle">Расспросить о деле. Если он, конечно, в настроении.</p>
         </button>
+        <button id="btn-request-register" class="card precinct-action text-left w-full" ${GameState.hasClue('court_switchboard_log') && !GameState.hasClue('court_phone_register_copy') ? '' : 'hidden'}>
+          <p class="card-title">ПОДАТЬ ЗАПРОС НА КНИГУ СОЕДИНЕНИЙ <span aria-hidden="true">↗</span></p>
+          <p class="card-subtitle">Предъявить выписку дежурному и запросить заверенную копию по делу.</p>
+        </button>
       </div>
 
+      <div id="precinct-register-result" class="hidden card p-4 mb-6" role="status" aria-live="polite"></div>
       <div id="dialog-container" class="hidden"></div>
     </div>
   `;
@@ -54,7 +60,31 @@ export function render(container, data) {
     Events.once('dialogue:closed', function() {
       dialogContainer.innerHTML = '<p class="text-gray-500 text-sm italic">Рэй закуривает очередную сигарету и отворачивается к окну. Аудиенция окончена.</p>';
       actions.classList.remove('hidden');
+      container.querySelector('#btn-request-register').hidden = !GameState.hasClue('court_switchboard_log') || GameState.hasClue('court_phone_register_copy');
     });
+  });
+
+  container.querySelector('#btn-request-register').addEventListener('click', async function() {
+    if (!GameState.hasClue('court_switchboard_log') || GameState.hasClue('court_phone_register_copy')) return;
+    const button = this;
+    button.disabled = true;
+    const result = container.querySelector('#precinct-register-result');
+    try {
+      const response = await fetch('src/data/clues.json');
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const catalog = await response.json();
+      const clue = catalog.court_phone_register_copy;
+      if (!clue) throw new Error('Не найдена запись в каталоге улик');
+      GameState.addClue(clue);
+      button.hidden = true;
+      result.classList.remove('hidden');
+      result.innerHTML = '<p class="card-title">ЗАПРОС ЗАРЕГИСТРИРОВАН</p><p class="card-subtitle mt-2">Дежурный сверяет номер дела с выпиской и выдаёт заверенную копию страницы из суда. Время совпадает, указан внутренний номер 17 и пометка «К». Подписи абонента нет — его личность по этим бумагам установить нельзя. Копия добавлена в архив улик.</p>';
+    } catch (error) {
+      button.disabled = false;
+      result.classList.remove('hidden');
+      result.textContent = 'Архивная запись сейчас недоступна. Попробуйте ещё раз.';
+      console.error('[Precinct] Ошибка выдачи копии:', error);
+    }
   });
 
   document.getElementById('btn-leave').addEventListener('click', function() {

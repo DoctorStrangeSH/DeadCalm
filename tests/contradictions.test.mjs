@@ -109,3 +109,41 @@ test('phone log appears only after confronting Ray and rewards the documented cl
     GameState.currentCase = oldCase;
   }
 });
+
+test('court register interview requires prior evidence and trust, but formal request remains possible', () => {
+  const dialogues = JSON.parse(readFileSync(new URL('../src/data/dialogues.json', import.meta.url), 'utf8'));
+  const clues = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
+  const followUp = dialogues.npc_ray_morgan.topics.about_case.responses.find(r => r.id === 'review_court_register_with_ray');
+  const scene = readFileSync(new URL('../src/js/scenes/police-station.js', import.meta.url), 'utf8');
+  assert.equal(followUp.requires_question, 'inspect_incoming_calls');
+  assert.equal(followUp.requires_clue, 'court_switchboard_log');
+  assert.equal(followUp.min_trust, 60);
+  assert.equal(followUp.gives_clue, 'court_phone_register_copy');
+  assert.ok(clues.court_phone_register_copy.connections_to.includes('court_switchboard_log'));
+  assert.match(scene, /btn-request-register/);
+  assert.match(scene, /GameState\.addClue\(clue\)/);
+  assert.match(scene, /hasClue\('court_switchboard_log'\)/);
+  const previousCase = GameState.currentCase;
+  const previousRelationships = GameState.relationships;
+  const previousNPC = DialogueEngine._currentNPC;
+  const previousAsked = DialogueEngine._askedQuestions;
+  try {
+    DialogueEngine._currentNPC = 'npc_ray_morgan';
+    DialogueEngine._askedQuestions = ['inspect_incoming_calls'];
+    GameState.currentCase = { clues: [], hypotheses: [] };
+    GameState.relationships = { npc_ray_morgan: { trust: 80 } };
+    assert.equal(DialogueEngine._isResponseAvailable(followUp), false);
+    GameState.currentCase.clues = [clues.court_switchboard_log];
+    assert.equal(DialogueEngine._isResponseAvailable(followUp), true);
+    GameState.relationships.npc_ray_morgan.trust = 30;
+    assert.equal(DialogueEngine._isResponseAvailable(followUp), false);
+    DialogueEngine._askedQuestions = [];
+    GameState.relationships.npc_ray_morgan.trust = 80;
+    assert.equal(DialogueEngine._isResponseAvailable(followUp), false);
+  } finally {
+    GameState.currentCase = previousCase;
+    GameState.relationships = previousRelationships;
+    DialogueEngine._currentNPC = previousNPC;
+    DialogueEngine._askedQuestions = previousAsked;
+  }
+});

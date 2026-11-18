@@ -190,6 +190,8 @@ export var DialogueEngine = {
 
   _isResponseAvailable(response) {
     if (response.requires_question && !this._askedQuestions.includes(response.requires_question)) return false;
+    if (response.requires_clue && !GameState.hasClue(response.requires_clue)) return false;
+    if (response.min_trust != null && NPCMemory.getTrust(this._currentNPC) < response.min_trust) return false;
     return hasDiscoveredContradiction(response.requires_contradiction,
       GameState.currentCase.hypotheses, GameState.currentCase.clues, this._contradictionRules);
   },

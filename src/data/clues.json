@@ -27,7 +27,17 @@
     "location": "police_station",
     "day": 1,
     "source": "Журнал входящих сообщений участка",
-    "connections_to": ["patrol_initial_report"]
+    "connections_to": ["patrol_initial_report", "court_phone_register_copy"]
+  },
+  "court_phone_register_copy": {
+    "id": "court_phone_register_copy",
+    "name": "Заверенная копия книги соединений суда",
+    "category": "document",
+    "description": "В книге служебных вызовов суда отмечено соединение с внутреннего номера 17 во время звонка дежурному участка. Рядом карандашная буква «К», но нет ни подписи, ни имени абонента. Совпадение времени связывает записи, а пометка не доказывает личность звонившего.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Заверенная копия регистрационной книги суда",
+    "connections_to": ["court_switchboard_log"]
   },
   "poison_vial_info": {
     "id": "poison_vial_info",
