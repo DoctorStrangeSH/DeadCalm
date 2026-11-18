@@ -40,14 +40,14 @@ test('PWA cache includes visual styles, map data and the new image assets', () =
     'blackford-city-atlas.webp', 'blackford-courtroom.webp',
     'blackford-precinct.webp', 'blackford-morgue.webp', 'blackford-rusty-anchor.webp',
     'lydia-winter.webp', 'lydia-winter-tension.webp', 'lydia-winter-warmth.webp', 'lydia-winter-withdrawal.webp', 'ray-morgan.webp', 'anna-holt.webp', 'marta-hayes.webp',
-    'father-thomas.webp', 'sebastian-blackwood.webp', 'ray-morgan-tension.webp', 'ray-morgan-warmth.webp', 'ray-morgan-withdrawal.webp', 'anna-holt-tension.webp', 'anna-holt-warmth.webp', 'anna-holt-withdrawal.webp', 'marta-hayes-tension.webp', 'marta-hayes-warmth.webp', 'marta-hayes-withdrawal.webp'
+    'father-thomas.webp', 'father-thomas-tension.webp', 'sebastian-blackwood.webp', 'ray-morgan-tension.webp', 'ray-morgan-warmth.webp', 'ray-morgan-withdrawal.webp', 'anna-holt-tension.webp', 'anna-holt-warmth.webp', 'anna-holt-withdrawal.webp', 'marta-hayes-tension.webp', 'marta-hayes-warmth.webp', 'marta-hayes-withdrawal.webp'
   ]) assert.ok(sw.includes(resource), `cache missing ${resource}`);
   assert.ok(sw.includes("self.addEventListener('activate'"), 'old PWA caches should be cleared');
 });
 
 test('character portraits are optimized and rendered in dialogue with fallback for other speakers', () => {
   for (const name of [
-    'lydia-winter', 'lydia-winter-tension', 'lydia-winter-warmth', 'lydia-winter-withdrawal', 'ray-morgan', 'ray-morgan-tension', 'ray-morgan-warmth', 'ray-morgan-withdrawal', 'anna-holt', 'anna-holt-tension', 'anna-holt-warmth', 'anna-holt-withdrawal', 'marta-hayes', 'marta-hayes-tension', 'marta-hayes-warmth', 'marta-hayes-withdrawal', 'father-thomas', 'sebastian-blackwood'
+    'lydia-winter', 'lydia-winter-tension', 'lydia-winter-warmth', 'lydia-winter-withdrawal', 'ray-morgan', 'ray-morgan-tension', 'ray-morgan-warmth', 'ray-morgan-withdrawal', 'anna-holt', 'anna-holt-tension', 'anna-holt-warmth', 'anna-holt-withdrawal', 'marta-hayes', 'marta-hayes-tension', 'marta-hayes-warmth', 'marta-hayes-withdrawal', 'father-thomas', 'father-thomas-tension', 'sebastian-blackwood'
   ]) {
     const file = resolve(root, `src/assets/portraits/${name}.webp`);
     assert.ok(existsSync(file), `${name} must exist`);
@@ -80,6 +80,8 @@ test('emotional portrait selection changes only for supported character reaction
   assert.equal(resolvePortraitFile('Марта Хейз', 'tension'), 'marta-hayes-tension.webp');
   assert.equal(resolvePortraitFile('Марта Хейз', 'warmth'), 'marta-hayes-warmth.webp');
   assert.equal(resolvePortraitFile('Марта Хейз', 'withdrawal'), 'marta-hayes-withdrawal.webp');
+  assert.equal(resolvePortraitFile('Отец Томас', 'tension'), 'father-thomas-tension.webp');
+  assert.equal(resolvePortraitFile('Отец Томас', 'warmth'), 'father-thomas.webp');
   assert.equal(resolvePortraitFile('Неизвестный свидетель', 'withdrawal'), null);
 });
 

@@ -31,6 +31,9 @@ const CHARACTER_REACTION_PORTRAITS = Object.freeze({
     tension: 'marta-hayes-tension.webp',
     warmth: 'marta-hayes-warmth.webp',
     withdrawal: 'marta-hayes-withdrawal.webp'
+  }),
+  'Отец Томас': Object.freeze({
+    tension: 'father-thomas-tension.webp'
   })
 });
 
