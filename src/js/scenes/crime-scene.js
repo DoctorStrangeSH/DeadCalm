@@ -74,6 +74,18 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="court-witnesses" class="mb-6" ${GameState.hasClue('court_access_ledger') ? '' : 'hidden'}>
+        <p class="text-gold text-xs tracking-widest mb-3">ПРОВЕРКА ДОСТУПА · СВИДЕТЕЛИ И КЛЮЧИ</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-guard-testimony" class="card text-left" ${GameState.hasClue('guard_key_testimony') ? 'disabled' : ''}>
+            <p class="card-title">ОПРОСИТЬ НОЧНОГО ОХРАННИКА</p><p class="card-subtitle">Восстановить его дежурство у комнаты секретарей.</p>
+          </button>
+          <button id="btn-spare-key" class="card text-left" ${GameState.hasClue('spare_key_inventory') ? 'disabled' : ''}>
+            <p class="card-title">ПРОВЕРИТЬ ОПИСЬ РЕЗЕРВНЫХ КЛЮЧЕЙ</p><p class="card-subtitle">Сверить слова охранника с учётом хозяйственной службы.</p>
+          </button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -173,8 +185,8 @@ export function render(container, data) {
     }
   });
 
-  async function inspectCourtRecord(buttonId, clueId, narrative) {
-    if (!GameState.hasClue('court_phone_register_copy') || GameState.hasClue(clueId)) return;
+  async function inspectCourtRecord(buttonId, clueId, narrative, prerequisite = 'court_phone_register_copy') {
+    if (!GameState.hasClue(prerequisite) || GameState.hasClue(clueId)) return;
     const button = container.querySelector('#' + buttonId);
     button.disabled = true;
     try {
@@ -183,6 +195,7 @@ export function render(container, data) {
       const catalog = await response.json();
       if (!catalog[clueId]) throw new Error('Не найдена запись в каталоге');
       GameState.addClue(catalog[clueId]);
+      if (clueId === 'court_access_ledger') container.querySelector('#court-witnesses').hidden = false;
       showNarrative(narrative, catalog[clueId].name);
     } catch (error) {
       button.disabled = false;
@@ -198,6 +211,16 @@ export function render(container, data) {
   container.querySelector('#btn-court-access').addEventListener('click', function() {
     inspectCourtRecord('btn-court-access', 'court_access_ledger',
       'Охрана записала: ключ от комнаты секретарей вернули в 19:40, до 22:00 доступ закрыт. Но в 20:15 с номера 17 кто-то звонил в участок. Ошибка в журнале? Запасной ключ? Пока это только расхождение документов.');
+  });
+  container.querySelector('#btn-guard-testimony').addEventListener('click', function() {
+    inspectCourtRecord('btn-guard-testimony', 'guard_key_testimony',
+      'Виктор Белл, ночной охранник, уверяет: «В 19:40 ключ вернули. Запасного у нас вообще нет. Коридор с восьми до половины девятого был пуст». На вопрос о непрерывном наблюдении он уточняет: «Я уходил на обход, но ненадолго». Его слова нужно сверить с учётом ключей.',
+      'court_access_ledger');
+  });
+  container.querySelector('#btn-spare-key').addEventListener('click', function() {
+    inspectCourtRecord('btn-spare-key', 'spare_key_inventory',
+      'В хозяйственной описи значится запасной ключ от комнаты секретарей. Он числится в опечатанном шкафу, но отметки о проверке пломбы в тот день нет. Это ещё не доказательство вскрытия шкафа — однако слова охранника о единственном ключе неверны.',
+      'court_access_ledger');
   });
 
   document.getElementById('btn-leave').addEventListener('click', function() {

@@ -30,7 +30,7 @@ test('authored contradiction references real clues and a discoverable dialogue r
   const catalog = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
   const dialogues = JSON.parse(readFileSync(new URL('../src/data/dialogues.json', import.meta.url), 'utf8'));
   const authored = JSON.parse(readFileSync(new URL('../src/data/contradictions.json', import.meta.url), 'utf8'));
-  assert.equal(authored.length, 2);
+  assert.equal(authored.length, 3);
   const rule = authored[0];
   for (const id of rule.clueIds) assert.ok(catalog[id], `${id} missing from clue catalog`);
   assert.equal(dialogues.npc_ray_morgan.topics.about_case.responses.find(r => r.id === 'initial_report').gives_clue, 'patrol_initial_report');
@@ -52,6 +52,20 @@ test('court telephone discrepancy needs both discovered documents in a single hy
   assert.match(scene, /btn-court-directory/);
   assert.match(scene, /btn-court-access/);
   assert.match(scene, /GameState\.addClue\(catalog\[clueId\]\)/);
+});
+
+test('night guard denial is challenged only by discovered spare-key records', () => {
+  const catalog = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
+  const authored = JSON.parse(readFileSync(new URL('../src/data/contradictions.json', import.meta.url), 'utf8'));
+  const rule = authored.find(r => r.id === 'guard_denies_spare_key');
+  assert.deepEqual(rule.clueIds, ['guard_key_testimony', 'spare_key_inventory']);
+  const all = rule.clueIds.map(id => catalog[id]);
+  assert.deepEqual(findContradictions({ clueIds: rule.clueIds }, all, authored).map(r => r.id), [rule.id]);
+  assert.deepEqual(findContradictions({ clueIds: rule.clueIds }, all.slice(0, 1), authored), []);
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /id="court-witnesses"[^>]*hasClue\('court_access_ledger'\)/);
+  assert.match(scene, /'guard_key_testimony'[^;]*'court_access_ledger'/s);
+  assert.match(scene, /'spare_key_inventory'[^;]*'court_access_ledger'/s);
 });
 
 test('Ray follow-up stays locked before deduction and unlocks on a saved hypothesis', () => {

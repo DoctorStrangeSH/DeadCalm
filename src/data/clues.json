@@ -57,7 +57,27 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Журнал ключей судебной охраны",
-    "connections_to": ["court_extension_directory", "court_phone_register_copy"]
+    "connections_to": ["court_extension_directory", "court_phone_register_copy", "guard_key_testimony", "spare_key_inventory"]
+  },
+  "guard_key_testimony": {
+    "id": "guard_key_testimony",
+    "name": "Показания ночного охранника",
+    "category": "testimony",
+    "description": "Охранник Виктор Белл утверждает, что после 19:40 никто не получал ключ от комнаты секретарей. По его словам, в смене был только один действующий ключ, запасного не существовало. Он не видел, чтобы кто-либо входил в коридор с 20:00 до 20:30, но сам покидал пост ради обхода.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Виктор Белл, охрана суда",
+    "connections_to": ["court_access_ledger", "spare_key_inventory"]
+  },
+  "spare_key_inventory": {
+    "id": "spare_key_inventory",
+    "name": "Опись резервных ключей суда",
+    "category": "document",
+    "description": "В описи хозяйственной службы значится резервный ключ от комнаты секретарей, зарегистрированный за неделю до убийства. В день звонка ключ числится в опечатанном шкафу, однако отметка о проверке пломбы отсутствует. Это опровергает утверждение, что запасного ключа не существовало, но не доказывает его использование.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Хозяйственная служба суда",
+    "connections_to": ["guard_key_testimony", "court_access_ledger"]
   },
   "poison_vial_info": {
     "id": "poison_vial_info",
