@@ -24,7 +24,8 @@ const CHARACTER_REACTION_PORTRAITS = Object.freeze({
   }),
   'Анна Холт': Object.freeze({
     tension: 'anna-holt-tension.webp',
-    warmth: 'anna-holt-warmth.webp'
+    warmth: 'anna-holt-warmth.webp',
+    withdrawal: 'anna-holt-withdrawal.webp'
   })
 });
 
