@@ -3,11 +3,21 @@
     "id": "autopsy_report_01",
     "name": "Отчёт о вскрытии",
     "category": "document",
-    "description": "Судья Гаррисон умер от отравления экстрактом белладонны. На теле — следы связывания и надрез в форме буквы 'К'.",
+    "description": "Судья Гаррисон умер от отравления экстрактом белладонны. По заключению Лидии, действие яда было длительным: судья мучился почти сутки. На теле — следы связывания и надрез в форме буквы 'К'.",
     "location": "morgue",
     "day": 1,
     "source": "Доктор Лидия Винтер",
-    "connections_to": ["poison_vial_info", "letter_k_mark"]
+    "connections_to": ["poison_vial_info", "letter_k_mark", "patrol_initial_report"]
+  },
+  "patrol_initial_report": {
+    "id": "patrol_initial_report",
+    "name": "Предварительный рапорт патруля",
+    "category": "document",
+    "description": "В первом рапорте утверждается, что яд вызвал мгновенную смерть сразу после попадания вещества. Рапорт составлен до вскрытия; вывод о скорости действия яда не подтверждён экспертизой.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Первичный рапорт дежурного",
+    "connections_to": ["autopsy_report_01"]
   },
   "poison_vial_info": {
     "id": "poison_vial_info",
