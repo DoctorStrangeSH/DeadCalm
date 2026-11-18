@@ -239,15 +239,16 @@ export var DialogueEngine = {
     console.log('[Dialogue] Задан вопрос: ' + questionId);
 
     // Добавляем заметку (только для важных)
-    if (foundResponse.adds_note) {
-      this._addToNotebook(foundResponse.adds_note);
-    }
+    var addedNote = foundResponse.adds_note && this._addToNotebook(foundResponse.adds_note)
+      ? foundResponse.adds_note : null;
 
     // Выдаём улику
+    var addedClue = null;
     if (foundResponse.gives_clue) {
       var clue = this._clues?.[foundResponse.gives_clue];
-      if (clue) {
+      if (clue && !GameState.hasClue(clue.id)) {
         GameState.addClue(clue);
+        addedClue = clue;
         console.log('[Dialogue] Выдана улика: ' + clue.name);
       }
     }
@@ -260,11 +261,11 @@ export var DialogueEngine = {
       if (criticalNode && !NPCMemory.hasFlag(this._currentNPC, flagName)) {
         NPCMemory.setFlag(this._currentNPC, flagName);
         console.log('[Dialogue] 🔴 КРИТИЧЕСКИЙ ВЫБОР!');
-        return this._formatCriticalChoice(criticalNode);
+        return this._formatCriticalChoice(criticalNode, { addedNote, addedClue });
       }
     }
 
-    return this._formatAnswer(foundResponse);
+    return this._formatAnswer(foundResponse, { addedNote, addedClue });
   },
 
   makeCriticalChoice(choiceId) {
@@ -291,10 +292,15 @@ export var DialogueEngine = {
 
           var nextNode = npcData[choice.next_dialogue];
           if (nextNode) {
-            if (nextNode.adds_note) this._addToNotebook(nextNode.adds_note);
+            var addedNote = nextNode.adds_note && this._addToNotebook(nextNode.adds_note)
+              ? nextNode.adds_note : null;
+            var addedClue = null;
             if (nextNode.gives_clue) {
               var clue = this._clues?.[nextNode.gives_clue];
-              if (clue) GameState.addClue(clue);
+              if (clue && !GameState.hasClue(clue.id)) {
+                GameState.addClue(clue);
+                addedClue = clue;
+              }
             }
             if (nextNode.memory_set) {
               NPCMemory.setFlag(this._currentNPC, nextNode.memory_set);
@@ -302,7 +308,9 @@ export var DialogueEngine = {
             return this._formatCriticalResult(nextNode, {
               type: 'critical_result',
               tone: choice.tone,
-              trustDelta: NPCMemory.getTrust(this._currentNPC) - trustBefore
+              trustDelta: NPCMemory.getTrust(this._currentNPC) - trustBefore,
+              addedNote,
+              addedClue
             });
           }
           return null;
@@ -343,7 +351,9 @@ export var DialogueEngine = {
         timestamp: new Date().toISOString()
       });
       GameState.save();
+      return true;
     }
+    return false;
   },
 
   // === ФОРМАТИРОВАНИЕ ===
@@ -390,7 +400,7 @@ export var DialogueEngine = {
     };
   },
 
-  _formatAnswer(response) {
+  _formatAnswer(response, context = {}) {
     var character = this.getCharacter(this._currentNPC);
     return {
       type: 'answer',
@@ -398,12 +408,13 @@ export var DialogueEngine = {
       speaker: character?.name || this._currentNPC,
       speakerRole: character?.role || '',
       trust: NPCMemory.getTrust(this._currentNPC),
-      addedNote: response.adds_note || null,
+      addedNote: context.addedNote || null,
+      addedClue: context.addedClue || null,
       canContinue: true
     };
   },
 
-  _formatCriticalChoice(node) {
+  _formatCriticalChoice(node, context = {}) {
     var character = this.getCharacter(this._currentNPC);
     return {
       type: 'critical_choice',
@@ -412,6 +423,8 @@ export var DialogueEngine = {
       speakerRole: character?.role || '',
       trust: NPCMemory.getTrust(this._currentNPC),
       reaction: resolveDialogueReaction({ type: 'critical_choice' }),
+      addedNote: context.addedNote || null,
+      addedClue: context.addedClue || null,
       choices: node.choices.map(function(c) {
         return { id: c.id, text: c.text, tone: c.tone || 'neutral' };
       })
@@ -428,7 +441,8 @@ export var DialogueEngine = {
       trust: NPCMemory.getTrust(this._currentNPC),
       reaction: resolveDialogueReaction(context),
       trustDelta: context.trustDelta ?? 0,
-      addedNote: node.adds_note || null,
+      addedNote: context.addedNote || null,
+      addedClue: context.addedClue || null,
       isEnd: !!node.end
     };
   },

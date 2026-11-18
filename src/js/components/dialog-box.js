@@ -200,6 +200,25 @@ export class DialogBox {
     return labels[type] || '';
   }
 
+  _renderDiscoveryCards(node, container) {
+    for (const entry of [
+      { data: node.addedClue, label: 'УЛИКА', icon: '◇' },
+      { data: node.addedNote, label: 'ЗАМЕТКА', icon: '▤' }
+    ]) {
+      if (!entry.data?.name && !entry.data?.title) continue;
+      const card = document.createElement('div');
+      card.className = 'dialog-discovery';
+      const stamp = document.createElement('span');
+      stamp.className = 'dialog-discovery-stamp';
+      stamp.textContent = `${entry.icon} ${entry.label} · ДОБАВЛЕНО В ДЕЛО`;
+      const title = document.createElement('strong');
+      title.className = 'dialog-discovery-title';
+      title.textContent = entry.data.name || entry.data.title;
+      card.append(stamp, title);
+      container.appendChild(card);
+    }
+  }
+
   _renderChoices(node, choicesEl) {
     var self = this;
     choicesEl.innerHTML = '';
@@ -207,6 +226,7 @@ export class DialogBox {
     // КРИТИЧЕСКИЙ ВЫБОР
     if (node.type === 'critical_choice') {
       choicesEl.innerHTML = '<p class="critical-warning">Этот выбор изменит отношение персонажа к вам навсегда</p>';
+      this._renderDiscoveryCards(node, choicesEl);
 
       if (node.choices) {
         node.choices.forEach(function(choice) {
@@ -234,12 +254,7 @@ export class DialogBox {
         feedbackEl.textContent = feedback.label;
         choicesEl.appendChild(feedbackEl);
       }
-      if (node.addedNote) {
-        var noteEl = document.createElement('p');
-        noteEl.className = 'note-added';
-        noteEl.textContent = '📝 В заметки: ' + node.addedNote.title;
-        choicesEl.appendChild(noteEl);
-      }
+      this._renderDiscoveryCards(node, choicesEl);
       var btn = document.createElement('button');
       btn.className = 'dialog-btn primary-btn';
       btn.textContent = node.isEnd ? 'ЗАКОНЧИТЬ РАЗГОВОР' : 'ПРОДОЛЖИТЬ';
@@ -323,12 +338,7 @@ export class DialogBox {
 
     // ОТВЕТ
     if (node.type === 'answer') {
-      if (node.addedNote) {
-        var noteEl2 = document.createElement('p');
-        noteEl2.className = 'note-added';
-        noteEl2.textContent = '📝 В заметки: ' + node.addedNote.title;
-        choicesEl.appendChild(noteEl2);
-      }
+      this._renderDiscoveryCards(node, choicesEl);
       var continueBtn = document.createElement('button');
       continueBtn.className = 'dialog-btn primary-btn';
       continueBtn.textContent = 'ПРОДОЛЖИТЬ';

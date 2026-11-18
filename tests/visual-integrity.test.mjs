@@ -118,3 +118,15 @@ test('all locations referenced by scene images resolve in the repository', () =>
     }
   }
 });
+
+test('dialogue discovery cards only announce newly recorded clues and notes', () => {
+  const engine = read('src/js/systems/dialogue.js');
+  const dialog = read('src/js/components/dialog-box.js');
+  const styles = read('src/css/art-direction.css');
+  assert.ok(engine.includes('!GameState.hasClue(clue.id)'), 'clues must be checked for duplicates');
+  assert.ok(engine.includes('return false;'), 'duplicate notebook entries must not be announced');
+  assert.ok(engine.includes('addedClue: context.addedClue || null'), 'actual new clues must reach UI');
+  assert.ok(dialog.includes('_renderDiscoveryCards(node, choicesEl)'), 'both answer types should show discoveries');
+  assert.ok(dialog.includes('title.textContent = entry.data.name || entry.data.title'), 'discovery titles must be inserted as text');
+  assert.ok(styles.includes('.cinematic-dialog .dialog-discovery'), 'archival discovery style should exist');
+});
