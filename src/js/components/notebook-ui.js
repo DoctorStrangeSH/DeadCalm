@@ -1,6 +1,7 @@
 import { Notebook } from '../systems/notebook.js';
 import { Events } from '../core/events.js';
 import { escapeHtml } from '../utils/helpers.js';
+import { evidenceCategoryLabel, selectEvidence } from '../systems/evidence-archive.js';
 
 /**
  * UI-компонент дневника.
@@ -11,21 +12,29 @@ export class NotebookUI {
     this.container = container;
     this.filter = 'all';
     this.searchQuery = '';
+    this.evidenceCategory = 'all';
+    this.evidenceSort = 'newest';
   }
 
   render() {
-    var notes = this.filter === 'clues' ? Notebook.getAllClues().map(clue => ({
+    const isEvidence = this.filter === 'clues';
+    const allClues = Notebook.getAllClues();
+    var notes = isEvidence ? selectEvidence(allClues, {
+      category: this.evidenceCategory,
+      sort: this.evidenceSort,
+      query: this.searchQuery
+    }).map(clue => ({
       ...clue,
       title: clue.name || 'Без названия',
       text: clue.description || '',
       timestamp: clue.foundAt || '',
       day: clue.day || 1,
       source: clue.location || 'Материалы дела',
-      category: 'улика',
+      category: evidenceCategoryLabel(clue.category),
       isClue: true
     })) : Notebook.getAllNotes();
     var stats = Notebook.getStats();
-    var clueCount = Notebook.getAllClues().length;
+    var clueCount = allClues.length;
     var self = this;
 
     // Применяем фильтр
@@ -38,7 +47,7 @@ export class NotebookUI {
     }
 
     // Применяем поиск
-    if (this.searchQuery) {
+    if (this.searchQuery && !isEvidence) {
       var query = this.searchQuery.toLowerCase();
       notes = notes.filter(function(n) {
         return n.title.toLowerCase().indexOf(query) !== -1 ||
@@ -48,11 +57,13 @@ export class NotebookUI {
     }
 
     // Сортируем: закреплённые сверху, потом по дате
-    notes.sort(function(a, b) {
+    if (!isEvidence) notes.sort(function(a, b) {
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
       return new Date(b.timestamp) - new Date(a.timestamp);
     });
+
+    const availableCategories = [...new Set(allClues.map(clue => clue.category || 'other'))].sort();
 
     this.container.innerHTML = `
       <div class="notebook-container dossier-notebook">
@@ -63,12 +74,27 @@ export class NotebookUI {
             <p class="notebook-stats">ЗАПИСЕЙ: ${stats.total} · УЛИК: ${clueCount} · ВАЖНЫХ: ${stats.important}</p>
           </div>
 
+          ${isEvidence ? `<div class="notebook-evidence-tools">
+            <label>ТИП УЛИКИ
+              <select id="evidence-category" aria-label="Категория улик">
+                <option value="all">Все категории</option>
+                ${availableCategories.map(category => `<option value="${escapeHtml(category)}" ${this.evidenceCategory === category ? 'selected' : ''}>${escapeHtml(evidenceCategoryLabel(category))}</option>`).join('')}
+              </select>
+            </label>
+            <label>ПОРЯДОК
+              <select id="evidence-sort" aria-label="Сортировка улик">
+                <option value="newest" ${this.evidenceSort === 'newest' ? 'selected' : ''}>Сначала новые</option>
+                <option value="oldest" ${this.evidenceSort === 'oldest' ? 'selected' : ''}>Сначала старые</option>
+              </select>
+            </label>
+          </div>` : ''}
+
           <!-- Поиск -->
           <div class="notebook-search">
             <input type="text" id="notebook-search-input"
                    class="notebook-search-input"
-                   aria-label="Поиск по заметкам"
-                   placeholder="Найти запись по слову или имени..."
+                   aria-label="${isEvidence ? 'Поиск по уликам' : 'Поиск по заметкам'}"
+                   placeholder="${isEvidence ? 'Название, описание или место находки...' : 'Найти запись по слову или имени...'}"
                    value="${escapeHtml(this.searchQuery)}">
           </div>
 
@@ -161,6 +187,15 @@ export class NotebookUI {
 
   _setupHandlers() {
     var self = this;
+
+    this.container.querySelector('#evidence-category')?.addEventListener('change', function() {
+      self.evidenceCategory = this.value;
+      self.render();
+    });
+    this.container.querySelector('#evidence-sort')?.addEventListener('change', function() {
+      self.evidenceSort = this.value;
+      self.render();
+    });
 
     // Поиск
     var searchInput = document.getElementById('notebook-search-input');
