@@ -176,6 +176,18 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="reader-interviews" class="mb-6" ${GameState.hasClue('reader_maintenance_access_log') && GameState.hasClue('reader_service_signoff') ? '' : 'hidden'}>
+        <p class="text-gold text-xs tracking-widest mb-3">ДВА СВИДЕТЕЛЯ · ПРОВЕРКА ВЕЧЕРНИХ СОБЫТИЙ</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-klimov-interview" class="card text-left" ${GameState.hasClue('klimov_evening_account') ? 'disabled' : ''}>
+            <p class="card-title">ОПРОСИТЬ НИКОЛАЯ КЛИМОВА</p><p class="card-subtitle">Кто проверял считыватель и закрывал наряд?</p>
+          </button>
+          <button id="btn-kostina-interview" class="card text-left" ${GameState.hasClue('kostina_evening_account') ? 'disabled' : ''}>
+            <p class="card-title">ОПРОСИТЬ НАДЕЖДУ КОСТИНУ</p><p class="card-subtitle">Что происходило в административном крыле?</p>
+          </button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -309,6 +321,9 @@ export function render(container, data) {
       if (GameState.hasClue('court_nk_staff_index') && GameState.hasClue('reader_service_ticket')) {
         container.querySelector('#reader-verification').hidden = false;
       }
+      if (GameState.hasClue('reader_maintenance_access_log') && GameState.hasClue('reader_service_signoff')) {
+        container.querySelector('#reader-interviews').hidden = false;
+      }
       refreshCourtWorkflow();
       showNarrative(narrative, catalog[clueId].name);
     } catch (error) {
@@ -419,6 +434,20 @@ export function render(container, data) {
   container.querySelector('#btn-reader-signoff').addEventListener('click', function() {
     inspectReaderRecord('btn-reader-signoff', 'reader_service_signoff',
       'Наряд закрыт отметкой «считыватель проверен» в 20:52. Подпись исполнителя неразборчива, поле проверки руководителем пустое. Время закрытия позже планового окна работ и выхода карточки Орлова в 20:47: это повод проверить исполнителя, но не доказательство подлога.');
+  });
+
+  function inspectReaderWitness(buttonId, clueId, narrative) {
+    if (!GameState.hasClue('reader_maintenance_access_log') || !GameState.hasClue('reader_service_signoff')) return;
+    inspectCourtRecord(buttonId, clueId, narrative, 'reader_service_signoff');
+  }
+
+  container.querySelector('#btn-klimov-interview').addEventListener('click', function() {
+    inspectReaderWitness('btn-klimov-interview', 'klimov_evening_account',
+      'Климов вспоминает: «Заявку видел, но универсального ключа не брал. В районе 20:25 передал инструмент дежурному и ушёл. Акт в 20:52 не подписывал». Это личные показания, которым пока нет независимого подтверждения: нужно проверить выдачу инструмента и подлинность подписи.');
+  });
+  container.querySelector('#btn-kostina-interview').addEventListener('click', function() {
+    inspectReaderWitness('btn-kostina-interview', 'kostina_evening_account',
+      'Костина отвечает: «После восьми разбирала архив. Около 20:50 услышала шаги у хозяйственной канцелярии, но никого не видела». Она отрицает получение карточки Орлова. Звук шагов не определяет посетителя, а её нахождение в архиве пока подтверждено лишь её словами.');
   });
 
   async function confrontOrlov(tone) {

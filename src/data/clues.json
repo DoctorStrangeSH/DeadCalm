@@ -187,7 +187,7 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Бумажный журнал технического помещения суда",
-    "connections_to": ["reader_service_ticket", "reader_service_signoff", "court_nk_staff_index"]
+    "connections_to": ["reader_service_ticket", "reader_service_signoff", "court_nk_staff_index", "klimov_evening_account"]
   },
   "reader_service_signoff": {
     "id": "reader_service_signoff",
@@ -197,7 +197,27 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Акт приёмки работ хозяйственной службы",
-    "connections_to": ["reader_service_ticket", "reader_maintenance_access_log", "orlov_badge_scan"]
+    "connections_to": ["reader_service_ticket", "reader_maintenance_access_log", "orlov_badge_scan", "klimov_evening_account", "kostina_evening_account"]
+  },
+  "klimov_evening_account": {
+    "id": "klimov_evening_account",
+    "name": "Показания Николая Климова о ремонте",
+    "category": "testimony",
+    "description": "Николай Климов утверждает, что видел заявку на проверку считывателя, не брал универсальный ключ и около 20:25 передал инструмент дежурному перед уходом. Он отрицает, что подписывал акт, закрытый в 20:52. Его слова не подтверждают, кто воспользовался ключом в 20:06; передачу инструмента и подпись ещё нужно проверять независимо.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Личный опрос Николая Климова",
+    "connections_to": ["reader_service_ticket", "reader_maintenance_access_log", "reader_service_signoff"]
+  },
+  "kostina_evening_account": {
+    "id": "kostina_evening_account",
+    "name": "Показания Надежды Костиной о вечернем дежурстве",
+    "category": "testimony",
+    "description": "Надежда Костина заявляет, что после 20:00 работала в архиве, а около 20:50 слышала шаги у хозяйственной канцелярии, не видя человека. Получение карточки Орлова она отрицает. Слышанные шаги не позволяют установить личность, а её присутствие в архиве пока подтверждено только собственными словами.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Личный опрос Надежды Костиной",
+    "connections_to": ["court_nk_staff_index", "orlov_badge_handover", "reader_service_signoff"]
   },
   "poison_vial_info": {
     "id": "poison_vial_info",

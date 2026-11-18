@@ -89,3 +89,16 @@ test('reader maintenance requires both prior records and does not assert the tec
   assert.match(scene, /'reader_maintenance_access_log'/);
   assert.match(scene, /'reader_service_signoff'/);
 });
+
+test('Klimov and Kostina interviews unlock after independent maintenance records', () => {
+  assert.match(clues.klimov_evening_account.description, /не брал универсальный ключ/);
+  assert.match(clues.klimov_evening_account.description, /подпись ещё нужно проверять/);
+  assert.match(clues.kostina_evening_account.description, /не видя человека/);
+  assert.match(clues.kostina_evening_account.description, /только собственными словами/);
+  assert.ok(clues.reader_service_signoff.connections_to.includes('klimov_evening_account'));
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /id="reader-interviews"[^>]*hasClue\('reader_maintenance_access_log'\) && GameState\.hasClue\('reader_service_signoff'\)/);
+  assert.match(scene, /function inspectReaderWitness/);
+  assert.match(scene, /'klimov_evening_account'/);
+  assert.match(scene, /'kostina_evening_account'/);
+});
