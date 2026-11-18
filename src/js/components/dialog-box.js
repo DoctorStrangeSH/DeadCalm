@@ -1,6 +1,7 @@
 import { DialogueEngine } from '../systems/dialogue.js';
 import { Events } from '../core/events.js';
 import { escapeHtml } from '../utils/helpers.js';
+import { resolveTrustFeedback } from '../systems/dialogue-reactions.js';
 
 const CHARACTER_PORTRAITS = Object.freeze({
   'Доктор Лидия Винтер': 'lydia-winter.webp',
@@ -225,6 +226,14 @@ export class DialogBox {
 
     // РЕЗУЛЬТАТ КРИТИЧЕСКОГО ВЫБОРА
     if (node.type === 'critical_result') {
+      const feedback = resolveTrustFeedback(node.trustDelta);
+      if (feedback) {
+        const feedbackEl = document.createElement('p');
+        feedbackEl.className = `dialog-impact dialog-impact-${feedback.tone}`;
+        feedbackEl.setAttribute('role', 'status');
+        feedbackEl.textContent = feedback.label;
+        choicesEl.appendChild(feedbackEl);
+      }
       if (node.addedNote) {
         var noteEl = document.createElement('p');
         noteEl.className = 'note-added';

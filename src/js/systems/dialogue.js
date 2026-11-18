@@ -427,6 +427,7 @@ export var DialogueEngine = {
       speakerRole: character?.role || '',
       trust: NPCMemory.getTrust(this._currentNPC),
       reaction: resolveDialogueReaction(context),
+      trustDelta: context.trustDelta ?? 0,
       addedNote: node.adds_note || null,
       isEnd: !!node.end
     };

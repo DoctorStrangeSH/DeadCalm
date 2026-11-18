@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveDialogueReaction } from '../src/js/systems/dialogue-reactions.js';
+import { resolveDialogueReaction, resolveTrustFeedback } from '../src/js/systems/dialogue-reactions.js';
 
 test('critical questions look tense before a decision', () => {
   assert.equal(resolveDialogueReaction({ type: 'critical_choice' }), 'tension');
@@ -19,4 +19,12 @@ test('ordinary dialogue has no fabricated emotional response', () => {
   assert.equal(resolveDialogueReaction({ type: 'answer', trustDelta: -50 }), 'neutral');
   assert.equal(resolveDialogueReaction({ type: 'critical_result', tone: 'neutral' }), 'neutral');
   assert.equal(resolveDialogueReaction(), 'neutral');
+});
+
+test('trust feedback reflects actual deltas without inventing changes', () => {
+  assert.deepEqual(resolveTrustFeedback(7), { tone: 'gain', label: 'Доверие +7' });
+  assert.deepEqual(resolveTrustFeedback(-3), { tone: 'loss', label: 'Доверие −3' });
+  assert.equal(resolveTrustFeedback(0), null);
+  assert.equal(resolveTrustFeedback(undefined), null);
+  assert.equal(resolveTrustFeedback(NaN), null);
 });
