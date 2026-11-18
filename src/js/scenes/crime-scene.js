@@ -152,6 +152,18 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="nk-identity" class="mb-6" ${GameState.hasClue('orlov_badge_handover') ? '' : 'hidden'}>
+        <p class="text-gold text-xs tracking-widest mb-3">ИНИЦИАЛЫ «Н. К.» · ПРОВЕРКА ЛИЧНОСТИ</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-nk-staff" class="card text-left" ${GameState.hasClue('court_nk_staff_index') ? 'disabled' : ''}>
+            <p class="card-title">ПРОВЕРИТЬ КАДРОВУЮ КАРТОТЕКУ</p><p class="card-subtitle">Кому в суде могли принадлежать инициалы «Н. К.»?</p>
+          </button>
+          <button id="btn-nk-service" class="card text-left" ${GameState.hasClue('reader_service_ticket') ? 'disabled' : ''}>
+            <p class="card-title">НАЙТИ НАРЯД НА ПРОВЕРКУ СЧИТЫВАТЕЛЯ</p><p class="card-subtitle">Были ли запланированы работы после 19:50?</p>
+          </button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -369,6 +381,17 @@ export function render(container, data) {
     );
   });
 
+  container.querySelector('#btn-nk-staff').addEventListener('click', function() {
+    inspectCourtRecord('btn-nk-staff', 'court_nk_staff_index',
+      'Кадровая картотека выдаёт две фамилии на «Н. К.»: техник Николай Климов и архивист Надежда Костина. Оба имеют доступ в административное крыло. Совпадение инициалов само по себе не устанавливает, кто получил карточку.',
+      'orlov_badge_handover');
+  });
+  container.querySelector('#btn-nk-service').addEventListener('click', function() {
+    inspectCourtRecord('btn-nk-service', 'reader_service_ticket',
+      'В ремонтном журнале найден наряд с 19:55 до 20:30 на проверку считывателя. Ответственным назначен Николай Климов. Это правдоподобная причина передать ему карточку, но наряд не подтверждает, что он действительно явился на работу.',
+      'orlov_badge_handover');
+  });
+
   async function confrontOrlov(tone) {
     if (GameState.hasClue('orlov_badge_handover')) return;
     const outcome = resolveOrlovConfrontation(tone);
@@ -387,6 +410,7 @@ export function render(container, data) {
       GameState.setFlag('court_orlov_interview_tone', tone);
       GameState.updateRelationship('npc_pavel_orlov', outcome.trustDelta);
       panel.hidden = true;
+      container.querySelector('#nk-identity').hidden = false;
       refreshCourtWorkflow();
       showNarrative(outcome.text + ' Документ добавлен в архив улик.', 'ПОВТОРНЫЙ ДОПРОС ОРЛОВА');
     } catch (error) {

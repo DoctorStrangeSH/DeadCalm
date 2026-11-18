@@ -63,3 +63,17 @@ test('Orlov confrontation requires discovered contradiction and both tones prese
   assert.match(scene, /GameState\.addClue\(catalog\.orlov_badge_handover\)/);
   assert.match(scene, /GameState\.setFlag\('court_orlov_interview_tone', tone\)/);
 });
+
+test('N. K. initials yield two candidates and an assignment, not an identified caller', () => {
+  const catalog = clues;
+  assert.ok(catalog.court_nk_staff_index);
+  assert.ok(catalog.reader_service_ticket);
+  assert.match(catalog.court_nk_staff_index.description, /Николай Климов/);
+  assert.match(catalog.court_nk_staff_index.description, /Надежда Костина/);
+  assert.match(catalog.reader_service_ticket.description, /не подтверждает/);
+  assert.ok(catalog.orlov_badge_handover.connections_to.includes('reader_service_ticket'));
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /id="nk-identity"[^>]*hasClue\('orlov_badge_handover'\)/);
+  assert.match(scene, /'court_nk_staff_index'[^;]*'orlov_badge_handover'/s);
+  assert.match(scene, /'reader_service_ticket'[^;]*'orlov_badge_handover'/s);
+});
