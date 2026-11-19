@@ -1,3 +1,5 @@
+> **Scope lock для версии 1.0.0:** этот документ описывает принципы и уже существующие прототипы мини-игр. Количество мини-игр в релизе ограничено тремя: Mechanical Repair, Analog Radio Tuning и Film Restoration. Новые мини-игры до 1.0 не добавлять. При расхождении по объёму приоритет имеет `docs/MASTER_GAME_SPEC_RU.md`. Исторические пометки «предлагается/планируется» ниже не являются обещанием добавить новые активности.
+
 # Dead Calm — Original Mini-game Design
 
 This document defines the mini-game direction for Dead Calm. Mini-games are explicitly part of the intended experience. The goal is variety and strong tactile interaction, not removing mini-games to distinguish the project from Ghost Signal.
