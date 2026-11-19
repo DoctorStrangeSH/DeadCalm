@@ -3,6 +3,7 @@ import { Storage } from './storage.js';
 import { createHypothesis, reviseHypothesis } from '../systems/hypotheses.js';
 import { createEmptySocialGraph, normalizeSocialGraph, upsertSocialTie, appendSocialEvent, getSocialTies, getSocialContext } from '../systems/npc-social-graph.js';
 import { createEmptyKnowledgeLedger, normalizeKnowledgeLedger, recordNpcKnowledge, updateNpcKnowledgeState, getNpcKnowledge, getNpcKnowledgeContext } from '../systems/npc-knowledge.js';
+import { createEmptyDailyLife, normalizeDailyLife, upsertNpcSchedule, getNpcScheduleAt, recordNpcOccurrence, getNpcOccurrences } from '../systems/npc-daily-life.js';
 
 export var GameState = {
   player: {
@@ -22,6 +23,7 @@ export var GameState = {
   npcMemory: {},
   socialGraph: createEmptySocialGraph(),
   knowledgeLedger: createEmptyKnowledgeLedger(),
+  npcDailyLife: createEmptyDailyLife(),
   notebook: [],
 
   settings: {
@@ -40,6 +42,7 @@ export var GameState = {
       this.npcMemory = saved.npcMemory || {};
       this.socialGraph = normalizeSocialGraph(saved.socialGraph);
       this.knowledgeLedger = normalizeKnowledgeLedger(saved.knowledgeLedger);
+      this.npcDailyLife = normalizeDailyLife(saved.npcDailyLife);
       this.notebook = saved.notebook || [];
       this.settings = saved.settings || this.settings;
       console.log('[State] Состояние загружено');
@@ -185,6 +188,28 @@ export var GameState = {
 
   getNpcKnowledgeContext(npcId) { return getNpcKnowledgeContext(this.knowledgeLedger, npcId); },
 
+  setNpcSchedule(input) {
+    const schedule = upsertNpcSchedule(this.npcDailyLife, input);
+    if (!schedule) return null;
+    this.save();
+    Events.emit('npc:schedule_updated', schedule);
+    return schedule;
+  },
+
+  getNpcScheduleAt(npcId, day, minute) {
+    return getNpcScheduleAt(this.npcDailyLife, npcId, day, minute);
+  },
+
+  recordNpcOccurrence(input) {
+    const occurrence = recordNpcOccurrence(this.npcDailyLife, input);
+    if (!occurrence) return null;
+    this.save();
+    Events.emit('npc:occurrence_recorded', occurrence);
+    return occurrence;
+  },
+
+  getNpcOccurrences(npcId) { return getNpcOccurrences(this.npcDailyLife, npcId); },
+
   updateRelationship(npcId, delta) {
     if (!this.relationships[npcId]) {
       this.relationships[npcId] = { trust: 50, met: false };
@@ -236,6 +261,7 @@ export var GameState = {
       npcMemory: this.npcMemory,
       socialGraph: this.socialGraph,
       knowledgeLedger: this.knowledgeLedger,
+      npcDailyLife: this.npcDailyLife,
       notebook: this.notebook,
       settings: this.settings,
     });
@@ -262,6 +288,7 @@ export var GameState = {
     this.npcMemory = {};
     this.socialGraph = createEmptySocialGraph();
     this.knowledgeLedger = createEmptyKnowledgeLedger();
+    this.npcDailyLife = createEmptyDailyLife();
     this.notebook = [];
     this.settings = { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
     
@@ -300,6 +327,7 @@ export var GameState = {
       npcMemory: JSON.parse(JSON.stringify(this.npcMemory)),
       socialGraph: JSON.parse(JSON.stringify(this.socialGraph)),
       knowledgeLedger: JSON.parse(JSON.stringify(this.knowledgeLedger)),
+      npcDailyLife: JSON.parse(JSON.stringify(this.npcDailyLife)),
       notebook: this.notebook.slice(),
       settings: Object.assign({}, this.settings)
     };
