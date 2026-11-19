@@ -1,4 +1,5 @@
 import { Events } from '../core/events.js';
+import { GameState } from '../core/state.js';
 import { createRepairSession, inspectMechanism, releasePressure, alignComponent, testMechanism, getRepairSummary } from '../systems/mechanical-repair.js';
 
 export function render(container) {
@@ -53,7 +54,7 @@ export function render(container) {
       if (action === 'release-force') { releasePressure(session, 'force'); feedback = 'Резкий рывок повредил край пружины. Можно продолжить осторожнее.'; }
       if (action === 'align-good') { alignComponent(session, 'tooth_mark'); feedback = 'Зубец встал точно на отметку.'; }
       if (action === 'align-wrong') { alignComponent(session, 'reverse_tooth'); feedback = 'Деталь не входит в паз. Попробуйте изменить положение.'; }
-      if (action === 'test-safe') { testMechanism(session, 'wind_gently'); feedback = 'Часы запущены.'; Events.emit('minigame:completed', { type: 'mechanical-repair', outcome: session.outcome }); }
+      if (action === 'test-safe') { testMechanism(session, 'wind_gently'); feedback = 'Часы запущены.'; Events.emit('minigame:completed', { type: 'mechanical-repair', outcome: session.outcome }); GameState.recordMiniGameResult({ type: 'mechanical-repair', outcome: session.outcome }); }
       if (action === 'test-force') { testMechanism(session, 'force'); feedback = 'Слишком резкое движение. Проверьте механизм ещё раз.'; }
       if (action === 'again') { render(container); return; }
       if (action === 'exit') { Events.emit('navigate', { scene: 'office' }); return; }
