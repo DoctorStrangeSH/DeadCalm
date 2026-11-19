@@ -77,6 +77,14 @@ export function render(container) {
           <p class="hidden md:block text-gray-600 text-xs mt-3">Событий: 10</p>
         </button>
 
+        <!-- Мастерская -->
+        <button id="btn-repair" class="card office-card text-left w-full">
+          <span class="office-card-icon" aria-hidden="true">⚙</span><span class="office-card-number">07</span>
+          <p class="card-title">МАСТЕРСКАЯ</p>
+          <p class="card-subtitle">Практика ремонта механизма</p>
+          <p class="hidden md:block text-gray-600 text-xs mt-3">Тренировка · Карманные часы</p>
+        </button>
+
         <!-- Дела -->
         <button id="btn-cases" class="card office-card text-left w-full">
           <span class="office-card-icon" aria-hidden="true">§</span><span class="office-card-number">06</span>
@@ -102,6 +110,11 @@ export function render(container) {
   `;
 
   // === ОБРАБОТЧИКИ КНОПОК ===
+
+  // Мастерская — отдельная игровая мини-сцена
+  document.getElementById('btn-repair').addEventListener('click', function () {
+    Events.emit('navigate', { scene: 'mechanical-repair' });
+  });
 
   // Карта города
   document.getElementById('btn-map').addEventListener('click', function () {
