@@ -13,6 +13,7 @@ import { assessOldCaseWitnesses, recordOldCaseWitnessReading, OLD_CASE_WITNESS_S
 import { planOldCaseWitnessFollowUp, recordOldCaseWitnessFollowUp } from '../systems/old-case-witness-follow-up.js';
 import { assessOldCaseDiscrepancy, recordOldCaseDiscrepancy, OLD_CASE_DISCREPANCY_CHOICES } from '../systems/old-case-discrepancy.js';
 import { assessOldCasePortLog, recordOldCasePortLogReading, OLD_CASE_PORT_LOG_READINGS } from '../systems/old-case-port-log.js';
+import { getOldCaseNavigation } from '../systems/old-case-navigation.js';
 
 export function render(container, data) {
   container.innerHTML = `
@@ -56,6 +57,12 @@ export function render(container, data) {
       </div>
 
       <div id="precinct-register-result" class="hidden card p-4 mb-6" role="status" aria-live="polite"></div>
+      <nav id="precinct-archive-route" class="reader-theories-view mb-6" aria-label="Маршрут архивного расследования" hidden>
+        <p class="reader-timeline-kicker">ПУТЕВОДИТЕЛЬ ПО РАССЛЕДОВАНИЮ</p>
+        <h3 class="reader-timeline-title">Дело Каллиопы · архивные проверки</h3>
+        <p id="precinct-archive-route-summary" class="reader-timeline-intro" aria-live="polite"></p>
+        <div id="precinct-archive-route-links" class="reader-theories-options"></div>
+      </nav>
       <section id="precinct-old-case" class="reader-theories-view mb-6" aria-label="Архив дела Каллиопы" hidden>
         <p class="reader-timeline-kicker">АРХИВ УЧАСТКА / ДЕЛО КАЛЛИОПЫ</p>
         <h3 class="reader-timeline-title">Почему дело закрыли за три дня?</h3>
@@ -143,6 +150,30 @@ export function render(container, data) {
   `;
 
   const oldCasePanel = container.querySelector('#precinct-old-case');
+  const routePanel = container.querySelector('#precinct-archive-route');
+  const routeSummary = container.querySelector('#precinct-archive-route-summary');
+  const routeLinks = container.querySelector('#precinct-archive-route-links');
+  function refreshArchiveRoute() {
+    const route = getOldCaseNavigation(GameState.flags, id => GameState.hasClue(id));
+    routePanel.hidden = route.stages.length === 0;
+    routeLinks.replaceChildren();
+    if (routePanel.hidden) return;
+    routeSummary.textContent = `Завершено этапов: ${route.completed} из ${route.stages.length} доступных. ${route.next ? `Следующая проверка: ${route.next.label}.` : 'Все доступные этапы завершены.'}`;
+    for (const stage of route.stages) {
+      const target = container.querySelector(`#${stage.target}`);
+      if (!target || target.hidden) continue;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'reader-theories-option';
+      button.textContent = `${stage.status === 'done' ? '✓' : '→'} ${stage.label}`;
+      button.addEventListener('click', () => {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        target.setAttribute('tabindex', '-1');
+        target.focus({ preventScroll: true });
+      });
+      routeLinks.appendChild(button);
+    }
+  }
   const oldCaseStatus = container.querySelector('#precinct-old-case-status');
   const oldCaseRegister = container.querySelector('#precinct-old-case-register');
   const oldCaseInventory = container.querySelector('#precinct-old-case-inventory');
@@ -209,6 +240,7 @@ export function render(container, data) {
         if (!result) return;
         if (!result.correct) { portLogResult.textContent = result.feedback; return; }
         GameState.setFlag('court_old_case_port_log_reading', result);
+        queueMicrotask(refreshArchiveRoute);
         refreshPortLog();
       });
       portLogOptions.appendChild(button);
@@ -233,6 +265,7 @@ export function render(container, data) {
         if (!result) return;
         if (!result.correct) { discrepancyResult.textContent = result.feedback; return; }
         GameState.setFlag('court_old_case_discrepancy', result);
+        queueMicrotask(refreshArchiveRoute);
         refreshOldDiscrepancy();
         refreshPortLog();
       });
@@ -264,6 +297,7 @@ export function render(container, data) {
           id => GameState.hasClue(id), GameState.flags.court_old_case_witness_follow_up);
         if (!result) return;
         GameState.setFlag('court_old_case_witness_follow_up', result);
+        queueMicrotask(refreshArchiveRoute);
         refreshWitnessFollowUp();
         refreshOldDiscrepancy();
       });
@@ -306,6 +340,7 @@ export function render(container, data) {
         if (!result) return;
         if (!result.correct) { witnessResult.textContent = result.feedback; return; }
         GameState.setFlag('court_old_case_witness_reading', result);
+        queueMicrotask(refreshArchiveRoute);
         refreshOldWitnesses();
         refreshWitnessFollowUp();
       });
@@ -338,6 +373,7 @@ export function render(container, data) {
         if (!result) return;
         if (!result.correct) { auditResult.textContent = result.feedback; return; }
         GameState.setFlag('court_old_case_source_audit', result);
+        queueMicrotask(refreshArchiveRoute);
         refreshSourceAudit();
         refreshOldWitnesses();
       });
@@ -384,6 +420,7 @@ export function render(container, data) {
         const decision = resolveMorganOldCaseApproach(approach.id, GameState.flags.court_old_case_follow_up, GameState.flags.court_old_case_morgan_approach);
         if (!decision) return;
         GameState.setFlag('court_old_case_morgan_approach', decision);
+        queueMicrotask(refreshArchiveRoute);
         NPCMemory.setFlag('npc_ray_morgan', decision.flag);
         NPCMemory.changeTrust('npc_ray_morgan', decision.trustDelta);
         refreshMorganOldCase();
@@ -438,6 +475,7 @@ export function render(container, data) {
         const selected = recordOldCaseSignatureAction(action.id, current, GameState.flags.court_old_case_signature_action);
         if (!selected) return;
         GameState.setFlag('court_old_case_signature_action', selected);
+        queueMicrotask(refreshArchiveRoute);
         refreshOldCaseSignature();
         refreshOldCaseFollowUp();
       });
@@ -471,6 +509,7 @@ export function render(container, data) {
         const result = recordOldCaseOrderInterpretation(interpretation.id, assessment, GameState.flags.court_old_case_order_interpretation);
         if (!result) return;
         GameState.setFlag('court_old_case_order_interpretation', result);
+        queueMicrotask(refreshArchiveRoute);
         refreshOldCaseOrder();
         refreshOldCaseSignature();
       });
@@ -526,6 +565,7 @@ export function render(container, data) {
       refreshSourceAudit();
       refreshOldWitnesses();
       refreshPortLog();
+      refreshArchiveRoute();
     } catch (error) {
       button.disabled = false;
       oldCaseStatus.textContent = 'Архив временно недоступен. Повторите запрос позже.';
@@ -547,6 +587,7 @@ export function render(container, data) {
     const result = recordOldCaseFollowUp(check, GameState.flags.court_old_case_follow_up);
     if (!result) return;
     GameState.setFlag('court_old_case_follow_up', result);
+    queueMicrotask(refreshArchiveRoute);
     refreshOldCaseFollowUp();
     refreshMorganOldCase();
   });
@@ -557,6 +598,7 @@ export function render(container, data) {
     const saved = recordMorganRevisit(route, id => GameState.hasClue(id), GameState.flags.court_old_case_morgan_revisit);
     if (!saved) return;
     GameState.setFlag('court_old_case_morgan_revisit', saved);
+    queueMicrotask(refreshArchiveRoute);
     refreshMorganRevisit();
     refreshSourceAudit();
   });
@@ -565,6 +607,7 @@ export function render(container, data) {
     const note = recordOldCaseClosure(assessOldCaseClosure(id => GameState.hasClue(id), GameState.flags.court_old_case_reading), GameState.flags.court_old_case_closure_review);
     if (!note) return;
     GameState.setFlag('court_old_case_closure_review', note);
+    queueMicrotask(refreshArchiveRoute);
     refreshOldCase();
     refreshOldCaseOrder();
   });
@@ -579,6 +622,7 @@ export function render(container, data) {
   refreshWitnessFollowUp();
   refreshOldDiscrepancy();
   refreshPortLog();
+  refreshArchiveRoute();
 
   document.getElementById('btn-talk-ray').addEventListener('click', async function() {
     const actions = container.querySelector('#precinct-actions');
