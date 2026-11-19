@@ -6,6 +6,7 @@ import { setupCourtWorkflow } from '../systems/court-workflow.js';
 import { NPCMemory } from '../systems/npc-memory.js';
 import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS, getReaderTimelineFollowUp } from '../systems/reader-timeline.js';
 import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, resolveWitnessRecall, getReaderEvidenceRoute, READER_THEORIES } from '../systems/reader-theories.js';
+import { assessReaderInvestigation } from '../systems/investigation-quality.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -116,6 +117,13 @@ export function render(container, data) {
         <button type="button" id="reader-theory-evidence" class="reader-timeline-follow-up" hidden></button>
         <p id="reader-theory-evidence-status" class="reader-theory-change-note" role="status" aria-live="polite"></p>
         <div id="reader-theory-history" class="reader-theory-history" aria-label="История версий"></div>
+      </section>
+
+      <section id="reader-quality-view" class="reader-theories-view reader-quality-view mb-6" aria-label="Аудит расследования" ${GameState.hasClue('reader_reconstructed_timeline') ? '' : 'hidden'}>
+        <p class="reader-timeline-kicker">ОЦЕНКА МАТЕРИАЛОВ / БЕЗ СПОЙЛЕРОВ</p>
+        <h3 class="reader-timeline-title">Насколько обоснованы выводы?</h3>
+        <p class="reader-timeline-intro">Аудит показывает полноту проверок и доказанные расхождения. Это не рейтинг раскрытия преступления.</p>
+        <div id="reader-quality-detail" class="reader-theories-detail" aria-live="polite"></div>
       </section>
 
       <div id="court-records" class="mb-6" ${GameState.hasClue('court_phone_register_copy') ? '' : 'hidden'}>
@@ -332,6 +340,36 @@ export function render(container, data) {
   const theoryRevisitResult = container.querySelector('#reader-theory-revisit-result');
   const theoryEvidenceButton = container.querySelector('#reader-theory-evidence');
   const theoryEvidenceStatus = container.querySelector('#reader-theory-evidence-status');
+  const qualityDetail = container.querySelector('#reader-quality-detail');
+  let qualityRules = [];
+  function refreshReaderQuality() {
+    const audit = assessReaderInvestigation(GameState.currentCase, qualityRules, GameState.flags);
+    qualityDetail.replaceChildren();
+    if (!audit) return;
+    const rows = [
+      ['Документы', `${audit.found.length} из ${audit.found.length + audit.remaining.length} ключевых проверок`],
+      ['Подтверждённые расхождения', String(audit.verifiedContradictions.length)],
+      ['Работа со свидетелем', audit.conduct],
+      ['Предел доказательств', audit.verdict]
+    ];
+    for (const [label, value] of rows) {
+      const row = document.createElement('p');
+      const strong = document.createElement('strong');
+      strong.textContent = label + ': ';
+      row.append(strong, document.createTextNode(value));
+      qualityDetail.appendChild(row);
+    }
+    const heading = document.createElement('strong');
+    heading.textContent = 'Что проверить дальше:';
+    qualityDetail.appendChild(heading);
+    const list = document.createElement('ul');
+    for (const step of audit.nextSteps) {
+      const item = document.createElement('li');
+      item.textContent = step;
+      list.appendChild(item);
+    }
+    qualityDetail.appendChild(list);
+  }
   let selectedTheoryId = 'single_operator';
   function refreshReaderTheories() {
     const theories = compareReaderTheories(id => GameState.hasClue(id));
@@ -403,6 +441,7 @@ export function render(container, data) {
         theoryHistory.appendChild(item);
       }
     }
+    refreshReaderQuality();
   }
   theoryRecordButton.addEventListener('click', () => {
     if (!GameState.hasClue('reader_reconstructed_timeline')) return;
@@ -488,6 +527,8 @@ export function render(container, data) {
   }
 
   loadCourtRules().then(rules => {
+    qualityRules = rules;
+    refreshReaderQuality();
     if (!GameState.hasClue('guard_round_sheet') && canChallengeGuard(GameState.currentCase, rules)) {
       container.querySelector('#guard-follow-up').hidden = false;
     }
@@ -606,6 +647,7 @@ export function render(container, data) {
       if (clueId === 'reader_reconstructed_timeline') {
         container.querySelector('#reader-timeline-view').hidden = false;
         container.querySelector('#reader-theories-view').hidden = false;
+        container.querySelector('#reader-quality-view').hidden = false;
       }
       if (clueId === 'court_access_ledger') container.querySelector('#court-witnesses').hidden = false;
       if (GameState.hasClue('court_nk_staff_index') && GameState.hasClue('reader_service_ticket')) {

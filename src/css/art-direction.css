@@ -415,6 +415,9 @@ body { background:#071015; color:#d3d5cc; }
 .reader-theory-approaches { margin-top:13px; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; padding:12px; border:1px solid #69584c; background:#252725; }
 .reader-theory-approaches > p { grid-column:1/-1; color:#e4c49d; font:700 11px/1.5 'Courier New',monospace; letter-spacing:.07em; }
 .reader-theory-approaches[hidden] { display:none; }
+.reader-quality-view { border-left-color:#718b8a; }
+.reader-quality-view ul { margin:7px 0 0 19px; list-style:disc; }
+.reader-quality-view li + li { margin-top:5px; }
 @media(max-width:650px) { .reader-timeline-events { grid-template-columns:1fr; } .reader-timeline-event { min-height:48px; } }
 @media(max-width:650px) { .reader-theories-options { grid-template-columns:1fr; } .reader-theories-option { text-align:left; } }
 @media(max-width:650px) { .reader-theory-approaches { grid-template-columns:1fr; } }
