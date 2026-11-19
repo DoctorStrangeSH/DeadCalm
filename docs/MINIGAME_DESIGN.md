@@ -156,3 +156,17 @@ A shared progress record is now part of the save model:
 - Service worker cache key: `dead-calm-visual-v92`.
 
 These records are activity history, not fabricated clues or narrative facts. Story consequences should be authored and connected separately when a specific transmission or repair is tied to a case.
+
+
+## Prototype — Film Restoration
+
+A distinct tactile mini-game family is now represented by a tested simulation module:
+- Logic: `src/js/systems/film-restoration.js`.
+- Tests: `tests/film-restoration.test.mjs`.
+- The player regulates film transport tension and speed, advances damaged frames through a gate, cleans dust, reduces a scratch with controlled pressure, and aligns a physical splice.
+- Unsafe transport and out-of-tolerance restoration attempts damage the reel; mistakes are recoverable but remain in the final quality grade.
+- The projection test grades a clean restoration, a partial restoration, or a damaged reel.
+- Results are accepted by the shared persistent mini-game progress system as `film-restoration`.
+- Service worker cache key: `dead-calm-visual-v93`.
+
+**Status boundary:** this is a tested gameplay simulation, not yet a playable in-game scene. It has no approved painted machine/film artwork, scene layout, pointer interaction, audio, animation, or office entry point. Do not present it as complete until those pieces are authored in the shipped Blackford visual style and validated at desktop/mobile sizes.
