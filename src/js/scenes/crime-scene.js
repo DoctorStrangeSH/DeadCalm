@@ -221,6 +221,18 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="note-authorship" class="mb-6" ${GameState.hasClue('key_note_paper_trace') && GameState.hasClue('supply_desk_shift_register') ? '' : 'hidden'}>
+        <p class="text-gold text-xs tracking-widest mb-3">ЛИСТОК С НОМЕРОМ · ПРОВЕРКА ВОЗМОЖНОСТИ</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-desk-access" class="card text-left" ${GameState.hasClue('supply_counter_access_roster') ? 'disabled' : ''}>
+            <p class="card-title">СПИСОК ДОПУЩЕННЫХ К ХОЗЯЙСТВЕННОЙ СТОЙКЕ</p><p class="card-subtitle">Кто мог войти в общий коридор без сопровождения?</p>
+          </button>
+          <button id="btn-note-imprint" class="card text-left" ${GameState.hasClue('key_note_impression_report') ? 'disabled' : ''}>
+            <p class="card-title">СВЕРИТЬ ВДАВЛЕННЫЕ ЗАПИСИ</p><p class="card-subtitle">Что было написано на листке под запиской?</p>
+          </button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -364,6 +376,9 @@ export function render(container, data) {
         container.querySelector('#witness-corroboration').hidden = false;
       }
       if (GameState.hasClue('key_issue_clerk_note')) container.querySelector('#key-note-trace').hidden = false;
+      if (GameState.hasClue('key_note_paper_trace') && GameState.hasClue('supply_desk_shift_register')) {
+        container.querySelector('#note-authorship').hidden = false;
+      }
       refreshCourtWorkflow();
       showNarrative(narrative, catalog[clueId].name);
     } catch (error) {
@@ -545,6 +560,20 @@ export function render(container, data) {
     inspectCourtRecord('btn-note-desk', 'supply_desk_shift_register',
       'По книге дежурств кладовщик отсутствовал у стойки с 19:56 до 20:04. В этот промежуток хозяйственный стол не закрывали, и пропуск поимённо не проверяли. Это объясняет возможность оставить записку, но не показывает, кто именно вошёл.',
       'key_issue_clerk_note');
+  });
+
+  function inspectNoteOrigin(buttonId, clueId, narrative) {
+    if (!GameState.hasClue('key_note_paper_trace') || !GameState.hasClue('supply_desk_shift_register')) return;
+    inspectCourtRecord(buttonId, clueId, narrative, 'key_note_paper_trace');
+  }
+
+  container.querySelector('#btn-desk-access').addEventListener('click', function() {
+    inspectNoteOrigin('btn-desk-access', 'supply_counter_access_roster',
+      'В список допущенных к хозяйственной стойке входят работники канцелярии, архивариус Костина, техник Климов и сменный курьер. Допуск не является отметкой фактического посещения. Проверить необходимо именно перемещения в 19:56–20:04.');
+  });
+  container.querySelector('#btn-note-imprint').addEventListener('click', function() {
+    inspectNoteOrigin('btn-note-imprint', 'key_note_impression_report',
+      'Исследование продавленных строк обнаруживает рядом с табельным номером помету «17 / вечер». Это похоже на внутренний номер 17, но назначение пометы неизвестно. Один и тот же блокнот использовали для разных заявок; приписывать текст конкретному человеку нельзя.');
   });
 
   async function confrontOrlov(tone) {

@@ -148,3 +148,16 @@ test('clerk note opens paper and desk investigations without assigning a suspect
   assert.match(scene, /'supply_desk_shift_register'[^;]*'key_issue_clerk_note'/s);
   assert.match(scene, /container\.querySelector\('#key-note-trace'\)\.hidden = false/);
 });
+
+test('note authorship review distinguishes authorized access from observed presence', () => {
+  assert.match(clues.supply_counter_access_roster.description, /не устанавливает, кто находился/);
+  assert.match(clues.supply_counter_access_roster.description, /Надежда Костина/);
+  assert.match(clues.key_note_impression_report.description, /17 \/ вечер/);
+  assert.match(clues.key_note_impression_report.description, /не доказывает, что обе записи связаны/);
+  assert.ok(clues.key_note_impression_report.connections_to.includes('court_extension_directory'));
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /id="note-authorship"[^>]*hasClue\('key_note_paper_trace'\) && GameState\.hasClue\('supply_desk_shift_register'\)/);
+  assert.match(scene, /function inspectNoteOrigin/);
+  assert.match(scene, /'supply_counter_access_roster'/);
+  assert.match(scene, /'key_note_impression_report'/);
+});

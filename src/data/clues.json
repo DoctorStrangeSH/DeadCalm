@@ -247,7 +247,7 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Бумажный архив хозяйственной службы и общий блокнот заявок",
-    "connections_to": ["key_issue_clerk_note", "supply_desk_shift_register"]
+    "connections_to": ["key_issue_clerk_note", "supply_desk_shift_register", "key_note_impression_report"]
   },
   "supply_desk_shift_register": {
     "id": "supply_desk_shift_register",
@@ -257,7 +257,27 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Книга дежурств хозяйственной службы",
-    "connections_to": ["key_issue_clerk_note", "key_note_paper_trace", "maintenance_tool_issue_ledger"]
+    "connections_to": ["key_issue_clerk_note", "key_note_paper_trace", "maintenance_tool_issue_ledger", "supply_counter_access_roster"]
+  },
+  "supply_counter_access_roster": {
+    "id": "supply_counter_access_roster",
+    "name": "Список допущенных к хозяйственной стойке",
+    "category": "document",
+    "description": "К хозяйственному столу без сопровождения могли проходить сотрудники канцелярии, архивариус Надежда Костина, техник Николай Климов и сменный курьер. В списке указан допуск, а не время реального визита; он не устанавливает, кто находился возле стойки с 19:56 до 20:04 и оставил записку.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Пропускной список хозяйственной службы",
+    "connections_to": ["supply_desk_shift_register", "court_nk_staff_index", "key_note_impression_report"]
+  },
+  "key_note_impression_report": {
+    "id": "key_note_impression_report",
+    "name": "Исследование вдавленных надписей блокнота",
+    "category": "document",
+    "description": "При боковом свете на соседнем листе общего блокнота рядом с табельным номером Климова различима помета «17 / вечер». В справочнике суда номер 17 относится к общей комнате секретарей, но помета не содержит указания на телефон или звонок. Совпадение числа ещё не доказывает, что обе записи связаны или что их сделал один человек.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Протокол осмотра бумаги хозяйственной службы",
+    "connections_to": ["key_note_paper_trace", "court_extension_directory", "supply_counter_access_roster"]
   },
   "archive_room_register": {
     "id": "archive_room_register",
