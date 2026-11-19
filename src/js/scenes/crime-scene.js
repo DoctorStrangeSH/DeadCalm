@@ -75,6 +75,20 @@ export function render(container, data) {
       </div>
       <div id="court-workflow-stages" class="court-workflow-stages"></div>
 
+      <section id="reader-timeline-view" class="reader-timeline-view mb-6" aria-label="Сводная хронология расследования" ${GameState.hasClue('reader_reconstructed_timeline') ? '' : 'hidden'}>
+        <p class="reader-timeline-kicker">АРХИВ СЛЕДСТВИЯ / ХРОНОЛОГИЯ</p>
+        <h3 class="reader-timeline-title">Вечер у служебного входа</h3>
+        <p class="reader-timeline-intro">Выберите событие, чтобы увидеть документ и то, чего он пока не доказывает.</p>
+        <div class="reader-timeline-events" role="group" aria-label="События по времени">
+          ${READER_TIMELINE_EVENTS.map((item, index) => `
+            <button type="button" class="reader-timeline-event" data-timeline-index="${index}" aria-pressed="${index === 0}">
+              <time>${item.time}</time><span>${item.event}</span>
+            </button>`).join('')}
+        </div>
+        <div id="reader-timeline-detail" class="reader-timeline-detail" aria-live="polite"></div>
+        <p class="reader-timeline-warning">Несколько регистраций не доказывают, что все действия совершил один человек.</p>
+      </section>
+
       <div id="court-records" class="mb-6" ${GameState.hasClue('court_phone_register_copy') ? '' : 'hidden'}>
         <p class="text-gold text-xs tracking-widest mb-3">ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА · НОМЕР 17</p>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -275,6 +289,20 @@ export function render(container, data) {
 
   updateCluesList();
   const refreshCourtWorkflow = setupCourtWorkflow(container);
+  const timelineDetail = container.querySelector('#reader-timeline-detail');
+  function selectTimelineEvent(index) {
+    const item = READER_TIMELINE_EVENTS[index];
+    if (!item) return;
+    const source = GameState.currentCase.clues.find(clue => clue.id === item.source);
+    timelineDetail.textContent = `${item.time} · ${source?.name || 'Документ'} — ${item.gap}`;
+    container.querySelectorAll('[data-timeline-index]').forEach(button => {
+      button.setAttribute('aria-pressed', String(Number(button.dataset.timelineIndex) === index));
+    });
+  }
+  container.querySelectorAll('[data-timeline-index]').forEach(button => {
+    button.addEventListener('click', () => selectTimelineEvent(Number(button.dataset.timelineIndex)));
+  });
+  selectTimelineEvent(0);
 
   async function loadCourtRules() {
     const response = await fetch('src/data/contradictions.json');
@@ -398,6 +426,7 @@ export function render(container, data) {
       const catalog = await response.json();
       if (!catalog[clueId]) throw new Error('Не найдена запись в каталоге');
       GameState.addClue(catalog[clueId]);
+      if (clueId === 'reader_reconstructed_timeline') container.querySelector('#reader-timeline-view').hidden = false;
       if (clueId === 'court_access_ledger') container.querySelector('#court-witnesses').hidden = false;
       if (GameState.hasClue('court_nk_staff_index') && GameState.hasClue('reader_service_ticket')) {
         container.querySelector('#reader-verification').hidden = false;

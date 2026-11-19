@@ -203,3 +203,18 @@ test('reader chronology requires five independent documents and preserves time o
   const cache = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
   assert.match(cache, /reader-timeline\.js/);
 });
+
+test('timeline lets players inspect each recorded source and its unresolved identity gap', () => {
+  for (const entry of READER_TIMELINE_EVENTS) {
+    assert.ok(READER_TIMELINE_EVIDENCE.includes(entry.source));
+    assert.ok(entry.gap.length > 15);
+  }
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../src/css/art-direction.css', import.meta.url), 'utf8');
+  assert.match(scene, /id="reader-timeline-view"[^>]*hasClue\('reader_reconstructed_timeline'\)/);
+  assert.match(scene, /function selectTimelineEvent\(index\)/);
+  assert.match(scene, /source\?\.name/);
+  assert.match(scene, /setAttribute\('aria-pressed'/);
+  assert.match(css, /\.reader-timeline-event:focus-visible/);
+  assert.match(css, /\.reader-timeline-events \{ grid-template-columns:1fr/);
+});

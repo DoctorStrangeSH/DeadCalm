@@ -382,6 +382,18 @@ body { background:#071015; color:#d3d5cc; }
 .court-zone-card .card-subtitle { color:#a9bcb1; margin-top:9px; font:12px Georgia,serif; }
 .court-zone-card:focus-visible { outline:2px solid #f3d4a0; outline-offset:2px; }
 .court-clues-panel { padding:17px 19px; border:1px solid #667367; background:#172729; }
+.reader-timeline-view { padding:clamp(16px,2.7vw,27px); background:linear-gradient(145deg,#1d3031,#111d22); border:1px solid #857459; border-left:4px solid #d7b47b; box-shadow:0 15px 30px #0007; }
+.reader-timeline-kicker { color:#c3a575; font:10px 'Courier New',monospace; letter-spacing:.17em; }
+.reader-timeline-title { margin:8px 0 5px; color:#efd6a5; font:clamp(20px,2.7vw,29px) Georgia,serif; }
+.reader-timeline-intro { margin-bottom:16px; color:#a7bab3; font:13px Georgia,serif; }
+.reader-timeline-events { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.reader-timeline-event { display:flex; align-items:center; gap:11px; min-height:54px; padding:10px 12px; border:1px solid #4d6660; background:#182729; color:#d9d7ca; text-align:left; font:12px Georgia,serif; transition:border-color .15s,background .15s; }
+.reader-timeline-event time { flex:none; color:#e5bd82; font:700 13px 'Courier New',monospace; }
+.reader-timeline-event[aria-pressed="true"],.reader-timeline-event:hover { background:#30413d; border-color:#d7b47b; }
+.reader-timeline-event:focus-visible { outline:2px solid #f5d6a1; outline-offset:2px; }
+.reader-timeline-detail { margin-top:12px; padding:14px; min-height:62px; color:#eee0c8; background:#293735; border:1px solid #60756c; font:13px/1.6 Georgia,serif; }
+.reader-timeline-warning { margin-top:11px; color:#b2bcb2; font:12px/1.5 Georgia,serif; }
+@media(max-width:650px) { .reader-timeline-events { grid-template-columns:1fr; } .reader-timeline-event { min-height:48px; } }
 @media(max-width:650px) { .court-hotspot em { display:none; } .court-hotspot span { width:32px; height:32px; font-size:10px; } .court-scan-hint { font-size:9px; } }
 
 /* Rusty Anchor: painted dockside tavern and bartender testimony. */
