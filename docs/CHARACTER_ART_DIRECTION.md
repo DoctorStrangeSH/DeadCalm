@@ -125,3 +125,19 @@ These are visual observations from the existing assets, not permission to rewrit
 - Integrate and test the actual asset; otherwise leave it as a concept and say so honestly.
 
 **Quality gate:** if a new character could be mistaken for an existing character, or if the image looks like another portrait in the same room with only the clothes changed, it is rejected. Do not ship it and do not ask the user to accept repeated near-duplicates.
+
+
+## First-pass final-art standard — no drafts
+
+The user expects the AI to act as the project's artist and technical lead, not as a sketch assistant. This is a production requirement.
+
+- **Do all planning internally before image generation.** Inspect the six originals, the existing cast, narrative role, location, composition, silhouette, palette, and identity differences first. Resolve the design decisions before calling the image generator.
+- **Generate a finished production-quality image on the first presented attempt.** Do not show exploratory sketches, roughs, thumbnails, moodboards, contact sheets, character sheets, collages, prompt experiments, or several near-identical options as substitutes for the requested final artwork.
+- **One request means one polished final image**, unless the user explicitly asks for multiple alternatives or a sheet.
+- Treat the first generation as the intended final deliverable: specific character identity, fully designed face and wardrobe, deliberate pose, role-specific environment, finished lighting, coherent painterly rendering, clean framing, and no text or decorative mockup elements.
+- Do not ask the user to direct every artistic decision. The AI owns the art direction and makes professional decisions from the established canon. Ask only when a genuinely essential story fact is missing.
+- Do not burden the user with iterative prompt tuning. If an internal result clearly fails the documented quality gate, correct the approach before presenting it. Do not present failed attempts as progress or pretend a rough is finished.
+- Never claim that "one-shot perfection" can be technically guaranteed by an image model. The operational standard is that the AI prepares thoroughly, makes one deliberate production attempt, and only presents work that meets the quality bar. If it does not, be transparent rather than shipping it.
+- Once the user approves the final image, preserve it as canonical and move directly to the actual production pipeline: prepare the required game asset, integrate the registry and scene, verify paths/loading, and run the relevant checks.
+
+The user should receive finished work and meaningful technical progress, not a stream of drafts.
