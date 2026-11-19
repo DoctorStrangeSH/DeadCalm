@@ -489,6 +489,16 @@
     "source": "Заверенная выписка из журнала движения архивных фондов",
     "connections_to": ["old_case_order_physical_original"]
   },
+  "old_case_transfer_card": {
+    "id": "old_case_transfer_card",
+    "name": "Карточка первичной передачи дела Каллиопы",
+    "category": "document",
+    "description": "Карточка фиксирует передачу закрытой папки из следственной группы в канцелярию на следующий рабочий день. В графе отправителя указано подразделение, а не имя; это не устанавливает автора постановления.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Архивный реестр первичной передачи дел",
+    "connections_to": ["old_case_custody_extract", "old_case_original_order"]
+  },
   "judge_notes": {
     "id": "judge_notes",
     "name": "Дневник судьи",
