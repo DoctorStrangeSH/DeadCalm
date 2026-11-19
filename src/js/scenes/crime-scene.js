@@ -10,6 +10,7 @@ import { assessReaderInvestigation } from '../systems/investigation-quality.js';
 import { buildReaderEpisodeConclusion, hasNewConclusionEvidence } from '../systems/episode-conclusion.js';
 import { reviewReaderConclusion } from '../systems/conclusion-review.js';
 import { planReviewDirective } from '../systems/review-directives.js';
+import { assessOldCaseCrosscheck, recordOldCaseReading, OLD_CASE_READINGS } from '../systems/old-case-crosscheck.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -133,6 +134,15 @@ export function render(container, data) {
         <button type="button" id="reader-review-directive" class="reader-timeline-follow-up" hidden>ПОЛУЧИТЬ СЛЕДУЮЩЕЕ ПОРУЧЕНИЕ</button>
         <div id="reader-review-directions" class="reader-theory-history" aria-label="Поручения по проверкам"></div>
         <div id="reader-conclusion-history" class="reader-theory-history" aria-label="Сохранённые заключения"></div>
+      </section>
+
+      <section id="old-case-crosscheck" class="reader-theories-view mb-6" aria-label="Сверка дневника и старого дела" hidden>
+        <p class="reader-timeline-kicker">АРХИВ / ДВАДЦАТЬ ЛЕТ НАЗАД</p>
+        <h3 class="reader-timeline-title">Кого ждал судья?</h3>
+        <p class="reader-timeline-intro">Сопоставьте две найденные записи и зафиксируйте рабочее прочтение. Это не обвинение.</p>
+        <div id="old-case-crosscheck-detail" class="reader-theories-detail" aria-live="polite"></div>
+        <div id="old-case-crosscheck-options" class="reader-theories-options" role="group" aria-label="Интерпретация дневника"></div>
+        <p id="old-case-crosscheck-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
       </section>
 
       <div id="court-records" class="mb-6" ${GameState.hasClue('court_phone_register_copy') ? '' : 'hidden'}>
@@ -356,6 +366,42 @@ export function render(container, data) {
   const conclusionReviews = container.querySelector('#reader-conclusion-reviews');
   const directiveButton = container.querySelector('#reader-review-directive');
   const directiveHistory = container.querySelector('#reader-review-directions');
+  const oldCasePanel = container.querySelector('#old-case-crosscheck');
+  const oldCaseDetail = container.querySelector('#old-case-crosscheck-detail');
+  const oldCaseOptions = container.querySelector('#old-case-crosscheck-options');
+  const oldCaseResult = container.querySelector('#old-case-crosscheck-result');
+  function refreshOldCaseCrosscheck() {
+    const check = assessOldCaseCrosscheck(id => GameState.hasClue(id), GameState.flags.court_reader_review_directives);
+    oldCasePanel.hidden = !check;
+    oldCaseDetail.replaceChildren();
+    oldCaseOptions.replaceChildren();
+    if (!check) return;
+    const details = check.ready
+      ? [check.commonGround, check.limit]
+      : [`Нужна независимая сверка. Получено источников: ${check.available.length} из 2.`,
+        !GameState.hasClue('judge_notes') ? 'Осмотрите стол судьи в зале суда.' : 'Получите архивные сведения о старом деле через полицейское расследование.'];
+    for (const detail of details) {
+      const paragraph = document.createElement('p');
+      paragraph.textContent = detail;
+      oldCaseDetail.appendChild(paragraph);
+    }
+    const recorded = GameState.flags.court_old_case_reading;
+    oldCaseResult.textContent = recorded ? `Записанная версия: ${recorded.assessment}` : '';
+    if (!check.ready || recorded) return;
+    for (const reading of OLD_CASE_READINGS) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'reader-theories-option';
+      button.textContent = reading.label;
+      button.addEventListener('click', () => {
+        const saved = recordOldCaseReading(reading.id, assessOldCaseCrosscheck(id => GameState.hasClue(id), GameState.flags.court_reader_review_directives), GameState.flags.court_old_case_reading);
+        if (!saved) return;
+        GameState.setFlag('court_old_case_reading', saved);
+        refreshOldCaseCrosscheck();
+      });
+      oldCaseOptions.appendChild(button);
+    }
+  }
   let qualityRules = [];
   function refreshReaderQuality() {
     const audit = assessReaderInvestigation(GameState.currentCase, qualityRules, GameState.flags);
@@ -422,6 +468,7 @@ export function render(container, data) {
       line.textContent = `Версия ${assignment.conclusionVersion} · ${assignment.text}`;
       directiveHistory.appendChild(line);
     }
+    refreshOldCaseCrosscheck();
     conclusionHistory.replaceChildren();
     if (history.length) {
       const heading = document.createElement('p');
@@ -732,6 +779,7 @@ export function render(container, data) {
     } else {
       showNarrative('Вы перечитываете записи судьи. Двадцать лет. Дело, которое пытались похоронить. Кто "она"? И кто "он"?');
     }
+    refreshOldCaseCrosscheck();
   });
 
   async function inspectCourtRecord(buttonId, clueId, narrative, prerequisite = 'court_phone_register_copy') {
