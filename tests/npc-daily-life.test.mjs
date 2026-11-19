@@ -50,3 +50,18 @@ test('normalization removes malformed and duplicate records', () => {
   normalized.schedules[0].days.push(8);
   assert.deepEqual(schedule.days, [1,2,3,4,5,6,7]);
 });
+
+test('normalization drops orphaned occurrences and occurrences outside schedule windows', () => {
+  const valid = { id: 'occ_ok', npcId: 'npc_marta_hayes', scheduleId: schedule.id, day: 1,
+    minute: 1200, locationId: 'bar_rusty_anchor', description: 'A documented closing shift.',
+    basis: 'A signed shift log.' };
+  const normalized = normalizeDailyLife({
+    schedules: [schedule],
+    occurrences: [
+      valid,
+      { ...valid, id: 'orphan', scheduleId: 'missing_schedule' },
+      { ...valid, id: 'late', minute: 1400 }
+    ]
+  });
+  assert.deepEqual(normalized.occurrences.map(item => item.id), ['occ_ok']);
+});
