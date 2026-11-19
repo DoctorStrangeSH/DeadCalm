@@ -42,3 +42,24 @@ Each event requires two distinct NPC IDs, a non-empty description, and may inclu
 - PWA cache: `sw.js`
 
 The data model and state API are implemented. A player-facing graph visualization, authored relationship content, and narrative event producers remain future work. Do not describe those future features as already implemented.
+
+## NPC knowledge ledger
+
+The knowledge ledger records which claims an NPC has encountered and where that information came from. It is separate from the social graph: a relationship is not proof that one NPC knows another NPC's secret.
+
+- Module: `src/js/systems/npc-knowledge.js`
+- State API: `GameState.recordNpcKnowledge(input)`, `GameState.updateNpcKnowledgeState(entryId, state, reason)`, `GameState.getNpcKnowledge(npcId)`, `GameState.getNpcKnowledgeContext(npcId)`
+- Tests: `tests/npc-knowledge.test.mjs`
+
+Allowed source types: `direct_observation`, `document`, `interview`, `rumor`, `inference`.
+Allowed knowledge states: `unverified`, `corroborated`, `disputed`.
+
+Integrity rules:
+1. A ledger entry records what the NPC has encountered or believes, not whether the claim is objectively true.
+2. Every entry requires a claim reference, a source type, and a non-empty provenance explanation.
+3. Rumors remain attributed hearsay; do not convert them to corroborated knowledge without a separate reasoned update.
+4. Knowledge-state changes require an explanation and are retained in `stateHistory`.
+5. Do not automatically copy knowledge from one NPC to another. A transfer must be explicitly recorded with `sourceNpcId` and a provenance explanation.
+6. Do not expose hidden claims to dialogue merely because an NPC is connected to someone who knows them.
+7. Old saves without `knowledgeLedger` migrate to an empty ledger; malformed entries and duplicate IDs are discarded.
+8. The ledger is a data model/API only. Automatic rumor propagation, schedules, and dialogue consumption are not implemented yet.
