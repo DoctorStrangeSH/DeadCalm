@@ -485,7 +485,8 @@ export function render(container, data) {
         open.className = 'investigation-assignment-open';
         open.textContent = 'К СВЯЗАННОЙ ПРОВЕРКЕ';
         open.addEventListener('click', () => {
-          const target = gapsDetail.querySelector('[data-gap-id="' + CSS.escape(assignment.id) + '"]');
+          const target = Array.from(gapsDetail.querySelectorAll('[data-gap-id]'))
+            .find(element => element.dataset.gapId === assignment.id);
           if (!target) return;
           target.scrollIntoView({ behavior: 'smooth', block: 'center' });
           target.focus({ preventScroll: true });
