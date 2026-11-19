@@ -98,7 +98,7 @@ export function render(container) {
           <span class="office-card-icon" aria-hidden="true">⚙</span><span class="office-card-number">07</span>
           <p class="card-title">МАСТЕРСКАЯ</p>
           <p class="card-subtitle">Практика ремонта механизма</p>
-          <p class="hidden md:block text-gray-600 text-xs mt-3">Тренировка · Карманные часы</p>
+          <p class="hidden md:block text-gray-600 text-xs mt-3">${repairStatus}</p>
         </button>
 
         <!-- Дела -->
