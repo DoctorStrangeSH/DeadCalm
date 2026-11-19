@@ -4,6 +4,7 @@ import { canChallengeGuard, resolveGuardChallenge } from '../systems/court-guard
 import { canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation, canConfrontKlimov, resolveKlimovConfrontation } from '../systems/witness-provenance.js';
 import { setupCourtWorkflow } from '../systems/court-workflow.js';
 import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS, getReaderTimelineFollowUp } from '../systems/reader-timeline.js';
+import { compareReaderTheories } from '../systems/reader-theories.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -89,6 +90,14 @@ export function render(container, data) {
         <button type="button" id="reader-timeline-follow-up" class="reader-timeline-follow-up" hidden></button>
         <p id="reader-timeline-follow-up-status" class="reader-timeline-follow-up-status" role="status" aria-live="polite"></p>
         <p class="reader-timeline-warning">Несколько регистраций не доказывают, что все действия совершил один человек.</p>
+      </section>
+
+      <section id="reader-theories-view" class="reader-theories-view mb-6" aria-label="Альтернативные версии событий" ${GameState.hasClue('reader_reconstructed_timeline') ? '' : 'hidden'}>
+        <p class="reader-timeline-kicker">АНАЛИТИКА / НЕПРОВЕРЕННЫЕ ВЕРСИИ</p>
+        <h3 class="reader-timeline-title">Кто действовал у служебного входа?</h3>
+        <p class="reader-timeline-intro">Выберите версию, чтобы увидеть имеющиеся документы, проведённые проверки и главное возражение. Ни одна версия пока не доказана.</p>
+        <div id="reader-theories-options" class="reader-theories-options" role="group" aria-label="Выбор версии"></div>
+        <div id="reader-theories-detail" class="reader-theories-detail" aria-live="polite"></div>
       </section>
 
       <div id="court-records" class="mb-6" ${GameState.hasClue('court_phone_register_copy') ? '' : 'hidden'}>
@@ -294,6 +303,46 @@ export function render(container, data) {
   const timelineDetail = container.querySelector('#reader-timeline-detail');
   const timelineFollowUp = container.querySelector('#reader-timeline-follow-up');
   const timelineFollowUpStatus = container.querySelector('#reader-timeline-follow-up-status');
+  const theoryOptions = container.querySelector('#reader-theories-options');
+  const theoryDetail = container.querySelector('#reader-theories-detail');
+  let selectedTheoryId = 'single_operator';
+  function refreshReaderTheories() {
+    const theories = compareReaderTheories(id => GameState.hasClue(id));
+    theoryOptions.replaceChildren();
+    for (const theory of theories) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'reader-theories-option';
+      button.textContent = theory.title;
+      button.setAttribute('aria-pressed', String(selectedTheoryId === theory.id));
+      button.addEventListener('click', () => { selectedTheoryId = theory.id; refreshReaderTheories(); });
+      theoryOptions.appendChild(button);
+    }
+    const selected = theories.find(theory => theory.id === selectedTheoryId);
+    if (!selected) { theoryDetail.textContent = ''; return; }
+    const evidenceName = id => GameState.currentCase.clues.find(clue => clue.id === id)?.name || id;
+    theoryDetail.replaceChildren();
+    const lines = [
+      ['Версия', selected.premise],
+      ['Материалы', selected.observed.map(evidenceName).join('; ') || 'Нет доступных документов'],
+      ['Ещё не изучено', selected.unavailable.length ? selected.unavailable.length + ' документ(а)' : 'Исходные документы собраны'],
+      ['Дополнительные проверки', selected.verifiedChecks.map(evidenceName).join('; ') || 'Не проводились'],
+      ['Ожидают проверки', selected.pendingChecks.length ? selected.pendingChecks.length + ' направление(я)' : 'Все доступные проверки проведены'],
+      ['Что не доказано', selected.question]
+    ];
+    for (const [label, value] of lines) {
+      const paragraph = document.createElement('p');
+      const strong = document.createElement('strong');
+      strong.textContent = label + ': ';
+      paragraph.append(strong, document.createTextNode(value));
+      theoryDetail.appendChild(paragraph);
+    }
+    const caution = document.createElement('p');
+    caution.className = 'reader-theories-verdict';
+    caution.textContent = selected.status + ' · Наличие документа не подтверждает автоматически выбранную версию.';
+    theoryDetail.appendChild(caution);
+  }
+  refreshReaderTheories();
   let selectedTimelineIndex = 0;
   function selectTimelineEvent(index) {
     const item = READER_TIMELINE_EVENTS[index];
@@ -321,6 +370,7 @@ export function render(container, data) {
     if (!followUp || GameState.hasClue(followUp.clueId)) return;
     await inspectCourtRecord('reader-timeline-follow-up', followUp.clueId, followUp.narrative, 'reader_reconstructed_timeline');
     selectTimelineEvent(selectedTimelineIndex);
+    refreshReaderTheories();
   });
   selectTimelineEvent(0);
 
@@ -446,7 +496,10 @@ export function render(container, data) {
       const catalog = await response.json();
       if (!catalog[clueId]) throw new Error('Не найдена запись в каталоге');
       GameState.addClue(catalog[clueId]);
-      if (clueId === 'reader_reconstructed_timeline') container.querySelector('#reader-timeline-view').hidden = false;
+      if (clueId === 'reader_reconstructed_timeline') {
+        container.querySelector('#reader-timeline-view').hidden = false;
+        container.querySelector('#reader-theories-view').hidden = false;
+      }
       if (clueId === 'court_access_ledger') container.querySelector('#court-witnesses').hidden = false;
       if (GameState.hasClue('court_nk_staff_index') && GameState.hasClue('reader_service_ticket')) {
         container.querySelector('#reader-verification').hidden = false;
@@ -467,6 +520,7 @@ export function render(container, data) {
       if (GameState.hasClue('supply_evening_request_codes')) container.querySelector('#kit-seventeen-audit').hidden = false;
       if (canAssembleReaderTimeline(id => GameState.hasClue(id))) container.querySelector('#reader-chronology').hidden = false;
       refreshCourtWorkflow();
+      refreshReaderTheories();
       showNarrative(narrative, catalog[clueId].name);
     } catch (error) {
       button.disabled = false;

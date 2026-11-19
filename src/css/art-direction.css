@@ -399,7 +399,17 @@ body { background:#071015; color:#d3d5cc; }
 .reader-timeline-follow-up[hidden] { display:none; }
 .reader-timeline-follow-up-status:not(:empty) { margin-top:9px; color:#bbd2c6; font:12px/1.6 Georgia,serif; }
 .reader-timeline-warning { margin-top:11px; color:#b2bcb2; font:12px/1.5 Georgia,serif; }
+.reader-theories-view { padding:clamp(16px,2.7vw,27px); background:linear-gradient(150deg,#20292d,#111a1f); border:1px solid #665c51; border-left:4px solid #a98f70; }
+.reader-theories-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+.reader-theories-option { padding:12px 10px; background:#1b2c2e; border:1px solid #52605f; color:#cbd9d2; font:13px/1.5 Georgia,serif; text-align:center; }
+.reader-theories-option:hover,.reader-theories-option[aria-pressed="true"] { border-color:#e2bf8c; background:#34413d; color:#ffe2af; }
+.reader-theories-option:focus-visible { outline:2px solid #ffe2af; outline-offset:2px; }
+.reader-theories-detail { margin-top:11px; padding:14px 17px; background:#172428; border:1px solid #52635d; color:#cbd5cb; font:13px/1.65 Georgia,serif; }
+.reader-theories-detail p + p { margin-top:7px; }
+.reader-theories-detail strong { color:#eac795; }
+.reader-theories-verdict { padding-top:9px; border-top:1px solid #49554f; color:#f0c5ac; }
 @media(max-width:650px) { .reader-timeline-events { grid-template-columns:1fr; } .reader-timeline-event { min-height:48px; } }
+@media(max-width:650px) { .reader-theories-options { grid-template-columns:1fr; } .reader-theories-option { text-align:left; } }
 @media(max-width:650px) { .court-hotspot em { display:none; } .court-hotspot span { width:32px; height:32px; font-size:10px; } .court-scan-hint { font-size:9px; } }
 
 /* Rusty Anchor: painted dockside tavern and bartender testimony. */
