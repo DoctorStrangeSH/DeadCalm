@@ -102,3 +102,20 @@ test('Klimov and Kostina interviews unlock after independent maintenance records
   assert.match(scene, /'klimov_evening_account'/);
   assert.match(scene, /'kostina_evening_account'/);
 });
+
+test('independent duty records expose a bounded discrepancy without proving who took the key', () => {
+  const keyLog = clues.maintenance_tool_issue_ledger;
+  const witness = clues.klimov_evening_account;
+  const rule = rules.find(item => item.id === 'klimov_key_denial_vs_issue');
+  assert.deepEqual(rule.clueIds, [witness.id, keyLog.id]);
+  assert.deepEqual(findContradictions({ clueIds: rule.clueIds }, [witness, keyLog], rules).map(item => item.id), [rule.id]);
+  assert.deepEqual(findContradictions({ clueIds: rule.clueIds }, [witness], rules), []);
+  assert.deepEqual(findContradictions({ clueIds: [witness.id] }, [witness, keyLog], rules), []);
+  assert.match(keyLog.description, /не позволяет установить, кто фактически/);
+  assert.match(clues.archive_room_register.description, /не доказывают/);
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /id="witness-corroboration"[^>]*hasClue\('klimov_evening_account'\) && GameState\.hasClue\('kostina_evening_account'\)/);
+  assert.match(scene, /function inspectWitnessRecord/);
+  assert.match(scene, /'maintenance_tool_issue_ledger'/);
+  assert.match(scene, /'archive_room_register'/);
+});

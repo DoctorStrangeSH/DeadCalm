@@ -207,7 +207,7 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Личный опрос Николая Климова",
-    "connections_to": ["reader_service_ticket", "reader_maintenance_access_log", "reader_service_signoff"]
+    "connections_to": ["reader_service_ticket", "reader_maintenance_access_log", "reader_service_signoff", "maintenance_tool_issue_ledger"]
   },
   "kostina_evening_account": {
     "id": "kostina_evening_account",
@@ -217,7 +217,27 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Личный опрос Надежды Костиной",
-    "connections_to": ["court_nk_staff_index", "orlov_badge_handover", "reader_service_signoff"]
+    "connections_to": ["court_nk_staff_index", "orlov_badge_handover", "reader_service_signoff", "archive_room_register"]
+  },
+  "maintenance_tool_issue_ledger": {
+    "id": "maintenance_tool_issue_ledger",
+    "name": "Журнал выдачи универсального ключа",
+    "category": "document",
+    "description": "В 20:03 универсальный ключ оформлен на табельный номер Николая Климова; возврат записан в 20:56, подпись получателя неразборчива. Климов утверждает, что ключ не брал. Документ расходится с его словами об оформлении ключа, но не позволяет установить, кто фактически забрал и вернул ключ.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Книга выдачи ключей и инструмента хозяйственной службы",
+    "connections_to": ["klimov_evening_account", "reader_maintenance_access_log", "reader_service_signoff"]
+  },
+  "archive_room_register": {
+    "id": "archive_room_register",
+    "name": "Книга вечерних отметок архива",
+    "category": "document",
+    "description": "В архивной книге есть записи с инициалами Надежды Костиной в 20:12 и 20:44. Книга заполняется вручную и не фиксирует входы и выходы непрерывно. Записи частично согласуются с её словами, но не доказывают, что она находилась в архиве всё это время или лично внесла обе отметки.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Журнал архива суда",
+    "connections_to": ["kostina_evening_account", "court_nk_staff_index"]
   },
   "poison_vial_info": {
     "id": "poison_vial_info",

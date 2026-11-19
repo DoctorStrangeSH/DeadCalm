@@ -188,6 +188,18 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="witness-corroboration" class="mb-6" ${GameState.hasClue('klimov_evening_account') && GameState.hasClue('kostina_evening_account') ? '' : 'hidden'}>
+        <p class="text-gold text-xs tracking-widest mb-3">ПРОВЕРКА ПОКАЗАНИЙ · НЕЗАВИСИМЫЕ ЗАПИСИ</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-tool-issue" class="card text-left" ${GameState.hasClue('maintenance_tool_issue_ledger') ? 'disabled' : ''}>
+            <p class="card-title">ЖУРНАЛ ВЫДАЧИ КЛЮЧЕЙ И ИНСТРУМЕНТОВ</p><p class="card-subtitle">На чьё имя оформили универсальный ключ?</p>
+          </button>
+          <button id="btn-archive-register" class="card text-left" ${GameState.hasClue('archive_room_register') ? 'disabled' : ''}>
+            <p class="card-title">ЖУРНАЛ АРХИВНОЙ КОМНАТЫ</p><p class="card-subtitle">Есть ли записи о дежурстве Костиной?</p>
+          </button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -324,6 +336,9 @@ export function render(container, data) {
       if (GameState.hasClue('reader_maintenance_access_log') && GameState.hasClue('reader_service_signoff')) {
         container.querySelector('#reader-interviews').hidden = false;
       }
+      if (GameState.hasClue('klimov_evening_account') && GameState.hasClue('kostina_evening_account')) {
+        container.querySelector('#witness-corroboration').hidden = false;
+      }
       refreshCourtWorkflow();
       showNarrative(narrative, catalog[clueId].name);
     } catch (error) {
@@ -448,6 +463,20 @@ export function render(container, data) {
   container.querySelector('#btn-kostina-interview').addEventListener('click', function() {
     inspectReaderWitness('btn-kostina-interview', 'kostina_evening_account',
       'Костина отвечает: «После восьми разбирала архив. Около 20:50 услышала шаги у хозяйственной канцелярии, но никого не видела». Она отрицает получение карточки Орлова. Звук шагов не определяет посетителя, а её нахождение в архиве пока подтверждено лишь её словами.');
+  });
+
+  function inspectWitnessRecord(buttonId, clueId, narrative) {
+    if (!GameState.hasClue('klimov_evening_account') || !GameState.hasClue('kostina_evening_account')) return;
+    inspectCourtRecord(buttonId, clueId, narrative, 'klimov_evening_account');
+  }
+
+  container.querySelector('#btn-tool-issue').addEventListener('click', function() {
+    inspectWitnessRecord('btn-tool-issue', 'maintenance_tool_issue_ledger',
+      'В книге выдачи универсальный ключ записан за табельным номером Климова в 20:03. Возврат помечен в 20:56, подпись получателя смазана. Это не совпадает с его утверждением, что ключ он не брал, но запись под номером не удостоверяет, кто фактически получил его. Сопоставьте оба документа на доске гипотез.');
+  });
+  container.querySelector('#btn-archive-register').addEventListener('click', function() {
+    inspectWitnessRecord('btn-archive-register', 'archive_room_register',
+      'В архивной книге есть строки с инициалами Костиной в 20:12 и 20:44. Журнал поддерживает её рассказ о работе, но заполнялся вручную без контроля времени: установить, оставалась ли она в архиве непрерывно, по этим строкам нельзя.');
   });
 
   async function confrontOrlov(tone) {
