@@ -15,12 +15,21 @@ async function init() {
   console.log('   Детективный триллер');
   console.log('═══════════════════════════════');
 
-  // 1. Инициализируем ядро
+  // 1. Восстанавливаем сохранённое состояние до запуска сцен и систем.
+  // Главное меню и все последующие системы должны видеть один и тот же загруженный GameState.
+  try {
+    GameState.init();
+    console.log('[App] Состояние игры восстановлено.');
+    console.log('[App] Память NPC: ' + Object.keys(GameState.npcMemory || {}).length);
+    console.log('[App] Улики: ' + (GameState.currentCase?.clues?.length || 0));
+  } catch (error) {
+    console.error('[App] Не удалось восстановить сохранение:', error);
+    throw error;
+  }
+
+  // Маршрутизатор запускаем только после восстановления GameState.
   Router.init();
-  console.log('[App] Ядро инициализировано. Сохранение НЕ загружено.');
-  console.log('[App] Память NPC: пусто');
-  console.log('[App] Улики: 0');
-  console.log('[App] Ждём действий игрока...');
+  console.log('[App] Ядро инициализировано.');
 
   // 2. Загружаем систему диалогов
   try {
