@@ -45,6 +45,14 @@ test('PWA cache includes visual styles, map data and the new image assets', () =
   assert.ok(sw.includes("self.addEventListener('activate'"), 'old PWA caches should be cleared');
 });
 
+test('investigation board becomes a flowing grid on tablet and narrow screens', () => {
+  const css = read('src/css/art-direction.css');
+  const responsive = css.match(/@media\(max-width:900px\) \{[\s\S]*?\.investigation-board \.board-lines \{ display:none; \}/)?.[0];
+  assert.ok(responsive, 'tablet board layout must disable overlapping SVG connections');
+  assert.match(responsive, /\.board-clues \{ position:relative; height:auto; display:grid/);
+  assert.match(responsive, /\.board-clue-card \{ position:relative; top:auto!important; left:auto!important; width:100%/);
+});
+
 test('character portraits are optimized and rendered in dialogue with fallback for other speakers', () => {
   for (const name of [
     'lydia-winter', 'lydia-winter-tension', 'lydia-winter-warmth', 'lydia-winter-withdrawal', 'ray-morgan', 'ray-morgan-tension', 'ray-morgan-warmth', 'ray-morgan-withdrawal', 'anna-holt', 'anna-holt-tension', 'anna-holt-warmth', 'anna-holt-withdrawal', 'marta-hayes', 'marta-hayes-tension', 'marta-hayes-warmth', 'marta-hayes-withdrawal', 'father-thomas', 'father-thomas-tension', 'father-thomas-warmth', 'father-thomas-withdrawal', 'sebastian-blackwood', 'sebastian-blackwood-tension', 'sebastian-blackwood-warmth', 'sebastian-blackwood-withdrawal'

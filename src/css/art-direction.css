@@ -147,11 +147,11 @@ body { background:#071015; color:#d3d5cc; }
 .noir-board-empty > * { position:relative; }
 .empty-case-stamp { border:3px double #bca783; border-radius:50%; width:100px; height:100px; display:grid; place-items:center; font:75px Georgia,serif; color:#ddcba7; margin-bottom:20px; }
 .noir-board-empty .board-title { color:#f2dba6; }
-@media(max-width:700px) {
+@media(max-width:900px) {
   .investigation-board .board-header { display:block; padding:.85rem; }
   .investigation-board .board-progress { border:0; padding:9px 0 0; }
   .investigation-board .board-canvas { height:auto; min-height:0; }
-  .investigation-board .board-clues { position:relative; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px 9px; padding:22px 11px 24px; }
+  .investigation-board .board-clues { position:relative; height:auto; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:15px 9px; padding:22px 11px 24px; }
   .investigation-board .board-clue-card { position:relative; top:auto!important; left:auto!important; width:100%; height:auto; min-height:120px; }
   .investigation-board .board-lines { display:none; }
   .investigation-board .board-footer { align-items:stretch; flex-direction:column; }

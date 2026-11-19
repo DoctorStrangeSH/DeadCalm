@@ -57,7 +57,7 @@ export class InvestigationBoard {
                 <button type="button" class="board-clue-card category-${self._safeCategory(clue.category)}"
                      data-clue-id="${clue.id}" 
                      style="left: ${5 + (index % 3) * 32}%; top: ${28 + Math.floor(index / 3) * 155}px;"
-                     draggable="true">
+                     draggable="true" aria-label="${self._escapeHtml(clue.name)}. Выберите для проверки связи с другой уликой">
                   <span class="clue-card-pin" aria-hidden="true"></span>
                   <span class="clue-card-icon">${self._getIcon(clue.category)}</span>
                   <span class="clue-card-content"><span class="clue-card-label">УЛИКА · ${String(index + 1).padStart(2, '0')}</span><span class="clue-card-name">${self._escapeHtml(clue.name)}</span><span class="clue-card-source">${self._escapeHtml(clue.source || 'Источник неизвестен')}</span></span>
