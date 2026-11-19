@@ -170,3 +170,10 @@ A distinct tactile mini-game family is now represented by a tested simulation mo
 - Service worker cache key: `dead-calm-visual-v93`.
 
 **Status boundary:** this is a tested gameplay simulation, not yet a playable in-game scene. It has no approved painted machine/film artwork, scene layout, pointer interaction, audio, animation, or office entry point. Do not present it as complete until those pieces are authored in the shipped Blackford visual style and validated at desktop/mobile sizes.
+
+
+## Playable scene — Film Restoration
+
+Scene entry: `src/js/scenes/film-restoration.js`; logic: `src/js/systems/film-restoration.js`; styles: `film-*` section in `src/css/main.css`. A new `АРХИВ КИНОПЛЁНКИ` entry is wired into the detective office. The player adjusts transport tension/speed, restores three distinct defects with separate tactile controls, advances the film, and runs a projection grade. Completion is persisted through `GameState.recordMiniGameResult`. Service worker cache is `dead-calm-visual-v94`.
+
+**Art status:** the device and film-gate visual are an original CSS-rendered interaction mockup layered over the shipped Holt Office painting, not final bespoke painted equipment artwork. Keep that distinction explicit. Replace the device illustration with approved hand-authored/painterly Blackford asset art before calling the art production-ready. Test at desktop/mobile and verify all success/partial/damaged paths.
