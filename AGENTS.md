@@ -43,3 +43,8 @@ Before adding or consuming NPC-to-NPC relationships, read `docs/NPC_SOCIAL_GRAPH
 ## NPC knowledge ledger
 
 Read `docs/NPC_SOCIAL_GRAPH.md` before working with NPC knowledge. NPC knowledge is attributed information, not objective truth. Require explicit provenance for every claim, keep rumors unverified, preserve state-change reasons, and never propagate secrets automatically. The ledger is currently a persistent data model/API; automatic rumor propagation and dialogue integration remain future work.
+
+
+## NPC daily-life schedules
+
+Read `docs/NPC_SOCIAL_GRAPH.md` before editing NPC schedules. Only author source-backed schedules; use in-game day/minute, never wall-clock time. Schedule lookup does not advance time or simulate movement. Record occurrences only against a matching authored schedule with an explicit basis. Do not invent routines for the six protected original characters. Autonomous simulation and time integration remain future work.
