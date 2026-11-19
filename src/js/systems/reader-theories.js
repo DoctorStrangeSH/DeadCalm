@@ -74,3 +74,19 @@ export function resolveTheoryApproach(snapshot, approach) {
       : 'Вы озвучиваете версию как обвинение. Собеседник требует назвать прямые доказательства своей причастности и прекращает обсуждение. Документы не подтверждают личность исполнителя.'
   };
 }
+
+export function resolveWitnessRecall(consequence, route) {
+  if (!consequence || !['discreet', 'accusation'].includes(consequence.approach)) return null;
+  if (!['conversation', 'formal'].includes(route)) return null;
+  if (route === 'formal') return {
+    route, trustDelta: 0, memoryFlag: 'reader_theory_formal_request',
+    text: 'Вместо повторного давления вы направляете официальный запрос в архив. Свидетель не обязан подтверждать вашу версию; документы остаются доступны по служебной процедуре.'
+  };
+  return consequence.approach === 'accusation' ? {
+    route, trustDelta: 1, memoryFlag: 'reader_theory_apology',
+    text: 'Свидетель помнит ваше необоснованное обвинение. Вы признаёте, что вывод был преждевременным. Он принимает извинение, но отказывается от новых устных показаний до проверки документов.'
+  } : {
+    route, trustDelta: 2, memoryFlag: 'reader_theory_cooperation',
+    text: 'Свидетель помнит, что вы не торопились обвинять. Он готов ещё раз вместе просмотреть журнал, однако без новых записей не может установить личность исполнителя.'
+  };
+}

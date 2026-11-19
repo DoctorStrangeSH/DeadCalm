@@ -3,8 +3,9 @@ import { GameState } from '../core/state.js';
 import { canChallengeGuard, resolveGuardChallenge } from '../systems/court-guard.js';
 import { canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation, canConfrontKlimov, resolveKlimovConfrontation } from '../systems/witness-provenance.js';
 import { setupCourtWorkflow } from '../systems/court-workflow.js';
+import { NPCMemory } from '../systems/npc-memory.js';
 import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS, getReaderTimelineFollowUp } from '../systems/reader-timeline.js';
-import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, READER_THEORIES } from '../systems/reader-theories.js';
+import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, resolveWitnessRecall, READER_THEORIES } from '../systems/reader-theories.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -106,6 +107,12 @@ export function render(container, data) {
           <button type="button" id="reader-theory-accusation" class="reader-theories-option">Предъявить обвинение без прямых доказательств</button>
         </div>
         <p id="reader-theory-approach-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
+        <div id="reader-theory-revisit" class="reader-theory-approaches" hidden>
+          <p>СВИДЕТЕЛЬ ПОМНИТ ПРЕДЫДУЩУЮ БЕСЕДУ · ВЫБЕРИТЕ ДАЛЬНЕЙШИЙ ПУТЬ</p>
+          <button type="button" id="reader-theory-revisit-talk" class="reader-theories-option">Повторно обратиться к свидетелю</button>
+          <button type="button" id="reader-theory-revisit-formal" class="reader-theories-option">Продолжить официальной проверкой документов</button>
+        </div>
+        <p id="reader-theory-revisit-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
         <div id="reader-theory-history" class="reader-theory-history" aria-label="История версий"></div>
       </section>
 
@@ -319,6 +326,8 @@ export function render(container, data) {
   const theoryHistory = container.querySelector('#reader-theory-history');
   const theoryApproaches = container.querySelector('#reader-theory-approaches');
   const theoryApproachResult = container.querySelector('#reader-theory-approach-result');
+  const theoryRevisit = container.querySelector('#reader-theory-revisit');
+  const theoryRevisitResult = container.querySelector('#reader-theory-revisit-result');
   let selectedTheoryId = 'single_operator';
   function refreshReaderTheories() {
     const theories = compareReaderTheories(id => GameState.hasClue(id));
@@ -368,6 +377,9 @@ export function render(container, data) {
     theoryApproaches.hidden = !latest || !!consequence;
     theoryApproachResult.textContent = consequence
       ? consequence.response + ` Доверие: ${consequence.trustDelta > 0 ? '+' : ''}${consequence.trustDelta}.` : '';
+    const revisit = GameState.flags.court_reader_theory_revisit;
+    theoryRevisit.hidden = !consequence || !!revisit;
+    theoryRevisitResult.textContent = revisit ? revisit.text + ` Изменение доверия: ${revisit.trustDelta > 0 ? '+' : ''}${revisit.trustDelta}.` : '';
     theoryHistory.replaceChildren();
     if (history.length) {
       const title = document.createElement('p');
@@ -405,6 +417,18 @@ export function render(container, data) {
   }
   container.querySelector('#reader-theory-discreet').addEventListener('click', () => handleTheoryApproach('discreet'));
   container.querySelector('#reader-theory-accusation').addEventListener('click', () => handleTheoryApproach('accusation'));
+  function revisitTheoryWitness(route) {
+    const consequence = GameState.flags.court_reader_theory_consequence;
+    if (!GameState.hasClue('reader_reconstructed_timeline') || !consequence || GameState.flags.court_reader_theory_revisit) return;
+    const result = resolveWitnessRecall(consequence, route);
+    if (!result) return;
+    NPCMemory.setFlag(consequence.npcId, result.memoryFlag);
+    GameState.setFlag('court_reader_theory_revisit', result);
+    if (result.trustDelta) GameState.updateRelationship(consequence.npcId, result.trustDelta);
+    refreshReaderTheories();
+  }
+  container.querySelector('#reader-theory-revisit-talk').addEventListener('click', () => revisitTheoryWitness('conversation'));
+  container.querySelector('#reader-theory-revisit-formal').addEventListener('click', () => revisitTheoryWitness('formal'));
   refreshReaderTheories();
   let selectedTimelineIndex = 0;
   function selectTimelineEvent(index) {

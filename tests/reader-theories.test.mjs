@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { compareReaderTheories, READER_THEORIES, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach } from '../src/js/systems/reader-theories.js';
+import { compareReaderTheories, READER_THEORIES, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, resolveWitnessRecall } from '../src/js/systems/reader-theories.js';
 
 const clues = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
 
@@ -100,4 +100,34 @@ test('one-time consequence is saved and trust is updated only in the action hand
   assert.match(scene, /GameState\.setFlag\('court_reader_theory_consequence', outcome\)/);
   assert.match(scene, /GameState\.updateRelationship\(outcome\.npcId, outcome\.trustDelta\)/);
   assert.match(css, /\.reader-theory-approaches\[hidden\] \{ display:none; \}/);
+});
+
+test('witness remembers accusations, but official evidence route remains available', () => {
+  const accusation = resolveTheoryApproach({ theoryId: 'borrowed_badge', verifiedChecks: [] }, 'accusation');
+  const apology = resolveWitnessRecall(accusation, 'conversation');
+  assert.equal(apology.trustDelta, 1);
+  assert.equal(apology.memoryFlag, 'reader_theory_apology');
+  assert.match(apology.text, /помнит ваше необоснованное обвинение/);
+  assert.match(apology.text, /отказывается от новых устных показаний/);
+  const official = resolveWitnessRecall(accusation, 'formal');
+  assert.equal(official.trustDelta, 0);
+  assert.equal(official.memoryFlag, 'reader_theory_formal_request');
+  assert.match(official.text, /документы остаются доступны/);
+  const friendly = resolveWitnessRecall(resolveTheoryApproach({ theoryId: 'single_operator', verifiedChecks: [] }, 'discreet'), 'conversation');
+  assert.equal(friendly.trustDelta, 2);
+  assert.equal(friendly.memoryFlag, 'reader_theory_cooperation');
+  assert.equal(resolveWitnessRecall(accusation, 'nonsense'), null);
+  assert.equal(resolveWitnessRecall(null, 'conversation'), null);
+});
+
+test('repeat interview writes persistent NPC memory once and never gates archive access', () => {
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  const cache = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
+  assert.match(scene, /id="reader-theory-revisit"/);
+  assert.match(scene, /function revisitTheoryWitness\(route\)/);
+  assert.match(scene, /GameState\.flags\.court_reader_theory_revisit\) return/);
+  assert.match(scene, /NPCMemory\.setFlag\(consequence\.npcId, result\.memoryFlag\)/);
+  assert.match(scene, /GameState\.setFlag\('court_reader_theory_revisit', result\)/);
+  assert.match(scene, /if \(result\.trustDelta\) GameState\.updateRelationship/);
+  assert.match(cache, /npc-memory\.js/);
 });

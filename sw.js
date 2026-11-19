@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dead-calm-visual-v59';
+const CACHE_NAME = 'dead-calm-visual-v60';
 const ASSETS = [
   '/',
   '/index.html',
@@ -13,6 +13,7 @@ const ASSETS = [
   '/src/js/core/audio.js',
   '/src/js/systems/dialogue-reactions.js',
   '/src/js/systems/dialogue.js',
+  '/src/js/systems/npc-memory.js',
   '/src/js/systems/evidence-archive.js',
   '/src/js/systems/hypotheses.js',
   '/src/js/systems/contradictions.js',
