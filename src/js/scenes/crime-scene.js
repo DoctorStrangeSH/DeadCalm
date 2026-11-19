@@ -7,6 +7,7 @@ import { NPCMemory } from '../systems/npc-memory.js';
 import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS, getReaderTimelineFollowUp } from '../systems/reader-timeline.js';
 import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, resolveWitnessRecall, getReaderEvidenceRoute, READER_THEORIES } from '../systems/reader-theories.js';
 import { assessReaderInvestigation } from '../systems/investigation-quality.js';
+import { buildReaderEpisodeConclusion, hasNewConclusionEvidence } from '../systems/episode-conclusion.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -124,6 +125,8 @@ export function render(container, data) {
         <h3 class="reader-timeline-title">Насколько обоснованы выводы?</h3>
         <p class="reader-timeline-intro">Аудит показывает полноту проверок и доказанные расхождения. Это не рейтинг раскрытия преступления.</p>
         <div id="reader-quality-detail" class="reader-theories-detail" aria-live="polite"></div>
+        <button type="button" id="reader-conclusion-save" class="reader-timeline-follow-up">СОСТАВИТЬ ПРОМЕЖУТОЧНОЕ ЗАКЛЮЧЕНИЕ</button>
+        <div id="reader-conclusion-history" class="reader-theory-history" aria-label="Сохранённые заключения"></div>
       </section>
 
       <div id="court-records" class="mb-6" ${GameState.hasClue('court_phone_register_copy') ? '' : 'hidden'}>
@@ -341,6 +344,8 @@ export function render(container, data) {
   const theoryEvidenceButton = container.querySelector('#reader-theory-evidence');
   const theoryEvidenceStatus = container.querySelector('#reader-theory-evidence-status');
   const qualityDetail = container.querySelector('#reader-quality-detail');
+  const conclusionButton = container.querySelector('#reader-conclusion-save');
+  const conclusionHistory = container.querySelector('#reader-conclusion-history');
   let qualityRules = [];
   function refreshReaderQuality() {
     const audit = assessReaderInvestigation(GameState.currentCase, qualityRules, GameState.flags);
@@ -369,7 +374,40 @@ export function render(container, data) {
       list.appendChild(item);
     }
     qualityDetail.appendChild(list);
+    const history = Array.isArray(GameState.flags.court_reader_conclusions) ? GameState.flags.court_reader_conclusions : [];
+    const draft = buildReaderEpisodeConclusion(GameState.currentCase, qualityRules, GameState.flags, history);
+    const canRevise = hasNewConclusionEvidence(history.at(-1), draft);
+    conclusionButton.disabled = !canRevise;
+    conclusionButton.textContent = !history.length ? 'СОСТАВИТЬ ПРОМЕЖУТОЧНОЕ ЗАКЛЮЧЕНИЕ'
+      : canRevise ? 'ОБНОВИТЬ ЗАКЛЮЧЕНИЕ ПО НОВЫМ ФАКТАМ' : '✓ ЗАКЛЮЧЕНИЕ СОХРАНЕНО · НОВЫХ ФАКТОВ НЕТ';
+    conclusionHistory.replaceChildren();
+    if (history.length) {
+      const heading = document.createElement('p');
+      heading.textContent = 'АРХИВ ПРОМЕЖУТОЧНЫХ ЗАКЛЮЧЕНИЙ';
+      conclusionHistory.appendChild(heading);
+      for (const entry of history) {
+        const block = document.createElement('div');
+        block.className = 'reader-conclusion-entry';
+        const title = document.createElement('strong');
+        title.textContent = `Версия ${entry.version} · ${entry.status}`;
+        const facts = document.createElement('p');
+        facts.textContent = `Установлено: ${entry.established.join(' ')}`;
+        const gaps = document.createElement('p');
+        gaps.textContent = `Требует проверки: ${entry.unresolved.join(' ')}`;
+        const verdict = document.createElement('p');
+        verdict.textContent = `Вывод: ${entry.verdict}`;
+        block.append(title, facts, gaps, verdict);
+        conclusionHistory.appendChild(block);
+      }
+    }
   }
+  conclusionButton.addEventListener('click', () => {
+    const history = Array.isArray(GameState.flags.court_reader_conclusions) ? GameState.flags.court_reader_conclusions : [];
+    const draft = buildReaderEpisodeConclusion(GameState.currentCase, qualityRules, GameState.flags, history);
+    if (!hasNewConclusionEvidence(history.at(-1), draft)) return;
+    GameState.setFlag('court_reader_conclusions', [...history, draft]);
+    refreshReaderQuality();
+  });
   let selectedTheoryId = 'single_operator';
   function refreshReaderTheories() {
     const theories = compareReaderTheories(id => GameState.hasClue(id));

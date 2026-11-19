@@ -418,6 +418,9 @@ body { background:#071015; color:#d3d5cc; }
 .reader-quality-view { border-left-color:#718b8a; }
 .reader-quality-view ul { margin:7px 0 0 19px; list-style:disc; }
 .reader-quality-view li + li { margin-top:5px; }
+.reader-conclusion-entry { margin-top:11px; padding-top:10px; border-top:1px solid #4e5f5a; }
+.reader-conclusion-entry strong { color:#edd1a7; }
+.reader-conclusion-entry p { margin-top:5px; }
 @media(max-width:650px) { .reader-timeline-events { grid-template-columns:1fr; } .reader-timeline-event { min-height:48px; } }
 @media(max-width:650px) { .reader-theories-options { grid-template-columns:1fr; } .reader-theories-option { text-align:left; } }
 @media(max-width:650px) { .reader-theory-approaches { grid-template-columns:1fr; } }
