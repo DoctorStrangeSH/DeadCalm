@@ -42,3 +42,19 @@ export function getWitnessInterviewContext(memory) {
     previouslyPresentedEvidenceIds: [...new Set(history.flatMap(item => cleanIds(item?.presentedEvidenceIds)))]
   };
 }
+
+/** Authored continuity text for a returning scene; it recalls interaction, not truth. */
+export function getWitnessRecallLine(memory, witnessName) {
+  const context = getWitnessInterviewContext(memory);
+  if (!context.hasPreviousInterview) return '';
+  const name = typeof witnessName === 'string' && witnessName.trim() ? witnessName.trim() : 'Свидетель';
+  const tone = context.lastTone === 'pressure' ? 'разговор на повышенных тонах' : 'спокойный разговор';
+  const response = context.lastResponse === 'declined_further_comment'
+    ? 'Тогда он отказался продолжать разговор.'
+    : 'Тогда он согласился поделиться дополнительными сведениями.';
+  const evidenceCount = context.previouslyPresentedEvidenceIds.length;
+  const evidence = evidenceCount
+    ? ' Вы уже предъявляли ему ' + evidenceCount + ' ' + (evidenceCount === 1 ? 'материал' : 'материала') + ' дела.'
+    : '';
+  return name + ' помнит ваш предыдущий ' + tone + '. ' + response + evidence + ' Прежние слова остаются показаниями, а не установленным фактом.';
+}
