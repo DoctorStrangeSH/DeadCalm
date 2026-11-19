@@ -62,4 +62,4 @@ Mini-games are explicitly welcome and part of the intended experience. Read `doc
 
 ## Mechanical repair prototype status
 
-`src/js/systems/mechanical-repair.js` is currently logic-only. Read its status in `docs/MINIGAME_DESIGN.md`. Do not describe it as a playable mini-game until a real scene, art/audio feedback, input bindings, save/result integration, and validation are complete.
+`src/js/systems/mechanical-repair.js` and `src/js/scenes/mechanical-repair.js` now form a playable prototype linked from the detective office. Its mechanism illustration is CSS-based, not final bespoke art. Audio, bespoke animation, controller bindings, persisted outcomes, and narrative consequences remain incomplete. Read `docs/MINIGAME_DESIGN.md` and do not call it art-complete or production-final.
