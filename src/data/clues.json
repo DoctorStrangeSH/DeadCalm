@@ -237,7 +237,27 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Служебная записка сменного кладовщика хозяйственной службы",
-    "connections_to": ["maintenance_tool_issue_ledger", "klimov_evening_account"]
+    "connections_to": ["maintenance_tool_issue_ledger", "klimov_evening_account", "key_note_paper_trace", "supply_desk_shift_register"]
+  },
+  "key_note_paper_trace": {
+    "id": "key_note_paper_trace",
+    "name": "След от отрывного листка с табельным номером",
+    "category": "document",
+    "description": "Сохранённый листок с номером Климова по структуре бумаги и отрывному краю соответствует общему блокноту заявок у хозяйственной стойки. На следующем листе сохранился продавленный номер, но почерк не идентифицирован. Блокнотом пользовались несколько сотрудников — бумага указывает на источник листка, а не на автора.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Бумажный архив хозяйственной службы и общий блокнот заявок",
+    "connections_to": ["key_issue_clerk_note", "supply_desk_shift_register"]
+  },
+  "supply_desk_shift_register": {
+    "id": "supply_desk_shift_register",
+    "name": "Журнал дежурств у хозяйственной стойки",
+    "category": "document",
+    "description": "Сменный кладовщик отметил отсутствие у стойки с 19:56 до 20:04. Общий стол заявок оставался доступен и не был под поимённым контролем. Это создаёт окно, когда кто-то мог оставить листок с чужим табельным номером, но журнал не устанавливает, кто заходил и кто получил ключ.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Книга дежурств хозяйственной службы",
+    "connections_to": ["key_issue_clerk_note", "key_note_paper_trace", "maintenance_tool_issue_ledger"]
   },
   "archive_room_register": {
     "id": "archive_room_register",

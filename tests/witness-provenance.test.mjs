@@ -136,3 +136,15 @@ test('Klimov follow-up requires a saved contradiction; either tone yields the sa
   assert.match(scene, /GameState\.addClue\(catalog\.key_issue_clerk_note\)/);
   assert.match(scene, /GameState\.setFlag\('court_klimov_interview_tone', tone\)/);
 });
+
+test('clerk note opens paper and desk investigations without assigning a suspect', () => {
+  assert.match(clues.key_note_paper_trace.description, /не на автора/);
+  assert.match(clues.supply_desk_shift_register.description, /не устанавливает, кто заходил/);
+  assert.ok(clues.key_issue_clerk_note.connections_to.includes('key_note_paper_trace'));
+  assert.ok(clues.key_issue_clerk_note.connections_to.includes('supply_desk_shift_register'));
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /id="key-note-trace"[^>]*hasClue\('key_issue_clerk_note'\)/);
+  assert.match(scene, /'key_note_paper_trace'[^;]*'key_issue_clerk_note'/s);
+  assert.match(scene, /'supply_desk_shift_register'[^;]*'key_issue_clerk_note'/s);
+  assert.match(scene, /container\.querySelector\('#key-note-trace'\)\.hidden = false/);
+});

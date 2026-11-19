@@ -209,6 +209,18 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="key-note-trace" class="mb-6" ${GameState.hasClue('key_issue_clerk_note') ? '' : 'hidden'}>
+        <p class="text-gold text-xs tracking-widest mb-3">ПРОИСХОЖДЕНИЕ ЗАПИСКИ · КТО ОСТАВИЛ НОМЕР?</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-note-paper" class="card text-left" ${GameState.hasClue('key_note_paper_trace') ? 'disabled' : ''}>
+            <p class="card-title">ИЗУЧИТЬ БУМАГУ И ОТРЫВНОЙ КРАЙ</p><p class="card-subtitle">Из какого блока взяли листок?</p>
+          </button>
+          <button id="btn-note-desk" class="card text-left" ${GameState.hasClue('supply_desk_shift_register') ? 'disabled' : ''}>
+            <p class="card-title">ПРОВЕРИТЬ ДОСТУП К СТОЛУ ВЫДАЧИ</p><p class="card-subtitle">Кто мог оставить листок без свидетелей?</p>
+          </button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -351,6 +363,7 @@ export function render(container, data) {
       if (GameState.hasClue('klimov_evening_account') && GameState.hasClue('kostina_evening_account')) {
         container.querySelector('#witness-corroboration').hidden = false;
       }
+      if (GameState.hasClue('key_issue_clerk_note')) container.querySelector('#key-note-trace').hidden = false;
       refreshCourtWorkflow();
       showNarrative(narrative, catalog[clueId].name);
     } catch (error) {
@@ -509,6 +522,7 @@ export function render(container, data) {
       GameState.setFlag('court_klimov_interview_tone', tone);
       GameState.updateRelationship('npc_nikolay_klimov', outcome.trustDelta);
       panel.hidden = true;
+      container.querySelector('#key-note-trace').hidden = false;
       refreshCourtWorkflow();
       showNarrative(outcome.text + ' Объяснение сменного кладовщика добавлено к материалам дела.', 'ПОВТОРНЫЙ ДОПРОС КЛИМОВА');
     } catch (error) {
@@ -521,6 +535,17 @@ export function render(container, data) {
 
   container.querySelector('#btn-klimov-patient').addEventListener('click', () => confrontKlimov('patient'));
   container.querySelector('#btn-klimov-pressure').addEventListener('click', () => confrontKlimov('pressure'));
+
+  container.querySelector('#btn-note-paper').addEventListener('click', function() {
+    inspectCourtRecord('btn-note-paper', 'key_note_paper_trace',
+      'В архиве хозяйственной службы сохранился листок: бумага и зубчатый край совпадают с общим блокнотом заявок у стойки выдачи. На соседнем листе различим продавленный номер Климова, но автор записи не установлен. Такой блокнот был доступен нескольким сотрудникам.',
+      'key_issue_clerk_note');
+  });
+  container.querySelector('#btn-note-desk').addEventListener('click', function() {
+    inspectCourtRecord('btn-note-desk', 'supply_desk_shift_register',
+      'По книге дежурств кладовщик отсутствовал у стойки с 19:56 до 20:04. В этот промежуток хозяйственный стол не закрывали, и пропуск поимённо не проверяли. Это объясняет возможность оставить записку, но не показывает, кто именно вошёл.',
+      'key_issue_clerk_note');
+  });
 
   async function confrontOrlov(tone) {
     if (GameState.hasClue('orlov_badge_handover')) return;
