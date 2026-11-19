@@ -140,3 +140,19 @@ Implemented:
 The player continuously tunes an analog frequency and adjusts an interference filter. Signal clarity is graded as clear, fragmented, or unreadable. Slider readouts update in place so the range control remains mounted during pointer/keyboard interaction. This is distinct from mechanical repair: it is continuous sensory tuning rather than sequential component manipulation.
 
 The radio uses a CSS-rendered receiver illustration, not a bespoke painted asset. Actual audio/static playback, authored voice content, persistent narrative reward, and manual browser playtesting are not yet implemented.
+
+
+## Persistent mini-game progress
+
+A shared progress record is now part of the save model:
+- Logic and migration: `src/js/systems/minigame-progress.js`.
+- Save integration: `src/js/core/state.js` under `miniGameProgress`.
+- Both radio tuning and mechanical repair write a result only when the player completes the activity.
+- Each activity tracks attempt count, last outcome/quality, best outcome/quality, and completion timestamp.
+- Replays never downgrade the saved best result. A stronger result can improve it.
+- Existing saves without this field migrate to an empty progress object; reset clears it; export includes a deep copy.
+- The detective office cards display attempts and the best recorded result.
+- Unit tests: `tests/minigame-progress.test.mjs`.
+- Service worker cache key: `dead-calm-visual-v92`.
+
+These records are activity history, not fabricated clues or narrative facts. Story consequences should be authored and connected separately when a specific transmission or repair is tied to a case.
