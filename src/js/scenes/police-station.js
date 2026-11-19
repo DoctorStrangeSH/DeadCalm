@@ -8,6 +8,7 @@ import { assessOldCaseFollowUp, recordOldCaseFollowUp } from '../systems/old-cas
 import { NPCMemory } from '../systems/npc-memory.js';
 import { canApproachMorganAboutOldCase, resolveMorganOldCaseApproach, OLD_CASE_MORGAN_APPROACHES } from '../systems/old-case-morgan.js';
 import { planMorganRevisit, recordMorganRevisit } from '../systems/old-case-morgan-revisit.js';
+import { assessOldCaseSources, recordOldCaseSourceReading, OLD_CASE_SOURCE_READINGS } from '../systems/old-case-source-audit.js';
 
 export function render(container, data) {
   container.innerHTML = `
@@ -97,6 +98,13 @@ export function render(container, data) {
         <button id="precinct-morgan-revisit-request" class="reader-timeline-follow-up"></button>
         <div id="precinct-morgan-revisit-result" class="reader-theories-detail" role="status" aria-live="polite"></div>
       </section>
+      <section id="precinct-source-audit" class="reader-theories-view mb-6" aria-label="Сверка архивных источников" hidden>
+        <p class="reader-timeline-kicker">ДЕЛО КАЛЛИОПЫ / ПРОИСХОЖДЕНИЕ СВЕДЕНИЙ</p>
+        <h3 class="reader-timeline-title">Что в действительности подтверждено?</h3>
+        <div id="precinct-source-audit-detail" class="reader-theories-detail" aria-live="polite"></div>
+        <div id="precinct-source-audit-options" class="reader-theories-options" role="group" aria-label="Оценка независимых источников"></div>
+        <p id="precinct-source-audit-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
+      </section>
       <div id="dialog-container" class="hidden"></div>
     </div>
   `;
@@ -128,6 +136,41 @@ export function render(container, data) {
   const revisitPanel = container.querySelector('#precinct-morgan-revisit');
   const revisitButton = container.querySelector('#precinct-morgan-revisit-request');
   const revisitResult = container.querySelector('#precinct-morgan-revisit-result');
+  const auditPanel = container.querySelector('#precinct-source-audit');
+  const auditDetail = container.querySelector('#precinct-source-audit-detail');
+  const auditOptions = container.querySelector('#precinct-source-audit-options');
+  const auditResult = container.querySelector('#precinct-source-audit-result');
+  function refreshSourceAudit() {
+    const check = assessOldCaseSources(id => GameState.hasClue(id), GameState.flags.court_old_case_source_audit);
+    auditPanel.hidden = !check;
+    auditDetail.replaceChildren();
+    auditOptions.replaceChildren();
+    if (!check) return;
+    const facts = check.saved
+      ? [check.established, check.limit]
+      : ['Морган называет участников старого дела. Реестр фиксирует срок и основание закрытия; карточка — передачу папки с названием подразделения.', 'Выберите, какие сведения подтверждаются независимо от устного сообщения.'];
+    for (const sentence of facts) {
+      const p = document.createElement('p');
+      p.textContent = sentence;
+      auditDetail.appendChild(p);
+    }
+    auditResult.textContent = check.saved ? `${check.saved.conclusion} ${check.saved.nextStep}` : '';
+    if (check.saved) return;
+    for (const reading of OLD_CASE_SOURCE_READINGS) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'reader-theories-option';
+      button.textContent = reading.label;
+      button.addEventListener('click', () => {
+        const result = recordOldCaseSourceReading(reading.id, check, GameState.flags.court_old_case_source_audit);
+        if (!result) return;
+        if (!result.correct) { auditResult.textContent = result.feedback; return; }
+        GameState.setFlag('court_old_case_source_audit', result);
+        refreshSourceAudit();
+      });
+      auditOptions.appendChild(button);
+    }
+  }
   function refreshMorganRevisit() {
     const saved = GameState.flags.court_old_case_morgan_revisit;
     const route = planMorganRevisit(GameState.flags.court_old_case_morgan_approach, null);
@@ -304,6 +347,7 @@ export function render(container, data) {
       refreshOldCaseSignature();
       refreshOldCaseFollowUp();
       refreshMorganRevisit();
+      refreshSourceAudit();
     } catch (error) {
       button.disabled = false;
       oldCaseStatus.textContent = 'Архив временно недоступен. Повторите запрос позже.';
@@ -336,6 +380,7 @@ export function render(container, data) {
     if (!saved) return;
     GameState.setFlag('court_old_case_morgan_revisit', saved);
     refreshMorganRevisit();
+    refreshSourceAudit();
   });
   oldCaseAssess.addEventListener('click', () => {
     const note = recordOldCaseClosure(assessOldCaseClosure(id => GameState.hasClue(id), GameState.flags.court_old_case_reading), GameState.flags.court_old_case_closure_review);
@@ -350,6 +395,7 @@ export function render(container, data) {
   refreshOldCaseFollowUp();
   refreshMorganOldCase();
   refreshMorganRevisit();
+  refreshSourceAudit();
 
   document.getElementById('btn-talk-ray').addEventListener('click', async function() {
     const actions = container.querySelector('#precinct-actions');
