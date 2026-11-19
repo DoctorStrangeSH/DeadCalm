@@ -63,3 +63,21 @@ Integrity rules:
 6. Do not expose hidden claims to dialogue merely because an NPC is connected to someone who knows them.
 7. Old saves without `knowledgeLedger` migrate to an empty ledger; malformed entries and duplicate IDs are discarded.
 8. The ledger is a data model/API only. Automatic rumor propagation, schedules, and dialogue consumption are not implemented yet.
+
+## NPC daily-life schedule model
+
+- Module: `src/js/systems/npc-daily-life.js`
+- State API: `GameState.setNpcSchedule(input)`, `GameState.getNpcScheduleAt(npcId, day, minute)`, `GameState.recordNpcOccurrence(input)`, `GameState.getNpcOccurrences(npcId)`
+- Tests: `tests/npc-daily-life.test.mjs`
+
+Schedules are authored records with an NPC ID, activity, in-game weekday set (1–7), start/end minute, location ID, and non-empty basis/source references. Activities are limited to work, travel, meal, rest, social, private, and unknown. Overlapping schedules intentionally resolve to no result rather than choosing arbitrarily.
+
+Integrity rules:
+1. Never infer a schedule from a job title, home, workplace, or character stereotype. Add only authored/source-backed schedules.
+2. Time uses the game's own day and minute values; it is not wall-clock time.
+3. A schedule lookup is descriptive only. It does not move NPCs, trigger conversations, or advance time.
+4. An occurrence can be recorded only when it matches an authored schedule's NPC, day, time, and location, and includes a non-empty description and basis.
+5. Passing time must never fabricate an occurrence. Discoveries/events require an explicit narrative/system producer.
+6. No schedules are pre-seeded for the six protected original characters without approved canon.
+7. Legacy saves without `npcDailyLife` migrate to an empty model.
+8. Autonomous simulation, rumor propagation, player-facing schedule UI, and time advancement integration are not implemented yet.
