@@ -53,3 +53,8 @@ Read `docs/NPC_SOCIAL_GRAPH.md` before editing NPC schedules. Only author source
 ## Product identity boundary — mandatory
 
 Before proposing or implementing major gameplay features, read `docs/PRODUCT_IDENTITY.md`. Dead Calm is a separate product from the owner's Ghost Signal project. Do not clone Ghost Signal's case archive, city-map investigation loop, clue-search scenes, evidence board, witness-call hub, hidden-object/code mini-games, document-fragment notebook, or day/night availability loop. Deepen Dead Calm's established persistent-character continuity, personal relationships, attributed knowledge, memories, schedules, and consequences instead. Any feature that risks converging on Ghost Signal requires explicit owner approval before implementation.
+
+
+## Dead Calm mini-games
+
+Mini-games are explicitly welcome and part of the intended experience. Read `docs/MINIGAME_DESIGN.md` before designing one. Do not interpret the Ghost Signal boundary as a ban on mini-games: create distinct tactile, mechanical, audio, social, physical, and environmental interactions. Avoid cloning Ghost Signal's code-breaking and hidden-object loops. The first proposed prototype is delicate mechanical repair; it is not implemented until integrated and validated.
