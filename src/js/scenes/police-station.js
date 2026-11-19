@@ -1,6 +1,7 @@
 import { Events } from '../core/events.js';
 import { DialogBox } from '../components/dialog-box.js';
 import { GameState } from '../core/state.js';
+import { assessOldCaseClosure, recordOldCaseClosure } from '../systems/old-case-closure.js';
 
 export function render(container, data) {
   container.innerHTML = `
@@ -44,9 +45,68 @@ export function render(container, data) {
       </div>
 
       <div id="precinct-register-result" class="hidden card p-4 mb-6" role="status" aria-live="polite"></div>
+      <section id="precinct-old-case" class="reader-theories-view mb-6" aria-label="Архив дела Каллиопы" hidden>
+        <p class="reader-timeline-kicker">АРХИВ УЧАСТКА / ДЕЛО КАЛЛИОПЫ</p>
+        <h3 class="reader-timeline-title">Почему дело закрыли за три дня?</h3>
+        <div id="precinct-old-case-status" class="reader-theories-detail" aria-live="polite"></div>
+        <button id="precinct-old-case-register" class="reader-timeline-follow-up">ЗАПРОСИТЬ ВЫПИСКУ ИЗ КНИГИ ЗАКРЫТЫХ ДЕЛ</button>
+        <button id="precinct-old-case-inventory" class="reader-timeline-follow-up">ЗАПРОСИТЬ ОПИСЬ АРХИВНОЙ ПАПКИ</button>
+        <button id="precinct-old-case-assess" class="reader-timeline-follow-up">СОСТАВИТЬ ЗАМЕТКУ О ПОЛНОТЕ АРХИВА</button>
+      </section>
       <div id="dialog-container" class="hidden"></div>
     </div>
   `;
+
+  const oldCasePanel = container.querySelector('#precinct-old-case');
+  const oldCaseStatus = container.querySelector('#precinct-old-case-status');
+  const oldCaseRegister = container.querySelector('#precinct-old-case-register');
+  const oldCaseInventory = container.querySelector('#precinct-old-case-inventory');
+  const oldCaseAssess = container.querySelector('#precinct-old-case-assess');
+  function refreshOldCase() {
+    const check = assessOldCaseClosure(id => GameState.hasClue(id), GameState.flags.court_old_case_reading);
+    oldCasePanel.hidden = !check;
+    if (!check) return;
+    const note = GameState.flags.court_old_case_closure_review;
+    oldCaseRegister.hidden = GameState.hasClue('old_case_closure_register');
+    oldCaseInventory.hidden = GameState.hasClue('old_case_archive_inventory');
+    oldCaseAssess.hidden = !check.ready || !!note;
+    oldCaseStatus.replaceChildren();
+    for (const detail of [
+      `Проверено источников: ${check.found.length} из ${check.found.length + check.missing.length}.`,
+      ...(GameState.hasClue('old_case_closure_register') ? [check.established] : []),
+      ...(GameState.hasClue('old_case_archive_inventory') ? [check.uncertainty] : []),
+      ...(note ? [`Дальнейшее поручение: ${note.nextStep}`] : [])
+    ]) {
+      const paragraph = document.createElement('p');
+      paragraph.textContent = detail;
+      oldCaseStatus.appendChild(paragraph);
+    }
+  }
+  async function retrieveOldCaseDocument(clueId, button) {
+    if (!GameState.flags.court_old_case_reading || GameState.hasClue(clueId)) return;
+    button.disabled = true;
+    try {
+      const response = await fetch('src/data/clues.json');
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const catalog = await response.json();
+      if (!catalog[clueId]) throw new Error('Архивный документ не найден');
+      GameState.addClue(catalog[clueId]);
+      refreshOldCase();
+    } catch (error) {
+      button.disabled = false;
+      oldCaseStatus.textContent = 'Архив временно недоступен. Повторите запрос позже.';
+      console.error('[Precinct] Архив Каллиопы:', error);
+    }
+  }
+  oldCaseRegister.addEventListener('click', () => retrieveOldCaseDocument('old_case_closure_register', oldCaseRegister));
+  oldCaseInventory.addEventListener('click', () => retrieveOldCaseDocument('old_case_archive_inventory', oldCaseInventory));
+  oldCaseAssess.addEventListener('click', () => {
+    const note = recordOldCaseClosure(assessOldCaseClosure(id => GameState.hasClue(id), GameState.flags.court_old_case_reading), GameState.flags.court_old_case_closure_review);
+    if (!note) return;
+    GameState.setFlag('court_old_case_closure_review', note);
+    refreshOldCase();
+  });
+  refreshOldCase();
 
   document.getElementById('btn-talk-ray').addEventListener('click', async function() {
     const actions = container.querySelector('#precinct-actions');

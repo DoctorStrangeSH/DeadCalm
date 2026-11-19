@@ -409,6 +409,26 @@
     "source": "Детектив Рэй Морган",
     "connections_to": ["kalliopa_name", "suspect_list_01"]
   },
+  "old_case_closure_register": {
+    "id": "old_case_closure_register",
+    "name": "Выписка из книги закрытых дел",
+    "category": "document",
+    "description": "В регистрационной книге дело Каллиопы отмечено закрытым на третий день после обнаружения тела. Основание указано как «несчастный случай». Эта запись подтверждает срок и формулировку решения, но не его обоснованность.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Заверенная выписка из архивного реестра участка",
+    "connections_to": ["old_case_details"]
+  },
+  "old_case_archive_inventory": {
+    "id": "old_case_archive_inventory",
+    "name": "Опись архивной папки Каллиопы",
+    "category": "document",
+    "description": "Сохранившаяся опись перечисляет протокол осмотра, решение о закрытии и регистрационный лист. Сведений о результатах дополнительных экспертиз в описи нет; это не доказывает, что экспертизы не проводились.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Опись архивной папки, представленная канцелярией",
+    "connections_to": ["old_case_closure_register"]
+  },
   "judge_notes": {
     "id": "judge_notes",
     "name": "Дневник судьи",
