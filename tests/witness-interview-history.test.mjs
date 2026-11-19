@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { appendWitnessInterview, getWitnessInterviewContext } from '../src/js/systems/witness-interview-history.js';
+import { appendWitnessInterview, getWitnessInterviewContext, getWitnessRecallLine } from '../src/js/systems/witness-interview-history.js';
 
 test('interview history appends ordered, attributed events without asserting truth', () => {
   const memory = {};
@@ -45,4 +45,25 @@ test('invalid events are rejected and history input is not mutated', () => {
   assert.equal(appendWitnessInterview(memory, { npcId: 'npc', tone: 'threat', response: 'shared_lead', statementRef: 'x' }), null);
   assert.deepEqual(memory, before);
   assert.equal(getWitnessInterviewContext(null).interviewCount, 0);
+});
+
+test('first visit has no fabricated memory and repeat visit recalls tone and response neutrally', () => {
+  const memory = {};
+  assert.equal(getWitnessRecallLine(memory, 'Орлов'), '');
+  appendWitnessInterview(memory, { npcId: 'npc_pavel_orlov', tone: 'pressure', response: 'declined_further_comment', statementRef: 'orlov_badge_handover', presentedEvidenceIds: ['one', 'two'] });
+  const line = getWitnessRecallLine(memory, 'Орлов');
+  assert.match(line, /Орлов помнит/);
+  assert.match(line, /разговор на повышенных тонах/);
+  assert.match(line, /отказался продолжать разговор/);
+  assert.match(line, /2 материала дела/);
+  assert.match(line, /не установленным фактом/);
+});
+
+test('patient cooperation callback is distinct from pressure refusal and never implies trust', () => {
+  const memory = {};
+  appendWitnessInterview(memory, { npcId: 'npc', tone: 'patient', response: 'shared_lead', statementRef: 'statement-ref', presentedEvidenceIds: ['clue-a'] });
+  const line = getWitnessRecallLine(memory, 'Климов');
+  assert.match(line, /спокойный разговор/);
+  assert.match(line, /согласился поделиться дополнительными сведениями/);
+  assert.doesNotMatch(line, /доверяет|правду|подтверждено/);
 });
