@@ -6,6 +6,22 @@ const markers = [
   [/ещё нужно проверять|требует независимой проверки|нужно проверить выдачу|нужно проверить .* подписи/i, 'Требуется дополнительная проверка', 'В самом документе отмечено обстоятельство, которое ещё не сверено независимо.']
 ];
 
+export const GAP_STATUS_LABELS = Object.freeze({ pending: 'Не назначено', active: 'В работе', deferred: 'Отложено' });
+
+/** A planning note only: changing its status never verifies or dismisses evidence. */
+export function updateInvestigationGapStatus(gaps, saved, id, status) {
+  if (!Array.isArray(gaps) || !gaps.some(gap => gap.id === id) || !Object.hasOwn(GAP_STATUS_LABELS, status)) return null;
+  const next = saved && typeof saved === 'object' && !Array.isArray(saved) ? { ...saved } : {};
+  if (status === 'pending') delete next[id];
+  else next[id] = status;
+  return next;
+}
+
+export function getInvestigationGapStatus(saved, id) {
+  const value = saved && typeof saved === 'object' && !Array.isArray(saved) && Object.hasOwn(saved, id) ? saved[id] : null;
+  return value === 'active' || value === 'deferred' ? value : 'pending';
+}
+
 export function buildInvestigationGaps(currentCase) {
   const discovered = Array.isArray(currentCase?.clues) ? currentCase.clues.filter(clue => clue?.id) : [];
   if (!discovered.some(clue => clue.id === 'reader_reconstructed_timeline')) return [];

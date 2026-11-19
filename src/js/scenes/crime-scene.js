@@ -7,7 +7,7 @@ import { NPCMemory } from '../systems/npc-memory.js';
 import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS, getReaderTimelineFollowUp } from '../systems/reader-timeline.js';
 import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, resolveWitnessRecall, getReaderEvidenceRoute, READER_THEORIES } from '../systems/reader-theories.js';
 import { assessReaderInvestigation } from '../systems/investigation-quality.js';
-import { buildInvestigationGaps } from '../systems/investigation-gaps.js';
+import { buildInvestigationGaps, GAP_STATUS_LABELS, getInvestigationGapStatus, updateInvestigationGapStatus } from '../systems/investigation-gaps.js';
 import { buildReaderEpisodeConclusion, hasNewConclusionEvidence } from '../systems/episode-conclusion.js';
 import { reviewReaderConclusion } from '../systems/conclusion-review.js';
 import { planReviewDirective } from '../systems/review-directives.js';
@@ -412,6 +412,7 @@ export function render(container, data) {
     gapsDetail.replaceChildren();
     if (!audit) return;
     const gaps = buildInvestigationGaps(GameState.currentCase);
+    const gapStatuses = GameState.flags.court_investigation_gap_statuses;
     const gapsHeading = document.createElement('h4');
     gapsHeading.textContent = 'ПРОБЕЛЫ, КОТОРЫЕ ЕЩЁ НУЖНО ПРОВЕРИТЬ';
     gapsDetail.appendChild(gapsHeading);
@@ -428,7 +429,28 @@ export function render(container, data) {
         title.textContent = gap.title;
         const detail = document.createElement('p');
         detail.textContent = gap.detail;
-        item.append(title, detail);
+        const controls = document.createElement('div');
+        controls.className = 'investigation-gap-controls';
+        const statusLabel = document.createElement('span');
+        const status = getInvestigationGapStatus(gapStatuses, gap.id);
+        statusLabel.textContent = 'План проверки: ' + GAP_STATUS_LABELS[status];
+        controls.appendChild(statusLabel);
+        for (const [choice, caption] of [['active', 'В работу'], ['deferred', 'Отложить'], ['pending', 'Сбросить']]) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.textContent = caption;
+          button.disabled = status === choice;
+          button.setAttribute('aria-label', caption + ': ' + gap.title);
+          button.addEventListener('click', () => {
+            const current = buildInvestigationGaps(GameState.currentCase);
+            const updated = updateInvestigationGapStatus(current, GameState.flags.court_investigation_gap_statuses, gap.id, choice);
+            if (!updated) return;
+            GameState.setFlag('court_investigation_gap_statuses', updated);
+            refreshReaderQuality();
+          });
+          controls.appendChild(button);
+        }
+        item.append(title, detail, controls);
         list.appendChild(item);
       }
       gapsDetail.appendChild(list);

@@ -499,3 +499,8 @@ body { background:#071015; color:#d3d5cc; }
 .investigation-gaps-list li { padding:10px 12px; border-left:2px solid #9a7848; background:#101b20; }
 .investigation-gaps-list li strong { color:#e0c58e; display:block; font:600 12px Georgia,serif; letter-spacing:.04em; }
 .investigation-gaps-list li p { color:#b8c0ba; font-size:12px; line-height:1.5; margin-top:5px; }
+.investigation-gap-controls { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin-top:9px; }
+.investigation-gap-controls span { margin-right:auto; color:#c7b994; font-size:11px; }
+.investigation-gap-controls button { border:1px solid #75664c; border-radius:3px; padding:5px 8px; color:#dbc69d; background:#263030; font-size:11px; cursor:pointer; }
+.investigation-gap-controls button:disabled { opacity:.45; cursor:default; }
+.investigation-gap-controls button:focus-visible { outline:2px solid #e7cd9c; outline-offset:2px; }
