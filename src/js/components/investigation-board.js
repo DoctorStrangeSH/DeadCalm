@@ -6,6 +6,7 @@ import { findContradictions } from '../systems/contradictions.js';
 import { getOldCaseBoardDigest } from '../systems/old-case-board-digest.js';
 import { filterBoardClues } from '../systems/board-clue-filter.js';
 import { filterHypotheses } from '../systems/hypothesis-filter.js';
+import { getHypothesisLinkMap } from '../systems/hypothesis-link-map.js';
 
 /**
  * Доска расследования.
@@ -309,7 +310,8 @@ export class InvestigationBoard {
     }
     const hypothesis = (GameState.currentCase.hypotheses || []).find(item => item.id === hypothesisId);
     if (!hypothesis) return;
-    const ids = new Set(hypothesis.clueIds || []);
+    const map = getHypothesisLinkMap(hypothesis.clueIds, GameState.currentCase.clues || [], this.connections);
+    const ids = new Set(map.ids);
     const cards = [...this.container.querySelectorAll('.board-clue-card')];
     const matching = cards.filter(card => ids.has(card.dataset.clueId));
     if (!matching.length) return;
@@ -321,8 +323,9 @@ export class InvestigationBoard {
       card.classList.toggle('board-clue-hypothesis', ids.has(card.dataset.clueId));
       card.classList.toggle('board-clue-hypothesis-muted', !ids.has(card.dataset.clueId));
     });
+    this._drawConnectionLines();
     const hint = this.container.querySelector('#board-hint');
-    hint.textContent = `Версия «${hypothesis.title}»: выделено ${matching.length} из ${ids.size} прикреплённых улик. Для возврата нажмите «Сбросить выбор».`;
+    hint.textContent = `Версия «${hypothesis.title}»: ${matching.length} улик, ${map.links.length} открытых связей, ${map.isolated.length} без открытых связей; отдельных цепочек: ${map.groups.length}.${map.missing ? ` Недоступных документов: ${map.missing}.` : ''} Связь не доказывает версию. «Сбросить выбор» вернёт доску.`;
     hint.className = 'board-hint board-hint-active';
     this._renderHypotheses();
     matching[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -334,6 +337,7 @@ export class InvestigationBoard {
     this.container.querySelectorAll('.board-clue-card').forEach(card => {
       card.classList.remove('board-clue-hypothesis', 'board-clue-hypothesis-muted');
     });
+    this._drawConnectionLines();
     this._renderHypotheses();
   }
 
@@ -486,6 +490,8 @@ export class InvestigationBoard {
 
     var lines = '';
     var self = this;
+    const focused = this.focusedHypothesisId && (GameState.currentCase.hypotheses || []).find(item => item.id === this.focusedHypothesisId);
+    const focusedIds = new Set(focused?.clueIds || []);
 
     this.connections.forEach(function(conn) {
       var card1 = self.container.querySelector('[data-clue-id="' + conn.clue1 + '"]');
@@ -501,7 +507,8 @@ export class InvestigationBoard {
         var x2 = rect2.left + rect2.width / 2 - boardRect.left;
         var y2 = rect2.top + rect2.height / 2 - boardRect.top;
 
-        lines += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" class="connection-line" />';
+        const type = !focused ? '' : focusedIds.has(conn.clue1) && focusedIds.has(conn.clue2) ? ' connection-line-hypothesis' : ' connection-line-muted';
+        lines += '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2 + '" class="connection-line' + type + '" />';
       }
     });
 
