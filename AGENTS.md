@@ -88,3 +88,18 @@ A tested simulation exists in `src/js/systems/film-restoration.js`, with tests i
 ## Film Restoration playable scene
 
 `src/js/scenes/film-restoration.js` is now the in-game scene, linked from the detective office as `АРХИВ КИНОПЛЁНКИ`. It persists results via `GameState`. Scene art is currently CSS-rendered mockup over the existing Holt Office environment, not final bespoke painted machinery. Read the latest `Playable scene — Film Restoration` section in `docs/MINIGAME_DESIGN.md`; do not overstate art readiness or browser validation.
+
+
+## Master production specification — mandatory scope lock
+
+Before any new feature or large task, read `docs/MASTER_GAME_SPEC_RU.md`. It is the single production scope for Dead Calm 1.0.0 and overrides speculative feature ideas in old notes unless the owner explicitly changes it.
+
+- Dead Calm 1.0 is one finite, complete campaign (case 001; five-day structure), not an endless feature sandbox.
+- Main cast is locked to John Rivers and the six approved NPCs. Their original portraits and expression variants are protected.
+- Existing nine Blackford locations are the finite location scope. Do not add districts or locations without owner approval.
+- The 1.0 mini-game cap is three: Mechanical Repair, Analog Radio Tuning, Film Restoration. Do not add a fourth before 1.0.
+- Prioritize finishing the story path, integrating existing character systems into authored scenes, completing required gameplay, replacing prototype art, QA, and release.
+- Do not expand the scope with new systems, characters, locations, side modes, collectibles, or polish loops. Park ideas in `docs/POST_1.0_BACKLOG.md`.
+- Work on one major task at a time. Close it when its acceptance criteria pass.
+- Report what was actually tested. Static inspection is not runtime/browser QA; CSS mockups are not final painted art.
+- If old docs describe prototypes or ambitions, preserve their historical status but follow the master spec's finite 1.0 scope.
