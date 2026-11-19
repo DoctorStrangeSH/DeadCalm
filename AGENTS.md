@@ -38,3 +38,8 @@ The AI is expected to operate as a senior artist and technical lead for Dead Cal
 ## NPC social graph
 
 Before adding or consuming NPC-to-NPC relationships, read `docs/NPC_SOCIAL_GRAPH.md`. Keep NPC-to-player trust separate, require authored/evidence-backed relationship bases, and never seed speculative ties. The social graph is currently a persistent data model/API; do not claim a player-facing relationship map or autonomous NPC simulation exists until implemented and tested.
+
+
+## NPC knowledge ledger
+
+Read `docs/NPC_SOCIAL_GRAPH.md` before working with NPC knowledge. NPC knowledge is attributed information, not objective truth. Require explicit provenance for every claim, keep rumors unverified, preserve state-change reasons, and never propagate secrets automatically. The ledger is currently a persistent data model/API; automatic rumor propagation and dialogue integration remain future work.
