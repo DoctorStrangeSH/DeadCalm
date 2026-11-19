@@ -245,6 +245,18 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="kit-seventeen-audit" class="mb-6" ${GameState.hasClue('supply_evening_request_codes') ? '' : 'hidden'}>
+        <p class="text-gold text-xs tracking-widest mb-3">НАБОР № 17 · ФАКТИЧЕСКОЕ ДВИЖЕНИЕ</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-kit-register" class="card text-left" ${GameState.hasClue('kit_seventeen_loan_log') ? 'disabled' : ''}>
+            <p class="card-title">ПРОВЕРИТЬ ВЫДАЧУ И ВОЗВРАТ НАБОРА</p><p class="card-subtitle">Когда набор покинул склад?</p>
+          </button>
+          <button id="btn-kit-checklist" class="card text-left" ${GameState.hasClue('kit_seventeen_service_checklist') ? 'disabled' : ''}>
+            <p class="card-title">СВЕРИТЬ ОТМЕТКИ О ПРОВЕРКЕ</p><p class="card-subtitle">Связан ли набор с работами на считывателе?</p>
+          </button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -394,6 +406,7 @@ export function render(container, data) {
       if (GameState.hasClue('key_note_impression_report') && GameState.hasClue('court_extension_directory')) {
         container.querySelector('#extension-seventeen-check').hidden = false;
       }
+      if (GameState.hasClue('supply_evening_request_codes')) container.querySelector('#kit-seventeen-audit').hidden = false;
       refreshCourtWorkflow();
       showNarrative(narrative, catalog[clueId].name);
     } catch (error) {
@@ -603,6 +616,17 @@ export function render(container, data) {
   container.querySelector('#btn-telephone-trace').addEventListener('click', function() {
     inspectSeventeenLink('btn-telephone-trace', 'switchboard_call_detail',
       'Детализация подтверждает звонок с внутреннего номера 17 в 20:15, но не содержит имени говорившего и ссылок на ремонтную заявку. Одновременное появление числа 17 в двух источниках само по себе не связывает их.');
+  });
+
+  container.querySelector('#btn-kit-register').addEventListener('click', function() {
+    inspectCourtRecord('btn-kit-register', 'kit_seventeen_loan_log',
+      'Набор № 17 записан как выданный в 19:58 на вечернюю ремонтную заявку и возвращённый в 20:58. Получатель обозначен «дежурная бригада», без имени. Это подтверждает движение набора, но не то, кто держал инструменты и ключ.',
+      'supply_evening_request_codes');
+  });
+  container.querySelector('#btn-kit-checklist').addEventListener('click', function() {
+    inspectCourtRecord('btn-kit-checklist', 'kit_seventeen_service_checklist',
+      'В контрольном листе набора № 17 указана проверка считывателя служебного входа. В 20:31 отмечено «тест выполнен», однако строка исполнителя пуста. Это связывает хозяйственную заявку с местом работ, но не доказывает, кто проводил проверку и зачем позже закрыли акт в 20:52.',
+      'supply_evening_request_codes');
   });
 
   async function confrontOrlov(tone) {

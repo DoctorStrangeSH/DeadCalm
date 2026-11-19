@@ -173,3 +173,15 @@ test('seventeen on a service note has a documented alternate meaning, not a prov
   assert.match(scene, /'supply_evening_request_codes'/);
   assert.match(scene, /'switchboard_call_detail'/);
 });
+
+test('kit seventeen has a verifiable inventory trail without identifying its operator', () => {
+  assert.match(clues.kit_seventeen_loan_log.description, /19:58/);
+  assert.match(clues.kit_seventeen_loan_log.description, /20:58/);
+  assert.match(clues.kit_seventeen_loan_log.description, /не личность получателя/);
+  assert.match(clues.kit_seventeen_service_checklist.description, /20:31/);
+  assert.match(clues.kit_seventeen_service_checklist.description, /не устанавливает, кто работал/);
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /id="kit-seventeen-audit"[^>]*hasClue\('supply_evening_request_codes'\)/);
+  assert.match(scene, /'kit_seventeen_loan_log'[^;]*'supply_evening_request_codes'/s);
+  assert.match(scene, /'kit_seventeen_service_checklist'[^;]*'supply_evening_request_codes'/s);
+});

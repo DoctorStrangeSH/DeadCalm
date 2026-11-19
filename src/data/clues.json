@@ -287,7 +287,27 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Книга заявок хозяйственной службы",
-    "connections_to": ["key_note_impression_report", "reader_service_ticket", "switchboard_call_detail"]
+    "connections_to": ["key_note_impression_report", "reader_service_ticket", "switchboard_call_detail", "kit_seventeen_loan_log", "kit_seventeen_service_checklist"]
+  },
+  "kit_seventeen_loan_log": {
+    "id": "kit_seventeen_loan_log",
+    "name": "Выдача и возврат вечернего набора № 17",
+    "category": "document",
+    "description": "Набор инструментов № 17 выдан по вечерней ремонтной заявке в 19:58 и возвращён в 20:58. В графе получателя указана «дежурная бригада» без фамилии. Журнал подтверждает движение набора, но не личность получателя, использование универсального ключа или связь с телефонным звонком в 20:15.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Журнал учёта инструментальных наборов",
+    "connections_to": ["supply_evening_request_codes", "kit_seventeen_service_checklist", "maintenance_tool_issue_ledger"]
+  },
+  "kit_seventeen_service_checklist": {
+    "id": "kit_seventeen_service_checklist",
+    "name": "Контрольный лист набора № 17",
+    "category": "document",
+    "description": "В контрольном листе набора № 17 значится проверка считывателя служебного входа; напротив 20:31 стоит отметка «тест выполнен». Поле исполнителя не заполнено. Запись связывает набор с назначенным ремонтом, но не устанавливает, кто работал у считывателя, и не объясняет позднее закрытие акта в 20:52.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Контрольный лист хозяйственной службы",
+    "connections_to": ["supply_evening_request_codes", "kit_seventeen_loan_log", "reader_service_signoff"]
   },
   "switchboard_call_detail": {
     "id": "switchboard_call_detail",
