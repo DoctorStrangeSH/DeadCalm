@@ -13,6 +13,7 @@ import { assessOldCaseWitnesses, recordOldCaseWitnessReading, OLD_CASE_WITNESS_S
 import { planOldCaseWitnessFollowUp, recordOldCaseWitnessFollowUp } from '../systems/old-case-witness-follow-up.js';
 import { assessOldCaseDiscrepancy, recordOldCaseDiscrepancy, OLD_CASE_DISCREPANCY_CHOICES } from '../systems/old-case-discrepancy.js';
 import { assessOldCasePortLog, recordOldCasePortLogReading, OLD_CASE_PORT_LOG_READINGS } from '../systems/old-case-port-log.js';
+import { assessOldCaseWaybill, recordOldCaseWaybillReading, OLD_CASE_WAYBILL_READINGS } from '../systems/old-case-waybill.js';
 import { getOldCaseNavigation } from '../systems/old-case-navigation.js';
 
 export function render(container, data) {
@@ -146,6 +147,14 @@ export function render(container, data) {
         <div id="precinct-port-log-options" class="reader-theories-options" role="group" aria-label="Оценка нового документа"></div>
         <p id="precinct-port-log-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
       </section>
+      <section id="precinct-waybill" class="reader-theories-view mb-6" aria-label="Сверка путевого листа с журналом порта" hidden>
+        <p class="reader-timeline-kicker">АРХИВ / НЕЗАВИСИМЫЙ ТРАНСПОРТНЫЙ ИСТОЧНИК</p>
+        <h3 class="reader-timeline-title">Был ли это один и тот же рейс?</h3>
+        <button id="precinct-waybill-request" class="reader-timeline-follow-up">ЗАПРОСИТЬ ПУТЕВОЙ ЛИСТ</button>
+        <div id="precinct-waybill-detail" class="reader-theories-detail" aria-live="polite"></div>
+        <div id="precinct-waybill-options" class="reader-theories-options" role="group" aria-label="Сопоставление транспортных записей"></div>
+        <p id="precinct-waybill-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
+      </section>
       <div id="dialog-container" class="hidden"></div>
     </div>
   `;
@@ -223,6 +232,36 @@ export function render(container, data) {
   const portLogDetail = container.querySelector('#precinct-port-log-detail');
   const portLogOptions = container.querySelector('#precinct-port-log-options');
   const portLogResult = container.querySelector('#precinct-port-log-result');
+  const waybillPanel = container.querySelector('#precinct-waybill');
+  const waybillRequest = container.querySelector('#precinct-waybill-request');
+  const waybillDetail = container.querySelector('#precinct-waybill-detail');
+  const waybillOptions = container.querySelector('#precinct-waybill-options');
+  const waybillResult = container.querySelector('#precinct-waybill-result');
+  function refreshWaybill() {
+    const check = assessOldCaseWaybill(id => GameState.hasClue(id),
+      GameState.flags.court_old_case_port_log_reading, GameState.flags.court_old_case_waybill_reading);
+    waybillPanel.hidden = !check;
+    waybillOptions.replaceChildren();
+    waybillRequest.hidden = !check || check.found;
+    waybillDetail.textContent = !check ? '' : check.found ? check.question : 'Для сопоставления нужен независимый транспортный документ.';
+    waybillResult.textContent = check?.saved ? `${check.saved.finding} ${check.saved.nextStep}` : '';
+    if (!check?.found || check.saved) return;
+    for (const reading of OLD_CASE_WAYBILL_READINGS) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'reader-theories-option';
+      button.textContent = reading.label;
+      button.addEventListener('click', () => {
+        const result = recordOldCaseWaybillReading(reading.id, check, GameState.flags.court_old_case_waybill_reading);
+        if (!result) return;
+        if (!result.correct) { waybillResult.textContent = result.feedback; return; }
+        GameState.setFlag('court_old_case_waybill_reading', result);
+        refreshWaybill();
+        refreshArchiveRoute();
+      });
+      waybillOptions.appendChild(button);
+    }
+  }
   function refreshPortLog() {
     const check = assessOldCasePortLog(id => GameState.hasClue(id),
       GameState.flags.court_old_case_discrepancy, GameState.flags.court_old_case_port_log_reading);
@@ -244,6 +283,7 @@ export function render(container, data) {
         GameState.setFlag('court_old_case_port_log_reading', result);
         queueMicrotask(refreshArchiveRoute);
         refreshPortLog();
+        refreshWaybill();
       });
       portLogOptions.appendChild(button);
     }
@@ -545,7 +585,8 @@ export function render(container, data) {
     const isFollowUpDocument = ['old_case_specialist_memo', 'old_case_custody_extract'].includes(clueId);
     const revisit = planMorganRevisit(GameState.flags.court_old_case_morgan_approach);
     const isWitnessDocument = OLD_CASE_WITNESS_STATEMENTS.some(item => item.clueId === clueId);
-    if (clueId === 'old_case_port_visitor_log' ? GameState.flags.court_old_case_discrepancy?.id !== 'source_gap'
+    if (clueId === 'old_case_port_waybill' ? GameState.flags.court_old_case_port_log_reading?.choice !== 'limited_record'
+      : clueId === 'old_case_port_visitor_log' ? GameState.flags.court_old_case_discrepancy?.id !== 'source_gap'
       : isWitnessDocument ? !GameState.flags.court_old_case_source_audit
       : clueId === 'old_case_transfer_card' ? !revisit
       : isFollowUpDocument ? followUp?.clueId !== clueId
@@ -569,6 +610,7 @@ export function render(container, data) {
       refreshSourceAudit();
       refreshOldWitnesses();
       refreshPortLog();
+      refreshWaybill();
       refreshArchiveRoute();
     } catch (error) {
       button.disabled = false;
@@ -609,6 +651,7 @@ export function render(container, data) {
     refreshSourceAudit();
   });
   portLogRequest.addEventListener('click', () => retrieveOldCaseDocument('old_case_port_visitor_log', portLogRequest));
+  waybillRequest.addEventListener('click', () => retrieveOldCaseDocument('old_case_port_waybill', waybillRequest));
   oldCaseAssess.addEventListener('click', () => {
     const note = recordOldCaseClosure(assessOldCaseClosure(id => GameState.hasClue(id), GameState.flags.court_old_case_reading), GameState.flags.court_old_case_closure_review);
     if (!note) return;
@@ -628,6 +671,7 @@ export function render(container, data) {
   refreshWitnessFollowUp();
   refreshOldDiscrepancy();
   refreshPortLog();
+  refreshWaybill();
   refreshArchiveRoute();
 
   document.getElementById('btn-talk-ray').addEventListener('click', async function() {

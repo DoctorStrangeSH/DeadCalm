@@ -529,6 +529,16 @@
     "source": "Заверенный фрагмент старого журнала пропускного пункта порта",
     "connections_to": ["old_case_dock_statement", "old_case_details"]
   },
+  "old_case_port_waybill": {
+    "id": "old_case_port_waybill",
+    "name": "Путевой лист портового района",
+    "category": "document",
+    "description": "Служебный рейс отмечен в тот же день, что и запись журнала въезда. В графе маршрута написано «портовый район», но номер автомобиля и имя пассажира не сохранились. Считать эти две записи одним визитом без независимого идентификатора нельзя.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Заверенная копия путевого листа транспортного отдела",
+    "connections_to": ["old_case_port_visitor_log"]
+  },
   "judge_notes": {
     "id": "judge_notes",
     "name": "Дневник судьи",

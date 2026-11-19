@@ -12,6 +12,7 @@ import { assessOldCaseWitnesses, recordOldCaseWitnessReading } from '../src/js/s
 import { recordOldCaseWitnessFollowUp } from '../src/js/systems/old-case-witness-follow-up.js';
 import { assessOldCaseDiscrepancy, recordOldCaseDiscrepancy } from '../src/js/systems/old-case-discrepancy.js';
 import { assessOldCasePortLog, recordOldCasePortLogReading } from '../src/js/systems/old-case-port-log.js';
+import { assessOldCaseWaybill, recordOldCaseWaybillReading } from '../src/js/systems/old-case-waybill.js';
 import { getOldCaseNavigation } from '../src/js/systems/old-case-navigation.js';
 
 for (const signatureRoute of ['request_specialist', 'formal_inquiry']) {
@@ -62,9 +63,16 @@ for (const signatureRoute of ['request_specialist', 'formal_inquiry']) {
       flags.court_old_case_port_log_reading = recordOldCasePortLogReading('limited_record', assessOldCasePortLog(has, flags.court_old_case_discrepancy));
       assert.ok(flags.court_old_case_port_log_reading);
 
+      const waybill = assessOldCaseWaybill(has, flags.court_old_case_port_log_reading);
+      assert.equal(waybill.found, false);
+      evidence.add('old_case_port_waybill');
+      flags.court_old_case_waybill_reading = recordOldCaseWaybillReading('unmatched_trip',
+        assessOldCaseWaybill(has, flags.court_old_case_port_log_reading));
+      assert.ok(flags.court_old_case_waybill_reading);
+
       const nav = getOldCaseNavigation(flags, has);
-      assert.equal(nav.stages.length, 11);
-      assert.equal(nav.completed, 11);
+      assert.equal(nav.stages.length, 12);
+      assert.equal(nav.completed, 12);
       assert.equal(nav.next, null);
     });
   }

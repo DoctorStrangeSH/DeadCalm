@@ -9,7 +9,8 @@ const STAGES = [
   { id: 'witnesses', label: 'Архивные свидетели', target: 'precinct-old-witnesses', open: ctx => !!ctx.flags.court_old_case_source_audit, done: ctx => !!ctx.flags.court_old_case_witness_reading },
   { id: 'recheck', label: 'Уточнение показаний', target: 'precinct-witness-follow-up', open: ctx => !!ctx.flags.court_old_case_witness_reading, done: ctx => !!ctx.flags.court_old_case_witness_follow_up },
   { id: 'discrepancy', label: 'Оценка расхождения', target: 'precinct-old-discrepancy', open: ctx => !!ctx.flags.court_old_case_witness_follow_up, done: ctx => !!ctx.flags.court_old_case_discrepancy },
-  { id: 'port', label: 'Журнал порта', target: 'precinct-port-log', open: ctx => !!ctx.flags.court_old_case_discrepancy, done: ctx => !!ctx.flags.court_old_case_port_log_reading }
+  { id: 'port', label: 'Журнал порта', target: 'precinct-port-log', open: ctx => !!ctx.flags.court_old_case_discrepancy, done: ctx => !!ctx.flags.court_old_case_port_log_reading },
+  { id: 'waybill', label: 'Путевой лист', target: 'precinct-waybill', open: ctx => ctx.flags.court_old_case_port_log_reading?.choice === 'limited_record', done: ctx => !!ctx.flags.court_old_case_waybill_reading }
 ];
 
 export function getOldCaseNavigation(flags = {}, hasClue = () => false) {
