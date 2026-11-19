@@ -5,6 +5,8 @@ import { assessOldCaseClosure, recordOldCaseClosure } from '../systems/old-case-
 import { assessOldCaseOrder, recordOldCaseOrderInterpretation, OLD_CASE_ORDER_INTERPRETATIONS } from '../systems/old-case-order.js';
 import { assessOldCaseSignature, recordOldCaseSignatureAction, OLD_CASE_SIGNATURE_ACTIONS } from '../systems/old-case-signature.js';
 import { assessOldCaseFollowUp, recordOldCaseFollowUp } from '../systems/old-case-follow-up.js';
+import { NPCMemory } from '../systems/npc-memory.js';
+import { canApproachMorganAboutOldCase, resolveMorganOldCaseApproach, OLD_CASE_MORGAN_APPROACHES } from '../systems/old-case-morgan.js';
 
 export function render(container, data) {
   container.innerHTML = `
@@ -81,6 +83,13 @@ export function render(container, data) {
         <div id="precinct-old-case-follow-up-detail" class="reader-theories-detail" aria-live="polite"></div>
         <button id="precinct-old-case-follow-up-save" class="reader-timeline-follow-up" hidden>ЗАФИКСИРОВАТЬ РЕЗУЛЬТАТ И ДАЛЬНЕЙШИЙ ЗАПРОС</button>
       </section>
+      <section id="precinct-morgan-old-case" class="reader-theories-view mb-6" aria-label="Обсуждение старого дела с Морганом" hidden>
+        <p class="reader-timeline-kicker">РАЗГОВОР / ЦЕНА ПРЕЖДЕВРЕМЕННОГО ВЫВОДА</p>
+        <h3 class="reader-timeline-title">Что сказать Моргану?</h3>
+        <p class="reader-timeline-intro">Морган помнит, как детектив обращается с неполными доказательствами. Официальный запрос доступен при любом выборе.</p>
+        <div id="precinct-morgan-old-case-options" class="reader-theories-options" role="group" aria-label="Тон разговора с Морганом"></div>
+        <div id="precinct-morgan-old-case-result" class="reader-theories-detail" role="status" aria-live="polite"></div>
+      </section>
       <div id="dialog-container" class="hidden"></div>
     </div>
   `;
@@ -106,6 +115,40 @@ export function render(container, data) {
   const followUpRequest = container.querySelector('#precinct-old-case-follow-up-request');
   const followUpDetail = container.querySelector('#precinct-old-case-follow-up-detail');
   const followUpSave = container.querySelector('#precinct-old-case-follow-up-save');
+  const morganPanel = container.querySelector('#precinct-morgan-old-case');
+  const morganOptions = container.querySelector('#precinct-morgan-old-case-options');
+  const morganResult = container.querySelector('#precinct-morgan-old-case-result');
+  function refreshMorganOldCase() {
+    const followUp = GameState.flags.court_old_case_follow_up;
+    morganPanel.hidden = !canApproachMorganAboutOldCase(followUp);
+    morganOptions.replaceChildren();
+    morganResult.replaceChildren();
+    if (morganPanel.hidden) return;
+    const saved = GameState.flags.court_old_case_morgan_approach;
+    if (saved) {
+      for (const content of [saved.response, saved.result]) {
+        const line = document.createElement('p');
+        line.textContent = content;
+        morganResult.appendChild(line);
+      }
+      return;
+    }
+    for (const approach of OLD_CASE_MORGAN_APPROACHES) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'reader-theories-option';
+      button.textContent = approach.label;
+      button.addEventListener('click', () => {
+        const decision = resolveMorganOldCaseApproach(approach.id, GameState.flags.court_old_case_follow_up, GameState.flags.court_old_case_morgan_approach);
+        if (!decision) return;
+        GameState.setFlag('court_old_case_morgan_approach', decision);
+        NPCMemory.setFlag('npc_ray_morgan', decision.flag);
+        NPCMemory.changeTrust('npc_ray_morgan', decision.trustDelta);
+        refreshMorganOldCase();
+      });
+      morganOptions.appendChild(button);
+    }
+  }
   function refreshOldCaseFollowUp() {
     const check = assessOldCaseFollowUp(GameState.flags.court_old_case_signature_action, id => GameState.hasClue(id));
     followUpPanel.hidden = !check;
@@ -253,6 +296,7 @@ export function render(container, data) {
     if (!result) return;
     GameState.setFlag('court_old_case_follow_up', result);
     refreshOldCaseFollowUp();
+    refreshMorganOldCase();
   });
   oldCaseAssess.addEventListener('click', () => {
     const note = recordOldCaseClosure(assessOldCaseClosure(id => GameState.hasClue(id), GameState.flags.court_old_case_reading), GameState.flags.court_old_case_closure_review);
@@ -265,6 +309,7 @@ export function render(container, data) {
   refreshOldCaseOrder();
   refreshOldCaseSignature();
   refreshOldCaseFollowUp();
+  refreshMorganOldCase();
 
   document.getElementById('btn-talk-ray').addEventListener('click', async function() {
     const actions = container.querySelector('#precinct-actions');
