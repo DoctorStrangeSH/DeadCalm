@@ -70,3 +70,12 @@ Russian is the game's localization language only. It must never be used as a vis
 Do not use image-search previews, generic stock art, or unrelated generated portraits in the game UI or as substitutes in design reviews. The images shown in conversational mockups are not game assets. When discussing in-game character art, reference the actual files above.
 
 Orlov and Klimov currently have narrative dossiers but are not part of the six approved portrait set. Do not assign them guessed portraits or force them into the cast visually. If they need portraits later, design them intentionally beside the approved set and review identity, framing, palette, and finish before integration.
+
+
+## Non-photographic character presentation
+
+The cast consists of fictional, illustrated game characters. The portraits must read as authored digital paintings, never as photographs of real people.
+
+Keep the approved painterly treatment, cinematic composition, expressive faces, and textured brushwork, but preserve clear illustration cues: designed shapes, intentional edge treatment, controlled facial detail, and art-directed color grouping. Do not push future work toward raw photorealism, camera-like skin texture, celebrity likeness, or documentary photography.
+
+The goal is a beautiful, premium illustrated noir cast: believable and emotionally expressive, but unmistakably fictional artwork. Russian dialogue and UI do not determine the characters' nationality or appearance.
