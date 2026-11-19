@@ -12,6 +12,7 @@ import { assessOldCaseSources, recordOldCaseSourceReading, OLD_CASE_SOURCE_READI
 import { assessOldCaseWitnesses, recordOldCaseWitnessReading, OLD_CASE_WITNESS_STATEMENTS } from '../systems/old-case-witnesses.js';
 import { planOldCaseWitnessFollowUp, recordOldCaseWitnessFollowUp } from '../systems/old-case-witness-follow-up.js';
 import { assessOldCaseDiscrepancy, recordOldCaseDiscrepancy, OLD_CASE_DISCREPANCY_CHOICES } from '../systems/old-case-discrepancy.js';
+import { assessOldCasePortLog, recordOldCasePortLogReading, OLD_CASE_PORT_LOG_READINGS } from '../systems/old-case-port-log.js';
 
 export function render(container, data) {
   container.innerHTML = `
@@ -129,6 +130,14 @@ export function render(container, data) {
         <div id="precinct-old-discrepancy-options" class="reader-theories-options" role="group" aria-label="Классификация расхождения"></div>
         <p id="precinct-old-discrepancy-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
       </section>
+      <section id="precinct-port-log" class="reader-theories-view mb-6" aria-label="Архивный журнал посещения порта" hidden>
+        <p class="reader-timeline-kicker">НОВЫЙ ИСТОЧНИК / ЖУРНАЛ ПОРТОВОГО ПОСТА</p>
+        <h3 class="reader-timeline-title">Кто въезжал в порт двадцать лет назад?</h3>
+        <button id="precinct-port-log-request" class="reader-timeline-follow-up">ЗАПРОСИТЬ СОХРАНИВШИЙСЯ ЖУРНАЛ ВЪЕЗДА</button>
+        <div id="precinct-port-log-detail" class="reader-theories-detail" aria-live="polite"></div>
+        <div id="precinct-port-log-options" class="reader-theories-options" role="group" aria-label="Оценка нового документа"></div>
+        <p id="precinct-port-log-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
+      </section>
       <div id="dialog-container" class="hidden"></div>
     </div>
   `;
@@ -176,6 +185,35 @@ export function render(container, data) {
   const discrepancyDetail = container.querySelector('#precinct-old-discrepancy-detail');
   const discrepancyOptions = container.querySelector('#precinct-old-discrepancy-options');
   const discrepancyResult = container.querySelector('#precinct-old-discrepancy-result');
+  const portLogPanel = container.querySelector('#precinct-port-log');
+  const portLogRequest = container.querySelector('#precinct-port-log-request');
+  const portLogDetail = container.querySelector('#precinct-port-log-detail');
+  const portLogOptions = container.querySelector('#precinct-port-log-options');
+  const portLogResult = container.querySelector('#precinct-port-log-result');
+  function refreshPortLog() {
+    const check = assessOldCasePortLog(id => GameState.hasClue(id),
+      GameState.flags.court_old_case_discrepancy, GameState.flags.court_old_case_port_log_reading);
+    portLogPanel.hidden = !check;
+    portLogOptions.replaceChildren();
+    portLogDetail.textContent = check?.found ? check.question : 'Нужен первичный журнал, чтобы проверить возможный визит независимо от слуха.';
+    portLogRequest.hidden = !check || check.found;
+    portLogResult.textContent = check?.saved ? `${check.saved.finding} ${check.saved.nextStep}` : '';
+    if (!check?.found || check.saved) return;
+    for (const reading of OLD_CASE_PORT_LOG_READINGS) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'reader-theories-option';
+      button.textContent = reading.label;
+      button.addEventListener('click', () => {
+        const result = recordOldCasePortLogReading(reading.id, check, GameState.flags.court_old_case_port_log_reading);
+        if (!result) return;
+        if (!result.correct) { portLogResult.textContent = result.feedback; return; }
+        GameState.setFlag('court_old_case_port_log_reading', result);
+        refreshPortLog();
+      });
+      portLogOptions.appendChild(button);
+    }
+  }
   function refreshOldDiscrepancy() {
     const check = assessOldCaseDiscrepancy(id => GameState.hasClue(id),
       GameState.flags.court_old_case_witness_reading, GameState.flags.court_old_case_witness_follow_up,
@@ -196,6 +234,7 @@ export function render(container, data) {
         if (!result.correct) { discrepancyResult.textContent = result.feedback; return; }
         GameState.setFlag('court_old_case_discrepancy', result);
         refreshOldDiscrepancy();
+        refreshPortLog();
       });
       discrepancyOptions.appendChild(button);
     }
@@ -465,7 +504,8 @@ export function render(container, data) {
     const isFollowUpDocument = ['old_case_specialist_memo', 'old_case_custody_extract'].includes(clueId);
     const revisit = planMorganRevisit(GameState.flags.court_old_case_morgan_approach);
     const isWitnessDocument = OLD_CASE_WITNESS_STATEMENTS.some(item => item.clueId === clueId);
-    if (isWitnessDocument ? !GameState.flags.court_old_case_source_audit
+    if (clueId === 'old_case_port_visitor_log' ? GameState.flags.court_old_case_discrepancy?.id !== 'source_gap'
+      : isWitnessDocument ? !GameState.flags.court_old_case_source_audit
       : clueId === 'old_case_transfer_card' ? !revisit
       : isFollowUpDocument ? followUp?.clueId !== clueId
       : isSignatureDocument ? !GameState.flags.court_old_case_order_interpretation
@@ -485,6 +525,7 @@ export function render(container, data) {
       refreshMorganRevisit();
       refreshSourceAudit();
       refreshOldWitnesses();
+      refreshPortLog();
     } catch (error) {
       button.disabled = false;
       oldCaseStatus.textContent = 'Архив временно недоступен. Повторите запрос позже.';
@@ -519,6 +560,7 @@ export function render(container, data) {
     refreshMorganRevisit();
     refreshSourceAudit();
   });
+  portLogRequest.addEventListener('click', () => retrieveOldCaseDocument('old_case_port_visitor_log', portLogRequest));
   oldCaseAssess.addEventListener('click', () => {
     const note = recordOldCaseClosure(assessOldCaseClosure(id => GameState.hasClue(id), GameState.flags.court_old_case_reading), GameState.flags.court_old_case_closure_review);
     if (!note) return;
@@ -536,6 +578,7 @@ export function render(container, data) {
   refreshOldWitnesses();
   refreshWitnessFollowUp();
   refreshOldDiscrepancy();
+  refreshPortLog();
 
   document.getElementById('btn-talk-ray').addEventListener('click', async function() {
     const actions = container.querySelector('#precinct-actions');
