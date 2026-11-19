@@ -520,3 +520,8 @@ body { background:#071015; color:#d3d5cc; }
 
 .witness-memory-callback { margin:10px 0 14px; padding:11px 13px; border-left:2px solid #a98a57; background:#172326; color:#c6c1ad; font-size:12px; line-height:1.55; }
 .witness-memory-callback::before { content:'ПАМЯТЬ СВИДЕТЕЛЯ / '; color:#d6b77b; font:600 10px Georgia,serif; letter-spacing:.08em; }
+
+.npc-dossier { display:grid; gap:7px; margin:12px 0 15px; padding:12px; border:1px solid #3c4b47; background:linear-gradient(145deg,#182528,#111b1e); }
+.npc-dossier p { margin:0; color:#b9c1b8; font-size:11px; line-height:1.5; }
+.npc-dossier strong { color:#d4b77e; font:600 9px Georgia,serif; letter-spacing:.08em; }
+.npc-dossier p:last-child { padding-top:7px; border-top:1px solid #34413d; color:#899b92; font-style:italic; }
