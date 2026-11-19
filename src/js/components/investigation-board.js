@@ -135,6 +135,17 @@ export class InvestigationBoard {
       GameState.reviseHypothesis(select.dataset.hypothesisId, { status: select.value });
       this._renderHypotheses();
     });
+    this.container.querySelector('#hypothesis-list').addEventListener('click', event => {
+      const trigger = event.target.closest('[data-review-hypothesis]');
+      if (!trigger) return;
+      const card = trigger.closest('.hypothesis-entry');
+      const editor = card?.querySelector('.hypothesis-edit');
+      if (!editor) return;
+      editor.open = true;
+      const firstSuggestion = editor.querySelector('input[data-new-lead="true"]');
+      (firstSuggestion || editor.querySelector('textarea[name="reasoning"]'))?.focus();
+      editor.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
     this.container.querySelector('#hypothesis-list').addEventListener('submit', event => {
       const form = event.target.closest('.hypothesis-edit-form');
       if (!form) return;
@@ -173,6 +184,7 @@ export class InvestigationBoard {
           <p>После последнего изменения этой версии появились связанные документы. Проверьте их и при необходимости пересмотрите вывод.</p>
           <p class="hypothesis-evidence">${newLeads.map(lead => `<span>◇ ${this._escapeHtml(lead.name)}</span>`).join('')}</p>
           <small>Это возможные направления проверки, а не подтверждение гипотезы. Материалы не добавляются автоматически.</small>
+          <button type="button" class="reader-theories-option" data-review-hypothesis="${this._escapeHtml(item.id)}">ПЕРЕСМОТРЕТЬ ВЕРСИЮ ↗</button>
         </aside>` : ''}
         <aside class="hypothesis-audit" aria-label="Проверка опорных улик">
           <strong>АНАЛИЗ ДОКАЗАТЕЛЬСТВ</strong>
@@ -200,7 +212,7 @@ export class InvestigationBoard {
           <form class="hypothesis-form hypothesis-edit-form" data-hypothesis-id="${this._escapeHtml(item.id)}">
             <label>НАЗВАНИЕ <input name="title" maxlength="100" required value="${this._escapeHtml(item.title)}" /></label>
             <label>ОБОСНОВАНИЕ <textarea name="reasoning" maxlength="2000" required rows="3">${this._escapeHtml(item.reasoning)}</textarea></label>
-            <fieldset><legend>ОПОРНЫЕ УЛИКИ</legend>${clues.map(clue => `<label class="hypothesis-clue"><input type="checkbox" name="clue" value="${this._escapeHtml(clue.id)}" ${(item.clueIds || []).includes(clue.id) ? 'checked' : ''} /> ${this._escapeHtml(clue.name)}</label>`).join('')}</fieldset>
+            <fieldset><legend>ОПОРНЫЕ УЛИКИ</legend>${clues.map(clue => `<label class="hypothesis-clue"><input type="checkbox" name="clue" value="${this._escapeHtml(clue.id)}" ${(item.clueIds || []).includes(clue.id) ? 'checked' : ''} ${newLeads.some(lead => lead.id === clue.id) ? 'data-new-lead="true"' : ''} /> ${this._escapeHtml(clue.name)}${newLeads.some(lead => lead.id === clue.id) ? ' · НОВАЯ' : ''}</label>`).join('')}</fieldset>
             <p class="hypothesis-edit-error" role="alert"></p>
             <button type="submit" class="btn-noir">СОХРАНИТЬ ИЗМЕНЕНИЯ</button>
           </form>
