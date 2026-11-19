@@ -17,9 +17,9 @@ test('новый разговор невозможен до обоих доку�
 
 test('Морган помнит прежнее обвинение и текущее доверие', () => {
   const plan = planMorganBriefing(has, reading, careful);
-  const trusted = recordMorganBriefing('share_limits', plan, careful, 2);
-  const strained = recordMorganBriefing('share_limits', plan, accused, 2);
-  const distrustful = recordMorganBriefing('share_limits', plan, careful, -2);
+  const trusted = recordMorganBriefing('share_limits', plan, careful, 55);
+  const strained = recordMorganBriefing('share_limits', plan, accused, 55);
+  const distrustful = recordMorganBriefing('share_limits', plan, careful, 35);
   assert.notEqual(trusted.response, strained.response);
   assert.equal(strained.response, distrustful.response);
   assert.equal(trusted.trustDelta, 1);

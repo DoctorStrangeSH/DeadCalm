@@ -17,6 +17,7 @@ export var Investigation = {
       var response = await fetch('src/data/clues.json');
       if (!response.ok) throw new Error('HTTP ' + response.status);
       this._cluesData = await response.json();
+      GameState.restoreClueSources(this._cluesData);
       // Optional authored rules; absence must never break an investigation.
       try {
         const rulesResponse = await fetch('src/data/contradictions.json');

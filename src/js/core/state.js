@@ -83,6 +83,7 @@ export var GameState = {
       name: clue.name,
       category: clue.category,
       description: clue.description,
+      source: clue.source || null,
       location: clue.location,
       day: clue.day,
       connections_to: Array.isArray(clue.connections_to) ? [...clue.connections_to] : [],
@@ -121,6 +122,21 @@ export var GameState = {
 
   getClue(clueId) {
     return this.currentCase.clues.find(function(c) { return c.id === clueId; }) || null;
+  },
+
+  // Older saves omitted the source field even when it existed in the authored catalog.
+  restoreClueSources(catalog = {}) {
+    if (!this.currentCase || !Array.isArray(this.currentCase.clues)) return 0;
+    let restored = 0;
+    for (const clue of this.currentCase.clues) {
+      if (!clue || clue.source || typeof clue.id !== 'string') continue;
+      const source = Object.hasOwn(catalog, clue.id) ? catalog[clue.id]?.source : null;
+      if (typeof source !== 'string' || !source.trim()) continue;
+      clue.source = source;
+      restored++;
+    }
+    if (restored) this.save();
+    return restored;
   },
 
   updateRelationship(npcId, delta) {

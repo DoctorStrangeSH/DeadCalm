@@ -14,7 +14,7 @@ export function recordMorganBriefing(choice, briefing, previousApproach, trust, 
   const approach = MORGAN_BRIEFING_APPROACHES.find(item => item.id === choice);
   if (!briefing || briefing.saved || previous || !approach ||
       !['careful_request', 'unsupported_accusation'].includes(previousApproach?.approachId)) return null;
-  const strained = previousApproach.approachId === 'unsupported_accusation' || trust < 0;
+  const strained = previousApproach.approachId === 'unsupported_accusation' || trust < 40;
   const response = choice === 'share_limits'
     ? strained
       ? 'Морган медлит: «После твоих прежних обвинений я осторожен. Но сейчас ты честно признаёшь пробел. Давай проверять номера пропусков официально».'
