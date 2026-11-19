@@ -85,7 +85,13 @@ test('GameState.init keeps a clean initial state when no save exists', () => {
 
   try {
     Storage.load = () => null;
-    GameState.reset();
+    GameState.player = { name: 'John Rivers', reputation: 50 };
+    GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
+    GameState.flags = {};
+    GameState.relationships = {};
+    GameState.npcMemory = {};
+    GameState.notebook = [];
+    GameState.miniGameProgress = {};
     GameState.init();
     assert.equal(GameState.currentCase.id, 'case_001');
     assert.deepEqual(GameState.currentCase.clues, []);
