@@ -33,6 +33,24 @@ export const HYPOTHESIS_STATUS_LABELS = Object.freeze({
   confirmed: 'Подтверждена', rejected: 'Отвергнута'
 });
 
+export function compareHypothesisRevisions(history = []) {
+  if (!Array.isArray(history) || history.length < 2) return null;
+  const before = history[history.length - 2];
+  const after = history[history.length - 1];
+  if (!before || !after) return null;
+  const previousIds = new Set(Array.isArray(before.clueIds) ? before.clueIds : []);
+  const currentIds = new Set(Array.isArray(after.clueIds) ? after.clueIds : []);
+  return {
+    added: [...currentIds].filter(id => !previousIds.has(id)),
+    removed: [...previousIds].filter(id => !currentIds.has(id)),
+    titleChanged: before.title !== after.title,
+    reasoningChanged: before.reasoning !== after.reasoning,
+    statusChanged: before.status !== after.status,
+    oldStatus: before.status,
+    newStatus: after.status
+  };
+}
+
 /** Newly found documents directly linked to a theory's attached evidence.
  *  A catalog link is a lead to recheck, never automatic corroboration. */
 export function findNewEvidenceLeads(hypothesis, availableClues = [], catalog = {}) {

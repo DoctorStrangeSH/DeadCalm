@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { auditHypothesisEvidence, createHypothesis, reviseHypothesis, findNewEvidenceLeads } from '../src/js/systems/hypotheses.js';
+import { auditHypothesisEvidence, createHypothesis, reviseHypothesis, findNewEvidenceLeads, compareHypothesisRevisions } from '../src/js/systems/hypotheses.js';
 
 const evidence = [{ id: 'autopsy' }, { id: 'letter' }];
 
@@ -99,4 +99,15 @@ test('unverified timestamps and absent supporting clues never reveal leads', () 
   const clues = [{ id: 'new', foundAt: '2026-11-19T12:00:00Z', connections_to: ['secret'] }];
   assert.deepEqual(findNewEvidenceLeads({ clueIds: ['secret'], updatedAt: '2026-11-18T12:00:00Z' }, clues), []);
   assert.deepEqual(findNewEvidenceLeads({ clueIds: ['new'], updatedAt: 'unknown' }, clues), []);
+});
+
+test('revision comparison reports evidence, status and reasoning changes', () => {
+  const first = createHypothesis({ id: 'h', title: 'Версия', reasoning: 'Первый вывод', clueIds: ['autopsy'] }, evidence, '2026-01-01');
+  const second = reviseHypothesis(first, { reasoning: 'Новый вывод', status: 'probable', clueIds: ['letter'] }, evidence, '2026-01-02');
+  assert.deepEqual(compareHypothesisRevisions(second.history), {
+    added: ['letter'], removed: ['autopsy'], titleChanged: false, reasoningChanged: true,
+    statusChanged: true, oldStatus: 'unchecked', newStatus: 'probable'
+  });
+  assert.equal(compareHypothesisRevisions(first.history), null);
+  assert.equal(compareHypothesisRevisions([null, {}]), null);
 });

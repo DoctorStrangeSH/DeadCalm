@@ -1,7 +1,7 @@
 import { GameState } from '../core/state.js';
 import { Investigation } from '../systems/investigation.js';
 import { Events } from '../core/events.js';
-import { HYPOTHESIS_STATUS_LABELS, auditHypothesisEvidence, findNewEvidenceLeads } from '../systems/hypotheses.js';
+import { HYPOTHESIS_STATUS_LABELS, auditHypothesisEvidence, findNewEvidenceLeads, compareHypothesisRevisions } from '../systems/hypotheses.js';
 import { findContradictions } from '../systems/contradictions.js';
 import { getOldCaseBoardDigest } from '../systems/old-case-board-digest.js';
 
@@ -173,6 +173,7 @@ export class InvestigationBoard {
       const audit = auditHypothesisEvidence(item, clues, Investigation._cluesData || {});
       const contradictions = findContradictions(item, clues, Investigation._contradictionRules);
       const newLeads = findNewEvidenceLeads(item, clues, Investigation._cluesData || {});
+      const revision = compareHypothesisRevisions(item.history);
       return `
       <article class="hypothesis-entry">
         <h4>${this._escapeHtml(item.title)}</h4>
@@ -218,6 +219,15 @@ export class InvestigationBoard {
           </form>
         </details>
         <details class="hypothesis-history"><summary>ИСТОРИЯ ВЕРСИИ (${(item.history || []).length})</summary>
+          ${revision ? `<div class="hypothesis-audit" aria-label="Изменения последней редакции">
+            <strong>ПОСЛЕДНЕЕ ИЗМЕНЕНИЕ</strong>
+            ${revision.added.length ? `<p>Добавлены улики: ${revision.added.map(id => this._escapeHtml(clueNames.get(id) || 'Ранее доступный материал')).join(', ')}.</p>` : ''}
+            ${revision.removed.length ? `<p>Убраны улики: ${revision.removed.map(id => this._escapeHtml(clueNames.get(id) || 'Ранее доступный материал')).join(', ')}.</p>` : ''}
+            ${revision.titleChanged ? '<p>Название версии изменено.</p>' : ''}
+            ${revision.reasoningChanged ? '<p>Обоснование пересмотрено.</p>' : ''}
+            ${revision.statusChanged ? `<p>Оценка: ${this._escapeHtml(HYPOTHESIS_STATUS_LABELS[revision.oldStatus] || 'Не проверена')} → ${this._escapeHtml(HYPOTHESIS_STATUS_LABELS[revision.newStatus] || 'Не проверена')}.</p>` : ''}
+            ${!revision.added.length && !revision.removed.length && !revision.titleChanged && !revision.reasoningChanged && !revision.statusChanged ? '<p>Содержательные изменения не обнаружены.</p>' : ''}
+          </div>` : ''}
           <ol>${(item.history || []).map(entry => `<li>
             <time>${this._escapeHtml(new Date(entry.at).toLocaleString('ru-RU'))}</time> · ${entry.type === 'created' ? 'Создана' : 'Пересмотрена'} · ${this._escapeHtml(HYPOTHESIS_STATUS_LABELS[entry.status] || 'Не проверена')}
             ${entry.title ? `<span>${this._escapeHtml(entry.title)}</span>` : ''}
