@@ -33,3 +33,8 @@ The AI is expected to operate as a senior artist and technical lead for Dead Cal
 - Do not claim an asset is integrated until the committed game files, registry/scene wiring, and validation confirm it.
 - Preserve the six original portraits without exception unless the user explicitly authorizes a change.
 - Apply these standards to future AI agents and handoffs; do not make the user repeat them in later sessions.
+
+
+## NPC social graph
+
+Before adding or consuming NPC-to-NPC relationships, read `docs/NPC_SOCIAL_GRAPH.md`. Keep NPC-to-player trust separate, require authored/evidence-backed relationship bases, and never seed speculative ties. The social graph is currently a persistent data model/API; do not claim a player-facing relationship map or autonomous NPC simulation exists until implemented and tested.
