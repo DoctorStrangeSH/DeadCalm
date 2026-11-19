@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dead-calm-visual-v79';
+const CACHE_NAME = 'dead-calm-visual-v80';
 const ASSETS = [
   '/',
   '/index.html',
@@ -23,6 +23,7 @@ const ASSETS = [
   '/src/js/systems/reader-timeline.js',
   '/src/js/systems/reader-theories.js',
   '/src/js/systems/investigation-quality.js',
+  '/src/js/systems/investigation-gaps.js',
   '/src/js/systems/episode-conclusion.js',
   '/src/js/systems/conclusion-review.js',
   '/src/js/systems/review-directives.js',
