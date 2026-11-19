@@ -7,7 +7,7 @@ const OUTCOME_RANK = {
   clear: 2
 };
 
-const ALLOWED_TYPES = new Set(['radio-tuning', 'mechanical-repair']);
+const ALLOWED_TYPES = new Set(['radio-tuning', 'mechanical-repair', 'film-restoration']);
 
 export function createEmptyMiniGameProgress() {
   return {};
