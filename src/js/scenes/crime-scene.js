@@ -9,6 +9,7 @@ import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, res
 import { assessReaderInvestigation } from '../systems/investigation-quality.js';
 import { buildReaderEpisodeConclusion, hasNewConclusionEvidence } from '../systems/episode-conclusion.js';
 import { reviewReaderConclusion } from '../systems/conclusion-review.js';
+import { planReviewDirective } from '../systems/review-directives.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -129,6 +130,8 @@ export function render(container, data) {
         <button type="button" id="reader-conclusion-save" class="reader-timeline-follow-up">СОСТАВИТЬ ПРОМЕЖУТОЧНОЕ ЗАКЛЮЧЕНИЕ</button>
         <button type="button" id="reader-conclusion-submit" class="reader-timeline-follow-up" hidden>ПЕРЕДАТЬ ЗАКЛЮЧЕНИЕ НА ПРОВЕРКУ</button>
         <div id="reader-conclusion-reviews" class="reader-theory-history" aria-label="Замечания по заключениям"></div>
+        <button type="button" id="reader-review-directive" class="reader-timeline-follow-up" hidden>ПОЛУЧИТЬ СЛЕДУЮЩЕЕ ПОРУЧЕНИЕ</button>
+        <div id="reader-review-directions" class="reader-theory-history" aria-label="Поручения по проверкам"></div>
         <div id="reader-conclusion-history" class="reader-theory-history" aria-label="Сохранённые заключения"></div>
       </section>
 
@@ -351,6 +354,8 @@ export function render(container, data) {
   const conclusionHistory = container.querySelector('#reader-conclusion-history');
   const conclusionSubmit = container.querySelector('#reader-conclusion-submit');
   const conclusionReviews = container.querySelector('#reader-conclusion-reviews');
+  const directiveButton = container.querySelector('#reader-review-directive');
+  const directiveHistory = container.querySelector('#reader-review-directions');
   let qualityRules = [];
   function refreshReaderQuality() {
     const audit = assessReaderInvestigation(GameState.currentCase, qualityRules, GameState.flags);
@@ -405,6 +410,18 @@ export function render(container, data) {
       }
       conclusionReviews.appendChild(block);
     }
+    const assignments = Array.isArray(GameState.flags.court_reader_review_directives) ? GameState.flags.court_reader_review_directives : [];
+    const lastReview = reviews.at(-1);
+    const reviewedConclusion = history.find(item => item.version === lastReview?.conclusionVersion);
+    const directive = planReviewDirective(lastReview, reviewedConclusion, assignments);
+    directiveButton.hidden = !directive;
+    directiveButton.textContent = directive?.kind === 'next_lead' ? 'ПОЛУЧИТЬ НАПРАВЛЕНИЕ К СЛЕДУЮЩЕЙ ЗАЦЕПКЕ' : 'ПОЛУЧИТЬ ПОРУЧЕНИЕ НА ДОПОЛНИТЕЛЬНУЮ ПРОВЕРКУ';
+    directiveHistory.replaceChildren();
+    for (const assignment of assignments) {
+      const line = document.createElement('p');
+      line.textContent = `Версия ${assignment.conclusionVersion} · ${assignment.text}`;
+      directiveHistory.appendChild(line);
+    }
     conclusionHistory.replaceChildren();
     if (history.length) {
       const heading = document.createElement('p');
@@ -440,6 +457,17 @@ export function render(container, data) {
     const result = reviewReaderConclusion(latest, reviews);
     if (!result) return;
     GameState.setFlag('court_reader_conclusion_reviews', [...reviews, result]);
+    refreshReaderQuality();
+  });
+  directiveButton.addEventListener('click', () => {
+    const history = GameState.flags.court_reader_conclusions || [];
+    const reviews = GameState.flags.court_reader_conclusion_reviews || [];
+    const assignments = GameState.flags.court_reader_review_directives || [];
+    const lastReview = reviews.at(-1);
+    const related = history.find(item => item.version === lastReview?.conclusionVersion);
+    const directive = planReviewDirective(lastReview, related, assignments);
+    if (!directive) return;
+    GameState.setFlag('court_reader_review_directives', [...assignments, directive]);
     refreshReaderQuality();
   });
   let selectedTheoryId = 'single_operator';
