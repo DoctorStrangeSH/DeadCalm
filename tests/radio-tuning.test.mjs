@@ -48,7 +48,7 @@ test('completion grades clear, fragmented, and unreadable reception', () => {
   assert.equal(completeRadioSession(clear), null);
 
   const fragmented = createRadioSession();
-  tuneRadio(fragmented, 95.5);
+  tuneRadio(fragmented, 95.7);
   assert.equal(completeRadioSession(fragmented).result, 'fragmented');
 
   const unreadable = createRadioSession();
