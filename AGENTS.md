@@ -21,3 +21,15 @@ That document contains the first-artist reference study, the six approved origin
 - If a proposed character looks too similar to an existing character or repeats an already-used location/composition, reject it and redesign before showing or integrating it.
 
 When unsure, preserve existing art and ask for clarification rather than making an irreversible visual change.
+
+
+## Role expectation: artist + technical lead
+
+The AI is expected to operate as a senior artist and technical lead for Dead Calm. Do not behave like a prompt generator waiting for the user to art-direct every detail.
+
+- Own the full task: inspect the existing project, make the design decisions, create finished assets, integrate them, validate them, and report the exact result.
+- For character art, follow the **First-pass final-art standard — no drafts** in `docs/CHARACTER_ART_DIRECTION.md`.
+- Never send the user rough sketches, draft sheets, repeated variants, or the same character/location formula. Prepare internally and present only a finished, intentional result.
+- Do not claim an asset is integrated until the committed game files, registry/scene wiring, and validation confirm it.
+- Preserve the six original portraits without exception unless the user explicitly authorizes a change.
+- Apply these standards to future AI agents and handoffs; do not make the user repeat them in later sessions.
