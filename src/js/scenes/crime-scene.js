@@ -3,6 +3,7 @@ import { GameState } from '../core/state.js';
 import { canChallengeGuard, resolveGuardChallenge } from '../systems/court-guard.js';
 import { canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation, canConfrontKlimov, resolveKlimovConfrontation } from '../systems/witness-provenance.js';
 import { setupCourtWorkflow } from '../systems/court-workflow.js';
+import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS } from '../systems/reader-timeline.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -257,6 +258,14 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="reader-chronology" class="mb-6" ${canAssembleReaderTimeline(id => GameState.hasClue(id)) ? '' : 'hidden'}>
+        <p class="text-gold text-xs tracking-widest mb-3">ХРОНОЛОГИЯ · СОПОСТАВИТЬ НЕЗАВИСИМЫЕ ЗАПИСИ</p>
+        <button id="btn-reader-chronology" class="card text-left" ${GameState.hasClue('reader_reconstructed_timeline') ? 'disabled' : ''}>
+          <p class="card-title">СОСТАВИТЬ ХРОНОЛОГИЮ РЕМОНТА</p>
+          <p class="card-subtitle">Восстановить последовательность по карточке, набору, ключу и акту.</p>
+        </button>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -407,6 +416,7 @@ export function render(container, data) {
         container.querySelector('#extension-seventeen-check').hidden = false;
       }
       if (GameState.hasClue('supply_evening_request_codes')) container.querySelector('#kit-seventeen-audit').hidden = false;
+      if (canAssembleReaderTimeline(id => GameState.hasClue(id))) container.querySelector('#reader-chronology').hidden = false;
       refreshCourtWorkflow();
       showNarrative(narrative, catalog[clueId].name);
     } catch (error) {
@@ -627,6 +637,14 @@ export function render(container, data) {
     inspectCourtRecord('btn-kit-checklist', 'kit_seventeen_service_checklist',
       'В контрольном листе набора № 17 указана проверка считывателя служебного входа. В 20:31 отмечено «тест выполнен», однако строка исполнителя пуста. Это связывает хозяйственную заявку с местом работ, но не доказывает, кто проводил проверку и зачем позже закрыли акт в 20:52.',
       'supply_evening_request_codes');
+  });
+
+  container.querySelector('#btn-reader-chronology').addEventListener('click', function() {
+    if (!canAssembleReaderTimeline(id => GameState.hasClue(id))) return;
+    const sequence = READER_TIMELINE_EVENTS.map(item => `${item.time} — ${item.event}`).join('<br>');
+    inspectCourtRecord('btn-reader-chronology', 'reader_reconstructed_timeline',
+      sequence + '<br><br>Источники показывают движение карточки, ключа и инструментов, но не доказывают, что ими пользовался один человек. Гостевой пропуск № 041 остаётся отдельным документом.',
+      'kit_seventeen_loan_log');
   });
 
   async function confrontOrlov(tone) {

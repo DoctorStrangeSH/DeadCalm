@@ -297,7 +297,7 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Журнал учёта инструментальных наборов",
-    "connections_to": ["supply_evening_request_codes", "kit_seventeen_service_checklist", "maintenance_tool_issue_ledger"]
+    "connections_to": ["supply_evening_request_codes", "kit_seventeen_service_checklist", "maintenance_tool_issue_ledger", "reader_reconstructed_timeline"]
   },
   "kit_seventeen_service_checklist": {
     "id": "kit_seventeen_service_checklist",
@@ -307,7 +307,17 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Контрольный лист хозяйственной службы",
-    "connections_to": ["supply_evening_request_codes", "kit_seventeen_loan_log", "reader_service_signoff"]
+    "connections_to": ["supply_evening_request_codes", "kit_seventeen_loan_log", "reader_service_signoff", "reader_reconstructed_timeline"]
+  },
+  "reader_reconstructed_timeline": {
+    "id": "reader_reconstructed_timeline",
+    "name": "Сводная хронология вечернего ремонта",
+    "category": "information",
+    "description": "Сводка следствия объединяет отметки: 19:58 — выдача набора № 17; 20:02 — вход по карточке Орлова; 20:03 — оформление универсального ключа; 20:31 — отметка о проверке считывателя; 20:47 — выход по карточке; 20:52 — закрытие акта; 20:56 — возврат ключа; 20:58 — возврат набора. Хронология упорядочивает независимые записи, но не доказывает, что все действия совершил один человек или что гостевой пропуск № 041 использовал тот же человек.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Аналитическая сводка следствия по пяти документам",
+    "connections_to": ["kit_seventeen_loan_log", "maintenance_tool_issue_ledger", "orlov_badge_scan", "kit_seventeen_service_checklist", "reader_service_signoff"]
   },
   "switchboard_call_detail": {
     "id": "switchboard_call_detail",

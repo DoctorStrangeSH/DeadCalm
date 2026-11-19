@@ -1,6 +1,6 @@
 export const COURT_STAGE_IDS = [
   'court-records', 'court-witnesses', 'guard-follow-up', 'court-visitors',
-  'secretary-follow-up', 'orlov-inquiry', 'orlov-confrontation', 'nk-identity', 'reader-verification', 'reader-interviews', 'witness-corroboration', 'klimov-confrontation', 'key-note-trace', 'note-authorship', 'extension-seventeen-check', 'kit-seventeen-audit'
+  'secretary-follow-up', 'orlov-inquiry', 'orlov-confrontation', 'nk-identity', 'reader-verification', 'reader-interviews', 'witness-corroboration', 'klimov-confrontation', 'key-note-trace', 'note-authorship', 'extension-seventeen-check', 'kit-seventeen-audit', 'reader-chronology'
 ];
 
 export function summarizeCourtStages(stages) {

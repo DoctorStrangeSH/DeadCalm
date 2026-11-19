@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { assessIndependentAccounts, canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation, canConfrontKlimov, resolveKlimovConfrontation } from '../src/js/systems/witness-provenance.js';
 import { findContradictions } from '../src/js/systems/contradictions.js';
+import { canAssembleReaderTimeline, READER_TIMELINE_EVIDENCE, READER_TIMELINE_EVENTS } from '../src/js/systems/reader-timeline.js';
 
 const clues = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
 const rules = JSON.parse(readFileSync(new URL('../src/data/contradictions.json', import.meta.url), 'utf8'));
@@ -184,4 +185,21 @@ test('kit seventeen has a verifiable inventory trail without identifying its ope
   assert.match(scene, /id="kit-seventeen-audit"[^>]*hasClue\('supply_evening_request_codes'\)/);
   assert.match(scene, /'kit_seventeen_loan_log'[^;]*'supply_evening_request_codes'/s);
   assert.match(scene, /'kit_seventeen_service_checklist'[^;]*'supply_evening_request_codes'/s);
+});
+
+test('reader chronology requires five independent documents and preserves time order', () => {
+  assert.equal(READER_TIMELINE_EVIDENCE.length, 5);
+  assert.equal(canAssembleReaderTimeline(id => READER_TIMELINE_EVIDENCE.includes(id)), true);
+  for (const missing of READER_TIMELINE_EVIDENCE) {
+    assert.equal(canAssembleReaderTimeline(id => READER_TIMELINE_EVIDENCE.includes(id) && id !== missing), false);
+    assert.ok(clues[missing]);
+  }
+  const times = READER_TIMELINE_EVENTS.map(item => item.time);
+  assert.deepEqual(times, [...times].sort());
+  assert.match(clues.reader_reconstructed_timeline.description, /не доказывает, что все действия совершил один человек/);
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /id="reader-chronology"[^>]*canAssembleReaderTimeline/);
+  assert.match(scene, /'reader_reconstructed_timeline'/);
+  const cache = readFileSync(new URL('../sw.js', import.meta.url), 'utf8');
+  assert.match(cache, /reader-timeline\.js/);
 });
