@@ -77,6 +77,14 @@ export function render(container) {
           <p class="hidden md:block text-gray-600 text-xs mt-3">Событий: 10</p>
         </button>
 
+        <!-- Радиоприёмная -->
+        <button id="btn-radio" class="card office-card text-left w-full">
+          <span class="office-card-icon" aria-hidden="true">⌁</span><span class="office-card-number">08</span>
+          <p class="card-title">РАДИОПРИЁМНАЯ</p>
+          <p class="card-subtitle">Настроить коротковолновый приёмник</p>
+          <p class="hidden md:block text-gray-600 text-xs mt-3">Практика · Работа с сигналом</p>
+        </button>
+
         <!-- Мастерская -->
         <button id="btn-repair" class="card office-card text-left w-full">
           <span class="office-card-icon" aria-hidden="true">⚙</span><span class="office-card-number">07</span>
@@ -110,6 +118,11 @@ export function render(container) {
   `;
 
   // === ОБРАБОТЧИКИ КНОПОК ===
+
+  // Радиоприёмная — отдельная сенсорная мини-игра
+  document.getElementById('btn-radio').addEventListener('click', function () {
+    Events.emit('navigate', { scene: 'radio-tuning' });
+  });
 
   // Мастерская — отдельная игровая мини-сцена
   document.getElementById('btn-repair').addEventListener('click', function () {
