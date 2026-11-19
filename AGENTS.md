@@ -73,3 +73,8 @@ The radio mini-game is a distinct continuous tuning/filter interaction. Read `do
 ## Visual identity — mandatory
 
 Before creating or restyling any scene, read `docs/VISUAL_STYLE_GUIDE.md` and `docs/CHARACTER_ART_DIRECTION.md`. Compare new work against the shipped `blackford-harbor.webp`, `holt-office.webp`, and six protected character portraits. Use the project's cinematic painterly teal/blue noir with selective amber practical lighting. Do not use generic stock/image-search imagery or drift into brown/gold fantasy UI. Keep CSS prototype art clearly labeled until replaced by reviewed bespoke artwork. Preserve all six original portraits and emotional variants.
+
+
+## Persistent mini-game results
+
+`GameState.miniGameProgress` persists best and last results for radio tuning and mechanical repair. The office cards display the record. Read the `Persistent mini-game progress` section in `docs/MINIGAME_DESIGN.md`. The progress helper is cached by Service Worker v92. Do not treat practice results as clues or story facts without explicit authored narrative integration.
