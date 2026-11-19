@@ -1,0 +1,14 @@
+{
+  "name": "dead-calm",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Dead Calm — narrative noir detective thriller",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "test:ci": "node --test --test-reporter=spec tests/*.test.mjs"
+  }
+}
