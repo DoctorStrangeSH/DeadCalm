@@ -46,6 +46,9 @@ test('knowledge status changes require a reason and preserve a history', () => {
   assert.equal(updated.stateHistory.length, 1);
   assert.equal(updated.stateHistory[0].from, 'unverified');
   assert.equal(updated.stateHistory[0].to, 'corroborated');
+  const disputed = updateNpcKnowledgeState(ledger, 'k1', 'disputed', 'A conflicting record challenges the account.');
+  assert.equal(disputed.stateHistory[1].from, 'corroborated');
+  assert.equal(disputed.stateHistory[1].to, 'disputed');
   assert.equal(updateNpcKnowledgeState(ledger, 'missing', 'disputed', 'No matching source.'), null);
 });
 
