@@ -1,7 +1,7 @@
 const ARCHIVE_GROUPS = [
   { id: 'closure', title: 'Закрытие дела', clues: ['old_case_details', 'old_case_closure_register', 'old_case_archive_inventory', 'old_case_original_order', 'old_case_authority_roster'] },
   { id: 'custody', title: 'Подпись и передача', clues: ['old_case_order_physical_original', 'old_case_signature_samples', 'old_case_specialist_memo', 'old_case_custody_extract', 'old_case_transfer_card'] },
-  { id: 'accounts', title: 'Свидетельства и порт', clues: ['old_case_clerk_statement', 'old_case_dock_statement', 'old_case_port_visitor_log'] }
+  { id: 'accounts', title: 'Свидетельства и порт', clues: ['old_case_clerk_statement', 'old_case_dock_statement', 'old_case_port_visitor_log', 'old_case_port_waybill'] }
 ];
 
 export function getOldCaseBoardDigest(clues = [], flags = {}) {
@@ -11,10 +11,11 @@ export function getOldCaseBoardDigest(clues = [], flags = {}) {
   })).filter(group => group.clueIds.length);
   if (!groups.length) return null;
   const observations = [
-    ...(flags.court_old_case_closure_review ? ['Срок закрытия документирован; обоснованность решения не установлена.'] : []),
-    ...(flags.court_old_case_witness_reading?.choice === 'direct_only' ? ['Показание о приёме папки — непосредственное; рассказ о судье — пересказ.'] : []),
-    ...(flags.court_old_case_discrepancy?.id === 'source_gap' ? ['Неизвестное происхождение слуха — пробел, а не доказанная ложь.'] : []),
-    ...(flags.court_old_case_port_log_reading?.choice === 'limited_record' ? ['Журнал подтверждает въезд, но не имя посетителя.'] : [])
+    ...(ids.has('old_case_closure_register') && flags.court_old_case_closure_review ? ['Срок закрытия документирован; обоснованность решения не установлена.'] : []),
+    ...(ids.has('old_case_clerk_statement') && ids.has('old_case_dock_statement') && flags.court_old_case_witness_reading?.choice === 'direct_only' ? ['Показание о приёме папки — непосредственное; рассказ о судье — пересказ.'] : []),
+    ...(ids.has('old_case_dock_statement') && flags.court_old_case_discrepancy?.id === 'source_gap' ? ['Неизвестное происхождение слуха — пробел, а не доказанная ложь.'] : []),
+    ...(ids.has('old_case_port_visitor_log') && flags.court_old_case_port_log_reading?.choice === 'limited_record' ? ['Журнал подтверждает въезд, но не имя посетителя.'] : []),
+    ...(ids.has('old_case_port_waybill') && ids.has('old_case_port_visitor_log') && flags.court_old_case_waybill_reading?.choice === 'unmatched_trip' ? ['Путевой лист и журнал совпадают по дате, но идентичность транспорта и посетителя не установлена.'] : [])
   ];
   return { groups, observations, total: groups.reduce((sum, group) => sum + group.clueIds.length, 0),
     warning: 'Архивные документы и устные сообщения не устанавливают автоматически личность подписанта или виновного.' };
