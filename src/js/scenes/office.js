@@ -11,62 +11,76 @@ export function render(container) {
   var notesCount = GameState.notebook ? GameState.notebook.length : 0;
 
   container.innerHTML = `
-    <div class="scene">
+    <div class="scene office-scene">
 
       <!-- Шапка -->
       <div class="scene-header mb-4 md:mb-8">
         <div>
-          <h2 class="text-gold text-lg md:text-2xl tracking-widest">КАБИНЕТ</h2>
-          <p class="text-gray-500 text-xs md:text-sm tracking-wider mt-1">Блэкфорд, ноябрь 1987 — День 1</p>
+          <p class="office-kicker">BLACKFORD POLICE DEPARTMENT / ОТДЕЛ РАССЛЕДОВАНИЙ</p>
+          <h2 class="text-gold text-lg md:text-2xl tracking-widest">КАБИНЕТ ДЕТЕКТИВА</h2>
+          <p class="text-gray-400 text-xs md:text-sm tracking-wider mt-1">Блэкфорд · Ноябрь 1987 · Дело № 001</p>
         </div>
         <div class="flex items-center gap-3">
-          <span class="text-gray-600 text-xs">Дождь за окном</span>
+          <span class="office-weather">● &nbsp; ДОЖДЬ ЗА ОКНОМ</span>
         </div>
       </div>
 
-      <div class="divider mb-4 md:mb-6"></div>
+      <div class="office-environment" aria-hidden="true">
+        <div class="office-window"><div class="office-rain"></div><div class="office-skyline"></div></div>
+        <div class="office-lamp"><span></span></div>
+        <div class="office-desk"><div class="office-desk-paper"></div><div class="office-cup"></div></div>
+        <div class="office-environment-caption">«Город не расскажет тебе правду. Придётся вытащить её самому.»</div>
+      </div>
+
+      <div class="office-section-heading"><span>РАБОЧИЙ СТОЛ</span><span>ВЫБЕРИТЕ ДЕЙСТВИЕ</span></div>
 
       <!-- Карточки-разделы -->
-      <div class="cards-grid flex-1">
+      <div class="cards-grid office-grid flex-1">
 
         <!-- Карта города -->
-        <button id="btn-map" class="card text-left w-full">
-          <p class="card-title">🗺 КАРТА ГОРОДА</p>
+        <button id="btn-map" class="card office-card text-left w-full">
+          <span class="office-card-icon" aria-hidden="true">⌖</span><span class="office-card-number">01</span>
+          <p class="card-title">КАРТА ГОРОДА</p>
           <p class="card-subtitle">Перемещаться между локациями</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">Доступно локаций: 5</p>
         </button>
 
         <!-- Доска расследования -->
-        <button id="btn-board" class="card text-left w-full">
-          <p class="card-title">📌 ДОСКА РАССЛЕДОВАНИЯ</p>
+        <button id="btn-board" class="card office-card text-left w-full">
+          <span class="office-card-icon" aria-hidden="true">◇</span><span class="office-card-number">02</span>
+          <p class="card-title">ДОСКА РАССЛЕДОВАНИЯ</p>
           <p class="card-subtitle">Улики, связи, подозреваемые</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">Улик на доске: ${cluesCount}</p>
         </button>
 
         <!-- Инвентарь -->
-        <button id="btn-inventory" class="card text-left w-full">
-          <p class="card-title">🎒 ИНВЕНТАРЬ</p>
+        <button id="btn-inventory" class="card office-card text-left w-full">
+          <span class="office-card-icon" aria-hidden="true">▤</span><span class="office-card-number">03</span>
+          <p class="card-title">АРХИВ УЛИК</p>
           <p class="card-subtitle">Просмотреть собранные улики</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">Улик собрано: ${cluesCount}</p>
         </button>
 
         <!-- Дневник -->
-        <button id="btn-notebook" class="card text-left w-full">
-          <p class="card-title">📓 ДНЕВНИК</p>
+        <button id="btn-notebook" class="card office-card text-left w-full">
+          <span class="office-card-icon" aria-hidden="true">✎</span><span class="office-card-number">04</span>
+          <p class="card-title">ДНЕВНИК</p>
           <p class="card-subtitle">Заметки и мысли детектива</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">Записей: ${notesCount}</p>
         </button>
 
         <!-- Хронология -->
-        <button id="btn-timeline" class="card text-left w-full">
-          <p class="card-title">⏳ ХРОНОЛОГИЯ</p>
+        <button id="btn-timeline" class="card office-card text-left w-full">
+          <span class="office-card-icon" aria-hidden="true">◷</span><span class="office-card-number">05</span>
+          <p class="card-title">ХРОНОЛОГИЯ</p>
           <p class="card-subtitle">Восстановить последовательность событий</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">Событий: 10</p>
         </button>
 
         <!-- Дела -->
-        <button id="btn-cases" class="card text-left w-full">
-          <p class="card-title">📋 ДЕЛА</p>
+        <button id="btn-cases" class="card office-card text-left w-full">
+          <span class="office-card-icon" aria-hidden="true">§</span><span class="office-card-number">06</span>
+          <p class="card-title">АКТИВНЫЕ ДЕЛА</p>
           <p class="card-subtitle">Активные и завершённые расследования</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">Активных: 1</p>
         </button>

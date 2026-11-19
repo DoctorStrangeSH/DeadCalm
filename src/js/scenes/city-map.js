@@ -21,7 +21,7 @@ export async function render(container) {
   }
 
   container.innerHTML = `
-    <div class="scene">
+    <div class="scene blackford-map-scene">
       <!-- Шапка -->
       <div class="scene-header mb-4">
         <div>
@@ -39,8 +39,8 @@ export async function render(container) {
       <div id="map-container" class="flex-1"></div>
 
       <!-- Подсказка -->
-      <p class="text-gray-600 text-xs mt-4 text-center">
-        Нажимайте на иконки локаций, затем «ОТПРАВИТЬСЯ»
+      <p class="text-gray-500 text-xs mt-4 text-center">
+        Выберите отметку на карте или локацию из списка, затем «ОТПРАВИТЬСЯ»
       </p>
     </div>
   `;

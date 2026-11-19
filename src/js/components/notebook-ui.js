@@ -1,5 +1,24 @@
 import { Notebook } from '../systems/notebook.js';
 import { Events } from '../core/events.js';
+import { escapeHtml } from '../utils/helpers.js';
+import { evidenceCategoryLabel, resolveEvidenceLinks, selectEvidence } from '../systems/evidence-archive.js';
+
+let clueCatalogRequest;
+function loadClueCatalog() {
+  if (!clueCatalogRequest) {
+    clueCatalogRequest = fetch('src/data/clues.json')
+      .then(response => {
+        if (!response.ok) throw new Error(`Каталог улик: ${response.status}`);
+        return response.json();
+      })
+      .catch(error => {
+        console.warn('[Notebook] Каталог связей недоступен:', error);
+        clueCatalogRequest = null;
+        return {};
+      });
+  }
+  return clueCatalogRequest;
+}
 
 /**
  * UI-компонент дневника.
@@ -10,11 +29,29 @@ export class NotebookUI {
     this.container = container;
     this.filter = 'all';
     this.searchQuery = '';
+    this.evidenceCategory = 'all';
+    this.evidenceSort = 'newest';
   }
 
   render() {
-    var notes = Notebook.getAllNotes();
+    const isEvidence = this.filter === 'clues';
+    const allClues = Notebook.getAllClues();
+    var notes = isEvidence ? selectEvidence(allClues, {
+      category: this.evidenceCategory,
+      sort: this.evidenceSort,
+      query: this.searchQuery
+    }).map(clue => ({
+      ...clue,
+      title: clue.name || 'Без названия',
+      text: clue.description || '',
+      timestamp: clue.foundAt || '',
+      day: clue.day || 1,
+      source: clue.location || 'Материалы дела',
+      category: evidenceCategoryLabel(clue.category),
+      isClue: true
+    })) : Notebook.getAllNotes();
     var stats = Notebook.getStats();
+    var clueCount = allClues.length;
     var self = this;
 
     // Применяем фильтр
@@ -22,41 +59,60 @@ export class NotebookUI {
       notes = Notebook.getImportantNotes();
     } else if (this.filter === 'day1') {
       notes = Notebook.getNotesByDay(1);
-    } else if (this.filter !== 'all') {
+    } else if (this.filter !== 'all' && this.filter !== 'clues') {
       notes = Notebook.getNotesByCategory(this.filter);
     }
 
     // Применяем поиск
-    if (this.searchQuery) {
+    if (this.searchQuery && !isEvidence) {
       var query = this.searchQuery.toLowerCase();
       notes = notes.filter(function(n) {
         return n.title.toLowerCase().indexOf(query) !== -1 ||
-               n.text.toLowerCase().indexOf(query) !== -1;
+               n.text.toLowerCase().indexOf(query) !== -1 ||
+               (n.source || '').toLowerCase().includes(query);
       });
     }
 
     // Сортируем: закреплённые сверху, потом по дате
-    notes.sort(function(a, b) {
+    if (!isEvidence) notes.sort(function(a, b) {
       if (a.pinned && !b.pinned) return -1;
       if (!a.pinned && b.pinned) return 1;
       return new Date(b.timestamp) - new Date(a.timestamp);
     });
 
+    const availableCategories = [...new Set(allClues.map(clue => clue.category || 'other'))].sort();
+
     this.container.innerHTML = `
-      <div class="notebook-container">
+      <div class="notebook-container dossier-notebook">
         <!-- Заголовок и статистика -->
         <div class="notebook-header">
           <div class="notebook-title-row">
-            <p class="notebook-title">📓 ДНЕВНИК ДЕТЕКТИВА</p>
-            <p class="notebook-stats">Всего: ${stats.total} | Важных: ${stats.important}</p>
+            <p class="notebook-title"><span class="dossier-seal">MH</span> ЛИЧНЫЙ ЖУРНАЛ / М. ХОЛТ</p>
+            <p class="notebook-stats">ЗАПИСЕЙ: ${stats.total} · УЛИК: ${clueCount} · ВАЖНЫХ: ${stats.important}</p>
           </div>
-          
+
+          ${isEvidence ? `<div class="notebook-evidence-tools">
+            <label>ТИП УЛИКИ
+              <select id="evidence-category" aria-label="Категория улик">
+                <option value="all">Все категории</option>
+                ${availableCategories.map(category => `<option value="${escapeHtml(category)}" ${this.evidenceCategory === category ? 'selected' : ''}>${escapeHtml(evidenceCategoryLabel(category))}</option>`).join('')}
+              </select>
+            </label>
+            <label>ПОРЯДОК
+              <select id="evidence-sort" aria-label="Сортировка улик">
+                <option value="newest" ${this.evidenceSort === 'newest' ? 'selected' : ''}>Сначала новые</option>
+                <option value="oldest" ${this.evidenceSort === 'oldest' ? 'selected' : ''}>Сначала старые</option>
+              </select>
+            </label>
+          </div>` : ''}
+
           <!-- Поиск -->
           <div class="notebook-search">
-            <input type="text" id="notebook-search-input" 
-                   class="notebook-search-input" 
-                   placeholder="🔍 Поиск по заметкам..." 
-                   value="${this.searchQuery}">
+            <input type="text" id="notebook-search-input"
+                   class="notebook-search-input"
+                   aria-label="${isEvidence ? 'Поиск по уликам' : 'Поиск по заметкам'}"
+                   placeholder="${isEvidence ? 'Название, описание или место находки...' : 'Найти запись по слову или имени...'}"
+                   value="${escapeHtml(this.searchQuery)}">
           </div>
 
           <!-- Фильтры -->
@@ -65,13 +121,16 @@ export class NotebookUI {
               Все (${stats.total})
             </button>
             <button class="notebook-filter ${this.filter === 'important' ? 'active' : ''}" data-filter="important">
-              ⭐ Важные
+              ★ Важные
+            </button>
+            <button class="notebook-filter ${this.filter === 'clues' ? 'active' : ''}" data-filter="clues">
+              ◇ Улики (${clueCount})
             </button>
             <button class="notebook-filter ${this.filter === 'day1' ? 'active' : ''}" data-filter="day1">
-              📅 День 1
+              День 1
             </button>
             <button class="notebook-filter ${this.filter === 'расследование' ? 'active' : ''}" data-filter="расследование">
-              🔍 Расследование
+              Расследование
             </button>
           </div>
         </div>
@@ -85,7 +144,7 @@ export class NotebookUI {
 
         <!-- Действия -->
         <div class="notebook-actions">
-          <button id="btn-export-notes" class="btn-noir text-xs py-2">📤 ЭКСПОРТ</button>
+          <button id="btn-export-notes" class="btn-noir text-xs py-2">↓ СОХРАНИТЬ ЗАПИСИ</button>
         </div>
       </div>
     `;
@@ -111,19 +170,19 @@ export class NotebookUI {
     };
 
     return `
-      <div class="notebook-card ${note.pinned ? 'notebook-card-pinned' : ''}" data-title="${note.title}">
+      <button type="button" class="notebook-card ${note.pinned ? 'notebook-card-pinned' : ''}" data-title="${escapeHtml(note.title)}" data-kind="${note.isClue ? 'clue' : 'note'}">
         <div class="notebook-card-header">
-          <span class="notebook-category ${categoryColors[note.category] || ''}">${note.category}</span>
-          ${note.pinned ? '<span class="notebook-pin">📌</span>' : ''}
-          <span class="notebook-day">День ${note.day}</span>
+          <span class="notebook-category ${categoryColors[note.category] || ''}">${escapeHtml(note.category)}</span>
+          ${note.pinned ? '<span class="notebook-pin">◆ ЗАКРЕПЛЕНО</span>' : ''}
+          <span class="notebook-day">${note.isClue ? 'УЛИКА' : `День ${note.day || 1}`}</span>
         </div>
-        <p class="notebook-card-title">${note.title}</p>
-        <p class="notebook-card-text">${note.text.substring(0, 120)}${note.text.length > 120 ? '...' : ''}</p>
+        <p class="notebook-card-title">${escapeHtml(note.title)}</p>
+        <p class="notebook-card-text">${escapeHtml(note.text.substring(0, 180))}${note.text.length > 180 ? '…' : ''}</p>
         <div class="notebook-card-footer">
-          <span class="notebook-date">${dateStr}</span>
-          <span class="notebook-source">${note.source}</span>
+          <span class="notebook-date">${escapeHtml(dateStr)}</span>
+          <span class="notebook-source">${escapeHtml(note.source)}</span>
         </div>
-      </div>
+      </button>
     `;
   }
 
@@ -137,7 +196,7 @@ export class NotebookUI {
 
     return `
       <div class="notebook-empty">
-        <p class="notebook-empty-icon">📖</p>
+        <p class="notebook-empty-icon">✎</p>
         <p class="notebook-empty-text">${msg}</p>
       </div>
     `;
@@ -146,12 +205,25 @@ export class NotebookUI {
   _setupHandlers() {
     var self = this;
 
+    this.container.querySelector('#evidence-category')?.addEventListener('change', function() {
+      self.evidenceCategory = this.value;
+      self.render();
+    });
+    this.container.querySelector('#evidence-sort')?.addEventListener('change', function() {
+      self.evidenceSort = this.value;
+      self.render();
+    });
+
     // Поиск
     var searchInput = document.getElementById('notebook-search-input');
     if (searchInput) {
       searchInput.addEventListener('input', function() {
+        const caret = this.selectionStart;
         self.searchQuery = this.value;
         self.render();
+        const updated = self.container.querySelector('#notebook-search-input');
+        updated.focus();
+        updated.setSelectionRange(caret, caret);
       });
     }
 
@@ -167,7 +239,8 @@ export class NotebookUI {
     this.container.querySelectorAll('.notebook-card').forEach(function(card) {
       card.addEventListener('click', function() {
         var title = this.getAttribute('data-title');
-        self._showNoteDetail(title);
+        if (this.getAttribute('data-kind') === 'clue') self._showClueDetail(title);
+        else self._showNoteDetail(title);
       });
     });
 
@@ -185,6 +258,50 @@ export class NotebookUI {
         URL.revokeObjectURL(url);
       });
     }
+  }
+
+  async _showClueDetail(title, returnFocus = document.activeElement) {
+    const foundClues = Notebook.getAllClues();
+    const clue = foundClues.find(c => c.id === title || c.name === title);
+    if (!clue) return;
+    const catalog = await loadClueCatalog();
+    const links = resolveEvidenceLinks(clue, foundClues, catalog);
+    const overlay = document.createElement('div');
+    overlay.className = 'dialog-overlay';
+    overlay.innerHTML = `
+      <div class="dialog-modal cinematic-dialog notebook-evidence-detail" role="dialog" aria-modal="true" aria-label="Материалы дела">
+        <div class="dialog-content cinematic-dialog-content">
+          <p class="dialog-type-label">◇ УЛИКА · МАТЕРИАЛЫ ДЕЛА</p>
+          <h3 class="notebook-evidence-title">${escapeHtml(clue.name || '')}</h3>
+          <p class="notebook-evidence-description">${escapeHtml(clue.description || '')}</p>
+          <p class="notebook-evidence-source">${escapeHtml(clue.location || 'Источник не указан')}</p>
+          ${links.length ? `<section class="notebook-evidence-links" aria-label="Связанные материалы">
+            <p class="notebook-evidence-links-title">СВЯЗАННЫЕ МАТЕРИАЛЫ · ${links.filter(link => link.found).length}/${links.length}</p>
+            <ul>${links.map(link => `<li>${link.found
+              ? `<button type="button" class="notebook-evidence-link" data-clue-id="${escapeHtml(link.id)}"><span>◇ ${escapeHtml(link.name || 'Без названия')}</span><span>ОТКРЫТЬ →</span></button>`
+              : '<span class="notebook-evidence-locked"><span>◇ Неизвестный материал</span><span>НЕ НАЙДЕНО</span></span>'}</li>`).join('')}</ul>
+          </section>` : ''}
+          <button type="button" class="dialog-btn primary-btn close-detail">ЗАКРЫТЬ</button>
+        </div>
+      </div>`;
+    document.body.appendChild(overlay);
+    const close = (restoreFocus = true) => {
+      overlay.removeEventListener('keydown', onKeydown);
+      overlay.remove();
+      if (restoreFocus && returnFocus?.isConnected) returnFocus.focus();
+    };
+    const onKeydown = event => { if (event.key === 'Escape') close(); };
+    overlay.addEventListener('keydown', onKeydown);
+    overlay.querySelector('.close-detail').addEventListener('click', () => close());
+    overlay.addEventListener('click', event => { if (event.target === overlay) close(); });
+    overlay.querySelectorAll('[data-clue-id]').forEach(button => {
+      button.addEventListener('click', () => {
+        const relatedId = button.getAttribute('data-clue-id');
+        close(false);
+        this._showClueDetail(relatedId, returnFocus);
+      });
+    });
+    overlay.querySelector('.close-detail').focus();
   }
 
   _showNoteDetail(title) {
@@ -210,26 +327,26 @@ export class NotebookUI {
         <div class="dialog-content">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <p class="dialog-type-label">${note.category.toUpperCase()} — ДЕНЬ ${note.day}</p>
-              <h3 class="text-gold text-lg mt-1">${note.pinned ? '📌 ' : ''}${note.title}</h3>
+              <p class="dialog-type-label">${escapeHtml(note.category.toUpperCase())} — ДЕНЬ ${note.day}</p>
+              <h3 class="text-gold text-lg mt-1">${note.pinned ? '◆ ' : ''}${escapeHtml(note.title)}</h3>
             </div>
             <div class="flex gap-2">
-              <button class="notebook-action-btn btn-pin" data-title="${note.title}">
-                ${note.pinned ? '📌' : '📌'}
+              <button class="notebook-action-btn btn-pin" aria-label="Закрепить или открепить заметку">
+                ${note.pinned ? '◆' : '◇'}
               </button>
             </div>
           </div>
 
-          <p class="text-gray-400 text-sm leading-relaxed mb-4">${note.text}</p>
+          <p class="text-gray-400 text-sm leading-relaxed mb-4">${escapeHtml(note.text)}</p>
 
           <div class="text-gray-600 text-xs space-y-1 mb-4">
-            <p>📅 ${dateStr}</p>
-            <p>👤 ${note.source}</p>
+            <p>Дата: ${escapeHtml(dateStr)}</p>
+            <p>Источник: ${escapeHtml(note.source)}</p>
           </div>
 
           <div class="flex gap-2">
             <button class="dialog-btn primary-btn close-detail">ЗАКРЫТЬ</button>
-            <button class="dialog-btn leave-btn delete-note" data-title="${note.title}">🗑 УДАЛИТЬ</button>
+            <button class="dialog-btn leave-btn delete-note">УДАЛИТЬ ЗАПИСЬ</button>
           </div>
         </div>
       </div>

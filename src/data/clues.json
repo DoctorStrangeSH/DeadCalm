@@ -3,11 +3,371 @@
     "id": "autopsy_report_01",
     "name": "Отчёт о вскрытии",
     "category": "document",
-    "description": "Судья Гаррисон умер от отравления экстрактом белладонны. На теле — следы связывания и надрез в форме буквы 'К'.",
+    "description": "Судья Гаррисон умер от отравления экстрактом белладонны. По заключению Лидии, действие яда было длительным: судья мучился почти сутки. На теле — следы связывания и надрез в форме буквы 'К'.",
     "location": "morgue",
     "day": 1,
     "source": "Доктор Лидия Винтер",
-    "connections_to": ["poison_vial_info", "letter_k_mark"]
+    "connections_to": ["poison_vial_info", "letter_k_mark", "patrol_initial_report"]
+  },
+  "patrol_initial_report": {
+    "id": "patrol_initial_report",
+    "name": "Предварительный рапорт патруля",
+    "category": "document",
+    "description": "В первом рапорте утверждается, что яд вызвал мгновенную смерть сразу после попадания вещества. Рапорт составлен до вскрытия; вывод о скорости действия яда не подтверждён экспертизой.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Первичный рапорт дежурного",
+    "connections_to": ["autopsy_report_01", "court_switchboard_log"]
+  },
+  "court_switchboard_log": {
+    "id": "court_switchboard_log",
+    "name": "Выписка из журнала звонков",
+    "category": "document",
+    "description": "В день обнаружения судьи в участок поступил звонок с внутреннего коммутатора суда. Имя звонившего в журнале не указано. Выписка не позволяет установить, кто именно сообщил о смерти и на чём основывался первоначальный вывод дежурного.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Журнал входящих сообщений участка",
+    "connections_to": ["patrol_initial_report", "court_phone_register_copy"]
+  },
+  "court_phone_register_copy": {
+    "id": "court_phone_register_copy",
+    "name": "Заверенная копия книги соединений суда",
+    "category": "document",
+    "description": "В книге служебных вызовов суда отмечено соединение с внутреннего номера 17 во время звонка дежурному участка. Рядом карандашная буква «К», но нет ни подписи, ни имени абонента. Совпадение времени связывает записи, а пометка не доказывает личность звонившего.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Заверенная копия регистрационной книги суда",
+    "connections_to": ["court_switchboard_log", "court_extension_directory", "court_access_ledger"]
+  },
+  "court_extension_directory": {
+    "id": "court_extension_directory",
+    "name": "Список внутренних номеров суда",
+    "category": "document",
+    "description": "В справочнике суда внутренний номер 17 закреплён не за конкретным человеком, а за общей комнатой судебных секретарей. Телефоном пользовались разные сотрудники; по одному номеру нельзя назвать звонящего.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Служебный телефонный справочник",
+    "connections_to": ["court_phone_register_copy", "court_access_ledger"]
+  },
+  "court_access_ledger": {
+    "id": "court_access_ledger",
+    "name": "Журнал выдачи ключей от комнаты секретарей",
+    "category": "document",
+    "description": "На странице за день убийства дежурный отметил, что ключ от комнаты секретарей с телефоном 17 был возвращён в 19:40, после чего доступ закрыли до 22:00. При этом регистрационная книга фиксирует исходящий звонок с номера 17 в 20:15. Запись о ключе может быть неполной; причина расхождения неизвестна.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Журнал ключей судебной охраны",
+    "connections_to": ["court_extension_directory", "court_phone_register_copy", "guard_key_testimony", "spare_key_inventory"]
+  },
+  "guard_key_testimony": {
+    "id": "guard_key_testimony",
+    "name": "Показания ночного охранника",
+    "category": "testimony",
+    "description": "Охранник Виктор Белл утверждает, что после 19:40 никто не получал ключ от комнаты секретарей. По его словам, в смене был только один действующий ключ, запасного не существовало. Он не видел, чтобы кто-либо входил в коридор с 20:00 до 20:30, но сам покидал пост ради обхода.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Виктор Белл, охрана суда",
+    "connections_to": ["court_access_ledger", "spare_key_inventory"]
+  },
+  "spare_key_inventory": {
+    "id": "spare_key_inventory",
+    "name": "Опись резервных ключей суда",
+    "category": "document",
+    "description": "В описи хозяйственной службы значится резервный ключ от комнаты секретарей, зарегистрированный за неделю до убийства. В день звонка ключ числится в опечатанном шкафу, однако отметка о проверке пломбы отсутствует. Это опровергает утверждение, что запасного ключа не существовало, но не доказывает его использование.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Хозяйственная служба суда",
+    "connections_to": ["guard_key_testimony", "court_access_ledger"]
+  },
+  "guard_round_sheet": {
+    "id": "guard_round_sheet",
+    "name": "Маршрутный лист ночной охраны",
+    "category": "document",
+    "description": "В подписанном маршрутном листе Белла указан обход западной лестницы с 20:05 до 20:25. В 20:15, когда с телефона № 17 звонили в участок, охранник не находился у коридора секретарей. Лист подтверждает запланированный обход, но не позволяет установить, кто вошёл в комнату.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Журнал служебных обходов охраны",
+    "connections_to": ["guard_key_testimony", "court_phone_register_copy", "court_access_ledger", "court_visitor_log"]
+  },
+  "court_visitor_log": {
+    "id": "court_visitor_log",
+    "name": "Журнал посетителей суда",
+    "category": "document",
+    "description": "В журнале служебных пропусков после 19:30 есть строка: 20:08, пропуск № 041, допуск в коридор секретарей. Поле с именем получателя затёрто, подпись о возврате отсутствует. Запись не удостоверяет личность посетителя и могла быть внесена позже.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Пост контроля доступа суда",
+    "connections_to": ["guard_round_sheet", "secretary_access_testimony"]
+  },
+  "secretary_access_testimony": {
+    "id": "secretary_access_testimony",
+    "name": "Показания секретаря Елены Савельевой",
+    "category": "testimony",
+    "description": "Секретарь Елена Савельева говорит, что после 19:30 новые служебные пропуска никому не выдавались. По её словам, последний сотрудник сдал пропуск в 19:25. Сама Савельева ушла до восьми и не проверяла книгу ночного поста лично.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Елена Савельева, судебный секретарь",
+    "connections_to": ["court_visitor_log", "court_extension_directory", "secretary_source_statement"]
+  },
+  "secretary_source_statement": {
+    "id": "secretary_source_statement",
+    "name": "Уточнение источника показаний Савельевой",
+    "category": "testimony",
+    "description": "Елена Савельева признаёт, что не присутствовала на посту после 20:00. О закрытом коридоре ей по телефону рассказал старший делопроизводитель Павел Орлов, который, в свою очередь, сослался на слова охранника Белла. Это зависимая цепочка пересказов, а не новое независимое наблюдение.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Повторные показания Елены Савельевой",
+    "connections_to": ["secretary_access_testimony", "guard_key_testimony", "orlov_evening_statement"]
+  },
+  "pass_041_counterfoil": {
+    "id": "pass_041_counterfoil",
+    "name": "Отрывной корешок пропуска № 041",
+    "category": "document",
+    "description": "В пронумерованной книге выдачи найден корешок пропуска № 041 со штампом 20:08 и отметкой «коридор секретарей». Имя получателя и здесь не внесено. Корешок подтверждает оформление пропуска в журнале, но не личность предъявителя и не время фактического прохода.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Корешковая книга поста охраны суда",
+    "connections_to": ["court_visitor_log", "secretary_source_statement", "orlov_badge_scan"]
+  },
+  "orlov_evening_statement": {
+    "id": "orlov_evening_statement",
+    "name": "Показания Павла Орлова о вечернем звонке",
+    "category": "testimony",
+    "description": "Павел Орлов говорит, что покинул суд в 19:45 и позвонил Савельевой из дома около 20:40. Сообщение о закрытом коридоре, по его словам, он узнал от охранника Белла. Орлов отрицает, что после ухода возвращался в здание.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Павел Орлов, старший делопроизводитель",
+    "connections_to": ["secretary_source_statement", "orlov_badge_scan"]
+  },
+  "orlov_badge_scan": {
+    "id": "orlov_badge_scan",
+    "name": "Выписка проходов служебной карточки Орлова",
+    "category": "document",
+    "description": "Контроллер служебного входа зафиксировал карточку, закреплённую за Павлом Орловым, при входе в 20:02 и выходе в 20:47. Запись противоречит его утверждению, что он ушёл в 19:45 и не возвращался. Но контроллер считывает карточку, а не личность владельца; использование её другим человеком не исключено.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Система служебных пропусков суда",
+    "connections_to": ["orlov_evening_statement", "pass_041_counterfoil", "orlov_badge_handover"]
+  },
+  "orlov_badge_handover": {
+    "id": "orlov_badge_handover",
+    "name": "Ведомость временной передачи карточки Орлова",
+    "category": "document",
+    "description": "В канцелярской ведомости в 19:50 отмечена передача служебной карточки Орлова на проверку считывателя. В графе получателя стоят инициалы «Н. К.» без разборчивой фамилии; подпись Орлова присутствует. Документ даёт возможное объяснение поздним проходам карточки, но не удостоверяет, кто использовал её в 20:02 и 20:47, и не связывает её с гостевым пропуском № 041.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Журнал передачи служебных карточек",
+    "connections_to": ["orlov_badge_scan", "orlov_evening_statement", "court_nk_staff_index", "reader_service_ticket"]
+  },
+  "court_nk_staff_index": {
+    "id": "court_nk_staff_index",
+    "name": "Список сотрудников с инициалами «Н. К.»",
+    "category": "document",
+    "description": "Кадровая картотека суда содержит как минимум двух сотрудников с инициалами «Н. К.»: Николай Климов, техник хозяйственной службы, и Надежда Костина, архивист. Оба имели разрешённый доступ в административное крыло. По инициалам нельзя установить получателя карточки Орлова.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Кадровый указатель суда",
+    "connections_to": ["orlov_badge_handover", "reader_service_ticket", "reader_maintenance_access_log"]
+  },
+  "reader_service_ticket": {
+    "id": "reader_service_ticket",
+    "name": "Наряд на проверку считывателя",
+    "category": "document",
+    "description": "В журнале хозяйственной службы есть наряд на проверку служебного считывателя с 19:55 до 20:30. Исполнителем назначен техник Николай Климов. Наряд объясняет, зачем сотруднику могли передать карточку для теста, но сам по себе не подтверждает фактическую явку Климова, использование карточки или связь с пропуском № 041.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Журнал ремонтных работ суда",
+    "connections_to": ["orlov_badge_handover", "court_nk_staff_index", "reader_maintenance_access_log", "reader_service_signoff"]
+  },
+  "reader_maintenance_access_log": {
+    "id": "reader_maintenance_access_log",
+    "name": "Журнал доступа в техническое помещение",
+    "category": "document",
+    "description": "В журнале технического помещения нет именной записи о входе Николая Климова. В 20:06 отмечен проход по универсальному ключу без указания посетителя. Журнал вёлся вручную: отсутствие фамилии не доказывает отсутствие Климова, а запись о ключе не позволяет установить, кто вошёл.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Бумажный журнал технического помещения суда",
+    "connections_to": ["reader_service_ticket", "reader_service_signoff", "court_nk_staff_index", "klimov_evening_account"]
+  },
+  "reader_service_signoff": {
+    "id": "reader_service_signoff",
+    "name": "Акт закрытия наряда на ремонт считывателя",
+    "category": "document",
+    "description": "Наряд на проверку считывателя закрыт в 20:52 пометкой «проверен». Подпись исполнителя неразборчива; графа подтверждения руководителя пуста. Завершение оформлено после плановых работ 19:55–20:30 и записи о выходе карточки Орлова в 20:47. Это требует объяснения задержки, но не доказывает, кто подписал акт или кто использовал карточку и пропуск № 041.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Акт приёмки работ хозяйственной службы",
+    "connections_to": ["reader_service_ticket", "reader_maintenance_access_log", "orlov_badge_scan", "klimov_evening_account", "kostina_evening_account"]
+  },
+  "klimov_evening_account": {
+    "id": "klimov_evening_account",
+    "name": "Показания Николая Климова о ремонте",
+    "category": "testimony",
+    "description": "Николай Климов утверждает, что видел заявку на проверку считывателя, не брал универсальный ключ и около 20:25 передал инструмент дежурному перед уходом. Он отрицает, что подписывал акт, закрытый в 20:52. Его слова не подтверждают, кто воспользовался ключом в 20:06; передачу инструмента и подпись ещё нужно проверять независимо.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Личный опрос Николая Климова",
+    "connections_to": ["reader_service_ticket", "reader_maintenance_access_log", "reader_service_signoff", "maintenance_tool_issue_ledger"]
+  },
+  "kostina_evening_account": {
+    "id": "kostina_evening_account",
+    "name": "Показания Надежды Костиной о вечернем дежурстве",
+    "category": "testimony",
+    "description": "Надежда Костина заявляет, что после 20:00 работала в архиве, а около 20:50 слышала шаги у хозяйственной канцелярии, не видя человека. Получение карточки Орлова она отрицает. Слышанные шаги не позволяют установить личность, а её присутствие в архиве пока подтверждено только собственными словами.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Личный опрос Надежды Костиной",
+    "connections_to": ["court_nk_staff_index", "orlov_badge_handover", "reader_service_signoff", "archive_room_register"]
+  },
+  "maintenance_tool_issue_ledger": {
+    "id": "maintenance_tool_issue_ledger",
+    "name": "Журнал выдачи универсального ключа",
+    "category": "document",
+    "description": "В 20:03 универсальный ключ оформлен на табельный номер Николая Климова; возврат записан в 20:56, подпись получателя неразборчива. Климов утверждает, что ключ не брал. Документ расходится с его словами об оформлении ключа, но не позволяет установить, кто фактически забрал и вернул ключ.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Книга выдачи ключей и инструмента хозяйственной службы",
+    "connections_to": ["klimov_evening_account", "reader_maintenance_access_log", "reader_service_signoff", "key_issue_clerk_note"]
+  },
+  "key_issue_clerk_note": {
+    "id": "key_issue_clerk_note",
+    "name": "Объяснение сменного кладовщика",
+    "category": "document",
+    "description": "Сменный кладовщик поясняет в подписанной служебной записке: около 20:00 на столе выдачи оставили листок с табельным номером Климова для оформления универсального ключа. Кладовщик перенёс номер в журнал, но не видел, кто затем забрал ключ. Записка объясняет происхождение номера, не подтверждая личность получателя и не устанавливая связь со служебной карточкой Орлова или пропуском № 041.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Служебная записка сменного кладовщика хозяйственной службы",
+    "connections_to": ["maintenance_tool_issue_ledger", "klimov_evening_account", "key_note_paper_trace", "supply_desk_shift_register"]
+  },
+  "key_note_paper_trace": {
+    "id": "key_note_paper_trace",
+    "name": "След от отрывного листка с табельным номером",
+    "category": "document",
+    "description": "Сохранённый листок с номером Климова по структуре бумаги и отрывному краю соответствует общему блокноту заявок у хозяйственной стойки. На следующем листе сохранился продавленный номер, но почерк не идентифицирован. Блокнотом пользовались несколько сотрудников — бумага указывает на источник листка, а не на автора.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Бумажный архив хозяйственной службы и общий блокнот заявок",
+    "connections_to": ["key_issue_clerk_note", "supply_desk_shift_register", "key_note_impression_report"]
+  },
+  "supply_desk_shift_register": {
+    "id": "supply_desk_shift_register",
+    "name": "Журнал дежурств у хозяйственной стойки",
+    "category": "document",
+    "description": "Сменный кладовщик отметил отсутствие у стойки с 19:56 до 20:04. Общий стол заявок оставался доступен и не был под поимённым контролем. Это создаёт окно, когда кто-то мог оставить листок с чужим табельным номером, но журнал не устанавливает, кто заходил и кто получил ключ.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Книга дежурств хозяйственной службы",
+    "connections_to": ["key_issue_clerk_note", "key_note_paper_trace", "maintenance_tool_issue_ledger", "supply_counter_access_roster"]
+  },
+  "supply_counter_access_roster": {
+    "id": "supply_counter_access_roster",
+    "name": "Список допущенных к хозяйственной стойке",
+    "category": "document",
+    "description": "К хозяйственному столу без сопровождения могли проходить сотрудники канцелярии, архивариус Надежда Костина, техник Николай Климов и сменный курьер. В списке указан допуск, а не время реального визита; он не устанавливает, кто находился возле стойки с 19:56 до 20:04 и оставил записку.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Пропускной список хозяйственной службы",
+    "connections_to": ["supply_desk_shift_register", "court_nk_staff_index", "key_note_impression_report"]
+  },
+  "key_note_impression_report": {
+    "id": "key_note_impression_report",
+    "name": "Исследование вдавленных надписей блокнота",
+    "category": "document",
+    "description": "При боковом свете на соседнем листе общего блокнота рядом с табельным номером Климова различима помета «17 / вечер». В справочнике суда номер 17 относится к общей комнате секретарей, но помета не содержит указания на телефон или звонок. Совпадение числа ещё не доказывает, что обе записи связаны или что их сделал один человек.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Протокол осмотра бумаги хозяйственной службы",
+    "connections_to": ["key_note_paper_trace", "court_extension_directory", "supply_counter_access_roster", "supply_evening_request_codes", "switchboard_call_detail"]
+  },
+  "supply_evening_request_codes": {
+    "id": "supply_evening_request_codes",
+    "name": "Обозначения вечерних заявок хозяйственной службы",
+    "category": "document",
+    "description": "В журнале хозяйственных заявок повторяется запись «17 / вечер»: это также обозначение вечернего набора № 17 для проверки оборудования. Такая помета могла относиться к инструментам, а не к внутреннему телефону 17. Совпадение объясняет возможное происхождение текста, но не устанавливает, кто написал листок и зачем был запрошен ключ.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Книга заявок хозяйственной службы",
+    "connections_to": ["key_note_impression_report", "reader_service_ticket", "switchboard_call_detail", "kit_seventeen_loan_log", "kit_seventeen_service_checklist"]
+  },
+  "kit_seventeen_loan_log": {
+    "id": "kit_seventeen_loan_log",
+    "name": "Выдача и возврат вечернего набора № 17",
+    "category": "document",
+    "description": "Набор инструментов № 17 выдан по вечерней ремонтной заявке в 19:58 и возвращён в 20:58. В графе получателя указана «дежурная бригада» без фамилии. Журнал подтверждает движение набора, но не личность получателя, использование универсального ключа или связь с телефонным звонком в 20:15.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Журнал учёта инструментальных наборов",
+    "connections_to": ["supply_evening_request_codes", "kit_seventeen_service_checklist", "maintenance_tool_issue_ledger", "reader_reconstructed_timeline"]
+  },
+  "kit_seventeen_service_checklist": {
+    "id": "kit_seventeen_service_checklist",
+    "name": "Контрольный лист набора № 17",
+    "category": "document",
+    "description": "В контрольном листе набора № 17 значится проверка считывателя служебного входа; напротив 20:31 стоит отметка «тест выполнен». Поле исполнителя не заполнено. Запись связывает набор с назначенным ремонтом, но не устанавливает, кто работал у считывателя, и не объясняет позднее закрытие акта в 20:52.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Контрольный лист хозяйственной службы",
+    "connections_to": ["supply_evening_request_codes", "kit_seventeen_loan_log", "reader_service_signoff", "reader_reconstructed_timeline"]
+  },
+  "reader_reconstructed_timeline": {
+    "id": "reader_reconstructed_timeline",
+    "name": "Сводная хронология вечернего ремонта",
+    "category": "information",
+    "description": "Сводка следствия объединяет отметки: 19:58 — выдача набора № 17; 20:02 — вход по карточке Орлова; 20:03 — оформление универсального ключа; 20:31 — отметка о проверке считывателя; 20:47 — выход по карточке; 20:52 — закрытие акта; 20:56 — возврат ключа; 20:58 — возврат набора. Хронология упорядочивает независимые записи, но не доказывает, что все действия совершил один человек или что гостевой пропуск № 041 использовал тот же человек.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Аналитическая сводка следствия по пяти документам",
+    "connections_to": ["kit_seventeen_loan_log", "maintenance_tool_issue_ledger", "orlov_badge_scan", "kit_seventeen_service_checklist", "reader_service_signoff", "key_signature_comparison", "reader_test_diagnostic", "reader_archive_crosscheck"]
+  },
+  "reader_archive_crosscheck": {
+    "id": "reader_archive_crosscheck",
+    "name": "Заверенная сверка вечерней ремонтной заявки",
+    "category": "document",
+    "description": "Архивная сверка сопоставляет заявку на вечернюю проверку считывателя, контрольный лист 20:31 и закрытие акта в 20:52. В сводной графе стоит номер заявки и помета «бригада», но отсутствует персональная расписка исполнителя. Сверка подтверждает общую цепочку документов, не личность техника и не связь с телефонным звонком с номера 17.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Заверенная копия архивной сверки хозяйственной службы",
+    "connections_to": ["reader_reconstructed_timeline", "kit_seventeen_service_checklist", "reader_service_signoff", "kit_seventeen_loan_log"]
+  },
+  "key_signature_comparison": {
+    "id": "key_signature_comparison",
+    "name": "Сопоставление подписей из журнала ключей",
+    "category": "document",
+    "description": "Архивные образцы подписей Климова и Костиной сопоставлены с размытыми росчерками выдачи и возврата универсального ключа. Эксперт не смог подтвердить совпадение ни с одним образцом. Факт регистрации движения ключа сохраняется; личность получателя и возвращавшего остаётся неустановленной.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Заключение о сопоставлении архивных подписей",
+    "connections_to": ["maintenance_tool_issue_ledger", "reader_reconstructed_timeline", "klimov_evening_account", "kostina_evening_account"]
+  },
+  "reader_test_diagnostic": {
+    "id": "reader_test_diagnostic",
+    "name": "Диагностическая распечатка считывателя",
+    "category": "document",
+    "description": "Распечатка контроллера фиксирует запуск и завершение тестового цикла в 20:31, но не хранит имя сотрудника, инициировавшего проверку. Запись подтверждает работу оборудования, но не указывает исполнителя, не подтверждает подпись в акте на 20:52 и не позволяет отождествить его с предъявителем карточки Орлова.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Технический архив контроллера служебного входа",
+    "connections_to": ["kit_seventeen_service_checklist", "reader_service_signoff", "reader_reconstructed_timeline"]
+  },
+  "switchboard_call_detail": {
+    "id": "switchboard_call_detail",
+    "name": "Детализация вечернего звонка с номера 17",
+    "category": "document",
+    "description": "Коммутатор подтверждает исходящий вызов с внутреннего номера 17 в участок в 20:15, но в детализации нет имени говорившего и номера хозяйственной заявки. Помета «17 / вечер» на отдельном листке не сопровождается телефонным обозначением: общего числа недостаточно для доказательства связи двух записей.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Выписка коммутатора суда",
+    "connections_to": ["court_phone_register_copy", "court_extension_directory", "key_note_impression_report", "supply_evening_request_codes"]
+  },
+  "archive_room_register": {
+    "id": "archive_room_register",
+    "name": "Книга вечерних отметок архива",
+    "category": "document",
+    "description": "В архивной книге есть записи с инициалами Надежды Костиной в 20:12 и 20:44. Книга заполняется вручную и не фиксирует входы и выходы непрерывно. Записи частично согласуются с её словами, но не доказывают, что она находилась в архиве всё это время или лично внесла обе отметки.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Журнал архива суда",
+    "connections_to": ["kostina_evening_account", "court_nk_staff_index"]
   },
   "poison_vial_info": {
     "id": "poison_vial_info",
@@ -48,6 +408,136 @@
     "day": 1,
     "source": "Детектив Рэй Морган",
     "connections_to": ["kalliopa_name", "suspect_list_01"]
+  },
+  "old_case_closure_register": {
+    "id": "old_case_closure_register",
+    "name": "Выписка из книги закрытых дел",
+    "category": "document",
+    "description": "В регистрационной книге дело Каллиопы отмечено закрытым на третий день после обнаружения тела. Основание указано как «несчастный случай». Эта запись подтверждает срок и формулировку решения, но не его обоснованность.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Заверенная выписка из архивного реестра участка",
+    "connections_to": ["old_case_details"]
+  },
+  "old_case_archive_inventory": {
+    "id": "old_case_archive_inventory",
+    "name": "Опись архивной папки Каллиопы",
+    "category": "document",
+    "description": "Сохранившаяся опись перечисляет протокол осмотра, решение о закрытии и регистрационный лист. Сведений о результатах дополнительных экспертиз в описи нет; это не доказывает, что экспертизы не проводились.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Опись архивной папки, представленная канцелярией",
+    "connections_to": ["old_case_closure_register"]
+  },
+  "old_case_original_order": {
+    "id": "old_case_original_order",
+    "name": "Копия постановления по делу Каллиопы",
+    "category": "document",
+    "description": "Копия постановления на третий день содержит формулировку «несчастный случай» и пометку «и. о. руководителя следственной группы». Подпись на копии неразборчива; без оригинала её нельзя надёжно атрибутировать.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Архивная копия постановления, заверенная канцелярией",
+    "connections_to": ["old_case_closure_register", "old_case_authority_roster"]
+  },
+  "old_case_authority_roster": {
+    "id": "old_case_authority_roster",
+    "name": "Журнал временного исполнения обязанностей",
+    "category": "document",
+    "description": "Журнал подтверждает, что в период закрытия дела полномочия руководителя следственной группы временно передавались дежурному сотруднику. Имя в сохранившейся копии записи повреждено; подтвердить автора подписи нельзя.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Архивный журнал назначений следственной группы",
+    "connections_to": ["old_case_original_order"]
+  },
+  "old_case_order_physical_original": {
+    "id": "old_case_order_physical_original",
+    "name": "Оригинал постановления Каллиопы",
+    "category": "document",
+    "description": "Архив выдал подлинный лист постановления. В области подписи бумага повреждена водой: часть штрихов отсутствует, имя подписавшего не читается. Наличие оригинала не устраняет эту утрату.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Оригинал из архивного фонда участка, выданный по описи",
+    "connections_to": ["old_case_original_order", "old_case_signature_samples"]
+  },
+  "old_case_signature_samples": {
+    "id": "old_case_signature_samples",
+    "name": "Контрольные образцы служебных подписей",
+    "category": "document",
+    "description": "Служебные приказы того периода содержат проверяемые подписи нескольких уполномоченных сотрудников. Они пригодны как независимые образцы, но исходный росчерк на постановлении сохранился лишь частично.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Подборка подписанных приказов из фонда кадровой службы",
+    "connections_to": ["old_case_order_physical_original"]
+  },
+  "old_case_specialist_memo": {
+    "id": "old_case_specialist_memo",
+    "name": "Заключение о пригодности росчерка",
+    "category": "document",
+    "description": "Специалист фиксирует разрыв штрихов в зоне повреждения оригинала. Сохранившихся признаков недостаточно для отождествления или исключения автора. Экспертиза подлинности подписи не проводилась.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Служебная записка специалиста-криминалиста",
+    "connections_to": ["old_case_order_physical_original"]
+  },
+  "old_case_custody_extract": {
+    "id": "old_case_custody_extract",
+    "name": "Выписка о движении архивной папки",
+    "category": "document",
+    "description": "Архивный журнал отмечает приём папки через год после закрытия дела и последующую выдачу на инвентаризацию. Состояние подписи при приёме не описано, поэтому время и причина повреждения неизвестны.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Заверенная выписка из журнала движения архивных фондов",
+    "connections_to": ["old_case_order_physical_original"]
+  },
+  "old_case_transfer_card": {
+    "id": "old_case_transfer_card",
+    "name": "Карточка первичной передачи дела Каллиопы",
+    "category": "document",
+    "description": "Карточка фиксирует передачу закрытой папки из следственной группы в канцелярию на следующий рабочий день. В графе отправителя указано подразделение, а не имя; это не устанавливает автора постановления.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Архивный реестр первичной передачи дел",
+    "connections_to": ["old_case_custody_extract", "old_case_original_order"]
+  },
+  "old_case_clerk_statement": {
+    "id": "old_case_clerk_statement",
+    "name": "Архивное объяснение делопроизводителя",
+    "category": "document",
+    "description": "Делопроизводитель вспоминает, как на следующий рабочий день после закрытия дела принял запечатанную папку у стойки канцелярии. Лица передавшего не помнит, содержимого папки не видел. Непосредственное наблюдение касается только факта приёма.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Запись опроса делопроизводителя из архивного дела Каллиопы",
+    "connections_to": ["old_case_transfer_card"]
+  },
+  "old_case_dock_statement": {
+    "id": "old_case_dock_statement",
+    "name": "Архивный опрос портового сторожа",
+    "category": "document",
+    "description": "Сторож утверждал, что судья приезжал в порт, но уточнил: сам его не видел, об этом сказал другой работник после смены. Имя первоисточника и дата предполагаемого визита не записаны. Показание не является независимым подтверждением визита.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Запись опроса портового сторожа из архивного дела Каллиопы",
+    "connections_to": ["old_case_details"]
+  },
+  "old_case_port_visitor_log": {
+    "id": "old_case_port_visitor_log",
+    "name": "Фрагмент журнала въезда в старый порт",
+    "category": "document",
+    "description": "Сохранившийся лист журнала отмечает въезд служебного транспорта в период расследования смерти Каллиопы. Имя посетителя залито чернилами, номер машины утрачен. Запись не устанавливает, был ли это судья, и не подтверждает пересказ портового сторожа о конкретном лице.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Заверенный фрагмент старого журнала пропускного пункта порта",
+    "connections_to": ["old_case_dock_statement", "old_case_details"]
+  },
+  "old_case_port_waybill": {
+    "id": "old_case_port_waybill",
+    "name": "Путевой лист портового района",
+    "category": "document",
+    "description": "Служебный рейс отмечен в тот же день, что и запись журнала въезда. В графе маршрута написано «портовый район», но номер автомобиля и имя пассажира не сохранились. Считать эти две записи одним визитом без независимого идентификатора нельзя.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Заверенная копия путевого листа транспортного отдела",
+    "connections_to": ["old_case_port_visitor_log"]
   },
   "judge_notes": {
     "id": "judge_notes",

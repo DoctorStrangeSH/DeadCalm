@@ -1,5 +1,6 @@
 import { Events } from './events.js';
 import { Storage } from './storage.js';
+import { createHypothesis, reviseHypothesis } from '../systems/hypotheses.js';
 
 export var GameState = {
   player: {
@@ -82,12 +83,37 @@ export var GameState = {
       name: clue.name,
       category: clue.category,
       description: clue.description,
+      source: clue.source || null,
       location: clue.location,
       day: clue.day,
+      connections_to: Array.isArray(clue.connections_to) ? [...clue.connections_to] : [],
       foundAt: new Date().toISOString()
     });
     Events.emit('clue:added', clue);
     this.save();
+  },
+
+  addHypothesis(input) {
+    if (!Array.isArray(this.currentCase.hypotheses)) this.currentCase.hypotheses = [];
+    const hypothesis = createHypothesis({ ...input,
+      id: 'hyp_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8)
+    }, this.currentCase.clues);
+    this.currentCase.hypotheses.push(hypothesis);
+    this.save();
+    Events.emit('hypothesis:created', hypothesis);
+    return hypothesis;
+  },
+
+  reviseHypothesis(id, change) {
+    const hypotheses = this.currentCase.hypotheses || [];
+    const index = hypotheses.findIndex(item => item.id === id);
+    if (index === -1) return null;
+    const revised = reviseHypothesis(hypotheses[index], change, this.currentCase.clues);
+    if (revised === hypotheses[index]) return revised;
+    hypotheses[index] = revised;
+    this.save();
+    Events.emit('hypothesis:revised', revised);
+    return revised;
   },
 
   hasClue(clueId) {
@@ -96,6 +122,21 @@ export var GameState = {
 
   getClue(clueId) {
     return this.currentCase.clues.find(function(c) { return c.id === clueId; }) || null;
+  },
+
+  // Older saves omitted the source field even when it existed in the authored catalog.
+  restoreClueSources(catalog = {}) {
+    if (!this.currentCase || !Array.isArray(this.currentCase.clues)) return 0;
+    let restored = 0;
+    for (const clue of this.currentCase.clues) {
+      if (!clue || clue.source || typeof clue.id !== 'string') continue;
+      const source = Object.hasOwn(catalog, clue.id) ? catalog[clue.id]?.source : null;
+      if (typeof source !== 'string' || !source.trim()) continue;
+      clue.source = source;
+      restored++;
+    }
+    if (restored) this.save();
+    return restored;
   },
 
   updateRelationship(npcId, delta) {

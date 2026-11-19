@@ -45,6 +45,10 @@ export var Notebook = {
     return GameState.notebook || [];
   },
 
+  getAllClues() {
+    return GameState.currentCase?.clues || [];
+  },
+
   /**
    * Получить заметки по категории
    */

@@ -1,24 +1,109 @@
-const CACHE_NAME = 'dead-calm-v1';
+const CACHE_NAME = 'dead-calm-visual-v85';
 const ASSETS = [
   '/',
   '/index.html',
   '/src/css/main.css',
   '/src/css/animations.css',
+  '/src/css/art-direction.css',
   '/src/js/core/app.js',
   '/src/js/core/events.js',
   '/src/js/core/state.js',
   '/src/js/core/router.js',
   '/src/js/core/storage.js',
   '/src/js/core/audio.js',
+  '/src/js/systems/dialogue-reactions.js',
+  '/src/js/systems/dialogue.js',
+  '/src/js/systems/npc-memory.js',
+  '/src/js/systems/npc-dossiers.js',
+  '/src/js/systems/witness-interview-history.js',
+  '/src/js/systems/evidence-archive.js',
+  '/src/js/systems/hypotheses.js',
+  '/src/js/systems/contradictions.js',
+  '/src/js/systems/court-guard.js',
+  '/src/js/systems/witness-provenance.js',
+  '/src/js/systems/court-workflow.js',
+  '/src/js/systems/reader-timeline.js',
+  '/src/js/systems/reader-theories.js',
+  '/src/js/systems/investigation-quality.js',
+  '/src/js/systems/investigation-gaps.js',
+  '/src/js/systems/episode-conclusion.js',
+  '/src/js/systems/conclusion-review.js',
+  '/src/js/systems/review-directives.js',
+  '/src/js/systems/old-case-crosscheck.js',
+  '/src/js/systems/old-case-closure.js',
+  '/src/js/systems/old-case-order.js',
+  '/src/js/systems/old-case-signature.js',
+  '/src/js/systems/old-case-follow-up.js',
+  '/src/js/systems/old-case-morgan.js',
+  '/src/js/systems/old-case-morgan-revisit.js',
+  '/src/js/systems/old-case-source-audit.js',
+  '/src/js/systems/old-case-witnesses.js',
+  '/src/js/systems/old-case-witness-follow-up.js',
+  '/src/js/systems/old-case-discrepancy.js',
+  '/src/js/systems/old-case-port-log.js',
+  '/src/js/systems/old-case-navigation.js',
+  '/src/js/systems/old-case-board-digest.js',
+  '/src/js/systems/investigation.js',
+  '/src/js/components/investigation-board.js',
   '/src/js/utils/helpers.js',
   '/src/js/scenes/main-menu.js',
   '/src/js/scenes/office.js',
+  '/src/js/scenes/city-map.js',
+  '/src/js/components/map.js',
+  '/src/js/scenes/crime-scene.js',
+  '/src/js/scenes/police-station.js',
+  '/src/js/scenes/morgue.js',
+  '/src/js/scenes/bar.js',
+  '/src/assets/backgrounds/blackford-harbor.webp',
+  '/src/assets/backgrounds/holt-office.webp',
+  '/src/assets/backgrounds/blackford-city-atlas.webp',
+  '/src/assets/backgrounds/blackford-courtroom.webp',
+  '/src/assets/backgrounds/blackford-precinct.webp',
+  '/src/assets/backgrounds/blackford-morgue.webp',
+  '/src/assets/backgrounds/blackford-rusty-anchor.webp',
+  '/src/assets/portraits/lydia-winter.webp',
+  '/src/assets/portraits/lydia-winter-tension.webp',
+  '/src/assets/portraits/lydia-winter-warmth.webp',
+  '/src/assets/portraits/lydia-winter-withdrawal.webp',
+  '/src/assets/portraits/ray-morgan.webp',
+  '/src/assets/portraits/ray-morgan-tension.webp',
+  '/src/assets/portraits/ray-morgan-warmth.webp',
+  '/src/assets/portraits/ray-morgan-withdrawal.webp',
+  '/src/assets/portraits/anna-holt.webp',
+  '/src/assets/portraits/anna-holt-tension.webp',
+  '/src/assets/portraits/anna-holt-warmth.webp',
+  '/src/assets/portraits/anna-holt-withdrawal.webp',
+  '/src/assets/portraits/marta-hayes.webp',
+  '/src/assets/portraits/marta-hayes-tension.webp',
+  '/src/assets/portraits/marta-hayes-warmth.webp',
+  '/src/assets/portraits/marta-hayes-withdrawal.webp',
+  '/src/assets/portraits/father-thomas.webp',
+  '/src/assets/portraits/father-thomas-tension.webp',
+  '/src/assets/portraits/father-thomas-warmth.webp',
+  '/src/assets/portraits/father-thomas-withdrawal.webp',
+  '/src/assets/portraits/sebastian-blackwood.webp',
+  '/src/assets/portraits/sebastian-blackwood-tension.webp',
+  '/src/assets/portraits/sebastian-blackwood-warmth.webp',
+  '/src/assets/portraits/sebastian-blackwood-withdrawal.webp',
+  '/src/data/locations.json',
+  '/src/data/dialogues.json',
+  '/src/data/clues.json',
+  '/src/data/contradictions.json',
   '/src/data/game.json'
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS)).then(() => self.skipWaiting())
+  );
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then(keys => Promise.all(
+      keys.filter(key => key.startsWith('dead-calm-') && key !== CACHE_NAME)
+        .map(key => caches.delete(key))
+    )).then(() => self.clients.claim())
   );
 });
 

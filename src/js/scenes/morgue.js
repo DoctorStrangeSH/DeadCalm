@@ -1,7 +1,5 @@
 import { Events } from '../core/events.js';
-import { DialogueEngine } from '../systems/dialogue.js';
 import { DialogBox } from '../components/dialog-box.js';
-import { GameState } from '../core/state.js';
 
 /**
  * Сцена: Морг Блэкфорда.
@@ -9,7 +7,7 @@ import { GameState } from '../core/state.js';
  */
 export function render(container) {
   container.innerHTML = `
-    <div class="scene">
+    <div class="scene morgue-scene">
       <!-- Шапка -->
       <div class="scene-header mb-4">
         <div>
@@ -23,19 +21,23 @@ export function render(container) {
 
       <div class="divider mb-4 md:mb-6"></div>
 
+      <div class="morgue-art" role="img" aria-label="Ночной морг: кафель, металлические столы, медицинские документы и тело под простынёй">
+        <div class="morgue-art-caption"><span>ГОРОДСКАЯ БОЛЬНИЦА · 03:47</span><strong>Тишина подвала</strong></div>
+      </div>
+
       <!-- Описание локации -->
-      <p class="text-gray-500 text-sm mb-6 italic">
-        Холодный воздух пахнет формалином и чем-то сладким. Под лампами дневного света — три стола. 
-        На одном из них — тело судьи, прикрытое простынёй. 
+      <p class="morgue-description mb-6">
+        Холодный воздух пахнет формалином и чем-то сладким. Под лампами дневного света — три стола.
+        На одном из них — тело судьи, прикрытое простынёй.
         Доктор Лидия Винтер стоит у раковины, молча моет инструменты.
       </p>
 
       <!-- Контейнер для диалога -->
-      <div id="dialog-container" class="flex-1"></div>
+      <div id="dialog-container" class="hidden" aria-live="polite"></div>
 
       <!-- Кнопка начала разговора (если диалог не активен) -->
-      <button id="btn-start-talk" class="btn-noir mt-4">
-        ЗАГОВОРИТЬ С ДОКТОРОМ ВИНТЕР
+      <button id="btn-start-talk" class="morgue-action mt-4">
+        <span>ЗАГОВОРИТЬ С ДОКТОРОМ ВИНТЕР</span><span aria-hidden="true">↗</span>
       </button>
     </div>
   `;
@@ -49,7 +51,7 @@ export function render(container) {
     btnStartTalk.classList.add('hidden');
     dialogContainer.classList.remove('hidden');
 
-    const dialogBox = new DialogBox(dialogContainer);
+    const dialogBox = new DialogBox();
     await dialogBox.show('npc_lydia_winter');
 
     // После завершения диалога
@@ -57,7 +59,7 @@ export function render(container) {
       dialogContainer.innerHTML = `
         <p class="text-gray-500 text-sm italic">Лидия возвращается к работе. Кажется, разговор окончен.</p>
       `;
-      btnStartTalk.textContent = 'ЗАГОВОРИТЬ СНОВА';
+      btnStartTalk.querySelector('span:first-child').textContent = 'ЗАГОВОРИТЬ СНОВА';
       btnStartTalk.classList.remove('hidden');
     });
   });
