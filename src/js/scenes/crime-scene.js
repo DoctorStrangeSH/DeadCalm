@@ -1,7 +1,7 @@
 import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { canChallengeGuard, resolveGuardChallenge } from '../systems/court-guard.js';
-import { canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation } from '../systems/witness-provenance.js';
+import { canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation, canConfrontKlimov, resolveKlimovConfrontation } from '../systems/witness-provenance.js';
 import { setupCourtWorkflow } from '../systems/court-workflow.js';
 
 export function render(container, data) {
@@ -200,6 +200,15 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="klimov-confrontation" class="card p-4 mb-6" hidden>
+        <p class="card-title">ПОВТОРНЫЙ ДОПРОС · НИКОЛАЙ КЛИМОВ</p>
+        <p class="card-subtitle mt-2 mb-3">Ключ оформлен на его табельный номер, хотя он отрицает получение. Как предъявить запись?</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-klimov-patient" class="btn-noir text-xs py-3">УТОЧНИТЬ ПОРЯДОК ВЫДАЧИ</button>
+          <button id="btn-klimov-pressure" class="btn-noir text-xs py-3">ОБВИНИТЬ В СОКРЫТИИ КЛЮЧА</button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -225,6 +234,9 @@ export function render(container, data) {
     }
     if (!GameState.hasClue('orlov_badge_handover') && canConfrontOrlov(GameState.currentCase, rules)) {
       container.querySelector('#orlov-confrontation').hidden = false;
+    }
+    if (!GameState.hasClue('key_issue_clerk_note') && canConfrontKlimov(GameState.currentCase, rules)) {
+      container.querySelector('#klimov-confrontation').hidden = false;
     }
     refreshCourtWorkflow();
   }).catch(error => console.warn('[Court] Не удалось проверить основания для повторного опроса:', error));
@@ -478,6 +490,37 @@ export function render(container, data) {
     inspectWitnessRecord('btn-archive-register', 'archive_room_register',
       'В архивной книге есть строки с инициалами Костиной в 20:12 и 20:44. Журнал поддерживает её рассказ о работе, но заполнялся вручную без контроля времени: установить, оставалась ли она в архиве непрерывно, по этим строкам нельзя.');
   });
+
+  async function confrontKlimov(tone) {
+    if (GameState.hasClue('key_issue_clerk_note')) return;
+    const outcome = resolveKlimovConfrontation(tone);
+    if (!outcome) return;
+    const panel = container.querySelector('#klimov-confrontation');
+    const buttons = panel.querySelectorAll('button');
+    buttons.forEach(button => { button.disabled = true; });
+    try {
+      const rules = await loadCourtRules();
+      if (!canConfrontKlimov(GameState.currentCase, rules)) return;
+      const response = await fetch('src/data/clues.json');
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      const catalog = await response.json();
+      if (!catalog.key_issue_clerk_note) throw new Error('Не найдена записка кладовщика');
+      GameState.addClue(catalog.key_issue_clerk_note);
+      GameState.setFlag('court_klimov_interview_tone', tone);
+      GameState.updateRelationship('npc_nikolay_klimov', outcome.trustDelta);
+      panel.hidden = true;
+      refreshCourtWorkflow();
+      showNarrative(outcome.text + ' Объяснение сменного кладовщика добавлено к материалам дела.', 'ПОВТОРНЫЙ ДОПРОС КЛИМОВА');
+    } catch (error) {
+      console.error('[Court] Не удалось проверить выдачу ключа:', error);
+      showNarrative('Запись сейчас недоступна. Повторите запрос позже.', 'ДОПРОС ПРЕРВАН');
+    } finally {
+      buttons.forEach(button => { button.disabled = false; });
+    }
+  }
+
+  container.querySelector('#btn-klimov-patient').addEventListener('click', () => confrontKlimov('patient'));
+  container.querySelector('#btn-klimov-pressure').addEventListener('click', () => confrontKlimov('pressure'));
 
   async function confrontOrlov(tone) {
     if (GameState.hasClue('orlov_badge_handover')) return;

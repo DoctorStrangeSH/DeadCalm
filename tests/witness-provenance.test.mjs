@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { assessIndependentAccounts, canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation } from '../src/js/systems/witness-provenance.js';
+import { assessIndependentAccounts, canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation, canConfrontKlimov, resolveKlimovConfrontation } from '../src/js/systems/witness-provenance.js';
 import { findContradictions } from '../src/js/systems/contradictions.js';
 
 const clues = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
@@ -118,4 +118,21 @@ test('independent duty records expose a bounded discrepancy without proving who 
   assert.match(scene, /function inspectWitnessRecord/);
   assert.match(scene, /'maintenance_tool_issue_ledger'/);
   assert.match(scene, /'archive_room_register'/);
+});
+
+test('Klimov follow-up requires a saved contradiction; either tone yields the same independent note', () => {
+  const hypothesis = { clueIds: ['klimov_evening_account', 'maintenance_tool_issue_ledger'] };
+  const evidence = [clues.klimov_evening_account, clues.maintenance_tool_issue_ledger];
+  assert.equal(canConfrontKlimov({ clues: evidence, hypotheses: [] }, rules), false);
+  assert.equal(canConfrontKlimov({ clues: evidence.slice(0, 1), hypotheses: [hypothesis] }, rules), false);
+  assert.equal(canConfrontKlimov({ clues: evidence, hypotheses: [hypothesis] }, []), false);
+  assert.equal(canConfrontKlimov({ clues: evidence, hypotheses: [hypothesis] }, rules), true);
+  assert.ok(resolveKlimovConfrontation('patient').trustDelta > 0);
+  assert.ok(resolveKlimovConfrontation('pressure').trustDelta < 0);
+  assert.equal(resolveKlimovConfrontation('unknown'), null);
+  assert.match(clues.key_issue_clerk_note.description, /не видел, кто затем забрал ключ/);
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /canConfrontKlimov\(GameState\.currentCase, rules\)/);
+  assert.match(scene, /GameState\.addClue\(catalog\.key_issue_clerk_note\)/);
+  assert.match(scene, /GameState\.setFlag\('court_klimov_interview_tone', tone\)/);
 });

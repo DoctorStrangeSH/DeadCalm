@@ -227,7 +227,17 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Книга выдачи ключей и инструмента хозяйственной службы",
-    "connections_to": ["klimov_evening_account", "reader_maintenance_access_log", "reader_service_signoff"]
+    "connections_to": ["klimov_evening_account", "reader_maintenance_access_log", "reader_service_signoff", "key_issue_clerk_note"]
+  },
+  "key_issue_clerk_note": {
+    "id": "key_issue_clerk_note",
+    "name": "Объяснение сменного кладовщика",
+    "category": "document",
+    "description": "Сменный кладовщик поясняет в подписанной служебной записке: около 20:00 на столе выдачи оставили листок с табельным номером Климова для оформления универсального ключа. Кладовщик перенёс номер в журнал, но не видел, кто затем забрал ключ. Записка объясняет происхождение номера, не подтверждая личность получателя и не устанавливая связь со служебной карточкой Орлова или пропуском № 041.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Служебная записка сменного кладовщика хозяйственной службы",
+    "connections_to": ["maintenance_tool_issue_ledger", "klimov_evening_account"]
   },
   "archive_room_register": {
     "id": "archive_room_register",

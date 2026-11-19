@@ -10,6 +10,23 @@ export function canConfrontOrlov(currentCase, rules) {
     currentCase?.hypotheses, currentCase?.clues || [], rules);
 }
 
+export function canConfrontKlimov(currentCase, rules) {
+  return hasDiscoveredContradiction('klimov_key_denial_vs_issue',
+    currentCase?.hypotheses, currentCase?.clues || [], rules);
+}
+
+export function resolveKlimovConfrontation(tone) {
+  if (tone === 'patient') return {
+    trustDelta: 5,
+    text: 'Климов изучает запись: «Это мой табельный номер, но почерк не мой. В тот вечер у выдачи был сменщик. Я оставил инструмент на столе дежурного, не оформляя универсальный ключ». Он советует запросить записку сменного кладовщика. Кто получил ключ, Климов не знает.'
+  };
+  if (tone === 'pressure') return {
+    trustDelta: -15,
+    text: 'Климов резко отодвигает книгу: «Номер мой, а подпись чужая. Без адвоката больше ничего не скажу». Следователь запрашивает объяснение сменного кладовщика официально — отказ Климова не закрывает доступ к учётным документам.'
+  };
+  return null;
+}
+
 export function resolveOrlovConfrontation(tone) {
   if (tone === 'patient') return {
     trustDelta: 5,
