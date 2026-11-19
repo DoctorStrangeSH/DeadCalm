@@ -11,6 +11,7 @@ import { planMorganRevisit, recordMorganRevisit } from '../systems/old-case-morg
 import { assessOldCaseSources, recordOldCaseSourceReading, OLD_CASE_SOURCE_READINGS } from '../systems/old-case-source-audit.js';
 import { assessOldCaseWitnesses, recordOldCaseWitnessReading, OLD_CASE_WITNESS_STATEMENTS } from '../systems/old-case-witnesses.js';
 import { planOldCaseWitnessFollowUp, recordOldCaseWitnessFollowUp } from '../systems/old-case-witness-follow-up.js';
+import { assessOldCaseDiscrepancy, recordOldCaseDiscrepancy, OLD_CASE_DISCREPANCY_CHOICES } from '../systems/old-case-discrepancy.js';
 
 export function render(container, data) {
   container.innerHTML = `
@@ -121,6 +122,13 @@ export function render(container, data) {
         <div id="precinct-witness-follow-up-options" class="reader-theories-options" role="group" aria-label="Выбор проверки"></div>
         <div id="precinct-witness-follow-up-result" class="reader-theories-detail" role="status" aria-live="polite"></div>
       </section>
+      <section id="precinct-old-discrepancy" class="reader-theories-view mb-6" aria-label="Оценка расхождений в архивных показаниях" hidden>
+        <p class="reader-timeline-kicker">ЖУРНАЛ ПРОТИВОРЕЧИЙ / ПРОВЕРКА ИСТОЧНИКА</p>
+        <h3 class="reader-timeline-title">Противоречие или пробел в сведениях?</h3>
+        <div id="precinct-old-discrepancy-detail" class="reader-theories-detail" aria-live="polite"></div>
+        <div id="precinct-old-discrepancy-options" class="reader-theories-options" role="group" aria-label="Классификация расхождения"></div>
+        <p id="precinct-old-discrepancy-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
+      </section>
       <div id="dialog-container" class="hidden"></div>
     </div>
   `;
@@ -164,6 +172,34 @@ export function render(container, data) {
   const witnessFollowUpPanel = container.querySelector('#precinct-witness-follow-up');
   const witnessFollowUpOptions = container.querySelector('#precinct-witness-follow-up-options');
   const witnessFollowUpResult = container.querySelector('#precinct-witness-follow-up-result');
+  const discrepancyPanel = container.querySelector('#precinct-old-discrepancy');
+  const discrepancyDetail = container.querySelector('#precinct-old-discrepancy-detail');
+  const discrepancyOptions = container.querySelector('#precinct-old-discrepancy-options');
+  const discrepancyResult = container.querySelector('#precinct-old-discrepancy-result');
+  function refreshOldDiscrepancy() {
+    const check = assessOldCaseDiscrepancy(id => GameState.hasClue(id),
+      GameState.flags.court_old_case_witness_reading, GameState.flags.court_old_case_witness_follow_up,
+      GameState.flags.court_old_case_discrepancy);
+    discrepancyPanel.hidden = !check;
+    discrepancyOptions.replaceChildren();
+    discrepancyDetail.textContent = check ? check.question : '';
+    discrepancyResult.textContent = check?.saved ? `${check.saved.finding} ${check.saved.nextStep}` : '';
+    if (!check || check.saved) return;
+    for (const choice of OLD_CASE_DISCREPANCY_CHOICES) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'reader-theories-option';
+      button.textContent = choice.label;
+      button.addEventListener('click', () => {
+        const result = recordOldCaseDiscrepancy(choice.id, check, GameState.flags.court_old_case_discrepancy);
+        if (!result) return;
+        if (!result.correct) { discrepancyResult.textContent = result.feedback; return; }
+        GameState.setFlag('court_old_case_discrepancy', result);
+        refreshOldDiscrepancy();
+      });
+      discrepancyOptions.appendChild(button);
+    }
+  }
   function refreshWitnessFollowUp() {
     const saved = GameState.flags.court_old_case_witness_follow_up;
     const options = planOldCaseWitnessFollowUp(GameState.flags.court_old_case_witness_reading);
@@ -190,6 +226,7 @@ export function render(container, data) {
         if (!result) return;
         GameState.setFlag('court_old_case_witness_follow_up', result);
         refreshWitnessFollowUp();
+        refreshOldDiscrepancy();
       });
       witnessFollowUpOptions.appendChild(button);
     }
@@ -498,6 +535,7 @@ export function render(container, data) {
   refreshSourceAudit();
   refreshOldWitnesses();
   refreshWitnessFollowUp();
+  refreshOldDiscrepancy();
 
   document.getElementById('btn-talk-ray').addEventListener('click', async function() {
     const actions = container.querySelector('#precinct-actions');
