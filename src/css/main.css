@@ -1638,3 +1638,56 @@ body {
 .repair-footer button{background:none;color:#9b8159;font:inherit;cursor:pointer}
 @media(max-width:760px){.repair-layout{grid-template-columns:1fr;margin:1rem auto}.repair-art{min-height:270px}.repair-watch{width:min(62vw,250px)}.repair-header{flex-direction:column}.repair-footer{align-items:flex-start;flex-direction:column}.repair-meta{font-size:.58rem}}
 @media(prefers-reduced-motion:reduce){.repair-actions button{transition:none}}
+
+/* Analog radio tuning mini-game */
+.radio-scene{background:radial-gradient(ellipse at 50% 35%,#20201d 0%,#10110f 48%,#070807 100%);color:#d7d0c2;padding:clamp(1rem,3vw,3rem)}
+.radio-header{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;border-bottom:1px solid #454238;padding-bottom:1.2rem}
+.radio-kicker,.radio-index,.radio-step,.radio-control-label,.radio-range-ends,.radio-quality,.radio-footer,.radio-brand,.radio-hardware-footer{font:.67rem 'Courier New',monospace;letter-spacing:.16em;color:#a89a78}
+.radio-header h1{font:clamp(1.4rem,3vw,2.3rem) Georgia,serif;color:#d4c39a;letter-spacing:.12em;margin:.5rem 0}
+.radio-subtitle{font-size:.84rem;color:#777970}
+.radio-index{border:1px solid #5a5544;padding:.55rem .8rem}
+.radio-layout{max-width:1100px;margin:clamp(1.5rem,4vw,3.5rem) auto;display:grid;grid-template-columns:minmax(280px,1.1fr) minmax(300px,.9fr);gap:clamp(1.5rem,5vw,5rem);align-items:center}
+.radio-hardware{position:relative;padding:1.4rem;background:linear-gradient(145deg,#45433a,#25251f 38%,#151612 100%);border:1px solid #77705a;box-shadow:0 25px 65px #000a,inset 0 1px #b8a98055;transform:rotate(-.5deg)}
+.radio-brand{display:flex;justify-content:space-between;align-items:center;color:#d0c29b;font-weight:bold;font-size:1rem;margin-bottom:1rem}
+.radio-brand span{font-size:.55rem;color:#89816c}
+.radio-display{padding:1rem 1.2rem;background:linear-gradient(180deg,#111b16,#0a100d);border:5px ridge #6c6044;box-shadow:inset 0 0 28px #000,0 0 18px #9eac7533;color:#b9c79b}
+.radio-display-label{font:.58rem 'Courier New',monospace;letter-spacing:.2em;color:#75856b}
+.radio-frequency{font:clamp(2.6rem,6vw,4.2rem) 'Courier New',monospace;letter-spacing:.04em;text-shadow:0 0 12px #a8c78b88}
+.radio-frequency small{font-size:.8rem;color:#819274}
+.radio-bars{display:flex;align-items:end;gap:5px;height:28px;margin:.4rem 0}
+.radio-bar{display:block;width:13px;height:30%;background:#4d5944;opacity:.35}
+.radio-bar:nth-child(2){height:45%}.radio-bar:nth-child(3){height:60%}.radio-bar:nth-child(4){height:78%}.radio-bar:nth-child(5){height:100%}
+.radio-bar.active{background:#c2d99b;opacity:1;box-shadow:0 0 8px #a8c78b88}
+.radio-display-status{font:.62rem 'Courier New',monospace;letter-spacing:.13em;color:#a8b894}
+.radio-dial-wrap{position:relative;margin:1.5rem .2rem 1rem;padding-top:1.4rem}
+.radio-dial{display:flex;justify-content:space-between;color:#b9ad8b;font:.62rem 'Courier New',monospace;border-top:2px solid #9b8a64;padding-top:.55rem}
+.radio-needle{position:absolute;top:.5rem;width:2px;height:30px;background:#d9a85e;box-shadow:0 0 8px #e8b86d;transform:translateX(-50%);pointer-events:none}
+.radio-speaker{display:grid;grid-template-columns:repeat(9,1fr);gap:7px;padding:1rem;background:#171813;border:1px solid #55513f}
+.radio-speaker i{height:54px;background:repeating-linear-gradient(180deg,#080907 0 3px,#5c5847 4px 5px);border-radius:3px;box-shadow:inset 0 0 5px #000}
+.radio-hardware-footer{display:flex;justify-content:space-between;font-size:.55rem;padding-top:.8rem;color:#b0a17a}
+.radio-controls{max-width:500px}
+.radio-step{color:#c4aa75}
+.radio-description{font:1.05rem/1.8 Georgia,serif;color:#d5cebf;margin:1rem 0 1.7rem}
+.radio-control-label{display:flex;justify-content:space-between;gap:1rem;margin:1.1rem 0 .6rem}
+.radio-control-label strong{color:#d7c18f;font-size:.75rem}
+.radio-range{width:100%;accent-color:#b99b62;cursor:ew-resize}
+.radio-range-ends{display:flex;justify-content:space-between;font-size:.55rem;color:#777568;margin-top:.3rem}
+.radio-filter-range{accent-color:#9da987}
+.radio-feedback{min-height:65px;margin-top:1.4rem;padding:.85rem 1rem;border-left:2px solid #a48a5b;background:#ffffff08;color:#aaa493;font-size:.83rem;line-height:1.6}
+.radio-quality{display:flex;justify-content:space-between;margin-top:1.2rem}
+.radio-quality strong{color:#d5c18f}
+.radio-quality-track{height:5px;background:#27271f;margin-top:.55rem;overflow:hidden}
+.radio-quality-track span{display:block;height:100%;background:linear-gradient(90deg,#7c5d39,#c6bd8d);transition:width .12s}
+.radio-finish{width:100%;margin-top:1.3rem;padding:1rem;border:1px solid #9b8050;background:linear-gradient(135deg,#342b1d,#17140f);color:#e0c895;font:.72rem 'Courier New',monospace;letter-spacing:.15em;cursor:pointer}
+.radio-finish:hover{background:#493a24;border-color:#e1c17c}
+.radio-hint{font-size:.7rem;line-height:1.6;color:#77756d;margin-top:.8rem}
+.radio-footer{display:flex;justify-content:space-between;gap:1rem;border-top:1px solid #39372e;padding-top:1rem}
+.radio-footer button,.radio-back{background:none;border:0;color:#ad9565;font:inherit;cursor:pointer}
+.radio-result-panel{max-width:620px;margin:5rem auto;text-align:center;padding:clamp(1.5rem,5vw,3.5rem);border:1px solid #5c513b;background:linear-gradient(145deg,#201f19,#0d0e0c);box-shadow:0 25px 60px #0008}
+.radio-result-mark{font-size:4rem;color:#c4a66d;text-shadow:0 0 25px #c4a66d55;margin-bottom:1rem}
+.radio-result-stats{display:flex;justify-content:space-around;gap:1rem;border-top:1px solid #4a4436;border-bottom:1px solid #4a4436;padding:1rem;margin-top:1.5rem;font:.65rem 'Courier New',monospace;color:#a89a78}
+.radio-result-stats span{display:flex;flex-direction:column;gap:.5rem}
+.radio-result-stats b{font-size:.9rem;color:#dfc996}
+.radio-back{display:block;margin:1.2rem auto 0;font-size:.7rem;letter-spacing:.13em}
+@media(max-width:760px){.radio-layout{grid-template-columns:1fr;margin:1.2rem auto}.radio-hardware{max-width:500px;width:100%;margin:auto}.radio-header{flex-direction:column}.radio-footer{flex-direction:column}.radio-result-panel{margin:2rem auto}}
+@media(prefers-reduced-motion:reduce){.radio-quality-track span{transition:none}}
