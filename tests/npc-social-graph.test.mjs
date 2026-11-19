@@ -39,3 +39,21 @@ test('queries return detached copies and isolate NPC context', () => {
   const context=getSocialContext(graph,'npc_b');
   assert.equal(context.connectionCount,2); assert.equal(context.strainedConnections,1); assert.equal(context.brokenConnections,1);
 });
+
+test('legacy and malformed save records are safely filtered during migration', () => {
+  const normalized = normalizeSocialGraph({
+    ties: [
+      { id: 'valid', fromNpcId: 'npc_a', toNpcId: 'npc_b', type: 'colleague', status: 'active', basis: 'A signed staff record.' },
+      { id: 'blank-basis', fromNpcId: 'npc_a', toNpcId: 'npc_c', type: 'friend', status: 'active', basis: '   ' },
+      { id: 'self-link', fromNpcId: 'npc_a', toNpcId: 'npc_a', type: 'family', status: 'active', basis: 'A record.' }
+    ],
+    events: [
+      { id: 'valid-event', fromNpcId: 'npc_a', toNpcId: 'npc_b', description: 'A documented meeting.' },
+      { id: 'blank-event', fromNpcId: 'npc_a', toNpcId: 'npc_b', description: '   ' }
+    ]
+  });
+  assert.deepEqual(normalized.ties.map(tie => tie.id), ['valid']);
+  assert.deepEqual(normalized.events.map(event => event.id), ['valid-event']);
+  assert.deepEqual(normalized.ties[0].sourceRefs, []);
+  assert.deepEqual(normalized.events[0].sourceRefs, []);
+});
