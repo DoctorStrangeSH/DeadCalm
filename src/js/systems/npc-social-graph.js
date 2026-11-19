@@ -10,15 +10,17 @@ function cloneRecord(record) {
   return { ...record, sourceRefs: Array.isArray(record.sourceRefs) ? [...record.sourceRefs] : [] };
 }
 function validTie(tie) {
-  return !!tie && typeof tie.id === 'string' && typeof tie.fromNpcId === 'string' &&
-    typeof tie.toNpcId === 'string' && tie.fromNpcId !== tie.toNpcId &&
-    RELATION_TYPES.has(tie.type) && RELATION_STATUSES.has(tie.status) &&
-    typeof tie.basis === 'string';
+  return !!tie && typeof tie.id === 'string' && !!tie.id.trim() &&
+    typeof tie.fromNpcId === 'string' && !!tie.fromNpcId.trim() &&
+    typeof tie.toNpcId === 'string' && !!tie.toNpcId.trim() &&
+    tie.fromNpcId !== tie.toNpcId && RELATION_TYPES.has(tie.type) &&
+    RELATION_STATUSES.has(tie.status) && typeof tie.basis === 'string' && !!tie.basis.trim();
 }
 function validEvent(event) {
-  return !!event && typeof event.id === 'string' && typeof event.fromNpcId === 'string' &&
-    typeof event.toNpcId === 'string' && event.fromNpcId !== event.toNpcId &&
-    typeof event.description === 'string';
+  return !!event && typeof event.id === 'string' && !!event.id.trim() &&
+    typeof event.fromNpcId === 'string' && !!event.fromNpcId.trim() &&
+    typeof event.toNpcId === 'string' && !!event.toNpcId.trim() &&
+    event.fromNpcId !== event.toNpcId && typeof event.description === 'string' && !!event.description.trim();
 }
 export function normalizeSocialGraph(value) {
   if (!value || typeof value !== 'object') return createEmptySocialGraph();
