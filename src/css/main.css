@@ -1691,3 +1691,125 @@ body {
 .radio-back{display:block;margin:1.2rem auto 0;font-size:.7rem;letter-spacing:.13em}
 @media(max-width:760px){.radio-layout{grid-template-columns:1fr;margin:1.2rem auto}.radio-hardware{max-width:500px;width:100%;margin:auto}.radio-header{flex-direction:column}.radio-footer{flex-direction:column}.radio-result-panel{margin:2rem auto}}
 @media(prefers-reduced-motion:reduce){.radio-quality-track span{transition:none}}
+
+/* ============================================================
+   DEAD CALM — VISUAL LOCK FOR INTERACTIVE MINI-GAMES
+   Match Blackford's painted environments and approved portraits:
+   rain-cooled teal/blue shadows, aged wood, restrained amber lamps,
+   cinematic depth, editorial serif + typewriter metadata.
+   ============================================================ */
+.repair-scene,
+.radio-scene {
+  color: #d3d8d1;
+  background:
+    radial-gradient(ellipse at 74% 18%, #b58b5430 0, transparent 31%),
+    radial-gradient(ellipse at 18% 70%, #24434a66 0, transparent 48%),
+    linear-gradient(145deg, #17282d 0%, #0b171c 56%, #070e12 100%);
+}
+.repair-scene::before,
+.radio-scene::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: .12;
+  background: repeating-linear-gradient(0deg, transparent 0 3px, #9ab0aa 4px 4.3px);
+  z-index: 0;
+}
+.repair-scene > *,
+.radio-scene > * { position: relative; z-index: 1; }
+.repair-header,
+.radio-header { border-color: #455753; }
+.repair-kicker,.repair-index,.repair-art-caption,.repair-step,
+.repair-meta,.repair-footer,.radio-kicker,.radio-index,.radio-step,
+.radio-control-label,.radio-range-ends,.radio-quality,.radio-footer,
+.radio-brand,.radio-hardware-footer {
+  color: #9bb0aa;
+}
+.repair-header h1,.radio-header h1 { color: #e0d2b4; text-shadow: 0 2px 14px #0009; }
+.repair-subtitle,.radio-subtitle { color: #a4b2ad; }
+.repair-art {
+  border-color: #52635f;
+  background:
+    radial-gradient(ellipse at 50% 42%, #53635d55 0, transparent 52%),
+    linear-gradient(145deg, #26383a, #101d22 70%, #091216);
+  box-shadow: inset 0 0 75px #0009, 0 18px 42px #0007;
+}
+.repair-glow { background: #d0a86a; opacity: .08; }
+.repair-watch {
+  border-color: #82775f;
+  background: radial-gradient(circle, #1a292b 0%, #0b1418 72%);
+  box-shadow: 0 0 0 5px #1c2d31, 0 24px 60px #000b, inset 0 0 35px #b6c6b322;
+}
+.repair-ring { border-color: #a9946e; }
+.ring-inner { border-color: #637875; }
+.repair-gear { color: #b8a47e; text-shadow: 0 0 12px #d0b78333; }
+.repair-spring { border-color: #aebbb1; box-shadow: 0 0 14px #aebbb133; }
+.repair-pin { background: #d7b77e; box-shadow: 0 0 18px #d7b77e88; }
+.repair-description,.radio-description { color: #d0d7d0; }
+.repair-feedback,.radio-feedback {
+  border-left-color: #bd9a64;
+  background: linear-gradient(100deg, #26383b99, #101b1fbb);
+  color: #bdc8c0;
+}
+.repair-actions button,.radio-finish {
+  border-color: #6d765f;
+  background: linear-gradient(135deg, #2a3b3c, #111e22);
+  color: #e0cda6;
+  box-shadow: inset 0 1px #ffffff12, 0 8px 20px #0004;
+}
+.repair-actions button:hover,.radio-finish:hover {
+  border-color: #d4b57b;
+  background: linear-gradient(135deg, #3b4d4b, #1a2b2f);
+}
+.repair-actions .repair-secondary {
+  border-color: #52605b;
+  background: #142327;
+  color: #b5c0b8;
+}
+.repair-actions .repair-danger {
+  border-color: #80554c;
+  background: linear-gradient(135deg, #3b2928, #1c1718);
+  color: #d9a99a;
+}
+.repair-result,.radio-result-panel {
+  border-color: #68756b;
+  background: linear-gradient(145deg, #243638, #0d191d);
+  color: #e0cda6;
+}
+.repair-footer,.radio-footer { border-color: #455753; }
+.repair-footer button,.radio-footer button,.radio-back { color: #c6aa78; }
+.radio-hardware {
+  border-color: #69766d;
+  background:
+    linear-gradient(145deg, #354443, #1d2c2d 38%, #101b1e 100%);
+  box-shadow: 0 25px 65px #000a, inset 0 1px #d1d9cb22;
+}
+.radio-brand { color: #d7c59d; }
+.radio-display {
+  background: linear-gradient(180deg, #101e1b, #091310);
+  border-color: #6d715d;
+  box-shadow: inset 0 0 28px #000, 0 0 18px #a8c4a322;
+  color: #c2d0ae;
+}
+.radio-display-label { color: #91a596; }
+.radio-frequency { color: #c6d4b0; text-shadow: 0 0 12px #a8c78b66; }
+.radio-bar { background: #53665a; }
+.radio-bar.active { background: #c2d0ae; box-shadow: 0 0 8px #a8c78b66; }
+.radio-display-status { color: #b3c4ac; }
+.radio-dial { color: #c2b796; border-color: #9a8d70; }
+.radio-needle { background: #d4b57b; box-shadow: 0 0 8px #d4b57b; }
+.radio-speaker { background: #172326; border-color: #56635c; }
+.radio-speaker i { background: repeating-linear-gradient(180deg, #0a1215 0 3px, #64716a 4px 5px); }
+.radio-hardware-footer { color: #b7aa88; }
+.radio-control-label strong,.radio-quality strong { color: #e0cda6; }
+.radio-range { accent-color: #c6aa78; }
+.radio-filter-range { accent-color: #9bb0aa; }
+.radio-quality-track { background: #293b3b; }
+.radio-quality-track span { background: linear-gradient(90deg, #6f8c83, #d4b57b); }
+.radio-result-mark { color: #d4b57b; text-shadow: 0 0 25px #d4b57b44; }
+.radio-result-stats { border-color: #52615a; color: #aab9b0; }
+.radio-result-stats b { color: #e0cda6; }
+@media (prefers-reduced-motion: reduce) {
+  .repair-actions button,.radio-finish,.radio-quality-track span { transition: none; }
+}
