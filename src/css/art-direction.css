@@ -493,3 +493,9 @@ body { background:#071015; color:#d3d5cc; }
 .atlas-detail-content { flex:1; min-width:0; }
 @media(max-width:850px) { .atlas-directory { grid-template-columns:repeat(2,minmax(0,1fr)); } .atlas-pin-label { display:none; } }
 @media(max-width:520px) { .blackford-atlas { border-width:5px; padding:23px 0 20px; } .atlas-directory { grid-template-columns:1fr; gap:6px; } .atlas-directory-item { min-height:46px; padding:10px 13px; } .atlas-pin-dot { width:27px; height:27px; font-size:10px; } .blackford-map-scene .atlas-info { padding:14px; } }
+
+/* Investigation gaps: compact Blackford Noir audit notes. */
+.investigation-gaps-list { display:grid; gap:10px; margin-top:12px; padding-left:20px; }
+.investigation-gaps-list li { padding:10px 12px; border-left:2px solid #9a7848; background:#101b20; }
+.investigation-gaps-list li strong { color:#e0c58e; display:block; font:600 12px Georgia,serif; letter-spacing:.04em; }
+.investigation-gaps-list li p { color:#b8c0ba; font-size:12px; line-height:1.5; margin-top:5px; }
