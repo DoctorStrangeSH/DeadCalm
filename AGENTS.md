@@ -58,3 +58,8 @@ Before proposing or implementing major gameplay features, read `docs/PRODUCT_IDE
 ## Dead Calm mini-games
 
 Mini-games are explicitly welcome and part of the intended experience. Read `docs/MINIGAME_DESIGN.md` before designing one. Do not interpret the Ghost Signal boundary as a ban on mini-games: create distinct tactile, mechanical, audio, social, physical, and environmental interactions. Avoid cloning Ghost Signal's code-breaking and hidden-object loops. The first proposed prototype is delicate mechanical repair; it is not implemented until integrated and validated.
+
+
+## Mechanical repair prototype status
+
+`src/js/systems/mechanical-repair.js` is currently logic-only. Read its status in `docs/MINIGAME_DESIGN.md`. Do not describe it as a playable mini-game until a real scene, art/audio feedback, input bindings, save/result integration, and validation are complete.
