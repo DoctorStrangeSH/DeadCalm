@@ -102,7 +102,8 @@ export var NPCMemory = {
       questionCount: 0,
       unlockedTopics: [],
       askedQuestions: [],
-      criticalChoiceMade: false
+      criticalChoiceMade: false,
+      interviewHistory: []
     };
     GameState.save();
     console.log('[NPCMemory] Память ' + npcId + ' сброшена');
