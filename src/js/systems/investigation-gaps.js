@@ -22,6 +22,17 @@ export function getInvestigationGapStatus(saved, id) {
   return value === 'active' || value === 'deferred' ? value : 'pending';
 }
 
+/** Lists only currently visible gaps that the investigator explicitly scheduled. */
+export function buildInvestigationAssignmentJournal(gaps, savedStatuses) {
+  if (!Array.isArray(gaps)) return [];
+  return gaps.map(gap => ({
+    ...gap,
+    status: getInvestigationGapStatus(savedStatuses, gap.id)
+  })).filter(item => item.status === 'active' || item.status === 'deferred')
+    .map(item => ({ ...item, statusLabel: GAP_STATUS_LABELS[item.status] }))
+    .sort((a, b) => (a.status === 'active' ? 0 : 1) - (b.status === 'active' ? 0 : 1));
+}
+
 export function buildInvestigationGaps(currentCase) {
   const discovered = Array.isArray(currentCase?.clues) ? currentCase.clues.filter(clue => clue?.id) : [];
   if (!discovered.some(clue => clue.id === 'reader_reconstructed_timeline')) return [];
