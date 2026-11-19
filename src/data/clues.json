@@ -317,7 +317,27 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Аналитическая сводка следствия по пяти документам",
-    "connections_to": ["kit_seventeen_loan_log", "maintenance_tool_issue_ledger", "orlov_badge_scan", "kit_seventeen_service_checklist", "reader_service_signoff"]
+    "connections_to": ["kit_seventeen_loan_log", "maintenance_tool_issue_ledger", "orlov_badge_scan", "kit_seventeen_service_checklist", "reader_service_signoff", "key_signature_comparison", "reader_test_diagnostic"]
+  },
+  "key_signature_comparison": {
+    "id": "key_signature_comparison",
+    "name": "Сопоставление подписей из журнала ключей",
+    "category": "document",
+    "description": "Архивные образцы подписей Климова и Костиной сопоставлены с размытыми росчерками выдачи и возврата универсального ключа. Эксперт не смог подтвердить совпадение ни с одним образцом. Факт регистрации движения ключа сохраняется; личность получателя и возвращавшего остаётся неустановленной.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Заключение о сопоставлении архивных подписей",
+    "connections_to": ["maintenance_tool_issue_ledger", "reader_reconstructed_timeline", "klimov_evening_account", "kostina_evening_account"]
+  },
+  "reader_test_diagnostic": {
+    "id": "reader_test_diagnostic",
+    "name": "Диагностическая распечатка считывателя",
+    "category": "document",
+    "description": "Распечатка контроллера фиксирует запуск и завершение тестового цикла в 20:31, но не хранит имя сотрудника, инициировавшего проверку. Запись подтверждает работу оборудования, но не указывает исполнителя, не подтверждает подпись в акте на 20:52 и не позволяет отождествить его с предъявителем карточки Орлова.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Технический архив контроллера служебного входа",
+    "connections_to": ["kit_seventeen_service_checklist", "reader_service_signoff", "reader_reconstructed_timeline"]
   },
   "switchboard_call_detail": {
     "id": "switchboard_call_detail",

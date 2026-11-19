@@ -3,7 +3,7 @@ import { GameState } from '../core/state.js';
 import { canChallengeGuard, resolveGuardChallenge } from '../systems/court-guard.js';
 import { canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation, canConfrontKlimov, resolveKlimovConfrontation } from '../systems/witness-provenance.js';
 import { setupCourtWorkflow } from '../systems/court-workflow.js';
-import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS } from '../systems/reader-timeline.js';
+import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS, getReaderTimelineFollowUp } from '../systems/reader-timeline.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -86,6 +86,8 @@ export function render(container, data) {
             </button>`).join('')}
         </div>
         <div id="reader-timeline-detail" class="reader-timeline-detail" aria-live="polite"></div>
+        <button type="button" id="reader-timeline-follow-up" class="reader-timeline-follow-up" hidden></button>
+        <p id="reader-timeline-follow-up-status" class="reader-timeline-follow-up-status" role="status" aria-live="polite"></p>
         <p class="reader-timeline-warning">Несколько регистраций не доказывают, что все действия совершил один человек.</p>
       </section>
 
@@ -290,17 +292,35 @@ export function render(container, data) {
   updateCluesList();
   const refreshCourtWorkflow = setupCourtWorkflow(container);
   const timelineDetail = container.querySelector('#reader-timeline-detail');
+  const timelineFollowUp = container.querySelector('#reader-timeline-follow-up');
+  const timelineFollowUpStatus = container.querySelector('#reader-timeline-follow-up-status');
+  let selectedTimelineIndex = 0;
   function selectTimelineEvent(index) {
     const item = READER_TIMELINE_EVENTS[index];
     if (!item) return;
+    selectedTimelineIndex = index;
     const source = GameState.currentCase.clues.find(clue => clue.id === item.source);
     timelineDetail.textContent = `${item.time} · ${source?.name || 'Документ'} — ${item.gap}`;
+    const followUp = getReaderTimelineFollowUp(index);
+    timelineFollowUp.hidden = !followUp;
+    timelineFollowUp.disabled = !followUp || GameState.hasClue(followUp.clueId);
+    timelineFollowUp.textContent = followUp && GameState.hasClue(followUp.clueId)
+      ? '✓ Проверка проведена: ' + followUp.label : followUp ? followUp.label + ' →' : '';
+    timelineFollowUpStatus.textContent = followUp && GameState.hasClue(followUp.clueId)
+      ? GameState.currentCase.clues.find(clue => clue.id === followUp.clueId)?.description || '' : '';
     container.querySelectorAll('[data-timeline-index]').forEach(button => {
       button.setAttribute('aria-pressed', String(Number(button.dataset.timelineIndex) === index));
     });
   }
   container.querySelectorAll('[data-timeline-index]').forEach(button => {
     button.addEventListener('click', () => selectTimelineEvent(Number(button.dataset.timelineIndex)));
+  });
+  timelineFollowUp.addEventListener('click', async () => {
+    if (!GameState.hasClue('reader_reconstructed_timeline')) return;
+    const followUp = getReaderTimelineFollowUp(selectedTimelineIndex);
+    if (!followUp || GameState.hasClue(followUp.clueId)) return;
+    await inspectCourtRecord('reader-timeline-follow-up', followUp.clueId, followUp.narrative, 'reader_reconstructed_timeline');
+    selectTimelineEvent(selectedTimelineIndex);
   });
   selectTimelineEvent(0);
 

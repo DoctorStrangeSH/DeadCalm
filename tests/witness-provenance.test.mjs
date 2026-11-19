@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { assessIndependentAccounts, canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation, canConfrontKlimov, resolveKlimovConfrontation } from '../src/js/systems/witness-provenance.js';
 import { findContradictions } from '../src/js/systems/contradictions.js';
-import { canAssembleReaderTimeline, READER_TIMELINE_EVIDENCE, READER_TIMELINE_EVENTS } from '../src/js/systems/reader-timeline.js';
+import { canAssembleReaderTimeline, READER_TIMELINE_EVIDENCE, READER_TIMELINE_EVENTS, READER_TIMELINE_FOLLOW_UPS, getReaderTimelineFollowUp } from '../src/js/systems/reader-timeline.js';
 
 const clues = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
 const rules = JSON.parse(readFileSync(new URL('../src/data/contradictions.json', import.meta.url), 'utf8'));
@@ -217,4 +217,28 @@ test('timeline lets players inspect each recorded source and its unresolved iden
   assert.match(scene, /setAttribute\('aria-pressed'/);
   assert.match(css, /\.reader-timeline-event:focus-visible/);
   assert.match(css, /\.reader-timeline-events \{ grid-template-columns:1fr/);
+});
+
+test('timeline gaps offer bounded, persistent verification rather than automatic culprit identification', () => {
+  assert.equal(getReaderTimelineFollowUp(-1), null);
+  assert.equal(getReaderTimelineFollowUp(0), null);
+  assert.equal(getReaderTimelineFollowUp(2).clueId, 'key_signature_comparison');
+  assert.equal(getReaderTimelineFollowUp(6).clueId, 'key_signature_comparison');
+  assert.equal(getReaderTimelineFollowUp(3).clueId, 'reader_test_diagnostic');
+  assert.equal(getReaderTimelineFollowUp(5).clueId, 'reader_test_diagnostic');
+  assert.equal(new Set(Object.values(READER_TIMELINE_FOLLOW_UPS).map(item => item.clueId)).size, 2);
+  for (const followUp of Object.values(READER_TIMELINE_FOLLOW_UPS)) {
+    assert.ok(clues[followUp.clueId]);
+    assert.ok(clues[followUp.clueId].connections_to.includes('reader_reconstructed_timeline'));
+    assert.ok(followUp.narrative.length > 90);
+  }
+  assert.match(clues.key_signature_comparison.description, /не смог подтвердить совпадение/);
+  assert.match(clues.reader_test_diagnostic.description, /не указывает исполнителя/);
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../src/css/art-direction.css', import.meta.url), 'utf8');
+  assert.match(scene, /id="reader-timeline-follow-up"/);
+  assert.match(scene, /getReaderTimelineFollowUp\(selectedTimelineIndex\)/);
+  assert.match(scene, /inspectCourtRecord\('reader-timeline-follow-up', followUp\.clueId, followUp\.narrative, 'reader_reconstructed_timeline'\)/);
+  assert.match(scene, /GameState\.hasClue\(followUp\.clueId\)/);
+  assert.match(css, /\.reader-timeline-follow-up\[hidden\] \{ display:none; \}/);
 });

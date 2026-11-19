@@ -18,6 +18,20 @@ export const READER_TIMELINE_EVENTS = [
   { time: '20:58', event: 'Возврат набора № 17', source: 'kit_seventeen_loan_log', gap: 'Имя возвращавшего не зафиксировано.' }
 ];
 
+// Follow-ups belong to evidence gaps, not to a presumed suspect. Multiple events
+// may refer to the same check; completing it once updates every relevant event.
+export const READER_TIMELINE_FOLLOW_UPS = {
+  '20:03': { clueId: 'key_signature_comparison', label: 'Сверить подпись в журнале ключей', narrative: 'Архивные образцы подписей и запись о выдаче ключа сопоставлены: росчерк в журнале смазан, уверенного совпадения с образцами Климова или Костиной нет. Это ограничивает доказательную силу записи, но не опровергает сам факт выдачи ключа.' },
+  '20:56': { clueId: 'key_signature_comparison', label: 'Сверить подпись в журнале ключей', narrative: 'Архивные образцы подписей и запись о возврате ключа сопоставлены: росчерк в журнале смазан, уверенного совпадения с образцами Климова или Костиной нет. Это ограничивает доказательную силу записи, но не опровергает сам факт возврата ключа.' },
+  '20:31': { clueId: 'reader_test_diagnostic', label: 'Запросить диагностику считывателя', narrative: 'Диагностическая распечатка фиксирует тестовый цикл считывателя в 20:31, но не содержит учётной записи техника. Проверка действительно запускалась — кто нажал кнопку и завершил работу, определить нельзя.' },
+  '20:52': { clueId: 'reader_test_diagnostic', label: 'Запросить диагностику считывателя', narrative: 'Диагностическая распечатка подтверждает тест в 20:31, но не содержит имени техника или данных о том, кто подписал акт в 20:52. Закрытие акта остаётся отдельным неподтверждённым действием.' }
+};
+
+export function getReaderTimelineFollowUp(index) {
+  const entry = READER_TIMELINE_EVENTS[index];
+  return entry ? READER_TIMELINE_FOLLOW_UPS[entry.time] || null : null;
+}
+
 export function canAssembleReaderTimeline(hasClue) {
   return READER_TIMELINE_EVIDENCE.every(id => hasClue(id));
 }
