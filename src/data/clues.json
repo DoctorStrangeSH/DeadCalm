@@ -317,7 +317,17 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Аналитическая сводка следствия по пяти документам",
-    "connections_to": ["kit_seventeen_loan_log", "maintenance_tool_issue_ledger", "orlov_badge_scan", "kit_seventeen_service_checklist", "reader_service_signoff", "key_signature_comparison", "reader_test_diagnostic"]
+    "connections_to": ["kit_seventeen_loan_log", "maintenance_tool_issue_ledger", "orlov_badge_scan", "kit_seventeen_service_checklist", "reader_service_signoff", "key_signature_comparison", "reader_test_diagnostic", "reader_archive_crosscheck"]
+  },
+  "reader_archive_crosscheck": {
+    "id": "reader_archive_crosscheck",
+    "name": "Заверенная сверка вечерней ремонтной заявки",
+    "category": "document",
+    "description": "Архивная сверка сопоставляет заявку на вечернюю проверку считывателя, контрольный лист 20:31 и закрытие акта в 20:52. В сводной графе стоит номер заявки и помета «бригада», но отсутствует персональная расписка исполнителя. Сверка подтверждает общую цепочку документов, не личность техника и не связь с телефонным звонком с номера 17.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Заверенная копия архивной сверки хозяйственной службы",
+    "connections_to": ["reader_reconstructed_timeline", "kit_seventeen_service_checklist", "reader_service_signoff", "kit_seventeen_loan_log"]
   },
   "key_signature_comparison": {
     "id": "key_signature_comparison",

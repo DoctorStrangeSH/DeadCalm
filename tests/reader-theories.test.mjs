@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { compareReaderTheories, READER_THEORIES, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, resolveWitnessRecall } from '../src/js/systems/reader-theories.js';
+import { compareReaderTheories, READER_THEORIES, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, resolveWitnessRecall, getReaderEvidenceRoute } from '../src/js/systems/reader-theories.js';
 
 const clues = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
 
@@ -25,7 +25,7 @@ test('three scenarios measure available documents and keep conclusions unproven'
   const updated = compareReaderTheories(id => discovered.has(id));
   assert.deepEqual(updated[0].observed, ['orlov_badge_scan']);
   assert.deepEqual(updated[0].verifiedChecks, ['reader_test_diagnostic']);
-  assert.deepEqual(updated[0].pendingChecks, ['key_signature_comparison']);
+  assert.deepEqual(updated[0].pendingChecks, ['key_signature_comparison', 'reader_archive_crosscheck']);
   assert.equal(updated[0].status, 'Не доказано');
   assert.equal(updated[2].status, 'Не доказано');
 });
@@ -130,4 +130,26 @@ test('repeat interview writes persistent NPC memory once and never gates archive
   assert.match(scene, /GameState\.setFlag\('court_reader_theory_revisit', result\)/);
   assert.match(scene, /if \(result\.trustDelta\) GameState\.updateRelationship/);
   assert.match(cache, /npc-memory\.js/);
+});
+
+test('cooperative and formal access grant one identical, non-identifying archive record', () => {
+  const friendly = resolveTheoryApproach({ theoryId: 'borrowed_badge', verifiedChecks: [] }, 'discreet');
+  const pressured = resolveTheoryApproach({ theoryId: 'borrowed_badge', verifiedChecks: [] }, 'accusation');
+  assert.equal(getReaderEvidenceRoute(friendly, resolveWitnessRecall(friendly, 'conversation')).id, 'cooperation');
+  assert.equal(getReaderEvidenceRoute(pressured, resolveWitnessRecall(pressured, 'conversation')).id, 'formal');
+  assert.equal(getReaderEvidenceRoute(friendly, resolveWitnessRecall(friendly, 'formal')).id, 'formal');
+  assert.equal(getReaderEvidenceRoute(null, resolveWitnessRecall(friendly, 'conversation')), null);
+  assert.equal(getReaderEvidenceRoute(friendly, null), null);
+  assert.match(clues.reader_archive_crosscheck.description, /не личность техника/);
+  assert.ok(clues.reader_archive_crosscheck.connections_to.includes('reader_reconstructed_timeline'));
+  for (const theory of READER_THEORIES) assert.ok(theory.checks.includes('reader_archive_crosscheck'));
+});
+
+test('follow-up action is gated by previous choices and saved chronology', () => {
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /id="reader-theory-evidence"/);
+  assert.match(scene, /getReaderEvidenceRoute\(consequence, revisit\)/);
+  assert.match(scene, /GameState\.hasClue\('reader_archive_crosscheck'\)/);
+  assert.match(scene, /inspectCourtRecord\('reader-theory-evidence', 'reader_archive_crosscheck', narrative, 'reader_reconstructed_timeline'\)/);
+  assert.match(scene, /refreshReaderTheories\(\)/);
 });

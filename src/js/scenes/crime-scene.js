@@ -5,7 +5,7 @@ import { canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation, canConf
 import { setupCourtWorkflow } from '../systems/court-workflow.js';
 import { NPCMemory } from '../systems/npc-memory.js';
 import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS, getReaderTimelineFollowUp } from '../systems/reader-timeline.js';
-import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, resolveWitnessRecall, READER_THEORIES } from '../systems/reader-theories.js';
+import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, resolveWitnessRecall, getReaderEvidenceRoute, READER_THEORIES } from '../systems/reader-theories.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -113,6 +113,8 @@ export function render(container, data) {
           <button type="button" id="reader-theory-revisit-formal" class="reader-theories-option">Продолжить официальной проверкой документов</button>
         </div>
         <p id="reader-theory-revisit-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
+        <button type="button" id="reader-theory-evidence" class="reader-timeline-follow-up" hidden></button>
+        <p id="reader-theory-evidence-status" class="reader-theory-change-note" role="status" aria-live="polite"></p>
         <div id="reader-theory-history" class="reader-theory-history" aria-label="История версий"></div>
       </section>
 
@@ -328,6 +330,8 @@ export function render(container, data) {
   const theoryApproachResult = container.querySelector('#reader-theory-approach-result');
   const theoryRevisit = container.querySelector('#reader-theory-revisit');
   const theoryRevisitResult = container.querySelector('#reader-theory-revisit-result');
+  const theoryEvidenceButton = container.querySelector('#reader-theory-evidence');
+  const theoryEvidenceStatus = container.querySelector('#reader-theory-evidence-status');
   let selectedTheoryId = 'single_operator';
   function refreshReaderTheories() {
     const theories = compareReaderTheories(id => GameState.hasClue(id));
@@ -380,6 +384,13 @@ export function render(container, data) {
     const revisit = GameState.flags.court_reader_theory_revisit;
     theoryRevisit.hidden = !consequence || !!revisit;
     theoryRevisitResult.textContent = revisit ? revisit.text + ` Изменение доверия: ${revisit.trustDelta > 0 ? '+' : ''}${revisit.trustDelta}.` : '';
+    const evidenceRoute = getReaderEvidenceRoute(consequence, revisit);
+    const evidenceDiscovered = GameState.hasClue('reader_archive_crosscheck');
+    theoryEvidenceButton.hidden = !evidenceRoute;
+    theoryEvidenceButton.disabled = !evidenceRoute || evidenceDiscovered;
+    theoryEvidenceButton.textContent = evidenceDiscovered ? '✓ АРХИВНАЯ СВЕРКА ПОЛУЧЕНА' : evidenceRoute?.label || '';
+    theoryEvidenceStatus.textContent = evidenceDiscovered
+      ? GameState.getClue('reader_archive_crosscheck')?.description || '' : '';
     theoryHistory.replaceChildren();
     if (history.length) {
       const title = document.createElement('p');
@@ -429,6 +440,15 @@ export function render(container, data) {
   }
   container.querySelector('#reader-theory-revisit-talk').addEventListener('click', () => revisitTheoryWitness('conversation'));
   container.querySelector('#reader-theory-revisit-formal').addEventListener('click', () => revisitTheoryWitness('formal'));
+  theoryEvidenceButton.addEventListener('click', async () => {
+    const route = getReaderEvidenceRoute(GameState.flags.court_reader_theory_consequence, GameState.flags.court_reader_theory_revisit);
+    if (!route || GameState.hasClue('reader_archive_crosscheck')) return;
+    const narrative = route.id === 'cooperation'
+      ? 'Свидетель помогает запросить архивную сверку: в документе есть запись о проверке считывателя в 20:31 и закрытии акта в 20:52, но не указано имя исполнителя. Содействие ускорило доступ к копии, а не установило виновного.'
+      : 'По официальному запросу канцелярия выдаёт ту же архивную сверку. Личная помощь свидетеля не потребовалась. Документ подтверждает последовательность работ, но не устанавливает участника ремонта.';
+    await inspectCourtRecord('reader-theory-evidence', 'reader_archive_crosscheck', narrative, 'reader_reconstructed_timeline');
+    refreshReaderTheories();
+  });
   refreshReaderTheories();
   let selectedTimelineIndex = 0;
   function selectTimelineEvent(index) {

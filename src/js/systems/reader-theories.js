@@ -5,7 +5,7 @@ export const READER_THEORIES = [
     title: 'Один исполнитель',
     premise: 'Карточкой, ключом и набором пользовался один человек.',
     observations: ['orlov_badge_scan', 'maintenance_tool_issue_ledger', 'kit_seventeen_service_checklist'],
-    checks: ['key_signature_comparison', 'reader_test_diagnostic'],
+    checks: ['key_signature_comparison', 'reader_test_diagnostic', 'reader_archive_crosscheck'],
     question: 'Кто объединяет эти действия? Ни один журнал не называет одного и того же человека.'
   },
   {
@@ -13,7 +13,7 @@ export const READER_THEORIES = [
     title: 'Передача между дежурными',
     premise: 'Инструменты и ключ переходили между несколькими сотрудниками.',
     observations: ['kit_seventeen_loan_log', 'maintenance_tool_issue_ledger', 'reader_service_signoff'],
-    checks: ['key_signature_comparison'],
+    checks: ['key_signature_comparison', 'reader_archive_crosscheck'],
     question: 'Где запись передачи? Коллективная заявка не подтверждает смену владельца ключа.'
   },
   {
@@ -21,7 +21,7 @@ export const READER_THEORIES = [
     title: 'Чужая карточка',
     premise: 'Карточку Орлова предъявлял человек, не являвшийся её владельцем.',
     observations: ['orlov_badge_scan', 'orlov_badge_handover'],
-    checks: ['reader_test_diagnostic'],
+    checks: ['reader_test_diagnostic', 'reader_archive_crosscheck'],
     question: 'Кто предъявил карточку в 20:02 и 20:47? Считыватель не фиксирует лицо.'
   }
 ];
@@ -89,4 +89,14 @@ export function resolveWitnessRecall(consequence, route) {
     route, trustDelta: 2, memoryFlag: 'reader_theory_cooperation',
     text: 'Свидетель помнит, что вы не торопились обвинять. Он готов ещё раз вместе просмотреть журнал, однако без новых записей не может установить личность исполнителя.'
   };
+}
+
+export function getReaderEvidenceRoute(consequence, revisit) {
+  if (!consequence || !revisit) return null;
+  // Only an unpressured witness who agreed to talk can help retrieve the copy.
+  if (consequence.approach === 'discreet' && revisit.route === 'conversation') {
+    return { id: 'cooperation', label: 'Получить копию через содействие свидетеля' };
+  }
+  // The documentary channel remains open after pressure or an apology.
+  return { id: 'formal', label: 'Запросить заверенную копию через канцелярию' };
 }
