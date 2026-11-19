@@ -504,3 +504,16 @@ body { background:#071015; color:#d3d5cc; }
 .investigation-gap-controls button { border:1px solid #75664c; border-radius:3px; padding:5px 8px; color:#dbc69d; background:#263030; font-size:11px; cursor:pointer; }
 .investigation-gap-controls button:disabled { opacity:.45; cursor:default; }
 .investigation-gap-controls button:focus-visible { outline:2px solid #e7cd9c; outline-offset:2px; }
+
+.investigation-gap-journal { margin-top:16px; padding:14px; border:1px solid #62563f; background:linear-gradient(145deg,#18272a,#101a1d); }
+.investigation-gap-journal h4 { color:#d7bd8c; font:600 11px Georgia,serif; letter-spacing:.12em; }
+.investigation-assignment-list { display:grid; gap:9px; margin-top:11px; padding:0; list-style:none; }
+.investigation-assignment-list li { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:6px 12px; padding:11px; border:1px solid #394b49; background:#111e21; }
+.investigation-assignment-list li strong { color:#e1d2b2; font:600 12px Georgia,serif; }
+.investigation-assignment-status { color:#d0b37c; font:10px 'Courier New',monospace; text-transform:uppercase; }
+.investigation-assignment-list li p { grid-column:1/-1; margin:0; color:#aebbb4; font-size:12px; line-height:1.45; }
+.investigation-assignment-open { grid-column:1/-1; justify-self:start; padding:6px 9px; border:1px solid #746346; color:#d9c49a; background:#253235; font-size:10px; letter-spacing:.06em; }
+.investigation-assignment-open:hover { border-color:#d2b47e; background:#304044; }
+.investigation-assignment-open:focus-visible { outline:2px solid #e7cd9c; outline-offset:2px; }
+[data-gap-id]:focus { outline:2px solid #d1ad72; outline-offset:3px; }
+@media(max-width:520px) { .investigation-gap-journal { padding:11px; } .investigation-assignment-list li { grid-template-columns:1fr; } .investigation-assignment-status { grid-row:2; } }
