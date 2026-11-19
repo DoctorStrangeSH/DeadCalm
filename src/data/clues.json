@@ -449,6 +449,26 @@
     "source": "Архивный журнал назначений следственной группы",
     "connections_to": ["old_case_original_order"]
   },
+  "old_case_order_physical_original": {
+    "id": "old_case_order_physical_original",
+    "name": "Оригинал постановления Каллиопы",
+    "category": "document",
+    "description": "Архив выдал подлинный лист постановления. В области подписи бумага повреждена водой: часть штрихов отсутствует, имя подписавшего не читается. Наличие оригинала не устраняет эту утрату.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Оригинал из архивного фонда участка, выданный по описи",
+    "connections_to": ["old_case_original_order", "old_case_signature_samples"]
+  },
+  "old_case_signature_samples": {
+    "id": "old_case_signature_samples",
+    "name": "Контрольные образцы служебных подписей",
+    "category": "document",
+    "description": "Служебные приказы того периода содержат проверяемые подписи нескольких уполномоченных сотрудников. Они пригодны как независимые образцы, но исходный росчерк на постановлении сохранился лишь частично.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Подборка подписанных приказов из фонда кадровой службы",
+    "connections_to": ["old_case_order_physical_original"]
+  },
   "judge_notes": {
     "id": "judge_notes",
     "name": "Дневник судьи",

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dead-calm-visual-v68';
+const CACHE_NAME = 'dead-calm-visual-v69';
 const ASSETS = [
   '/',
   '/index.html',
@@ -29,6 +29,7 @@ const ASSETS = [
   '/src/js/systems/old-case-crosscheck.js',
   '/src/js/systems/old-case-closure.js',
   '/src/js/systems/old-case-order.js',
+  '/src/js/systems/old-case-signature.js',
   '/src/js/systems/investigation.js',
   '/src/js/components/investigation-board.js',
   '/src/js/utils/helpers.js',

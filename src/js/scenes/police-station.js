@@ -3,6 +3,7 @@ import { DialogBox } from '../components/dialog-box.js';
 import { GameState } from '../core/state.js';
 import { assessOldCaseClosure, recordOldCaseClosure } from '../systems/old-case-closure.js';
 import { assessOldCaseOrder, recordOldCaseOrderInterpretation, OLD_CASE_ORDER_INTERPRETATIONS } from '../systems/old-case-order.js';
+import { assessOldCaseSignature, recordOldCaseSignatureAction, OLD_CASE_SIGNATURE_ACTIONS } from '../systems/old-case-signature.js';
 
 export function render(container, data) {
   container.innerHTML = `
@@ -63,6 +64,15 @@ export function render(container, data) {
         <div id="precinct-old-case-order-options" class="reader-theories-options" role="group" aria-label="Рабочая оценка полномочий"></div>
         <p id="precinct-old-case-order-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
       </section>
+      <section id="precinct-old-case-signature" class="reader-theories-view mb-6" aria-label="Независимая проверка подписи" hidden>
+        <p class="reader-timeline-kicker">ЭКСПЕРТИЗА / ПРОВЕРКА ПОДПИСИ</p>
+        <h3 class="reader-timeline-title">Сохранился ли исходный росчерк?</h3>
+        <div id="precinct-old-case-signature-detail" class="reader-theories-detail" aria-live="polite"></div>
+        <button id="precinct-signature-original" class="reader-timeline-follow-up">ЗАПРОСИТЬ ОРИГИНАЛ ПОСТАНОВЛЕНИЯ</button>
+        <button id="precinct-signature-samples" class="reader-timeline-follow-up">ПОЛУЧИТЬ НЕЗАВИСИМЫЕ ОБРАЗЦЫ ПОДПИСЕЙ</button>
+        <div id="precinct-old-case-signature-options" class="reader-theories-options" role="group" aria-label="Выбор дополнительной проверки"></div>
+        <p id="precinct-old-case-signature-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
+      </section>
       <div id="dialog-container" class="hidden"></div>
     </div>
   `;
@@ -78,6 +88,44 @@ export function render(container, data) {
   const rosterRequest = container.querySelector('#precinct-old-case-roster-request');
   const orderOptions = container.querySelector('#precinct-old-case-order-options');
   const orderResult = container.querySelector('#precinct-old-case-order-result');
+  const signaturePanel = container.querySelector('#precinct-old-case-signature');
+  const signatureDetail = container.querySelector('#precinct-old-case-signature-detail');
+  const signatureOriginal = container.querySelector('#precinct-signature-original');
+  const signatureSamples = container.querySelector('#precinct-signature-samples');
+  const signatureOptions = container.querySelector('#precinct-old-case-signature-options');
+  const signatureResult = container.querySelector('#precinct-old-case-signature-result');
+  function refreshOldCaseSignature() {
+    const assessment = assessOldCaseSignature(id => GameState.hasClue(id), GameState.flags.court_old_case_order_interpretation);
+    signaturePanel.hidden = !assessment;
+    signatureDetail.replaceChildren();
+    signatureOptions.replaceChildren();
+    if (!assessment) return;
+    signatureOriginal.hidden = GameState.hasClue('old_case_order_physical_original');
+    signatureSamples.hidden = GameState.hasClue('old_case_signature_samples');
+    for (const detail of [`Собрано источников: ${assessment.found.length} из 2.`,
+      ...(assessment.ready ? [assessment.finding, assessment.limit] : [])]) {
+      const line = document.createElement('p');
+      line.textContent = detail;
+      signatureDetail.appendChild(line);
+    }
+    const saved = GameState.flags.court_old_case_signature_action;
+    signatureResult.textContent = saved ? saved.result : '';
+    if (!assessment.ready || saved) return;
+    for (const action of OLD_CASE_SIGNATURE_ACTIONS) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'reader-theories-option';
+      button.textContent = action.label;
+      button.addEventListener('click', () => {
+        const current = assessOldCaseSignature(id => GameState.hasClue(id), GameState.flags.court_old_case_order_interpretation);
+        const selected = recordOldCaseSignatureAction(action.id, current, GameState.flags.court_old_case_signature_action);
+        if (!selected) return;
+        GameState.setFlag('court_old_case_signature_action', selected);
+        refreshOldCaseSignature();
+      });
+      signatureOptions.appendChild(button);
+    }
+  }
   function refreshOldCaseOrder() {
     const check = assessOldCaseOrder(id => GameState.hasClue(id), GameState.flags.court_old_case_closure_review);
     orderPanel.hidden = !check;
@@ -106,6 +154,7 @@ export function render(container, data) {
         if (!result) return;
         GameState.setFlag('court_old_case_order_interpretation', result);
         refreshOldCaseOrder();
+        refreshOldCaseSignature();
       });
       orderOptions.appendChild(button);
     }
@@ -132,7 +181,9 @@ export function render(container, data) {
   }
   async function retrieveOldCaseDocument(clueId, button) {
     const isOrderDocument = ['old_case_original_order', 'old_case_authority_roster'].includes(clueId);
-    if (isOrderDocument ? !GameState.flags.court_old_case_closure_review : !GameState.flags.court_old_case_reading) return;
+    const isSignatureDocument = ['old_case_order_physical_original', 'old_case_signature_samples'].includes(clueId);
+    if (isSignatureDocument ? !GameState.flags.court_old_case_order_interpretation
+      : isOrderDocument ? !GameState.flags.court_old_case_closure_review : !GameState.flags.court_old_case_reading) return;
     if (GameState.hasClue(clueId)) return;
     button.disabled = true;
     try {
@@ -143,6 +194,7 @@ export function render(container, data) {
       GameState.addClue(catalog[clueId]);
       refreshOldCase();
       refreshOldCaseOrder();
+      refreshOldCaseSignature();
     } catch (error) {
       button.disabled = false;
       oldCaseStatus.textContent = 'Архив временно недоступен. Повторите запрос позже.';
@@ -153,6 +205,8 @@ export function render(container, data) {
   oldCaseInventory.addEventListener('click', () => retrieveOldCaseDocument('old_case_archive_inventory', oldCaseInventory));
   orderRequest.addEventListener('click', () => retrieveOldCaseDocument('old_case_original_order', orderRequest));
   rosterRequest.addEventListener('click', () => retrieveOldCaseDocument('old_case_authority_roster', rosterRequest));
+  signatureOriginal.addEventListener('click', () => retrieveOldCaseDocument('old_case_order_physical_original', signatureOriginal));
+  signatureSamples.addEventListener('click', () => retrieveOldCaseDocument('old_case_signature_samples', signatureSamples));
   oldCaseAssess.addEventListener('click', () => {
     const note = recordOldCaseClosure(assessOldCaseClosure(id => GameState.hasClue(id), GameState.flags.court_old_case_reading), GameState.flags.court_old_case_closure_review);
     if (!note) return;
@@ -162,6 +216,7 @@ export function render(container, data) {
   });
   refreshOldCase();
   refreshOldCaseOrder();
+  refreshOldCaseSignature();
 
   document.getElementById('btn-talk-ray').addEventListener('click', async function() {
     const actions = container.querySelector('#precinct-actions');
