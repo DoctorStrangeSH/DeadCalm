@@ -60,3 +60,24 @@ test('audit spots evidence islands and unavailable references without plot spoil
   assert.equal(result.needsReview, true);
   assert.equal(JSON.stringify(result).includes('lost'), false);
 });
+
+test('audit flags shared origin independently of known graph connections', () => {
+  const clues = [{ id: 'a', source: 'Архив порта' }, { id: 'b', source: 'архив порта' },
+    { id: 'c', source: 'Личный дневник' }, { id: 'd' }];
+  const result = auditHypothesisEvidence({ clueIds: ['a', 'b', 'c', 'd'] }, clues, {
+    a: { connections_to: ['b', 'c'] }, b: { connections_to: ['d'] }
+  });
+  assert.equal(result.needsReview, false);
+  assert.deepEqual(result.sharedSources[0].clueIds, ['a', 'b']);
+  assert.equal(result.unknownSources, 1);
+  assert.equal(result.sharedSources.length, 1);
+});
+
+test('missing documents and unverified sources never leak into provenance groups', () => {
+  const result = auditHypothesisEvidence({ clueIds: ['a', 'hidden'] }, [{ id: 'a', source: 'Запись' }], {
+    hidden: { source: 'Тайный источник' }
+  });
+  assert.equal(result.missing, 1);
+  assert.equal(result.sharedSources.length, 0);
+  assert.equal(JSON.stringify(result).includes('Тайный источник'), false);
+});

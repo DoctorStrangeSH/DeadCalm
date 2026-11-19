@@ -64,6 +64,21 @@ export function auditHypothesisEvidence(hypothesis, availableClues, catalog = {}
     }
     groups.push(group);
   }
+  // A known graph link is not independent corroboration. Group only identical,
+  // explicitly documented origins; an unknown origin must never count as independent.
+  const bySource = new Map();
+  let unknownSources = 0;
+  for (const id of ids) {
+    const clue = found.get(id);
+    const source = (typeof clue.source === 'string' && clue.source.trim()) ||
+      (typeof catalog[id]?.source === 'string' && catalog[id].source.trim()) || '';
+    if (!source) { unknownSources++; continue; }
+    const key = source.toLocaleLowerCase('ru-RU');
+    if (!bySource.has(key)) bySource.set(key, { label: source, clueIds: [] });
+    bySource.get(key).clueIds.push(id);
+  }
+  const sharedSources = [...bySource.values()].filter(group => group.clueIds.length > 1);
   return { attached: ids.length, missing: (hypothesis.clueIds || []).filter(id => !found.has(id)).length,
-    connections, groups, needsReview: groups.length > 1 };
+    connections, groups, needsReview: groups.length > 1,
+    unknownSources, sharedSources };
 }

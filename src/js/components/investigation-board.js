@@ -174,7 +174,10 @@ export class InvestigationBoard {
             : audit.needsReview ? `Связанные группы улик: ${audit.groups.length}. Между некоторыми материалами нет установленной связи — проверьте промежуточные факты.`
             : `Все ${audit.attached} прикреплённые улики входят в одну цепочку известных связей.`}</p>
           ${audit.missing ? `<p>Недоступных материалов: ${audit.missing}. Перепроверьте состав гипотезы.</p>` : ''}
-          <small>Это проверка связности материалов, а не доказательство истинности версии.</small>
+          ${audit.sharedSources.length ? `<p>⚠ Совпадающее происхождение: ${audit.sharedSources.length} ${audit.sharedSources.length === 1 ? 'группа' : 'групп(ы)'} документов. Это ещё не независимые подтверждения.</p>
+          ${audit.sharedSources.map(group => `<p class="hypothesis-evidence">${group.clueIds.map(id => this._escapeHtml(clueNames.get(id) || 'Материал')).join(' · ')} — источник: ${this._escapeHtml(group.label)}</p>`).join('')}` : ''}
+          ${audit.unknownSources ? `<p>Не указан источник у ${audit.unknownSources} ${audit.unknownSources === 1 ? 'улики' : 'улик(и)'} — независимость оценить нельзя.</p>` : ''}
+          <small>Связь на доске не доказывает достоверность или независимость источников и не подтверждает истинность версии.</small>
         </aside>
         ${contradictions.length ? `<aside class="hypothesis-contradictions" aria-label="Обнаруженные противоречия">
           <strong>ТРЕБУЮТ ПРОВЕРКИ · ${contradictions.length}</strong>
