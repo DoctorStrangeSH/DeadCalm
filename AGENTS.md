@@ -78,3 +78,8 @@ Before creating or restyling any scene, read `docs/VISUAL_STYLE_GUIDE.md` and `d
 ## Persistent mini-game results
 
 `GameState.miniGameProgress` persists best and last results for radio tuning and mechanical repair. The office cards display the record. Read the `Persistent mini-game progress` section in `docs/MINIGAME_DESIGN.md`. The progress helper is cached by Service Worker v92. Do not treat practice results as clues or story facts without explicit authored narrative integration.
+
+
+## Film Restoration prototype
+
+A tested simulation exists in `src/js/systems/film-restoration.js`, with tests in `tests/film-restoration.test.mjs`. It is not yet a playable scene. It must receive bespoke Blackford-style painted equipment/film art, a distinct layout, accessible pointer controls, audio/animation, persistent result integration, and a real office entry point before being called complete. The persistent mini-game type `film-restoration` is now supported.
