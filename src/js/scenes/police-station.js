@@ -9,6 +9,7 @@ import { NPCMemory } from '../systems/npc-memory.js';
 import { canApproachMorganAboutOldCase, resolveMorganOldCaseApproach, OLD_CASE_MORGAN_APPROACHES } from '../systems/old-case-morgan.js';
 import { planMorganRevisit, recordMorganRevisit } from '../systems/old-case-morgan-revisit.js';
 import { assessOldCaseSources, recordOldCaseSourceReading, OLD_CASE_SOURCE_READINGS } from '../systems/old-case-source-audit.js';
+import { assessOldCaseWitnesses, recordOldCaseWitnessReading, OLD_CASE_WITNESS_STATEMENTS } from '../systems/old-case-witnesses.js';
 
 export function render(container, data) {
   container.innerHTML = `
@@ -105,6 +106,14 @@ export function render(container, data) {
         <div id="precinct-source-audit-options" class="reader-theories-options" role="group" aria-label="Оценка независимых источников"></div>
         <p id="precinct-source-audit-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
       </section>
+      <section id="precinct-old-witnesses" class="reader-theories-view mb-6" aria-label="Архивные свидетельства по делу Каллиопы" hidden>
+        <p class="reader-timeline-kicker">АРХИВ / ПРЯМОЕ НАБЛЮДЕНИЕ И ПЕРЕСКАЗ</p>
+        <h3 class="reader-timeline-title">Кто действительно был очевидцем?</h3>
+        <div id="precinct-old-witness-requests" class="reader-theories-options"></div>
+        <div id="precinct-old-witness-detail" class="reader-theories-detail" aria-live="polite"></div>
+        <div id="precinct-old-witness-choices" class="reader-theories-options" role="group" aria-label="Оценить происхождение показаний"></div>
+        <p id="precinct-old-witness-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
+      </section>
       <div id="dialog-container" class="hidden"></div>
     </div>
   `;
@@ -140,6 +149,52 @@ export function render(container, data) {
   const auditDetail = container.querySelector('#precinct-source-audit-detail');
   const auditOptions = container.querySelector('#precinct-source-audit-options');
   const auditResult = container.querySelector('#precinct-source-audit-result');
+  const witnessesPanel = container.querySelector('#precinct-old-witnesses');
+  const witnessRequests = container.querySelector('#precinct-old-witness-requests');
+  const witnessDetail = container.querySelector('#precinct-old-witness-detail');
+  const witnessChoices = container.querySelector('#precinct-old-witness-choices');
+  const witnessResult = container.querySelector('#precinct-old-witness-result');
+  function refreshOldWitnesses() {
+    const check = assessOldCaseWitnesses(id => GameState.hasClue(id), GameState.flags.court_old_case_source_audit);
+    witnessesPanel.hidden = !check;
+    witnessRequests.replaceChildren();
+    witnessDetail.replaceChildren();
+    witnessChoices.replaceChildren();
+    if (!check) return;
+    for (const statement of OLD_CASE_WITNESS_STATEMENTS) {
+      if (GameState.hasClue(statement.clueId)) continue;
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'reader-timeline-follow-up';
+      button.textContent = statement.button;
+      button.addEventListener('click', () => retrieveOldCaseDocument(statement.clueId, button));
+      witnessRequests.appendChild(button);
+    }
+    const note = document.createElement('p');
+    note.textContent = check.ready ? check.question : `Получено свидетельств: ${check.found.length} из 2. Запросите оба документа.`;
+    witnessDetail.appendChild(note);
+    const saved = GameState.flags.court_old_case_witness_reading;
+    witnessResult.textContent = saved ? `${saved.conclusion} ${saved.nextStep}` : '';
+    if (!check.ready || saved) return;
+    for (const [id, label] of [
+      ['both_direct', 'Оба показания — независимые наблюдения.'],
+      ['direct_only', 'Только приём папки описан очевидцем; рассказ о судье — пересказ.'],
+      ['both_rumor', 'Оба показания являются слухами.']
+    ]) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'reader-theories-option';
+      button.textContent = label;
+      button.addEventListener('click', () => {
+        const result = recordOldCaseWitnessReading(id, check, GameState.flags.court_old_case_witness_reading);
+        if (!result) return;
+        if (!result.correct) { witnessResult.textContent = result.feedback; return; }
+        GameState.setFlag('court_old_case_witness_reading', result);
+        refreshOldWitnesses();
+      });
+      witnessChoices.appendChild(button);
+    }
+  }
   function refreshSourceAudit() {
     const check = assessOldCaseSources(id => GameState.hasClue(id), GameState.flags.court_old_case_source_audit);
     auditPanel.hidden = !check;
@@ -167,6 +222,7 @@ export function render(container, data) {
         if (!result.correct) { auditResult.textContent = result.feedback; return; }
         GameState.setFlag('court_old_case_source_audit', result);
         refreshSourceAudit();
+        refreshOldWitnesses();
       });
       auditOptions.appendChild(button);
     }
@@ -330,7 +386,9 @@ export function render(container, data) {
     const followUp = assessOldCaseFollowUp(GameState.flags.court_old_case_signature_action, id => GameState.hasClue(id));
     const isFollowUpDocument = ['old_case_specialist_memo', 'old_case_custody_extract'].includes(clueId);
     const revisit = planMorganRevisit(GameState.flags.court_old_case_morgan_approach);
-    if (clueId === 'old_case_transfer_card' ? !revisit
+    const isWitnessDocument = OLD_CASE_WITNESS_STATEMENTS.some(item => item.clueId === clueId);
+    if (isWitnessDocument ? !GameState.flags.court_old_case_source_audit
+      : clueId === 'old_case_transfer_card' ? !revisit
       : isFollowUpDocument ? followUp?.clueId !== clueId
       : isSignatureDocument ? !GameState.flags.court_old_case_order_interpretation
       : isOrderDocument ? !GameState.flags.court_old_case_closure_review : !GameState.flags.court_old_case_reading) return;
@@ -348,6 +406,7 @@ export function render(container, data) {
       refreshOldCaseFollowUp();
       refreshMorganRevisit();
       refreshSourceAudit();
+      refreshOldWitnesses();
     } catch (error) {
       button.disabled = false;
       oldCaseStatus.textContent = 'Архив временно недоступен. Повторите запрос позже.';
@@ -396,6 +455,7 @@ export function render(container, data) {
   refreshMorganOldCase();
   refreshMorganRevisit();
   refreshSourceAudit();
+  refreshOldWitnesses();
 
   document.getElementById('btn-talk-ray').addEventListener('click', async function() {
     const actions = container.querySelector('#precinct-actions');
