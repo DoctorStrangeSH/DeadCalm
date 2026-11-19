@@ -3,6 +3,7 @@ import { Investigation } from '../systems/investigation.js';
 import { Events } from '../core/events.js';
 import { HYPOTHESIS_STATUS_LABELS, auditHypothesisEvidence } from '../systems/hypotheses.js';
 import { findContradictions } from '../systems/contradictions.js';
+import { getOldCaseBoardDigest } from '../systems/old-case-board-digest.js';
 
 /**
  * Доска расследования.
@@ -19,6 +20,7 @@ export class InvestigationBoard {
   async render() {
     await Investigation.init();
     var clues = GameState.currentCase.clues;
+    const archiveDigest = getOldCaseBoardDigest(clues, GameState.flags);
     this.connections = Investigation.getConnections();
     var self = this;
 
@@ -69,6 +71,19 @@ export class InvestigationBoard {
           <p id="board-hint" class="board-hint">Выберите две улики, чтобы проверить связь</p>
           <button id="btn-clear-selection" class="btn-noir text-xs py-2">СБРОСИТЬ ВЫБОР</button>
         </div>
+        ${archiveDigest ? `<section class="board-hypotheses" aria-label="Архивное дело Каллиопы">
+          <h3>АРХИВ · ДЕЛО КАЛЛИОПЫ</h3>
+          <p>Получено материалов: ${archiveDigest.total}. Нажмите на документ, чтобы найти его на доске.</p>
+          ${archiveDigest.groups.map(group => `<div class="hypothesis-entry">
+            <h4>${self._escapeHtml(group.title)}</h4>
+            <div class="reader-theories-options">${group.clueIds.map(id => {
+              const clue = clues.find(item => item.id === id);
+              return `<button type="button" class="reader-theories-option" data-archive-clue-id="${self._escapeHtml(id)}">${self._escapeHtml(clue.name)}</button>`;
+            }).join('')}</div>
+          </div>`).join('')}
+          ${archiveDigest.observations.map(note => `<p class="hypothesis-evidence">✓ ${self._escapeHtml(note)}</p>`).join('')}
+          <small>${self._escapeHtml(archiveDigest.warning)}</small>
+        </section>` : ''}
         <section class="board-hypotheses" aria-label="Архив гипотез">
           <h3>АРХИВ ГИПОТЕЗ</h3>
           <p>Запишите свою версию событий. Гипотеза — предположение детектива, а не установленный факт.</p>
@@ -90,6 +105,15 @@ export class InvestigationBoard {
     this._drawConnectionLines();
     this._observeBoardSize();
     this._setupHypotheses();
+    this.container.querySelectorAll('[data-archive-clue-id]').forEach(button => {
+      button.addEventListener('click', () => {
+        const card = Array.from(this.container.querySelectorAll('.board-clue-card'))
+          .find(element => element.dataset.clueId === button.dataset.archiveClueId);
+        if (!card) return;
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.focus({ preventScroll: true });
+      });
+    });
   }
 
   _setupHypotheses() {
