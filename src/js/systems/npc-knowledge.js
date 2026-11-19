@@ -76,10 +76,11 @@ export function updateNpcKnowledgeState(ledger, entryId, state, reason) {
       typeof reason !== 'string' || !reason.trim()) return null;
   const entry = ledger.entries.find(item => item.id === entryId);
   if (!entry || entry.state === state) return null;
+  const previousState = entry.state;
   entry.state = state;
   entry.stateHistory = Array.isArray(entry.stateHistory) ? entry.stateHistory : [];
   entry.stateHistory.push({
-    from: entry.stateHistory.length ? entry.stateHistory[entry.stateHistory.length - 1].to : 'unverified',
+    from: entry.stateHistory.length ? entry.stateHistory[entry.stateHistory.length - 1].to : previousState,
     to: state,
     reason: reason.trim(),
     changedAt: new Date().toISOString()
