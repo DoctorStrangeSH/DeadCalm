@@ -48,3 +48,8 @@ Read `docs/NPC_SOCIAL_GRAPH.md` before working with NPC knowledge. NPC knowledge
 ## NPC daily-life schedules
 
 Read `docs/NPC_SOCIAL_GRAPH.md` before editing NPC schedules. Only author source-backed schedules; use in-game day/minute, never wall-clock time. Schedule lookup does not advance time or simulate movement. Record occurrences only against a matching authored schedule with an explicit basis. Do not invent routines for the six protected original characters. Autonomous simulation and time integration remain future work.
+
+
+## Product identity boundary — mandatory
+
+Before proposing or implementing major gameplay features, read `docs/PRODUCT_IDENTITY.md`. Dead Calm is a separate product from the owner's Ghost Signal project. Do not clone Ghost Signal's case archive, city-map investigation loop, clue-search scenes, evidence board, witness-call hub, hidden-object/code mini-games, document-fragment notebook, or day/night availability loop. Deepen Dead Calm's established persistent-character continuity, personal relationships, attributed knowledge, memories, schedules, and consequences instead. Any feature that risks converging on Ghost Signal requires explicit owner approval before implementation.
