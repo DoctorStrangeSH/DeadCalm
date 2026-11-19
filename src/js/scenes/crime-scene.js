@@ -8,6 +8,7 @@ import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS, getReaderTimelineFol
 import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, resolveWitnessRecall, getReaderEvidenceRoute, READER_THEORIES } from '../systems/reader-theories.js';
 import { assessReaderInvestigation } from '../systems/investigation-quality.js';
 import { buildReaderEpisodeConclusion, hasNewConclusionEvidence } from '../systems/episode-conclusion.js';
+import { reviewReaderConclusion } from '../systems/conclusion-review.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -126,6 +127,8 @@ export function render(container, data) {
         <p class="reader-timeline-intro">Аудит показывает полноту проверок и доказанные расхождения. Это не рейтинг раскрытия преступления.</p>
         <div id="reader-quality-detail" class="reader-theories-detail" aria-live="polite"></div>
         <button type="button" id="reader-conclusion-save" class="reader-timeline-follow-up">СОСТАВИТЬ ПРОМЕЖУТОЧНОЕ ЗАКЛЮЧЕНИЕ</button>
+        <button type="button" id="reader-conclusion-submit" class="reader-timeline-follow-up" hidden>ПЕРЕДАТЬ ЗАКЛЮЧЕНИЕ НА ПРОВЕРКУ</button>
+        <div id="reader-conclusion-reviews" class="reader-theory-history" aria-label="Замечания по заключениям"></div>
         <div id="reader-conclusion-history" class="reader-theory-history" aria-label="Сохранённые заключения"></div>
       </section>
 
@@ -346,6 +349,8 @@ export function render(container, data) {
   const qualityDetail = container.querySelector('#reader-quality-detail');
   const conclusionButton = container.querySelector('#reader-conclusion-save');
   const conclusionHistory = container.querySelector('#reader-conclusion-history');
+  const conclusionSubmit = container.querySelector('#reader-conclusion-submit');
+  const conclusionReviews = container.querySelector('#reader-conclusion-reviews');
   let qualityRules = [];
   function refreshReaderQuality() {
     const audit = assessReaderInvestigation(GameState.currentCase, qualityRules, GameState.flags);
@@ -380,6 +385,26 @@ export function render(container, data) {
     conclusionButton.disabled = !canRevise;
     conclusionButton.textContent = !history.length ? 'СОСТАВИТЬ ПРОМЕЖУТОЧНОЕ ЗАКЛЮЧЕНИЕ'
       : canRevise ? 'ОБНОВИТЬ ЗАКЛЮЧЕНИЕ ПО НОВЫМ ФАКТАМ' : '✓ ЗАКЛЮЧЕНИЕ СОХРАНЕНО · НОВЫХ ФАКТОВ НЕТ';
+    const reviews = Array.isArray(GameState.flags.court_reader_conclusion_reviews) ? GameState.flags.court_reader_conclusion_reviews : [];
+    const latest = history.at(-1);
+    const alreadyReviewed = reviews.some(item => item.conclusionVersion === latest?.version);
+    conclusionSubmit.hidden = !latest;
+    conclusionSubmit.disabled = !latest || alreadyReviewed;
+    conclusionSubmit.textContent = alreadyReviewed ? '✓ ПОСЛЕДНЯЯ РЕДАКЦИЯ ПРОВЕРЕНА' : 'ПЕРЕДАТЬ ЗАКЛЮЧЕНИЕ НА ПРОВЕРКУ';
+    conclusionReviews.replaceChildren();
+    for (const review of reviews) {
+      const block = document.createElement('div');
+      block.className = 'reader-conclusion-entry';
+      const title = document.createElement('strong');
+      title.textContent = `Рецензия на версию ${review.conclusionVersion} · ${review.status}`;
+      block.appendChild(title);
+      for (const comment of review.comments) {
+        const line = document.createElement('p');
+        line.textContent = comment;
+        block.appendChild(line);
+      }
+      conclusionReviews.appendChild(block);
+    }
     conclusionHistory.replaceChildren();
     if (history.length) {
       const heading = document.createElement('p');
@@ -406,6 +431,15 @@ export function render(container, data) {
     const draft = buildReaderEpisodeConclusion(GameState.currentCase, qualityRules, GameState.flags, history);
     if (!hasNewConclusionEvidence(history.at(-1), draft)) return;
     GameState.setFlag('court_reader_conclusions', [...history, draft]);
+    refreshReaderQuality();
+  });
+  conclusionSubmit.addEventListener('click', () => {
+    const history = GameState.flags.court_reader_conclusions;
+    const latest = Array.isArray(history) ? history.at(-1) : null;
+    const reviews = Array.isArray(GameState.flags.court_reader_conclusion_reviews) ? GameState.flags.court_reader_conclusion_reviews : [];
+    const result = reviewReaderConclusion(latest, reviews);
+    if (!result) return;
+    GameState.setFlag('court_reader_conclusion_reviews', [...reviews, result]);
     refreshReaderQuality();
   });
   let selectedTheoryId = 'single_operator';
