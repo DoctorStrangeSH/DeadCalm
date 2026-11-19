@@ -33,6 +33,26 @@ export const HYPOTHESIS_STATUS_LABELS = Object.freeze({
   confirmed: 'Подтверждена', rejected: 'Отвергнута'
 });
 
+/** Newly found documents directly linked to a theory's attached evidence.
+ *  A catalog link is a lead to recheck, never automatic corroboration. */
+export function findNewEvidenceLeads(hypothesis, availableClues = [], catalog = {}) {
+  const attached = new Set(hypothesis?.clueIds || []);
+  if (!attached.size || !Number.isFinite(Date.parse(hypothesis?.updatedAt))) return [];
+  const lastReviewedAt = Date.parse(hypothesis.updatedAt);
+  const discovered = new Map(availableClues.filter(clue => clue?.id).map(clue => [clue.id, clue]));
+  return [...discovered.values()].filter(clue => {
+    if (attached.has(clue.id)) return false;
+    const foundAt = Date.parse(clue.foundAt);
+    if (!Number.isFinite(foundAt) || foundAt <= lastReviewedAt) return false;
+    return [...attached].some(id => {
+      if (!discovered.has(id)) return false;
+      const a = catalog[id]?.connections_to || discovered.get(id)?.connections_to || [];
+      const b = catalog[clue.id]?.connections_to || clue.connections_to || [];
+      return a.includes(clue.id) || b.includes(id);
+    });
+  }).map(clue => ({ id: clue.id, name: clue.name || 'Новый материал' }));
+}
+
 /** An evidence-link audit, not an automatic judgment about a theory's truth. */
 export function auditHypothesisEvidence(hypothesis, availableClues, catalog = {}) {
   const found = new Map(availableClues.filter(clue => clue.id).map(clue => [clue.id, clue]));

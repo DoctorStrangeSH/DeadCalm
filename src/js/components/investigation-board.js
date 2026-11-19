@@ -1,7 +1,7 @@
 import { GameState } from '../core/state.js';
 import { Investigation } from '../systems/investigation.js';
 import { Events } from '../core/events.js';
-import { HYPOTHESIS_STATUS_LABELS, auditHypothesisEvidence } from '../systems/hypotheses.js';
+import { HYPOTHESIS_STATUS_LABELS, auditHypothesisEvidence, findNewEvidenceLeads } from '../systems/hypotheses.js';
 import { findContradictions } from '../systems/contradictions.js';
 import { getOldCaseBoardDigest } from '../systems/old-case-board-digest.js';
 
@@ -161,12 +161,19 @@ export class InvestigationBoard {
     list.innerHTML = hypotheses.length ? hypotheses.map(item => {
       const audit = auditHypothesisEvidence(item, clues, Investigation._cluesData || {});
       const contradictions = findContradictions(item, clues, Investigation._contradictionRules);
+      const newLeads = findNewEvidenceLeads(item, clues, Investigation._cluesData || {});
       return `
       <article class="hypothesis-entry">
         <h4>${this._escapeHtml(item.title)}</h4>
         <p>${this._escapeHtml(item.reasoning)}</p>
         <p class="hypothesis-meta">УЛИКИ: ${(item.clueIds || []).length} · ИЗМЕНЕНИЙ: ${Math.max(0, (item.history || []).length - 1)}</p>
         <p class="hypothesis-evidence">${(item.clueIds || []).map(id => `<span>◇ ${this._escapeHtml(clueNames.get(id) || 'Материал недоступен')}</span>`).join('') || 'Улики пока не прикреплены'}</p>
+        ${newLeads.length ? `<aside class="hypothesis-audit" aria-label="Новые материалы для пересмотра">
+          <strong>НОВЫЕ МАТЕРИАЛЫ · ${newLeads.length}</strong>
+          <p>После последнего изменения этой версии появились связанные документы. Проверьте их и при необходимости пересмотрите вывод.</p>
+          <p class="hypothesis-evidence">${newLeads.map(lead => `<span>◇ ${this._escapeHtml(lead.name)}</span>`).join('')}</p>
+          <small>Это возможные направления проверки, а не подтверждение гипотезы. Материалы не добавляются автоматически.</small>
+        </aside>` : ''}
         <aside class="hypothesis-audit" aria-label="Проверка опорных улик">
           <strong>АНАЛИЗ ДОКАЗАТЕЛЬСТВ</strong>
           <p>${audit.attached === 0 ? 'Пока нет опорных улик: версия требует проверки.'

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { auditHypothesisEvidence, createHypothesis, reviseHypothesis } from '../src/js/systems/hypotheses.js';
+import { auditHypothesisEvidence, createHypothesis, reviseHypothesis, findNewEvidenceLeads } from '../src/js/systems/hypotheses.js';
 
 const evidence = [{ id: 'autopsy' }, { id: 'letter' }];
 
@@ -80,4 +80,23 @@ test('missing documents and unverified sources never leak into provenance groups
   assert.equal(result.missing, 1);
   assert.equal(result.sharedSources.length, 0);
   assert.equal(JSON.stringify(result).includes('Тайный источник'), false);
+});
+
+test('new evidence leads mention only found clues linked after last revision', () => {
+  const hypothesis = { clueIds: ['archive'], updatedAt: '2026-11-18T12:00:00Z' };
+  const clues = [
+    { id: 'archive', foundAt: '2026-11-17T12:00:00Z' },
+    { id: 'new', name: 'Путевой лист', foundAt: '2026-11-19T12:00:00Z' },
+    { id: 'old', foundAt: '2026-11-17T12:00:00Z' },
+    { id: 'unrelated', foundAt: '2026-11-19T12:00:00Z' }
+  ];
+  const catalog = { archive: { connections_to: ['new', 'old', 'hidden'] } };
+  assert.deepEqual(findNewEvidenceLeads(hypothesis, clues, catalog), [{ id: 'new', name: 'Путевой лист' }]);
+  assert.equal(findNewEvidenceLeads({ ...hypothesis, updatedAt: '2026-11-20T12:00:00Z' }, clues, catalog).length, 0);
+});
+
+test('unverified timestamps and absent supporting clues never reveal leads', () => {
+  const clues = [{ id: 'new', foundAt: '2026-11-19T12:00:00Z', connections_to: ['secret'] }];
+  assert.deepEqual(findNewEvidenceLeads({ clueIds: ['secret'], updatedAt: '2026-11-18T12:00:00Z' }, clues), []);
+  assert.deepEqual(findNewEvidenceLeads({ clueIds: ['new'], updatedAt: 'unknown' }, clues), []);
 });
