@@ -1,5 +1,6 @@
 import { GameState } from '../core/state.js';
 import { Events } from '../core/events.js';
+import { appendWitnessInterview, getWitnessInterviewContext } from './witness-interview-history.js';
 
 export var NPCMemory = {
   getMemory(npcId) {
@@ -12,7 +13,8 @@ export var NPCMemory = {
         questionCount: 0,
         unlockedTopics: [],
         askedQuestions: [],
-        criticalChoiceMade: false
+        criticalChoiceMade: false,
+        interviewHistory: []
       };
     }
     return GameState.npcMemory[npcId];
@@ -44,6 +46,23 @@ export var NPCMemory = {
     memory.met = true;
     memory.conversationCount++;
     GameState.save();
+  },
+
+  recordInterview(npcId, details) {
+    var memory = this.getMemory(npcId);
+    var event = appendWitnessInterview(memory, { ...details, npcId: npcId });
+    if (!event) return null;
+    GameState.save();
+    Events.emit('npc:interview_recorded', { npcId: npcId, sequence: event.sequence, tone: event.tone, response: event.response });
+    return event;
+  },
+
+  getInterviewHistory(npcId) {
+    return this.getMemory(npcId).interviewHistory || [];
+  },
+
+  getInterviewContext(npcId) {
+    return getWitnessInterviewContext(this.getMemory(npcId));
   },
 
   changeTrust(npcId, delta) {
