@@ -112,3 +112,16 @@ The current prototype is a framework-independent state machine with four player 
 It supports recoverable observation/alignment mistakes, records action history, distinguishes clean success from partial success after damage or mistakes, and rejects out-of-order actions.
 
 **Important status:** this is a tested gameplay-logic prototype only. It is not yet a rendered, playable scene; it has no art, animation, audio, input bindings, save integration, or in-game entry point. Do not call it a finished mini-game until those are implemented and validated.
+
+
+## Playable scene integration
+
+The first mechanical-repair vertical slice now has a real scene:
+- Entry point: the new **МАСТЕРСКАЯ** card in the detective office.
+- Scene: `src/js/scenes/mechanical-repair.js`.
+- Styling: appended dedicated `repair-*` styles in `src/css/main.css`.
+- Logic: `src/js/systems/mechanical-repair.js`.
+- The scene provides an interactive four-stage repair flow, recoverable mistakes, a force-damage path, a result state, replay, and return-to-office navigation.
+- The service worker precaches the scene and its cache key is bumped to `dead-calm-visual-v90`.
+
+The mechanism illustration is currently CSS-based interface artwork, not a finished bespoke painted asset. Audio, bespoke animated gears, controller bindings, save-persisted repair outcomes, and narrative consequences are not yet implemented. The scene is a playable prototype, not a final art-complete mini-game.
