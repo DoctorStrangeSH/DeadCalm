@@ -125,6 +125,9 @@ body { background:#071015; color:#d3d5cc; }
 .investigation-board .board-search input,.investigation-board .board-search select { width:100%; min-width:0; padding:10px; border:1px solid #6f7565; background:#0d191d; color:#e2ddca; font:13px Georgia,serif; }
 .investigation-board #board-search-count { grid-column:1 / 3; margin:0; color:#adbeb2; font-size:12px; }
 .investigation-board #board-search-reset { grid-column:3; grid-row:1 / span 2; min-height:40px; }
+.investigation-board .hypothesis-search { margin:15px 0; }
+.investigation-board .hypothesis-search #hypothesis-search-count { grid-column:1 / 3; margin:0; color:#adbeb2; font-size:12px; }
+.investigation-board .hypothesis-search #hypothesis-search-reset { grid-column:3; grid-row:1 / span 2; min-height:40px; }
 .investigation-board .board-canvas { flex:0 0 auto; height:var(--board-content-height,500px); min-height:350px; border:12px solid #403228; outline:1px solid #867050; outline-offset:-6px; background:radial-gradient(ellipse at 60% 40%,#70563b 0%,#483423 80%),repeating-linear-gradient(32deg,#704f33 0 3px,#4a3424 4px 6px); box-shadow:inset 0 0 45px #1b1009a8,0 20px 35px #0007; }
 .investigation-board .board-canvas::before { content:""; position:absolute; inset:0; opacity:.24; pointer-events:none; background:repeating-linear-gradient(45deg,transparent 0 7px,#a1805d 8px 9px,transparent 10px 17px); }
 .investigation-board .board-clues { position:absolute; inset:0; }
@@ -156,6 +159,7 @@ body { background:#071015; color:#d3d5cc; }
 @media(max-width:900px) {
   .investigation-board .board-search { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
   .investigation-board #board-search-count,.investigation-board #board-search-reset { grid-column:auto; grid-row:auto; }
+  .investigation-board .hypothesis-search #hypothesis-search-count,.investigation-board .hypothesis-search #hypothesis-search-reset { grid-column:auto; grid-row:auto; }
   .investigation-board .board-header { display:block; padding:.85rem; }
   .investigation-board .board-progress { border:0; padding:9px 0 0; }
   .investigation-board .board-canvas { height:auto; min-height:0; }
@@ -166,7 +170,7 @@ body { background:#071015; color:#d3d5cc; }
   .investigation-board #btn-clear-selection { width:100%; }
 }
 @media(max-width:420px) { .investigation-board .board-clues { grid-template-columns:1fr; padding:16px; }.investigation-board .board-clue-card { min-height:95px; } }
-@media(max-width:480px) { .investigation-board .board-search { grid-template-columns:1fr; }.investigation-board #board-search-reset { width:100%; } }
+@media(max-width:480px) { .investigation-board .board-search { grid-template-columns:1fr; }.investigation-board #board-search-reset,.investigation-board #hypothesis-search-reset { width:100%; } }
 
 /* Personal journal: a working detective's paper notebook. */
 .dossier-notebook { border:1px solid #72654f; padding:clamp(12px,2vw,25px); background:linear-gradient(90deg,#b09d79 0 5px,#d6c6a5 5px 6px,#cbbd9d 6px); box-shadow:8px 11px 0 #0b1315,0 18px 40px #0008; color:#3c332c; height:auto; min-height:520px; }

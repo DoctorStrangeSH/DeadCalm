@@ -5,6 +5,7 @@ import { HYPOTHESIS_STATUS_LABELS, auditHypothesisEvidence, findNewEvidenceLeads
 import { findContradictions } from '../systems/contradictions.js';
 import { getOldCaseBoardDigest } from '../systems/old-case-board-digest.js';
 import { filterBoardClues } from '../systems/board-clue-filter.js';
+import { filterHypotheses } from '../systems/hypothesis-filter.js';
 
 /**
  * Доска расследования.
@@ -105,6 +106,16 @@ export class InvestigationBoard {
             </fieldset>
             <button type="submit" class="btn-noir">СОХРАНИТЬ ВЕРСИЮ</button>
           </form>
+          <div class="board-search hypothesis-search" role="search" aria-label="Поиск по гипотезам">
+            <label>ПОИСК ВЕРСИИ <input id="hypothesis-search-query" type="search" placeholder="Название, обоснование, улика…" autocomplete="off" /></label>
+            <label>СТАТУС <select id="hypothesis-search-status">
+              <option value="all">Все версии</option>
+              ${Object.entries(HYPOTHESIS_STATUS_LABELS).map(([value, label]) => `<option value="${value}">${self._escapeHtml(label)}</option>`).join('')}
+              <option value="review">Есть новые материалы</option>
+            </select></label>
+            <p id="hypothesis-search-count" role="status" aria-live="polite"></p>
+            <button type="button" id="hypothesis-search-reset" class="btn-noir">СБРОСИТЬ ПОИСК</button>
+          </div>
           <div id="hypothesis-list" aria-live="polite"></div>
         </section>
       </div>
@@ -130,6 +141,15 @@ export class InvestigationBoard {
 
   _setupHypotheses() {
     const form = this.container.querySelector('#hypothesis-create-form');
+    const query = this.container.querySelector('#hypothesis-search-query');
+    const status = this.container.querySelector('#hypothesis-search-status');
+    query.addEventListener('input', () => this._renderHypotheses());
+    status.addEventListener('change', () => this._renderHypotheses());
+    this.container.querySelector('#hypothesis-search-reset').addEventListener('click', () => {
+      query.value = '';
+      status.value = 'all';
+      this._renderHypotheses();
+    });
     form.addEventListener('submit', event => {
       event.preventDefault();
       const data = new FormData(form);
@@ -181,7 +201,12 @@ export class InvestigationBoard {
     const hypotheses = GameState.currentCase.hypotheses || [];
     const clues = GameState.currentCase.clues || [];
     const clueNames = new Map(clues.map(clue => [clue.id, clue.name]));
-    list.innerHTML = hypotheses.length ? hypotheses.map(item => {
+    const reviewIds = new Set(hypotheses.filter(item => findNewEvidenceLeads(item, clues, Investigation._cluesData || {}).length).map(item => item.id));
+    const visible = filterHypotheses(hypotheses, clues,
+      this.container.querySelector('#hypothesis-search-query').value,
+      this.container.querySelector('#hypothesis-search-status').value, reviewIds);
+    this.container.querySelector('#hypothesis-search-count').textContent = `Найдено ${visible.length} из ${hypotheses.length} версий`;
+    list.innerHTML = visible.length ? visible.map(item => {
       const audit = auditHypothesisEvidence(item, clues, Investigation._cluesData || {});
       const contradictions = findContradictions(item, clues, Investigation._contradictionRules);
       const newLeads = findNewEvidenceLeads(item, clues, Investigation._cluesData || {});
@@ -248,7 +273,7 @@ export class InvestigationBoard {
           </li>`).join('')}</ol>
         </details>
       </article>`;
-    }).join('') : '<p class="hypothesis-empty">Пока нет версий. Начните с наблюдения.</p>';
+    }).join('') : `<p class="hypothesis-empty">${hypotheses.length ? 'По заданным условиям версий нет. Измените поиск или сбросьте фильтр.' : 'Пока нет версий. Начните с наблюдения.'}</p>`;
   }
 
   _setupClickHandlers() {
