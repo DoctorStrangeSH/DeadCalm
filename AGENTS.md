@@ -83,3 +83,8 @@ Before creating or restyling any scene, read `docs/VISUAL_STYLE_GUIDE.md` and `d
 ## Film Restoration prototype
 
 A tested simulation exists in `src/js/systems/film-restoration.js`, with tests in `tests/film-restoration.test.mjs`. It is not yet a playable scene. It must receive bespoke Blackford-style painted equipment/film art, a distinct layout, accessible pointer controls, audio/animation, persistent result integration, and a real office entry point before being called complete. The persistent mini-game type `film-restoration` is now supported.
+
+
+## Film Restoration playable scene
+
+`src/js/scenes/film-restoration.js` is now the in-game scene, linked from the detective office as `АРХИВ КИНОПЛЁНКИ`. It persists results via `GameState`. Scene art is currently CSS-rendered mockup over the existing Holt Office environment, not final bespoke painted machinery. Read the latest `Playable scene — Film Restoration` section in `docs/MINIGAME_DESIGN.md`; do not overstate art readiness or browser validation.
