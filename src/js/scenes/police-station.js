@@ -57,6 +57,7 @@ export function render(container, data) {
       </div>
 
       <div id="precinct-register-result" class="hidden card p-4 mb-6" role="status" aria-live="polite"></div>
+      <p id="precinct-archive-error" class="reader-theory-change-note" role="alert" hidden></p>
       <nav id="precinct-archive-route" class="reader-theories-view mb-6" aria-label="Маршрут архивного расследования" hidden>
         <p class="reader-timeline-kicker">ПУТЕВОДИТЕЛЬ ПО РАССЛЕДОВАНИЮ</p>
         <h3 class="reader-timeline-title">Дело Каллиопы · архивные проверки</h3>
@@ -150,6 +151,7 @@ export function render(container, data) {
   `;
 
   const oldCasePanel = container.querySelector('#precinct-old-case');
+  const archiveError = container.querySelector('#precinct-archive-error');
   const routePanel = container.querySelector('#precinct-archive-route');
   const routeSummary = container.querySelector('#precinct-archive-route-summary');
   const routeLinks = container.querySelector('#precinct-archive-route-links');
@@ -550,6 +552,8 @@ export function render(container, data) {
       : isSignatureDocument ? !GameState.flags.court_old_case_order_interpretation
       : isOrderDocument ? !GameState.flags.court_old_case_closure_review : !GameState.flags.court_old_case_reading) return;
     if (GameState.hasClue(clueId)) return;
+    archiveError.hidden = true;
+    archiveError.textContent = '';
     button.disabled = true;
     try {
       const response = await fetch('src/data/clues.json');
@@ -568,7 +572,9 @@ export function render(container, data) {
       refreshArchiveRoute();
     } catch (error) {
       button.disabled = false;
-      oldCaseStatus.textContent = 'Архив временно недоступен. Повторите запрос позже.';
+      archiveError.textContent = 'Архив временно недоступен. Повторите запрос позже — текущие результаты сохранены.';
+      archiveError.hidden = false;
+      archiveError.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       console.error('[Precinct] Архив Каллиопы:', error);
     }
   }
