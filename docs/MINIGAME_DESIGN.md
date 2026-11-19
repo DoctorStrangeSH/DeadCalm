@@ -96,3 +96,19 @@ Before implementing a mini-game, document:
 6. The smallest playable vertical slice and its tests.
 
 Do not claim a mini-game is playable until it is integrated into the actual game flow and manually or automatically validated.
+
+
+## Prototype status — Mechanical Repair
+
+Implemented logic module: `src/js/systems/mechanical-repair.js`.
+Tests: `tests/mechanical-repair.test.mjs`.
+
+The current prototype is a framework-independent state machine with four player actions:
+1. Inspect and identify the spring under tension.
+2. Release pressure with a controlled action.
+3. Align the component to its tooth mark.
+4. Wind gently to test the mechanism.
+
+It supports recoverable observation/alignment mistakes, records action history, distinguishes clean success from partial success after damage or mistakes, and rejects out-of-order actions.
+
+**Important status:** this is a tested gameplay-logic prototype only. It is not yet a rendered, playable scene; it has no art, animation, audio, input bindings, save integration, or in-game entry point. Do not call it a finished mini-game until those are implemented and validated.
