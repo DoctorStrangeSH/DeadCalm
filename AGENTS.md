@@ -63,3 +63,8 @@ Mini-games are explicitly welcome and part of the intended experience. Read `doc
 ## Mechanical repair prototype status
 
 `src/js/systems/mechanical-repair.js` and `src/js/scenes/mechanical-repair.js` now form a playable prototype linked from the detective office. Its mechanism illustration is CSS-based, not final bespoke art. Audio, bespoke animation, controller bindings, persisted outcomes, and narrative consequences remain incomplete. Read `docs/MINIGAME_DESIGN.md` and do not call it art-complete or production-final.
+
+
+## Analog radio tuning prototype
+
+The radio mini-game is a distinct continuous tuning/filter interaction. Read `docs/MINIGAME_DESIGN.md`. Scene: `src/js/scenes/radio-tuning.js`; logic: `src/js/systems/radio-tuning.js`. The CSS receiver is placeholder interface art, not bespoke final art. Audio, authored voice, persistent story reward, and manual playtesting remain future work.
