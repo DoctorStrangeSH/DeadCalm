@@ -50,3 +50,23 @@ All files live under `src/assets/portraits/`. The mapping and emotional-variant 
 - Has the asset been connected through the existing portrait map rather than a one-off inline image?
 
 If any answer is no, do not ship the portrait.
+
+
+## Approved portrait assets — identity lock
+
+The six existing base portraits and their authored emotional variants are the approved character-art canon. Preserve them as the primary visual reference:
+
+- Lydia Winter: `lydia-winter.webp` and her tension / warmth / withdrawal variants.
+- Ray Morgan: `ray-morgan.webp` and his tension / warmth / withdrawal variants.
+- Anna Holt: `anna-holt.webp` and her tension / warmth / withdrawal variants.
+- Marta Hayes: `marta-hayes.webp` and her tension / warmth / withdrawal variants.
+- Father Thomas: `father-thomas.webp` and his tension / warmth / withdrawal variants.
+- Sebastian Blackwood: `sebastian-blackwood.webp` and his tension / warmth / withdrawal variants.
+
+These portraits define the intended finish: premium painterly realism, individual attractive adult faces, natural anatomy, nuanced expression, period-appropriate clothing, rain-cooled teal shadows and warm amber practical lighting. They belong to Blackford's fictional international/British-noir setting.
+
+Russian is the game's localization language only. It must never be used as a visual brief for national stereotypes, facial features, wardrobe, or character identity. Keep the cast's established names, backgrounds, and designs.
+
+Do not use image-search previews, generic stock art, or unrelated generated portraits in the game UI or as substitutes in design reviews. The images shown in conversational mockups are not game assets. When discussing in-game character art, reference the actual files above.
+
+Orlov and Klimov currently have narrative dossiers but are not part of the six approved portrait set. Do not assign them guessed portraits or force them into the cast visually. If they need portraits later, design them intentionally beside the approved set and review identity, framing, palette, and finish before integration.
