@@ -14,6 +14,7 @@ import { planOldCaseWitnessFollowUp, recordOldCaseWitnessFollowUp } from '../sys
 import { assessOldCaseDiscrepancy, recordOldCaseDiscrepancy, OLD_CASE_DISCREPANCY_CHOICES } from '../systems/old-case-discrepancy.js';
 import { assessOldCasePortLog, recordOldCasePortLogReading, OLD_CASE_PORT_LOG_READINGS } from '../systems/old-case-port-log.js';
 import { assessOldCaseWaybill, recordOldCaseWaybillReading, OLD_CASE_WAYBILL_READINGS } from '../systems/old-case-waybill.js';
+import { planMorganBriefing, recordMorganBriefing, MORGAN_BRIEFING_APPROACHES } from '../systems/old-case-morgan-briefing.js';
 import { getOldCaseNavigation } from '../systems/old-case-navigation.js';
 
 export function render(container, data) {
@@ -155,6 +156,13 @@ export function render(container, data) {
         <div id="precinct-waybill-options" class="reader-theories-options" role="group" aria-label="Сопоставление транспортных записей"></div>
         <p id="precinct-waybill-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
       </section>
+      <section id="precinct-morgan-briefing" class="reader-theories-view mb-6" aria-label="Повторный разговор с Морганом о портовых документах" hidden>
+        <p class="reader-timeline-kicker">МОРГАН / ПАМЯТЬ О ПРЕЖНИХ РЕШЕНИЯХ</p>
+        <h3 class="reader-timeline-title">Что сказать Моргану о совпавших датах?</h3>
+        <div id="precinct-morgan-briefing-detail" class="reader-theories-detail" aria-live="polite"></div>
+        <div id="precinct-morgan-briefing-options" class="reader-theories-options" role="group" aria-label="Выбор тона разговора"></div>
+        <p id="precinct-morgan-briefing-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
+      </section>
       <div id="dialog-container" class="hidden"></div>
     </div>
   `;
@@ -237,6 +245,37 @@ export function render(container, data) {
   const waybillDetail = container.querySelector('#precinct-waybill-detail');
   const waybillOptions = container.querySelector('#precinct-waybill-options');
   const waybillResult = container.querySelector('#precinct-waybill-result');
+  const briefingPanel = container.querySelector('#precinct-morgan-briefing');
+  const briefingDetail = container.querySelector('#precinct-morgan-briefing-detail');
+  const briefingOptions = container.querySelector('#precinct-morgan-briefing-options');
+  const briefingResult = container.querySelector('#precinct-morgan-briefing-result');
+  function refreshMorganBriefing() {
+    const briefing = planMorganBriefing(id => GameState.hasClue(id),
+      GameState.flags.court_old_case_waybill_reading, GameState.flags.court_old_case_morgan_approach,
+      GameState.flags.court_old_case_morgan_briefing);
+    briefingPanel.hidden = !briefing;
+    briefingOptions.replaceChildren();
+    briefingDetail.textContent = briefing?.lead || '';
+    briefingResult.textContent = briefing?.saved ? `${briefing.saved.response} ${briefing.saved.nextStep}` : '';
+    if (!briefing || briefing.saved) return;
+    for (const approach of MORGAN_BRIEFING_APPROACHES) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'reader-theories-option';
+      button.textContent = approach.label;
+      button.addEventListener('click', () => {
+        const result = recordMorganBriefing(approach.id, briefing,
+          GameState.flags.court_old_case_morgan_approach, NPCMemory.getTrust('npc_ray_morgan'),
+          GameState.flags.court_old_case_morgan_briefing);
+        if (!result) return;
+        GameState.setFlag('court_old_case_morgan_briefing', result);
+        NPCMemory.changeTrust('npc_ray_morgan', result.trustDelta);
+        refreshMorganBriefing();
+        refreshArchiveRoute();
+      });
+      briefingOptions.appendChild(button);
+    }
+  }
   function refreshWaybill() {
     const check = assessOldCaseWaybill(id => GameState.hasClue(id),
       GameState.flags.court_old_case_port_log_reading, GameState.flags.court_old_case_waybill_reading);
@@ -257,6 +296,7 @@ export function render(container, data) {
         if (!result.correct) { waybillResult.textContent = result.feedback; return; }
         GameState.setFlag('court_old_case_waybill_reading', result);
         refreshWaybill();
+        refreshMorganBriefing();
         refreshArchiveRoute();
       });
       waybillOptions.appendChild(button);
@@ -611,6 +651,7 @@ export function render(container, data) {
       refreshOldWitnesses();
       refreshPortLog();
       refreshWaybill();
+      refreshMorganBriefing();
       refreshArchiveRoute();
     } catch (error) {
       button.disabled = false;
@@ -672,6 +713,7 @@ export function render(container, data) {
   refreshOldDiscrepancy();
   refreshPortLog();
   refreshWaybill();
+  refreshMorganBriefing();
   refreshArchiveRoute();
 
   document.getElementById('btn-talk-ray').addEventListener('click', async function() {

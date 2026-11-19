@@ -10,7 +10,8 @@ const STAGES = [
   { id: 'recheck', label: 'Уточнение показаний', target: 'precinct-witness-follow-up', open: ctx => !!ctx.flags.court_old_case_witness_reading, done: ctx => !!ctx.flags.court_old_case_witness_follow_up },
   { id: 'discrepancy', label: 'Оценка расхождения', target: 'precinct-old-discrepancy', open: ctx => !!ctx.flags.court_old_case_witness_follow_up, done: ctx => !!ctx.flags.court_old_case_discrepancy },
   { id: 'port', label: 'Журнал порта', target: 'precinct-port-log', open: ctx => !!ctx.flags.court_old_case_discrepancy, done: ctx => !!ctx.flags.court_old_case_port_log_reading },
-  { id: 'waybill', label: 'Путевой лист', target: 'precinct-waybill', open: ctx => ctx.flags.court_old_case_port_log_reading?.choice === 'limited_record', done: ctx => !!ctx.flags.court_old_case_waybill_reading }
+  { id: 'waybill', label: 'Путевой лист', target: 'precinct-waybill', open: ctx => ctx.flags.court_old_case_port_log_reading?.choice === 'limited_record', done: ctx => !!ctx.flags.court_old_case_waybill_reading },
+  { id: 'briefing', label: 'Разговор с Морганом', target: 'precinct-morgan-briefing', open: ctx => ctx.flags.court_old_case_waybill_reading?.choice === 'unmatched_trip' && !!ctx.flags.court_old_case_morgan_approach, done: ctx => !!ctx.flags.court_old_case_morgan_briefing }
 ];
 
 export function getOldCaseNavigation(flags = {}, hasClue = () => false) {

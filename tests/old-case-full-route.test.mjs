@@ -13,6 +13,7 @@ import { recordOldCaseWitnessFollowUp } from '../src/js/systems/old-case-witness
 import { assessOldCaseDiscrepancy, recordOldCaseDiscrepancy } from '../src/js/systems/old-case-discrepancy.js';
 import { assessOldCasePortLog, recordOldCasePortLogReading } from '../src/js/systems/old-case-port-log.js';
 import { assessOldCaseWaybill, recordOldCaseWaybillReading } from '../src/js/systems/old-case-waybill.js';
+import { planMorganBriefing, recordMorganBriefing } from '../src/js/systems/old-case-morgan-briefing.js';
 import { getOldCaseNavigation } from '../src/js/systems/old-case-navigation.js';
 
 for (const signatureRoute of ['request_specialist', 'formal_inquiry']) {
@@ -70,9 +71,14 @@ for (const signatureRoute of ['request_specialist', 'formal_inquiry']) {
         assessOldCaseWaybill(has, flags.court_old_case_port_log_reading));
       assert.ok(flags.court_old_case_waybill_reading);
 
+      const briefing = planMorganBriefing(has, flags.court_old_case_waybill_reading, flags.court_old_case_morgan_approach);
+      assert.ok(briefing);
+      flags.court_old_case_morgan_briefing = recordMorganBriefing('share_limits', briefing, flags.court_old_case_morgan_approach, 0);
+      assert.ok(flags.court_old_case_morgan_briefing);
+
       const nav = getOldCaseNavigation(flags, has);
-      assert.equal(nav.stages.length, 12);
-      assert.equal(nav.completed, 12);
+      assert.equal(nav.stages.length, 13);
+      assert.equal(nav.completed, 13);
       assert.equal(nav.next, null);
     });
   }
