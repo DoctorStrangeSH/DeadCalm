@@ -18,7 +18,7 @@ Ghost Signal's repository README describes it as an interactive detective termin
 - day/night availability changes for locations and NPCs;
 - keeping notes from documents.
 
-These are recognizable Ghost Signal pillars. Dead Calm must not simply reproduce this package under different names.
+These are recognizable Ghost Signal pillars. Dead Calm must not simply reproduce this package under different names. Mini-games are allowed and desired in Dead Calm; their interaction design and fiction must be distinct rather than copied.
 
 ## Dead Calm direction
 
@@ -39,7 +39,7 @@ Do not add the following to Dead Calm merely because they exist in Ghost Signal:
 3. A clue-hunting scene loop or hidden-object search.
 4. A player-facing evidence board that connects clues to solve a case.
 5. A witness-call / interrogation hub as the central interaction loop.
-6. Code-breaking or hidden-object mini-games as default investigation gates.
+6. Code-breaking or hidden-object mini-games as default investigation gates. This is not a ban on mini-games: Dead Calm should have its own varied, tactile, character- and world-grounded mini-games as specified in `docs/MINIGAME_DESIGN.md`.
 7. A notebook that duplicates Ghost Signal's document-fragment collection loop.
 8. A day/night system whose main purpose is toggling NPC and location availability.
 
