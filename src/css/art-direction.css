@@ -408,6 +408,10 @@ body { background:#071015; color:#d3d5cc; }
 .reader-theories-detail p + p { margin-top:7px; }
 .reader-theories-detail strong { color:#eac795; }
 .reader-theories-verdict { padding-top:9px; border-top:1px solid #49554f; color:#f0c5ac; }
+.reader-theory-change-note:not(:empty) { margin-top:9px; padding:10px 12px; background:#433428; border-left:3px solid #e0af6f; color:#f3d7b2; font:12px/1.5 Georgia,serif; }
+.reader-theory-history:not(:empty) { margin-top:13px; padding:12px; border:1px solid #52635d; background:#172428; color:#c3d0c7; font:12px/1.6 Georgia,serif; }
+.reader-theory-history p:first-child { color:#edc895; letter-spacing:.1em; font:700 11px/1.5 'Courier New',monospace; }
+.reader-theory-history p + p { padding-top:6px; }
 @media(max-width:650px) { .reader-timeline-events { grid-template-columns:1fr; } .reader-timeline-event { min-height:48px; } }
 @media(max-width:650px) { .reader-theories-options { grid-template-columns:1fr; } .reader-theories-option { text-align:left; } }
 @media(max-width:650px) { .court-hotspot em { display:none; } .court-hotspot span { width:32px; height:32px; font-size:10px; } .court-scan-hint { font-size:9px; } }

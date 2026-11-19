@@ -37,3 +37,24 @@ export function compareReaderTheories(hasClue) {
     status: 'Не доказано'
   }));
 }
+
+export function snapshotReaderTheory(theory, previous = [], recordedAt = new Date().toISOString()) {
+  if (!theory || !READER_THEORIES.some(item => item.id === theory.id)) return null;
+  const entries = Array.isArray(previous) ? previous : [];
+  const version = entries.length + 1;
+  return {
+    theoryId: theory.id,
+    recordedAt,
+    version,
+    observed: [...theory.observed],
+    verifiedChecks: [...theory.verifiedChecks],
+    status: 'Не доказано'
+  };
+}
+
+export function evaluateTheoryChanges(snapshot, current) {
+  if (!snapshot || !current || snapshot.theoryId !== current.id) return null;
+  const newDocuments = current.observed.filter(id => !snapshot.observed.includes(id));
+  const newChecks = current.verifiedChecks.filter(id => !snapshot.verifiedChecks.includes(id));
+  return { newDocuments, newChecks, changed: newDocuments.length + newChecks.length > 0 };
+}

@@ -4,7 +4,7 @@ import { canChallengeGuard, resolveGuardChallenge } from '../systems/court-guard
 import { canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation, canConfrontKlimov, resolveKlimovConfrontation } from '../systems/witness-provenance.js';
 import { setupCourtWorkflow } from '../systems/court-workflow.js';
 import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS, getReaderTimelineFollowUp } from '../systems/reader-timeline.js';
-import { compareReaderTheories } from '../systems/reader-theories.js';
+import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, READER_THEORIES } from '../systems/reader-theories.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -98,6 +98,9 @@ export function render(container, data) {
         <p class="reader-timeline-intro">Выберите версию, чтобы увидеть имеющиеся документы, проведённые проверки и главное возражение. Ни одна версия пока не доказана.</p>
         <div id="reader-theories-options" class="reader-theories-options" role="group" aria-label="Выбор версии"></div>
         <div id="reader-theories-detail" class="reader-theories-detail" aria-live="polite"></div>
+        <button type="button" id="reader-theory-record" class="reader-timeline-follow-up">ЗАКРЕПИТЬ ВЕРСИЮ В ДЕЛЕ</button>
+        <p id="reader-theory-change-note" class="reader-theory-change-note" role="status" aria-live="polite"></p>
+        <div id="reader-theory-history" class="reader-theory-history" aria-label="История версий"></div>
       </section>
 
       <div id="court-records" class="mb-6" ${GameState.hasClue('court_phone_register_copy') ? '' : 'hidden'}>
@@ -305,6 +308,9 @@ export function render(container, data) {
   const timelineFollowUpStatus = container.querySelector('#reader-timeline-follow-up-status');
   const theoryOptions = container.querySelector('#reader-theories-options');
   const theoryDetail = container.querySelector('#reader-theories-detail');
+  const theoryRecordButton = container.querySelector('#reader-theory-record');
+  const theoryChangeNote = container.querySelector('#reader-theory-change-note');
+  const theoryHistory = container.querySelector('#reader-theory-history');
   let selectedTheoryId = 'single_operator';
   function refreshReaderTheories() {
     const theories = compareReaderTheories(id => GameState.hasClue(id));
@@ -319,7 +325,7 @@ export function render(container, data) {
       theoryOptions.appendChild(button);
     }
     const selected = theories.find(theory => theory.id === selectedTheoryId);
-    if (!selected) { theoryDetail.textContent = ''; return; }
+    if (!selected) { theoryDetail.textContent = ''; theoryRecordButton.hidden = true; return; }
     const evidenceName = id => GameState.currentCase.clues.find(clue => clue.id === id)?.name || id;
     theoryDetail.replaceChildren();
     const lines = [
@@ -341,7 +347,40 @@ export function render(container, data) {
     caution.className = 'reader-theories-verdict';
     caution.textContent = selected.status + ' · Наличие документа не подтверждает автоматически выбранную версию.';
     theoryDetail.appendChild(caution);
+    const history = Array.isArray(GameState.flags.court_reader_theory_history) ? GameState.flags.court_reader_theory_history : [];
+    const latest = history.at(-1);
+    const change = latest?.theoryId === selected.id ? evaluateTheoryChanges(latest, selected) : null;
+    theoryRecordButton.hidden = false;
+    theoryRecordButton.disabled = latest?.theoryId === selected.id && !change?.changed;
+    theoryRecordButton.textContent = latest?.theoryId !== selected.id ? 'ЗАКРЕПИТЬ ЭТУ ВЕРСИЮ В ДЕЛЕ'
+      : change?.changed ? 'ПЕРЕСМОТРЕТЬ ВЕРСИЮ С НОВЫМИ ДАННЫМИ' : '✓ ВЕРСИЯ ЗАПИСАНА · НОВЫХ ДАННЫХ НЕТ';
+    theoryChangeNote.textContent = change?.changed
+      ? `После записи версии появились новые материалы: ${change.newDocuments.length} документ(а), ${change.newChecks.length} проверк(и). Вывод по-прежнему не доказан.` : '';
+    theoryHistory.replaceChildren();
+    if (history.length) {
+      const title = document.createElement('p');
+      title.textContent = 'ЖУРНАЛ РАССУЖДЕНИЙ';
+      theoryHistory.appendChild(title);
+      for (const entry of history) {
+        const item = document.createElement('p');
+        const name = READER_THEORIES.find(theory => theory.id === entry.theoryId)?.title || 'Неизвестная версия';
+        item.textContent = `Запись ${entry.version} · ${name} · ${entry.observed.length} документ(а) · ${entry.verifiedChecks.length} проверк(и) · ${entry.status}`;
+        theoryHistory.appendChild(item);
+      }
+    }
   }
+  theoryRecordButton.addEventListener('click', () => {
+    if (!GameState.hasClue('reader_reconstructed_timeline')) return;
+    const current = compareReaderTheories(id => GameState.hasClue(id)).find(theory => theory.id === selectedTheoryId);
+    if (!current) return;
+    const history = Array.isArray(GameState.flags.court_reader_theory_history) ? GameState.flags.court_reader_theory_history : [];
+    const latest = history.at(-1);
+    if (latest?.theoryId === current.id && !evaluateTheoryChanges(latest, current)?.changed) return;
+    const snapshot = snapshotReaderTheory(current, history);
+    if (!snapshot) return;
+    GameState.setFlag('court_reader_theory_history', [...history, snapshot]);
+    refreshReaderTheories();
+  });
   refreshReaderTheories();
   let selectedTimelineIndex = 0;
   function selectTimelineEvent(index) {

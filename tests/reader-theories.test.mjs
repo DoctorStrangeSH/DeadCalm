@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { compareReaderTheories, READER_THEORIES } from '../src/js/systems/reader-theories.js';
+import { compareReaderTheories, READER_THEORIES, snapshotReaderTheory, evaluateTheoryChanges } from '../src/js/systems/reader-theories.js';
 
 const clues = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
 
@@ -43,4 +43,36 @@ test('alternative-version panel is revealed with chronology and updates after ev
   assert.match(css, /\.reader-theories-option:focus-visible/);
   assert.match(css, /\.reader-theories-options \{ grid-template-columns:1fr/);
   assert.match(cache, /reader-theories\.js/);
+});
+
+test('saved versions are immutable snapshots and new evidence is explicitly detectable', () => {
+  const known = new Set(['reader_reconstructed_timeline', 'orlov_badge_scan']);
+  const initial = compareReaderTheories(id => known.has(id))[0];
+  const first = snapshotReaderTheory(initial, [], '2026-11-19T10:00:00Z');
+  assert.equal(first.version, 1);
+  assert.equal(first.status, 'Не доказано');
+  assert.equal(evaluateTheoryChanges(first, initial).changed, false);
+  known.add('reader_test_diagnostic');
+  known.add('maintenance_tool_issue_ledger');
+  const revised = compareReaderTheories(id => known.has(id))[0];
+  const delta = evaluateTheoryChanges(first, revised);
+  assert.deepEqual(delta.newChecks, ['reader_test_diagnostic']);
+  assert.deepEqual(delta.newDocuments, ['maintenance_tool_issue_ledger']);
+  assert.equal(delta.changed, true);
+  const second = snapshotReaderTheory(revised, [first], '2026-11-19T11:00:00Z');
+  assert.equal(second.version, 2);
+  assert.deepEqual(first.verifiedChecks, []);
+  assert.deepEqual(second.verifiedChecks, ['reader_test_diagnostic']);
+  assert.equal(evaluateTheoryChanges(second, revised).changed, false);
+  assert.equal(evaluateTheoryChanges(first, compareReaderTheories(id => known.has(id))[1]), null);
+  assert.equal(snapshotReaderTheory({ id: 'unknown' }), null);
+});
+
+test('investigative journal persists theory choice but disallows duplicate unchanged snapshots', () => {
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /id="reader-theory-record"/);
+  assert.match(scene, /id="reader-theory-history"/);
+  assert.match(scene, /GameState\.setFlag\('court_reader_theory_history', \[\.\.\.history, snapshot\]\)/);
+  assert.match(scene, /latest\?\.theoryId === current\.id && !evaluateTheoryChanges\(latest, current\)\?\.changed/);
+  assert.match(scene, /ПЕРЕСМОТРЕТЬ ВЕРСИЮ С НОВЫМИ ДАННЫМИ/);
 });
