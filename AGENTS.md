@@ -90,6 +90,11 @@ A tested simulation exists in `src/js/systems/film-restoration.js`, with tests i
 `src/js/scenes/film-restoration.js` is now the in-game scene, linked from the detective office as `АРХИВ КИНОПЛЁНКИ`. It persists results via `GameState`. Scene art is currently CSS-rendered mockup over the existing Holt Office environment, not final bespoke painted machinery. Read the latest `Playable scene — Film Restoration` section in `docs/MINIGAME_DESIGN.md`; do not overstate art readiness or browser validation.
 
 
+## Story canon ledger — mandatory before narrative work
+
+Before writing, editing, or integrating any campaign scene, dialogue, ending, character secret, or day progression, read `docs/CANON_LEDGER_RU.md`. It separates source-backed facts from unresolved owner decisions. Do not resolve listed contradictions by inference. Do not implement a plot-dependent change until the owner has explicitly settled the relevant canon question.
+
+
 ## Master production specification — mandatory scope lock
 
 Before any new feature or large task, read `docs/MASTER_GAME_SPEC_RU.md`. It is the single production scope for Dead Calm 1.0.0 and overrides speculative feature ideas in old notes unless the owner explicitly changes it.
