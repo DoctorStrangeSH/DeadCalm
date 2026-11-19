@@ -7,6 +7,7 @@ import { NPCMemory } from '../systems/npc-memory.js';
 import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS, getReaderTimelineFollowUp } from '../systems/reader-timeline.js';
 import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, resolveWitnessRecall, getReaderEvidenceRoute, READER_THEORIES } from '../systems/reader-theories.js';
 import { assessReaderInvestigation } from '../systems/investigation-quality.js';
+import { buildInvestigationGaps } from '../systems/investigation-gaps.js';
 import { buildReaderEpisodeConclusion, hasNewConclusionEvidence } from '../systems/episode-conclusion.js';
 import { reviewReaderConclusion } from '../systems/conclusion-review.js';
 import { planReviewDirective } from '../systems/review-directives.js';
@@ -128,6 +129,7 @@ export function render(container, data) {
         <h3 class="reader-timeline-title">Насколько обоснованы выводы?</h3>
         <p class="reader-timeline-intro">Аудит показывает полноту проверок и доказанные расхождения. Это не рейтинг раскрытия преступления.</p>
         <div id="reader-quality-detail" class="reader-theories-detail" aria-live="polite"></div>
+        <div id="reader-gaps-detail" class="reader-theories-detail" aria-live="polite" aria-label="Пробелы расследования"></div>
         <button type="button" id="reader-conclusion-save" class="reader-timeline-follow-up">СОСТАВИТЬ ПРОМЕЖУТОЧНОЕ ЗАКЛЮЧЕНИЕ</button>
         <button type="button" id="reader-conclusion-submit" class="reader-timeline-follow-up" hidden>ПЕРЕДАТЬ ЗАКЛЮЧЕНИЕ НА ПРОВЕРКУ</button>
         <div id="reader-conclusion-reviews" class="reader-theory-history" aria-label="Замечания по заключениям"></div>
@@ -360,6 +362,7 @@ export function render(container, data) {
   const theoryEvidenceButton = container.querySelector('#reader-theory-evidence');
   const theoryEvidenceStatus = container.querySelector('#reader-theory-evidence-status');
   const qualityDetail = container.querySelector('#reader-quality-detail');
+  const gapsDetail = container.querySelector('#reader-gaps-detail');
   const conclusionButton = container.querySelector('#reader-conclusion-save');
   const conclusionHistory = container.querySelector('#reader-conclusion-history');
   const conclusionSubmit = container.querySelector('#reader-conclusion-submit');
@@ -406,7 +409,30 @@ export function render(container, data) {
   function refreshReaderQuality() {
     const audit = assessReaderInvestigation(GameState.currentCase, qualityRules, GameState.flags);
     qualityDetail.replaceChildren();
+    gapsDetail.replaceChildren();
     if (!audit) return;
+    const gaps = buildInvestigationGaps(GameState.currentCase);
+    const gapsHeading = document.createElement('h4');
+    gapsHeading.textContent = 'ПРОБЕЛЫ, КОТОРЫЕ ЕЩЁ НУЖНО ПРОВЕРИТЬ';
+    gapsDetail.appendChild(gapsHeading);
+    if (!gaps.length) {
+      const empty = document.createElement('p');
+      empty.textContent = 'По уже открытым материалам явных пробелов этого типа не выявлено. Это не означает, что дело раскрыто.';
+      gapsDetail.appendChild(empty);
+    } else {
+      const list = document.createElement('ul');
+      list.className = 'investigation-gaps-list';
+      for (const gap of gaps) {
+        const item = document.createElement('li');
+        const title = document.createElement('strong');
+        title.textContent = gap.title;
+        const detail = document.createElement('p');
+        detail.textContent = gap.detail;
+        item.append(title, detail);
+        list.appendChild(item);
+      }
+      gapsDetail.appendChild(list);
+    }
     const rows = [
       ['Документы', `${audit.found.length} из ${audit.found.length + audit.remaining.length} ключевых проверок`],
       ['Подтверждённые расхождения', String(audit.verifiedContradictions.length)],
