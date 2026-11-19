@@ -10,6 +10,7 @@ import { canApproachMorganAboutOldCase, resolveMorganOldCaseApproach, OLD_CASE_M
 import { planMorganRevisit, recordMorganRevisit } from '../systems/old-case-morgan-revisit.js';
 import { assessOldCaseSources, recordOldCaseSourceReading, OLD_CASE_SOURCE_READINGS } from '../systems/old-case-source-audit.js';
 import { assessOldCaseWitnesses, recordOldCaseWitnessReading, OLD_CASE_WITNESS_STATEMENTS } from '../systems/old-case-witnesses.js';
+import { planOldCaseWitnessFollowUp, recordOldCaseWitnessFollowUp } from '../systems/old-case-witness-follow-up.js';
 
 export function render(container, data) {
   container.innerHTML = `
@@ -114,6 +115,12 @@ export function render(container, data) {
         <div id="precinct-old-witness-choices" class="reader-theories-options" role="group" aria-label="Оценить происхождение показаний"></div>
         <p id="precinct-old-witness-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
       </section>
+      <section id="precinct-witness-follow-up" class="reader-theories-view mb-6" aria-label="Повторная проверка архивных показаний" hidden>
+        <p class="reader-timeline-kicker">АРХИВ / УТОЧНЕНИЕ ПОКАЗАНИЙ</p>
+        <h3 class="reader-timeline-title">Как проверить воспоминание двадцатилетней давности?</h3>
+        <div id="precinct-witness-follow-up-options" class="reader-theories-options" role="group" aria-label="Выбор проверки"></div>
+        <div id="precinct-witness-follow-up-result" class="reader-theories-detail" role="status" aria-live="polite"></div>
+      </section>
       <div id="dialog-container" class="hidden"></div>
     </div>
   `;
@@ -154,6 +161,39 @@ export function render(container, data) {
   const witnessDetail = container.querySelector('#precinct-old-witness-detail');
   const witnessChoices = container.querySelector('#precinct-old-witness-choices');
   const witnessResult = container.querySelector('#precinct-old-witness-result');
+  const witnessFollowUpPanel = container.querySelector('#precinct-witness-follow-up');
+  const witnessFollowUpOptions = container.querySelector('#precinct-witness-follow-up-options');
+  const witnessFollowUpResult = container.querySelector('#precinct-witness-follow-up-result');
+  function refreshWitnessFollowUp() {
+    const saved = GameState.flags.court_old_case_witness_follow_up;
+    const options = planOldCaseWitnessFollowUp(GameState.flags.court_old_case_witness_reading);
+    witnessFollowUpPanel.hidden = !options;
+    witnessFollowUpOptions.replaceChildren();
+    witnessFollowUpResult.replaceChildren();
+    if (!options) return;
+    if (saved) {
+      for (const line of [saved.response, saved.limitation]) {
+        const p = document.createElement('p');
+        p.textContent = line;
+        witnessFollowUpResult.appendChild(p);
+      }
+      return;
+    }
+    for (const option of options) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'reader-theories-option';
+      button.textContent = option.label;
+      button.addEventListener('click', () => {
+        const result = recordOldCaseWitnessFollowUp(option.id, GameState.flags.court_old_case_witness_reading,
+          id => GameState.hasClue(id), GameState.flags.court_old_case_witness_follow_up);
+        if (!result) return;
+        GameState.setFlag('court_old_case_witness_follow_up', result);
+        refreshWitnessFollowUp();
+      });
+      witnessFollowUpOptions.appendChild(button);
+    }
+  }
   function refreshOldWitnesses() {
     const check = assessOldCaseWitnesses(id => GameState.hasClue(id), GameState.flags.court_old_case_source_audit);
     witnessesPanel.hidden = !check;
@@ -191,6 +231,7 @@ export function render(container, data) {
         if (!result.correct) { witnessResult.textContent = result.feedback; return; }
         GameState.setFlag('court_old_case_witness_reading', result);
         refreshOldWitnesses();
+        refreshWitnessFollowUp();
       });
       witnessChoices.appendChild(button);
     }
@@ -456,6 +497,7 @@ export function render(container, data) {
   refreshMorganRevisit();
   refreshSourceAudit();
   refreshOldWitnesses();
+  refreshWitnessFollowUp();
 
   document.getElementById('btn-talk-ray').addEventListener('click', async function() {
     const actions = container.querySelector('#precinct-actions');
