@@ -4,6 +4,7 @@ import { canChallengeGuard, resolveGuardChallenge } from '../systems/court-guard
 import { canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation, canConfrontKlimov, resolveKlimovConfrontation } from '../systems/witness-provenance.js';
 import { setupCourtWorkflow } from '../systems/court-workflow.js';
 import { NPCMemory } from '../systems/npc-memory.js';
+import { getWitnessRecallLine } from '../systems/witness-interview-history.js';
 import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS, getReaderTimelineFollowUp } from '../systems/reader-timeline.js';
 import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, resolveWitnessRecall, getReaderEvidenceRoute, READER_THEORIES } from '../systems/reader-theories.js';
 import { assessReaderInvestigation } from '../systems/investigation-quality.js';
@@ -15,6 +16,8 @@ import { assessOldCaseCrosscheck, recordOldCaseReading, OLD_CASE_READINGS } from
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
+  const orlovRecall = getWitnessRecallLine(NPCMemory.getMemory('npc_pavel_orlov'), 'Орлов');
+  const klimovRecall = getWitnessRecallLine(NPCMemory.getMemory('npc_nikolay_klimov'), 'Климов');
 
   container.innerHTML = `
     <div class="scene court-crime-scene">
@@ -228,6 +231,7 @@ export function render(container, data) {
 
       <div id="nk-identity" class="mb-6" ${GameState.hasClue('orlov_badge_handover') ? '' : 'hidden'}>
         <p class="text-gold text-xs tracking-widest mb-3">ИНИЦИАЛЫ «Н. К.» · ПРОВЕРКА ЛИЧНОСТИ</p>
+        <p id="orlov-memory-callback" class="witness-memory-callback" role="note" hidden></p>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <button id="btn-nk-staff" class="card text-left" ${GameState.hasClue('court_nk_staff_index') ? 'disabled' : ''}>
             <p class="card-title">ПРОВЕРИТЬ КАДРОВУЮ КАРТОТЕКУ</p><p class="card-subtitle">Кому в суде могли принадлежать инициалы «Н. К.»?</p>
@@ -285,6 +289,7 @@ export function render(container, data) {
 
       <div id="key-note-trace" class="mb-6" ${GameState.hasClue('key_issue_clerk_note') ? '' : 'hidden'}>
         <p class="text-gold text-xs tracking-widest mb-3">ПРОИСХОЖДЕНИЕ ЗАПИСКИ · КТО ОСТАВИЛ НОМЕР?</p>
+        <p id="klimov-memory-callback" class="witness-memory-callback" role="note" hidden></p>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <button id="btn-note-paper" class="card text-left" ${GameState.hasClue('key_note_paper_trace') ? 'disabled' : ''}>
             <p class="card-title">ИЗУЧИТЬ БУМАГУ И ОТРЫВНОЙ КРАЙ</p><p class="card-subtitle">Из какого блока взяли листок?</p>
@@ -345,6 +350,16 @@ export function render(container, data) {
       </div>
     </div>
   `;
+  const orlovMemoryNote = container.querySelector('#orlov-memory-callback');
+  if (orlovMemoryNote && orlovRecall) {
+    orlovMemoryNote.textContent = orlovRecall;
+    orlovMemoryNote.hidden = false;
+  }
+  const klimovMemoryNote = container.querySelector('#klimov-memory-callback');
+  if (klimovMemoryNote && klimovRecall) {
+    klimovMemoryNote.textContent = klimovRecall;
+    klimovMemoryNote.hidden = false;
+  }
 
   updateCluesList();
   const refreshCourtWorkflow = setupCourtWorkflow(container);
