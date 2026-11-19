@@ -1,6 +1,7 @@
 import { Events } from './events.js';
 import { Storage } from './storage.js';
 import { createHypothesis, reviseHypothesis } from '../systems/hypotheses.js';
+import { createEmptySocialGraph, normalizeSocialGraph, upsertSocialTie, appendSocialEvent, getSocialTies, getSocialContext } from '../systems/npc-social-graph.js';
 
 export var GameState = {
   player: {
@@ -18,6 +19,7 @@ export var GameState = {
   flags: {},
   relationships: {},
   npcMemory: {},
+  socialGraph: createEmptySocialGraph(),
   notebook: [],
 
   settings: {
@@ -34,6 +36,7 @@ export var GameState = {
       this.flags = saved.flags || {};
       this.relationships = saved.relationships || {};
       this.npcMemory = saved.npcMemory || {};
+      this.socialGraph = normalizeSocialGraph(saved.socialGraph);
       this.notebook = saved.notebook || [];
       this.settings = saved.settings || this.settings;
       console.log('[State] Состояние загружено');
@@ -139,6 +142,26 @@ export var GameState = {
     return restored;
   },
 
+  recordSocialTie(input) {
+    const tie = upsertSocialTie(this.socialGraph, input);
+    if (!tie) return null;
+    this.save();
+    Events.emit('social:tie_updated', tie);
+    return tie;
+  },
+
+  recordSocialEvent(input) {
+    const event = appendSocialEvent(this.socialGraph, input);
+    if (!event) return null;
+    this.save();
+    Events.emit('social:event_recorded', event);
+    return event;
+  },
+
+  getSocialTies(npcId) { return getSocialTies(this.socialGraph, npcId); },
+
+  getSocialContext(npcId) { return getSocialContext(this.socialGraph, npcId); },
+
   updateRelationship(npcId, delta) {
     if (!this.relationships[npcId]) {
       this.relationships[npcId] = { trust: 50, met: false };
@@ -188,6 +211,7 @@ export var GameState = {
       flags: this.flags,
       relationships: this.relationships,
       npcMemory: this.npcMemory,
+      socialGraph: this.socialGraph,
       notebook: this.notebook,
       settings: this.settings,
     });
@@ -212,6 +236,7 @@ export var GameState = {
     this.flags = {};
     this.relationships = {};
     this.npcMemory = {};
+    this.socialGraph = createEmptySocialGraph();
     this.notebook = [];
     this.settings = { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
     
@@ -248,6 +273,7 @@ export var GameState = {
       flags: Object.assign({}, this.flags),
       relationships: Object.assign({}, this.relationships),
       npcMemory: JSON.parse(JSON.stringify(this.npcMemory)),
+      socialGraph: JSON.parse(JSON.stringify(this.socialGraph)),
       notebook: this.notebook.slice(),
       settings: Object.assign({}, this.settings)
     };
