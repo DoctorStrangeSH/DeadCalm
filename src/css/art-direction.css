@@ -517,3 +517,6 @@ body { background:#071015; color:#d3d5cc; }
 .investigation-assignment-open:focus-visible { outline:2px solid #e7cd9c; outline-offset:2px; }
 [data-gap-id]:focus { outline:2px solid #d1ad72; outline-offset:3px; }
 @media(max-width:520px) { .investigation-gap-journal { padding:11px; } .investigation-assignment-list li { grid-template-columns:1fr; } .investigation-assignment-status { grid-row:2; } }
+
+.witness-memory-callback { margin:10px 0 14px; padding:11px 13px; border-left:2px solid #a98a57; background:#172326; color:#c6c1ad; font-size:12px; line-height:1.55; }
+.witness-memory-callback::before { content:'ПАМЯТЬ СВИДЕТЕЛЯ / '; color:#d6b77b; font:600 10px Georgia,serif; letter-spacing:.08em; }
