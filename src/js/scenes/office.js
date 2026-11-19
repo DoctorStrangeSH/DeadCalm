@@ -11,12 +11,14 @@ export function render(container) {
   var notesCount = GameState.notebook ? GameState.notebook.length : 0;
   var radioProgress = GameState.miniGameProgress?.['radio-tuning'];
   var repairProgress = GameState.miniGameProgress?.['mechanical-repair'];
+  var filmProgress = GameState.miniGameProgress?.['film-restoration'];
   var radioStatus = radioProgress
     ? 'Попыток: ' + radioProgress.attempts + ' · Лучший приём: ' + (radioProgress.bestOutcome === 'clear' ? 'чистый' : radioProgress.bestOutcome === 'fragmented' ? 'фрагменты' : 'неразборчиво')
     : 'Ещё не настраивали';
   var repairStatus = repairProgress
     ? 'Попыток: ' + repairProgress.attempts + ' · Лучший ремонт: ' + (repairProgress.bestOutcome === 'success' ? 'без повреждений' : 'с последствиями')
     : 'Ещё не ремонтировали';
+  var filmStatus = filmProgress ? 'Попыток: ' + filmProgress.attempts + ' · Лучший результат: ' + filmProgress.bestQuality + '%' : 'Катушка № 014 · ожидает реставрации';
 
   container.innerHTML = `
     <div class="scene office-scene">
@@ -101,6 +103,14 @@ export function render(container) {
           <p class="hidden md:block text-gray-600 text-xs mt-3">${repairStatus}</p>
         </button>
 
+        <!-- Реставрация киноплёнки -->
+        <button id="btn-film" class="card office-card text-left w-full">
+          <span class="office-card-icon" aria-hidden="true">▥</span><span class="office-card-number">09</span>
+          <p class="card-title">АРХИВ КИНОПЛЁНКИ</p>
+          <p class="card-subtitle">Восстановить повреждённую катушку</p>
+          <p class="hidden md:block text-gray-600 text-xs mt-3">${filmStatus}</p>
+        </button>
+
         <!-- Дела -->
         <button id="btn-cases" class="card office-card text-left w-full">
           <span class="office-card-icon" aria-hidden="true">§</span><span class="office-card-number">06</span>
@@ -130,6 +140,11 @@ export function render(container) {
   // Радиоприёмная — отдельная сенсорная мини-игра
   document.getElementById('btn-radio').addEventListener('click', function () {
     Events.emit('navigate', { scene: 'radio-tuning' });
+  });
+
+  // Архивная киноплёнка — отдельная сенсорная мини-игра
+  document.getElementById('btn-film').addEventListener('click', function () {
+    Events.emit('navigate', { scene: 'film-restoration' });
   });
 
   // Мастерская — отдельная игровая мини-сцена
