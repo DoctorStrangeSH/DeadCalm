@@ -33,14 +33,19 @@ function validOccurrence(item) {
 
 export function normalizeDailyLife(value) {
   if (!value || typeof value !== 'object') return createEmptyDailyLife();
-  const schedules = Array.isArray(value.schedules) ? value.schedules.filter(validSchedule) : [];
-  const occurrences = Array.isArray(value.occurrences) ? value.occurrences.filter(validOccurrence) : [];
-  return {
-    schedules: schedules.filter((item, index, all) => all.findIndex(other => other.id === item.id) === index)
-      .map(item => ({ ...item, days: [...new Set(item.days)], sourceRefs: cleanRefs(item.sourceRefs) })),
-    occurrences: occurrences.filter((item, index, all) => all.findIndex(other => other.id === item.id) === index)
-      .map(item => ({ ...item, sourceRefs: cleanRefs(item.sourceRefs) }))
-  };
+  const schedules = (Array.isArray(value.schedules) ? value.schedules.filter(validSchedule) : [])
+    .filter((item, index, all) => all.findIndex(other => other.id === item.id) === index)
+    .map(item => ({ ...item, days: [...new Set(item.days)], sourceRefs: cleanRefs(item.sourceRefs) }));
+  const occurrences = (Array.isArray(value.occurrences) ? value.occurrences.filter(validOccurrence) : [])
+    .filter((item, index, all) => all.findIndex(other => other.id === item.id) === index)
+    .filter(item => {
+      const schedule = schedules.find(candidate => candidate.id === item.scheduleId && candidate.npcId === item.npcId);
+      return !!schedule && schedule.days.includes(((item.day - 1) % 7) + 1) &&
+        item.minute >= schedule.startMinute && item.minute < schedule.endMinute &&
+        item.locationId === schedule.locationId;
+    })
+    .map(item => ({ ...item, sourceRefs: cleanRefs(item.sourceRefs) }));
+  return { schedules, occurrences };
 }
 
 /** Add only an authored, source-backed schedule. No schedule is inferred from a location or job title. */
