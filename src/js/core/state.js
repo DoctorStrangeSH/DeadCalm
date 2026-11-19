@@ -2,6 +2,7 @@ import { Events } from './events.js';
 import { Storage } from './storage.js';
 import { createHypothesis, reviseHypothesis } from '../systems/hypotheses.js';
 import { createEmptySocialGraph, normalizeSocialGraph, upsertSocialTie, appendSocialEvent, getSocialTies, getSocialContext } from '../systems/npc-social-graph.js';
+import { createEmptyKnowledgeLedger, normalizeKnowledgeLedger, recordNpcKnowledge, updateNpcKnowledgeState, getNpcKnowledge, getNpcKnowledgeContext } from '../systems/npc-knowledge.js';
 
 export var GameState = {
   player: {
@@ -20,6 +21,7 @@ export var GameState = {
   relationships: {},
   npcMemory: {},
   socialGraph: createEmptySocialGraph(),
+  knowledgeLedger: createEmptyKnowledgeLedger(),
   notebook: [],
 
   settings: {
@@ -37,6 +39,7 @@ export var GameState = {
       this.relationships = saved.relationships || {};
       this.npcMemory = saved.npcMemory || {};
       this.socialGraph = normalizeSocialGraph(saved.socialGraph);
+      this.knowledgeLedger = normalizeKnowledgeLedger(saved.knowledgeLedger);
       this.notebook = saved.notebook || [];
       this.settings = saved.settings || this.settings;
       console.log('[State] Состояние загружено');
@@ -162,6 +165,26 @@ export var GameState = {
 
   getSocialContext(npcId) { return getSocialContext(this.socialGraph, npcId); },
 
+  recordNpcKnowledge(input) {
+    const entry = recordNpcKnowledge(this.knowledgeLedger, input);
+    if (!entry) return null;
+    this.save();
+    Events.emit('npc:knowledge_recorded', entry);
+    return entry;
+  },
+
+  updateNpcKnowledgeState(entryId, state, reason) {
+    const entry = updateNpcKnowledgeState(this.knowledgeLedger, entryId, state, reason);
+    if (!entry) return null;
+    this.save();
+    Events.emit('npc:knowledge_updated', entry);
+    return entry;
+  },
+
+  getNpcKnowledge(npcId) { return getNpcKnowledge(this.knowledgeLedger, npcId); },
+
+  getNpcKnowledgeContext(npcId) { return getNpcKnowledgeContext(this.knowledgeLedger, npcId); },
+
   updateRelationship(npcId, delta) {
     if (!this.relationships[npcId]) {
       this.relationships[npcId] = { trust: 50, met: false };
@@ -212,6 +235,7 @@ export var GameState = {
       relationships: this.relationships,
       npcMemory: this.npcMemory,
       socialGraph: this.socialGraph,
+      knowledgeLedger: this.knowledgeLedger,
       notebook: this.notebook,
       settings: this.settings,
     });
@@ -237,6 +261,7 @@ export var GameState = {
     this.relationships = {};
     this.npcMemory = {};
     this.socialGraph = createEmptySocialGraph();
+    this.knowledgeLedger = createEmptyKnowledgeLedger();
     this.notebook = [];
     this.settings = { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
     
@@ -274,6 +299,7 @@ export var GameState = {
       relationships: Object.assign({}, this.relationships),
       npcMemory: JSON.parse(JSON.stringify(this.npcMemory)),
       socialGraph: JSON.parse(JSON.stringify(this.socialGraph)),
+      knowledgeLedger: JSON.parse(JSON.stringify(this.knowledgeLedger)),
       notebook: this.notebook.slice(),
       settings: Object.assign({}, this.settings)
     };
