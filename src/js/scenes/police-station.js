@@ -2,6 +2,7 @@ import { Events } from '../core/events.js';
 import { DialogBox } from '../components/dialog-box.js';
 import { GameState } from '../core/state.js';
 import { assessOldCaseClosure, recordOldCaseClosure } from '../systems/old-case-closure.js';
+import { assessOldCaseOrder, recordOldCaseOrderInterpretation, OLD_CASE_ORDER_INTERPRETATIONS } from '../systems/old-case-order.js';
 
 export function render(container, data) {
   container.innerHTML = `
@@ -53,6 +54,15 @@ export function render(container, data) {
         <button id="precinct-old-case-inventory" class="reader-timeline-follow-up">ЗАПРОСИТЬ ОПИСЬ АРХИВНОЙ ПАПКИ</button>
         <button id="precinct-old-case-assess" class="reader-timeline-follow-up">СОСТАВИТЬ ЗАМЕТКУ О ПОЛНОТЕ АРХИВА</button>
       </section>
+      <section id="precinct-old-case-order" class="reader-theories-view mb-6" aria-label="Проверка постановления о закрытии дела" hidden>
+        <p class="reader-timeline-kicker">АРХИВ / ПОЛНОМОЧИЯ И ПОДПИСЬ</p>
+        <h3 class="reader-timeline-title">Кто подписал постановление?</h3>
+        <div id="precinct-old-case-order-detail" class="reader-theories-detail" aria-live="polite"></div>
+        <button id="precinct-old-case-order-request" class="reader-timeline-follow-up">ЗАПРОСИТЬ КОПИЮ ПОСТАНОВЛЕНИЯ</button>
+        <button id="precinct-old-case-roster-request" class="reader-timeline-follow-up">СВЕРИТЬ ЖУРНАЛ ВРЕМЕННЫХ ПОЛНОМОЧИЙ</button>
+        <div id="precinct-old-case-order-options" class="reader-theories-options" role="group" aria-label="Рабочая оценка полномочий"></div>
+        <p id="precinct-old-case-order-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
+      </section>
       <div id="dialog-container" class="hidden"></div>
     </div>
   `;
@@ -62,6 +72,44 @@ export function render(container, data) {
   const oldCaseRegister = container.querySelector('#precinct-old-case-register');
   const oldCaseInventory = container.querySelector('#precinct-old-case-inventory');
   const oldCaseAssess = container.querySelector('#precinct-old-case-assess');
+  const orderPanel = container.querySelector('#precinct-old-case-order');
+  const orderDetail = container.querySelector('#precinct-old-case-order-detail');
+  const orderRequest = container.querySelector('#precinct-old-case-order-request');
+  const rosterRequest = container.querySelector('#precinct-old-case-roster-request');
+  const orderOptions = container.querySelector('#precinct-old-case-order-options');
+  const orderResult = container.querySelector('#precinct-old-case-order-result');
+  function refreshOldCaseOrder() {
+    const check = assessOldCaseOrder(id => GameState.hasClue(id), GameState.flags.court_old_case_closure_review);
+    orderPanel.hidden = !check;
+    orderOptions.replaceChildren();
+    orderDetail.replaceChildren();
+    if (!check) return;
+    orderRequest.hidden = GameState.hasClue('old_case_original_order');
+    rosterRequest.hidden = GameState.hasClue('old_case_authority_roster');
+    for (const info of [`Получено документов: ${check.found.length} из 2.`,
+      ...(check.ready ? [check.established, check.limitation] : [])]) {
+      const paragraph = document.createElement('p');
+      paragraph.textContent = info;
+      orderDetail.appendChild(paragraph);
+    }
+    const saved = GameState.flags.court_old_case_order_interpretation;
+    orderResult.textContent = saved ? `${saved.finding} Следующий шаг: ${saved.nextStep}` : '';
+    if (!check.ready || saved) return;
+    for (const interpretation of OLD_CASE_ORDER_INTERPRETATIONS) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'reader-theories-option';
+      button.textContent = interpretation.label;
+      button.addEventListener('click', () => {
+        const assessment = assessOldCaseOrder(id => GameState.hasClue(id), GameState.flags.court_old_case_closure_review);
+        const result = recordOldCaseOrderInterpretation(interpretation.id, assessment, GameState.flags.court_old_case_order_interpretation);
+        if (!result) return;
+        GameState.setFlag('court_old_case_order_interpretation', result);
+        refreshOldCaseOrder();
+      });
+      orderOptions.appendChild(button);
+    }
+  }
   function refreshOldCase() {
     const check = assessOldCaseClosure(id => GameState.hasClue(id), GameState.flags.court_old_case_reading);
     oldCasePanel.hidden = !check;
@@ -83,7 +131,9 @@ export function render(container, data) {
     }
   }
   async function retrieveOldCaseDocument(clueId, button) {
-    if (!GameState.flags.court_old_case_reading || GameState.hasClue(clueId)) return;
+    const isOrderDocument = ['old_case_original_order', 'old_case_authority_roster'].includes(clueId);
+    if (isOrderDocument ? !GameState.flags.court_old_case_closure_review : !GameState.flags.court_old_case_reading) return;
+    if (GameState.hasClue(clueId)) return;
     button.disabled = true;
     try {
       const response = await fetch('src/data/clues.json');
@@ -92,6 +142,7 @@ export function render(container, data) {
       if (!catalog[clueId]) throw new Error('Архивный документ не найден');
       GameState.addClue(catalog[clueId]);
       refreshOldCase();
+      refreshOldCaseOrder();
     } catch (error) {
       button.disabled = false;
       oldCaseStatus.textContent = 'Архив временно недоступен. Повторите запрос позже.';
@@ -100,13 +151,17 @@ export function render(container, data) {
   }
   oldCaseRegister.addEventListener('click', () => retrieveOldCaseDocument('old_case_closure_register', oldCaseRegister));
   oldCaseInventory.addEventListener('click', () => retrieveOldCaseDocument('old_case_archive_inventory', oldCaseInventory));
+  orderRequest.addEventListener('click', () => retrieveOldCaseDocument('old_case_original_order', orderRequest));
+  rosterRequest.addEventListener('click', () => retrieveOldCaseDocument('old_case_authority_roster', rosterRequest));
   oldCaseAssess.addEventListener('click', () => {
     const note = recordOldCaseClosure(assessOldCaseClosure(id => GameState.hasClue(id), GameState.flags.court_old_case_reading), GameState.flags.court_old_case_closure_review);
     if (!note) return;
     GameState.setFlag('court_old_case_closure_review', note);
     refreshOldCase();
+    refreshOldCaseOrder();
   });
   refreshOldCase();
+  refreshOldCaseOrder();
 
   document.getElementById('btn-talk-ray').addEventListener('click', async function() {
     const actions = container.querySelector('#precinct-actions');

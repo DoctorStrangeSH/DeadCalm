@@ -429,6 +429,26 @@
     "source": "Опись архивной папки, представленная канцелярией",
     "connections_to": ["old_case_closure_register"]
   },
+  "old_case_original_order": {
+    "id": "old_case_original_order",
+    "name": "Копия постановления по делу Каллиопы",
+    "category": "document",
+    "description": "Копия постановления на третий день содержит формулировку «несчастный случай» и пометку «и. о. руководителя следственной группы». Подпись на копии неразборчива; без оригинала её нельзя надёжно атрибутировать.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Архивная копия постановления, заверенная канцелярией",
+    "connections_to": ["old_case_closure_register", "old_case_authority_roster"]
+  },
+  "old_case_authority_roster": {
+    "id": "old_case_authority_roster",
+    "name": "Журнал временного исполнения обязанностей",
+    "category": "document",
+    "description": "Журнал подтверждает, что в период закрытия дела полномочия руководителя следственной группы временно передавались дежурному сотруднику. Имя в сохранившейся копии записи повреждено; подтвердить автора подписи нельзя.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Архивный журнал назначений следственной группы",
+    "connections_to": ["old_case_original_order"]
+  },
   "judge_notes": {
     "id": "judge_notes",
     "name": "Дневник судьи",
