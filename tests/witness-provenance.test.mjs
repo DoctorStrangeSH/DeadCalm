@@ -161,3 +161,15 @@ test('note authorship review distinguishes authorized access from observed prese
   assert.match(scene, /'supply_counter_access_roster'/);
   assert.match(scene, /'key_note_impression_report'/);
 });
+
+test('seventeen on a service note has a documented alternate meaning, not a proven telephone link', () => {
+  assert.match(clues.supply_evening_request_codes.description, /вечернего набора № 17/);
+  assert.match(clues.switchboard_call_detail.description, /нет имени говорившего/);
+  assert.match(clues.switchboard_call_detail.description, /недостаточно для доказательства связи/);
+  assert.ok(clues.key_note_impression_report.connections_to.includes('supply_evening_request_codes'));
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.match(scene, /id="extension-seventeen-check"[^>]*hasClue\('key_note_impression_report'\) && GameState\.hasClue\('court_extension_directory'\)/);
+  assert.match(scene, /function inspectSeventeenLink/);
+  assert.match(scene, /'supply_evening_request_codes'/);
+  assert.match(scene, /'switchboard_call_detail'/);
+});

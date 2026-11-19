@@ -233,6 +233,18 @@ export function render(container, data) {
         </div>
       </div>
 
+      <div id="extension-seventeen-check" class="mb-6" ${GameState.hasClue('key_note_impression_report') && GameState.hasClue('court_extension_directory') ? '' : 'hidden'}>
+        <p class="text-gold text-xs tracking-widest mb-3">«17 / ВЕЧЕР» · ПРОВЕРИТЬ ЗНАЧЕНИЕ ПОМЕТЫ</p>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button id="btn-numbered-requests" class="card text-left" ${GameState.hasClue('supply_evening_request_codes') ? 'disabled' : ''}>
+            <p class="card-title">СВЕРИТЬ ОБОЗНАЧЕНИЯ В ЗАЯВКАХ</p><p class="card-subtitle">Был ли номер 17 внутренним кодом хозяйственной службы?</p>
+          </button>
+          <button id="btn-telephone-trace" class="card text-left" ${GameState.hasClue('switchboard_call_detail') ? 'disabled' : ''}>
+            <p class="card-title">ПРОВЕРИТЬ ДЕТАЛИЗАЦИЮ ЗВОНКА</p><p class="card-subtitle">Есть ли независимая связь с запиской?</p>
+          </button>
+        </div>
+      </div>
+
       <div class="court-clues-panel">
         <p class="text-gray-500 text-xs mb-2">НАЙДЕННЫЕ УЛИКИ:</p>
         <div id="found-clues" class="text-gold text-xs"></div>
@@ -378,6 +390,9 @@ export function render(container, data) {
       if (GameState.hasClue('key_issue_clerk_note')) container.querySelector('#key-note-trace').hidden = false;
       if (GameState.hasClue('key_note_paper_trace') && GameState.hasClue('supply_desk_shift_register')) {
         container.querySelector('#note-authorship').hidden = false;
+      }
+      if (GameState.hasClue('key_note_impression_report') && GameState.hasClue('court_extension_directory')) {
+        container.querySelector('#extension-seventeen-check').hidden = false;
       }
       refreshCourtWorkflow();
       showNarrative(narrative, catalog[clueId].name);
@@ -574,6 +589,20 @@ export function render(container, data) {
   container.querySelector('#btn-note-imprint').addEventListener('click', function() {
     inspectNoteOrigin('btn-note-imprint', 'key_note_impression_report',
       'Исследование продавленных строк обнаруживает рядом с табельным номером помету «17 / вечер». Это похоже на внутренний номер 17, но назначение пометы неизвестно. Один и тот же блокнот использовали для разных заявок; приписывать текст конкретному человеку нельзя.');
+  });
+
+  function inspectSeventeenLink(buttonId, clueId, narrative) {
+    if (!GameState.hasClue('key_note_impression_report') || !GameState.hasClue('court_extension_directory')) return;
+    inspectCourtRecord(buttonId, clueId, narrative, 'key_note_impression_report');
+  }
+
+  container.querySelector('#btn-numbered-requests').addEventListener('click', function() {
+    inspectSeventeenLink('btn-numbered-requests', 'supply_evening_request_codes',
+      'В хозяйственных заявках найдено обозначение «17 / вечер»: так помечают вечерние заявки на набор № 17 для проверки оборудования. Совпадение с надписью на листке даёт бытовое объяснение числу, но не устанавливает, кто оставил записку и использовался ли номер также для телефона.');
+  });
+  container.querySelector('#btn-telephone-trace').addEventListener('click', function() {
+    inspectSeventeenLink('btn-telephone-trace', 'switchboard_call_detail',
+      'Детализация подтверждает звонок с внутреннего номера 17 в 20:15, но не содержит имени говорившего и ссылок на ремонтную заявку. Одновременное появление числа 17 в двух источниках само по себе не связывает их.');
   });
 
   async function confrontOrlov(tone) {

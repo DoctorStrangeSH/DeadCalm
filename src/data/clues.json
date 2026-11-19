@@ -277,7 +277,27 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Протокол осмотра бумаги хозяйственной службы",
-    "connections_to": ["key_note_paper_trace", "court_extension_directory", "supply_counter_access_roster"]
+    "connections_to": ["key_note_paper_trace", "court_extension_directory", "supply_counter_access_roster", "supply_evening_request_codes", "switchboard_call_detail"]
+  },
+  "supply_evening_request_codes": {
+    "id": "supply_evening_request_codes",
+    "name": "Обозначения вечерних заявок хозяйственной службы",
+    "category": "document",
+    "description": "В журнале хозяйственных заявок повторяется запись «17 / вечер»: это также обозначение вечернего набора № 17 для проверки оборудования. Такая помета могла относиться к инструментам, а не к внутреннему телефону 17. Совпадение объясняет возможное происхождение текста, но не устанавливает, кто написал листок и зачем был запрошен ключ.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Книга заявок хозяйственной службы",
+    "connections_to": ["key_note_impression_report", "reader_service_ticket", "switchboard_call_detail"]
+  },
+  "switchboard_call_detail": {
+    "id": "switchboard_call_detail",
+    "name": "Детализация вечернего звонка с номера 17",
+    "category": "document",
+    "description": "Коммутатор подтверждает исходящий вызов с внутреннего номера 17 в участок в 20:15, но в детализации нет имени говорившего и номера хозяйственной заявки. Помета «17 / вечер» на отдельном листке не сопровождается телефонным обозначением: общего числа недостаточно для доказательства связи двух записей.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Выписка коммутатора суда",
+    "connections_to": ["court_phone_register_copy", "court_extension_directory", "key_note_impression_report", "supply_evening_request_codes"]
   },
   "archive_room_register": {
     "id": "archive_room_register",
