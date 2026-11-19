@@ -125,3 +125,18 @@ The first mechanical-repair vertical slice now has a real scene:
 - The service worker precaches the scene and its cache key is bumped to `dead-calm-visual-v90`.
 
 The mechanism illustration is currently CSS-based interface artwork, not a finished bespoke painted asset. Audio, bespoke animated gears, controller bindings, save-persisted repair outcomes, and narrative consequences are not yet implemented. The scene is a playable prototype, not a final art-complete mini-game.
+
+
+## Second mini-game — Analog Radio Tuning
+
+Implemented:
+- Logic: `src/js/systems/radio-tuning.js`
+- Tests: `tests/radio-tuning.test.mjs`
+- Scene: `src/js/scenes/radio-tuning.js`
+- Styling: dedicated `radio-*` styles in `src/css/main.css`
+- Entry: **РАДИОПРИЁМНАЯ** card in the detective office.
+- Service worker cache: `dead-calm-visual-v91`.
+
+The player continuously tunes an analog frequency and adjusts an interference filter. Signal clarity is graded as clear, fragmented, or unreadable. Slider readouts update in place so the range control remains mounted during pointer/keyboard interaction. This is distinct from mechanical repair: it is continuous sensory tuning rather than sequential component manipulation.
+
+The radio uses a CSS-rendered receiver illustration, not a bespoke painted asset. Actual audio/static playback, authored voice content, persistent narrative reward, and manual browser playtesting are not yet implemented.
