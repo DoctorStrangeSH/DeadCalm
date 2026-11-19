@@ -4,6 +4,7 @@ import { createHypothesis, reviseHypothesis } from '../systems/hypotheses.js';
 import { createEmptySocialGraph, normalizeSocialGraph, upsertSocialTie, appendSocialEvent, getSocialTies, getSocialContext } from '../systems/npc-social-graph.js';
 import { createEmptyKnowledgeLedger, normalizeKnowledgeLedger, recordNpcKnowledge, updateNpcKnowledgeState, getNpcKnowledge, getNpcKnowledgeContext } from '../systems/npc-knowledge.js';
 import { createEmptyDailyLife, normalizeDailyLife, upsertNpcSchedule, getNpcScheduleAt, recordNpcOccurrence, getNpcOccurrences } from '../systems/npc-daily-life.js';
+import { createEmptyMiniGameProgress, normalizeMiniGameProgress, recordMiniGameResult } from '../systems/minigame-progress.js';
 
 export var GameState = {
   player: {
@@ -24,6 +25,7 @@ export var GameState = {
   socialGraph: createEmptySocialGraph(),
   knowledgeLedger: createEmptyKnowledgeLedger(),
   npcDailyLife: createEmptyDailyLife(),
+  miniGameProgress: createEmptyMiniGameProgress(),
   notebook: [],
 
   settings: {
@@ -43,6 +45,7 @@ export var GameState = {
       this.socialGraph = normalizeSocialGraph(saved.socialGraph);
       this.knowledgeLedger = normalizeKnowledgeLedger(saved.knowledgeLedger);
       this.npcDailyLife = normalizeDailyLife(saved.npcDailyLife);
+      this.miniGameProgress = normalizeMiniGameProgress(saved.miniGameProgress);
       this.notebook = saved.notebook || [];
       this.settings = saved.settings || this.settings;
       console.log('[State] Состояние загружено');
@@ -210,6 +213,14 @@ export var GameState = {
 
   getNpcOccurrences(npcId) { return getNpcOccurrences(this.npcDailyLife, npcId); },
 
+  recordMiniGameResult(input) {
+    const result = recordMiniGameResult(this.miniGameProgress, input);
+    if (!result) return null;
+    this.save();
+    Events.emit('minigame:result_recorded', result);
+    return result;
+  },
+
   updateRelationship(npcId, delta) {
     if (!this.relationships[npcId]) {
       this.relationships[npcId] = { trust: 50, met: false };
@@ -262,6 +273,7 @@ export var GameState = {
       socialGraph: this.socialGraph,
       knowledgeLedger: this.knowledgeLedger,
       npcDailyLife: this.npcDailyLife,
+      miniGameProgress: this.miniGameProgress,
       notebook: this.notebook,
       settings: this.settings,
     });
@@ -289,6 +301,7 @@ export var GameState = {
     this.socialGraph = createEmptySocialGraph();
     this.knowledgeLedger = createEmptyKnowledgeLedger();
     this.npcDailyLife = createEmptyDailyLife();
+    this.miniGameProgress = createEmptyMiniGameProgress();
     this.notebook = [];
     this.settings = { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
     
@@ -328,6 +341,7 @@ export var GameState = {
       socialGraph: JSON.parse(JSON.stringify(this.socialGraph)),
       knowledgeLedger: JSON.parse(JSON.stringify(this.knowledgeLedger)),
       npcDailyLife: JSON.parse(JSON.stringify(this.npcDailyLife)),
+      miniGameProgress: JSON.parse(JSON.stringify(this.miniGameProgress)),
       notebook: this.notebook.slice(),
       settings: Object.assign({}, this.settings)
     };
