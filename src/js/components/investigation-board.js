@@ -17,10 +17,12 @@ export class InvestigationBoard {
     this.selectedClue = null;
     this.connections = [];
     this.draggedClue = null;
+    this.focusedHypothesisId = null;
   }
 
   async render() {
     await Investigation.init();
+    this.focusedHypothesisId = null;
     var clues = GameState.currentCase.clues;
     const archiveDigest = getOldCaseBoardDigest(clues, GameState.flags);
     this.connections = Investigation.getConnections();
@@ -168,6 +170,11 @@ export class InvestigationBoard {
       this._renderHypotheses();
     });
     this.container.querySelector('#hypothesis-list').addEventListener('click', event => {
+      const focusButton = event.target.closest('[data-focus-hypothesis]');
+      if (focusButton) {
+        this._focusHypothesisClues(focusButton.dataset.focusHypothesis);
+        return;
+      }
       const trigger = event.target.closest('[data-review-hypothesis]');
       if (!trigger) return;
       const card = trigger.closest('.hypothesis-entry');
@@ -217,6 +224,7 @@ export class InvestigationBoard {
         <p>${this._escapeHtml(item.reasoning)}</p>
         <p class="hypothesis-meta">УЛИКИ: ${(item.clueIds || []).length} · ИЗМЕНЕНИЙ: ${Math.max(0, (item.history || []).length - 1)}</p>
         <p class="hypothesis-evidence">${(item.clueIds || []).map(id => `<span>◇ ${this._escapeHtml(clueNames.get(id) || 'Материал недоступен')}</span>`).join('') || 'Улики пока не прикреплены'}</p>
+        <button type="button" class="reader-theories-option" data-focus-hypothesis="${this._escapeHtml(item.id)}" aria-pressed="${this.focusedHypothesisId === item.id}" ${(item.clueIds || []).some(id => clueNames.has(id)) ? '' : 'disabled'}>${this.focusedHypothesisId === item.id ? 'УБРАТЬ ПОДСВЕТКУ' : 'ПОКАЗАТЬ УЛИКИ НА ДОСКЕ ↗'}</button>
         ${newLeads.length ? `<aside class="hypothesis-audit" aria-label="Новые материалы для пересмотра">
           <strong>НОВЫЕ МАТЕРИАЛЫ · ${newLeads.length}</strong>
           <p>После последнего изменения этой версии появились связанные документы. Проверьте их и при необходимости пересмотрите вывод.</p>
@@ -289,7 +297,44 @@ export class InvestigationBoard {
 
     document.getElementById('btn-clear-selection').addEventListener('click', function() {
       self._clearSelection();
+      self._clearHypothesisFocus();
     });
+  }
+
+  _focusHypothesisClues(hypothesisId) {
+    if (this.focusedHypothesisId === hypothesisId) {
+      this._clearHypothesisFocus();
+      this._renderHypotheses();
+      return;
+    }
+    const hypothesis = (GameState.currentCase.hypotheses || []).find(item => item.id === hypothesisId);
+    if (!hypothesis) return;
+    const ids = new Set(hypothesis.clueIds || []);
+    const cards = [...this.container.querySelectorAll('.board-clue-card')];
+    const matching = cards.filter(card => ids.has(card.dataset.clueId));
+    if (!matching.length) return;
+    this._clearSelection();
+    // Reveal every attached card, even if the document search previously hid it.
+    this.container.querySelector('#board-search-reset')?.click();
+    this.focusedHypothesisId = hypothesisId;
+    cards.forEach(card => {
+      card.classList.toggle('board-clue-hypothesis', ids.has(card.dataset.clueId));
+      card.classList.toggle('board-clue-hypothesis-muted', !ids.has(card.dataset.clueId));
+    });
+    const hint = this.container.querySelector('#board-hint');
+    hint.textContent = `Версия «${hypothesis.title}»: выделено ${matching.length} из ${ids.size} прикреплённых улик. Для возврата нажмите «Сбросить выбор».`;
+    hint.className = 'board-hint board-hint-active';
+    this._renderHypotheses();
+    matching[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    matching[0].focus({ preventScroll: true });
+  }
+
+  _clearHypothesisFocus() {
+    this.focusedHypothesisId = null;
+    this.container.querySelectorAll('.board-clue-card').forEach(card => {
+      card.classList.remove('board-clue-hypothesis', 'board-clue-hypothesis-muted');
+    });
+    this._renderHypotheses();
   }
 
   _setupClueSearch(clues) {
