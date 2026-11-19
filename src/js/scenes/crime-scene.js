@@ -1063,6 +1063,13 @@ export function render(container, data) {
       GameState.addClue(catalog.key_issue_clerk_note);
       GameState.setFlag('court_klimov_interview_tone', tone);
       GameState.updateRelationship('npc_nikolay_klimov', outcome.trustDelta);
+      NPCMemory.recordInterview('npc_nikolay_klimov', {
+        tone,
+        response: tone === 'patient' ? 'shared_lead' : 'declined_further_comment',
+        statementRef: 'key_issue_clerk_note',
+        presentedEvidenceIds: ['klimov_evening_account', 'maintenance_tool_issue_ledger'],
+        trustAfter: GameState.getRelationship('npc_nikolay_klimov').trust
+      });
       panel.hidden = true;
       container.querySelector('#key-note-trace').hidden = false;
       refreshCourtWorkflow();
@@ -1153,6 +1160,13 @@ export function render(container, data) {
       GameState.addClue(catalog.orlov_badge_handover);
       GameState.setFlag('court_orlov_interview_tone', tone);
       GameState.updateRelationship('npc_pavel_orlov', outcome.trustDelta);
+      NPCMemory.recordInterview('npc_pavel_orlov', {
+        tone,
+        response: tone === 'patient' ? 'shared_lead' : 'declined_further_comment',
+        statementRef: 'orlov_badge_handover',
+        presentedEvidenceIds: ['orlov_evening_statement', 'orlov_badge_scan'],
+        trustAfter: GameState.getRelationship('npc_pavel_orlov').trust
+      });
       panel.hidden = true;
       container.querySelector('#nk-identity').hidden = false;
       refreshCourtWorkflow();
