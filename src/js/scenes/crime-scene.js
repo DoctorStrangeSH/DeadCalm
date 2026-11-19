@@ -5,6 +5,7 @@ import { canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation, canConf
 import { setupCourtWorkflow } from '../systems/court-workflow.js';
 import { NPCMemory } from '../systems/npc-memory.js';
 import { getWitnessRecallLine } from '../systems/witness-interview-history.js';
+import { getNPCDossier } from '../systems/npc-dossiers.js';
 import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS, getReaderTimelineFollowUp } from '../systems/reader-timeline.js';
 import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, resolveWitnessRecall, getReaderEvidenceRoute, READER_THEORIES } from '../systems/reader-theories.js';
 import { assessReaderInvestigation } from '../systems/investigation-quality.js';
@@ -18,6 +19,8 @@ export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
   const orlovRecall = getWitnessRecallLine(NPCMemory.getMemory('npc_pavel_orlov'), 'Орлов');
   const klimovRecall = getWitnessRecallLine(NPCMemory.getMemory('npc_nikolay_klimov'), 'Климов');
+  const orlovDossier = getNPCDossier('npc_pavel_orlov');
+  const klimovDossier = getNPCDossier('npc_nikolay_klimov');
 
   container.innerHTML = `
     <div class="scene court-crime-scene">
@@ -223,6 +226,7 @@ export function render(container, data) {
       <div id="orlov-confrontation" class="card p-4 mb-6" hidden>
         <p class="card-title">ПРОВЕРКА АЛИБИ · ПОВТОРНЫЙ ДОПРОС ОРЛОВА</p>
         <p class="card-subtitle mt-2 mb-3">Карточка отмечена на входе после предполагаемого ухода Орлова. Как предъявить несостыковку?</p>
+        <div id="orlov-dossier" class="npc-dossier" aria-label="Известные особенности Орлова"></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <button id="btn-orlov-patient" class="btn-noir text-xs py-3">УТОЧНИТЬ СУДЬБУ КАРТОЧКИ</button>
           <button id="btn-orlov-pressure" class="btn-noir text-xs py-3">ОБВИНИТЬ В СОКРЫТИИ</button>
@@ -281,6 +285,7 @@ export function render(container, data) {
       <div id="klimov-confrontation" class="card p-4 mb-6" hidden>
         <p class="card-title">ПОВТОРНЫЙ ДОПРОС · НИКОЛАЙ КЛИМОВ</p>
         <p class="card-subtitle mt-2 mb-3">Ключ оформлен на его табельный номер, хотя он отрицает получение. Как предъявить запись?</p>
+        <div id="klimov-dossier" class="npc-dossier" aria-label="Известные особенности Климова"></div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
           <button id="btn-klimov-patient" class="btn-noir text-xs py-3">УТОЧНИТЬ ПОРЯДОК ВЫДАЧИ</button>
           <button id="btn-klimov-pressure" class="btn-noir text-xs py-3">ОБВИНИТЬ В СОКРЫТИИ КЛЮЧА</button>
@@ -350,6 +355,29 @@ export function render(container, data) {
       </div>
     </div>
   `;
+  function renderNPCDossier(targetId, profile) {
+    const target = container.querySelector(targetId);
+    if (!target || !profile) return;
+    const rows = [
+      ['НАБЛЮДАЕМЫЙ МОТИВ', profile.observedMotive],
+      ['КАК НАЧАТЬ РАЗГОВОР', profile.cooperationOpening],
+      ['ГРАНИЦА СОТРУДНИЧЕСТВА', profile.boundary],
+      ['ЧЕГО МЫ НЕ ЗНАЕМ', profile.unknown],
+      ['ОСНОВАНИЕ', profile.basis]
+    ];
+    target.replaceChildren();
+    for (const [label, value] of rows) {
+      const row = document.createElement('p');
+      const heading = document.createElement('strong');
+      heading.textContent = label + ' · ';
+      const detail = document.createElement('span');
+      detail.textContent = value;
+      row.append(heading, detail);
+      target.appendChild(row);
+    }
+  }
+  renderNPCDossier('#orlov-dossier', orlovDossier);
+  renderNPCDossier('#klimov-dossier', klimovDossier);
   const orlovMemoryNote = container.querySelector('#orlov-memory-callback');
   if (orlovMemoryNote && orlovRecall) {
     orlovMemoryNote.textContent = orlovRecall;
