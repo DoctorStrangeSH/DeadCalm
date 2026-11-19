@@ -130,6 +130,7 @@ export function render(container, data) {
         <p class="reader-timeline-intro">Аудит показывает полноту проверок и доказанные расхождения. Это не рейтинг раскрытия преступления.</p>
         <div id="reader-quality-detail" class="reader-theories-detail" aria-live="polite"></div>
         <div id="reader-gaps-detail" class="reader-theories-detail" aria-live="polite" aria-label="Пробелы расследования"></div>
+        <div id="reader-gap-journal" class="reader-gap-journal" aria-label="Журнал следственных поручений"></div>
         <button type="button" id="reader-conclusion-save" class="reader-timeline-follow-up">СОСТАВИТЬ ПРОМЕЖУТОЧНОЕ ЗАКЛЮЧЕНИЕ</button>
         <button type="button" id="reader-conclusion-submit" class="reader-timeline-follow-up" hidden>ПЕРЕДАТЬ ЗАКЛЮЧЕНИЕ НА ПРОВЕРКУ</button>
         <div id="reader-conclusion-reviews" class="reader-theory-history" aria-label="Замечания по заключениям"></div>
@@ -363,6 +364,7 @@ export function render(container, data) {
   const theoryEvidenceStatus = container.querySelector('#reader-theory-evidence-status');
   const qualityDetail = container.querySelector('#reader-quality-detail');
   const gapsDetail = container.querySelector('#reader-gaps-detail');
+  const gapJournal = container.querySelector('#reader-gap-journal');
   const conclusionButton = container.querySelector('#reader-conclusion-save');
   const conclusionHistory = container.querySelector('#reader-conclusion-history');
   const conclusionSubmit = container.querySelector('#reader-conclusion-submit');
@@ -425,6 +427,8 @@ export function render(container, data) {
       list.className = 'investigation-gaps-list';
       for (const gap of gaps) {
         const item = document.createElement('li');
+        item.dataset.gapId = gap.id;
+        item.tabIndex = -1;
         const title = document.createElement('strong');
         title.textContent = gap.title;
         const detail = document.createElement('p');
@@ -454,6 +458,42 @@ export function render(container, data) {
         list.appendChild(item);
       }
       gapsDetail.appendChild(list);
+    }
+    gapJournal.replaceChildren();
+    const journalHeading = document.createElement('h4');
+    journalHeading.textContent = 'ЖУРНАЛ СЛЕДСТВЕННЫХ ПОРУЧЕНИЙ';
+    gapJournal.appendChild(journalHeading);
+    const assignments = buildInvestigationAssignmentJournal(gaps, gapStatuses);
+    if (!assignments.length) {
+      const emptyJournal = document.createElement('p');
+      emptyJournal.textContent = 'Нет проверок, взятых в работу или отложенных. Назначьте действие в списке пробелов выше.';
+      gapJournal.appendChild(emptyJournal);
+    } else {
+      const journalList = document.createElement('ul');
+      journalList.className = 'investigation-assignment-list';
+      for (const assignment of assignments) {
+        const entry = document.createElement('li');
+        const title = document.createElement('strong');
+        title.textContent = assignment.title;
+        const status = document.createElement('span');
+        status.className = 'investigation-assignment-status';
+        status.textContent = assignment.statusLabel;
+        const detail = document.createElement('p');
+        detail.textContent = assignment.detail;
+        const open = document.createElement('button');
+        open.type = 'button';
+        open.className = 'investigation-assignment-open';
+        open.textContent = 'К СВЯЗАННОЙ ПРОВЕРКЕ';
+        open.addEventListener('click', () => {
+          const target = gapsDetail.querySelector('[data-gap-id="' + CSS.escape(assignment.id) + '"]');
+          if (!target) return;
+          target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          target.focus({ preventScroll: true });
+        });
+        entry.append(title, status, detail, open);
+        journalList.appendChild(entry);
+      }
+      gapJournal.appendChild(journalList);
     }
     const rows = [
       ['Документы', `${audit.found.length} из ${audit.found.length + audit.remaining.length} ключевых проверок`],
