@@ -9,6 +9,14 @@ import { Inventory } from '../components/inventory.js';
 export function render(container) {
   var cluesCount = GameState.currentCase.clues.length;
   var notesCount = GameState.notebook ? GameState.notebook.length : 0;
+  var radioProgress = GameState.miniGameProgress?.['radio-tuning'];
+  var repairProgress = GameState.miniGameProgress?.['mechanical-repair'];
+  var radioStatus = radioProgress
+    ? 'Попыток: ' + radioProgress.attempts + ' · Лучший приём: ' + (radioProgress.bestOutcome === 'clear' ? 'чистый' : radioProgress.bestOutcome === 'fragmented' ? 'фрагменты' : 'неразборчиво')
+    : 'Ещё не настраивали';
+  var repairStatus = repairProgress
+    ? 'Попыток: ' + repairProgress.attempts + ' · Лучший ремонт: ' + (repairProgress.bestOutcome === 'success' ? 'без повреждений' : 'с последствиями')
+    : 'Ещё не ремонтировали';
 
   container.innerHTML = `
     <div class="scene office-scene">
@@ -82,7 +90,7 @@ export function render(container) {
           <span class="office-card-icon" aria-hidden="true">⌁</span><span class="office-card-number">08</span>
           <p class="card-title">РАДИОПРИЁМНАЯ</p>
           <p class="card-subtitle">Настроить коротковолновый приёмник</p>
-          <p class="hidden md:block text-gray-600 text-xs mt-3">Практика · Работа с сигналом</p>
+          <p class="hidden md:block text-gray-600 text-xs mt-3">${radioStatus}</p>
         </button>
 
         <!-- Мастерская -->
