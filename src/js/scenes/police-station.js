@@ -4,6 +4,7 @@ import { GameState } from '../core/state.js';
 import { assessOldCaseClosure, recordOldCaseClosure } from '../systems/old-case-closure.js';
 import { assessOldCaseOrder, recordOldCaseOrderInterpretation, OLD_CASE_ORDER_INTERPRETATIONS } from '../systems/old-case-order.js';
 import { assessOldCaseSignature, recordOldCaseSignatureAction, OLD_CASE_SIGNATURE_ACTIONS } from '../systems/old-case-signature.js';
+import { assessOldCaseFollowUp, recordOldCaseFollowUp } from '../systems/old-case-follow-up.js';
 
 export function render(container, data) {
   container.innerHTML = `
@@ -73,6 +74,13 @@ export function render(container, data) {
         <div id="precinct-old-case-signature-options" class="reader-theories-options" role="group" aria-label="Выбор дополнительной проверки"></div>
         <p id="precinct-old-case-signature-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
       </section>
+      <section id="precinct-old-case-follow-up" class="reader-theories-view mb-6" aria-label="Результат выбранной проверки подписи" hidden>
+        <p class="reader-timeline-kicker">ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА / ПО ВЫБРАННОМУ МАРШРУТУ</p>
+        <h3 class="reader-timeline-title">Что удалось установить?</h3>
+        <button id="precinct-old-case-follow-up-request" class="reader-timeline-follow-up"></button>
+        <div id="precinct-old-case-follow-up-detail" class="reader-theories-detail" aria-live="polite"></div>
+        <button id="precinct-old-case-follow-up-save" class="reader-timeline-follow-up" hidden>ЗАФИКСИРОВАТЬ РЕЗУЛЬТАТ И ДАЛЬНЕЙШИЙ ЗАПРОС</button>
+      </section>
       <div id="dialog-container" class="hidden"></div>
     </div>
   `;
@@ -94,6 +102,29 @@ export function render(container, data) {
   const signatureSamples = container.querySelector('#precinct-signature-samples');
   const signatureOptions = container.querySelector('#precinct-old-case-signature-options');
   const signatureResult = container.querySelector('#precinct-old-case-signature-result');
+  const followUpPanel = container.querySelector('#precinct-old-case-follow-up');
+  const followUpRequest = container.querySelector('#precinct-old-case-follow-up-request');
+  const followUpDetail = container.querySelector('#precinct-old-case-follow-up-detail');
+  const followUpSave = container.querySelector('#precinct-old-case-follow-up-save');
+  function refreshOldCaseFollowUp() {
+    const check = assessOldCaseFollowUp(GameState.flags.court_old_case_signature_action, id => GameState.hasClue(id));
+    followUpPanel.hidden = !check;
+    followUpDetail.replaceChildren();
+    if (!check) return;
+    followUpRequest.hidden = check.found;
+    followUpRequest.textContent = check.button;
+    followUpSave.hidden = !check.found || !!GameState.flags.court_old_case_follow_up;
+    const saved = GameState.flags.court_old_case_follow_up;
+    for (const detail of [
+      check.found ? check.conclusion : 'Дождитесь ответа на выбранный запрос, чтобы оценить найденные материалы.',
+      ...(check.found ? [check.commonLimit] : []),
+      ...(saved ? ['Результат сохранён в материалах дела.'] : [])
+    ]) {
+      const paragraph = document.createElement('p');
+      paragraph.textContent = detail;
+      followUpDetail.appendChild(paragraph);
+    }
+  }
   function refreshOldCaseSignature() {
     const assessment = assessOldCaseSignature(id => GameState.hasClue(id), GameState.flags.court_old_case_order_interpretation);
     signaturePanel.hidden = !assessment;
@@ -122,6 +153,7 @@ export function render(container, data) {
         if (!selected) return;
         GameState.setFlag('court_old_case_signature_action', selected);
         refreshOldCaseSignature();
+        refreshOldCaseFollowUp();
       });
       signatureOptions.appendChild(button);
     }
@@ -182,7 +214,10 @@ export function render(container, data) {
   async function retrieveOldCaseDocument(clueId, button) {
     const isOrderDocument = ['old_case_original_order', 'old_case_authority_roster'].includes(clueId);
     const isSignatureDocument = ['old_case_order_physical_original', 'old_case_signature_samples'].includes(clueId);
-    if (isSignatureDocument ? !GameState.flags.court_old_case_order_interpretation
+    const followUp = assessOldCaseFollowUp(GameState.flags.court_old_case_signature_action, id => GameState.hasClue(id));
+    const isFollowUpDocument = ['old_case_specialist_memo', 'old_case_custody_extract'].includes(clueId);
+    if (isFollowUpDocument ? followUp?.clueId !== clueId
+      : isSignatureDocument ? !GameState.flags.court_old_case_order_interpretation
       : isOrderDocument ? !GameState.flags.court_old_case_closure_review : !GameState.flags.court_old_case_reading) return;
     if (GameState.hasClue(clueId)) return;
     button.disabled = true;
@@ -195,6 +230,7 @@ export function render(container, data) {
       refreshOldCase();
       refreshOldCaseOrder();
       refreshOldCaseSignature();
+      refreshOldCaseFollowUp();
     } catch (error) {
       button.disabled = false;
       oldCaseStatus.textContent = 'Архив временно недоступен. Повторите запрос позже.';
@@ -207,6 +243,17 @@ export function render(container, data) {
   rosterRequest.addEventListener('click', () => retrieveOldCaseDocument('old_case_authority_roster', rosterRequest));
   signatureOriginal.addEventListener('click', () => retrieveOldCaseDocument('old_case_order_physical_original', signatureOriginal));
   signatureSamples.addEventListener('click', () => retrieveOldCaseDocument('old_case_signature_samples', signatureSamples));
+  followUpRequest.addEventListener('click', () => {
+    const followUp = assessOldCaseFollowUp(GameState.flags.court_old_case_signature_action, id => GameState.hasClue(id));
+    if (followUp && !followUp.found) retrieveOldCaseDocument(followUp.clueId, followUpRequest);
+  });
+  followUpSave.addEventListener('click', () => {
+    const check = assessOldCaseFollowUp(GameState.flags.court_old_case_signature_action, id => GameState.hasClue(id));
+    const result = recordOldCaseFollowUp(check, GameState.flags.court_old_case_follow_up);
+    if (!result) return;
+    GameState.setFlag('court_old_case_follow_up', result);
+    refreshOldCaseFollowUp();
+  });
   oldCaseAssess.addEventListener('click', () => {
     const note = recordOldCaseClosure(assessOldCaseClosure(id => GameState.hasClue(id), GameState.flags.court_old_case_reading), GameState.flags.court_old_case_closure_review);
     if (!note) return;
@@ -217,6 +264,7 @@ export function render(container, data) {
   refreshOldCase();
   refreshOldCaseOrder();
   refreshOldCaseSignature();
+  refreshOldCaseFollowUp();
 
   document.getElementById('btn-talk-ray').addEventListener('click', async function() {
     const actions = container.querySelector('#precinct-actions');

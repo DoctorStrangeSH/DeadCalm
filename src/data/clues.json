@@ -469,6 +469,26 @@
     "source": "Подборка подписанных приказов из фонда кадровой службы",
     "connections_to": ["old_case_order_physical_original"]
   },
+  "old_case_specialist_memo": {
+    "id": "old_case_specialist_memo",
+    "name": "Заключение о пригодности росчерка",
+    "category": "document",
+    "description": "Специалист фиксирует разрыв штрихов в зоне повреждения оригинала. Сохранившихся признаков недостаточно для отождествления или исключения автора. Экспертиза подлинности подписи не проводилась.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Служебная записка специалиста-криминалиста",
+    "connections_to": ["old_case_order_physical_original"]
+  },
+  "old_case_custody_extract": {
+    "id": "old_case_custody_extract",
+    "name": "Выписка о движении архивной папки",
+    "category": "document",
+    "description": "Архивный журнал отмечает приём папки через год после закрытия дела и последующую выдачу на инвентаризацию. Состояние подписи при приёме не описано, поэтому время и причина повреждения неизвестны.",
+    "location": "police_station",
+    "day": 1,
+    "source": "Заверенная выписка из журнала движения архивных фондов",
+    "connections_to": ["old_case_order_physical_original"]
+  },
   "judge_notes": {
     "id": "judge_notes",
     "name": "Дневник судьи",
