@@ -1,0 +1,74 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  createEmptyKnowledgeLedger,
+  getNpcKnowledge,
+  getNpcKnowledgeContext,
+  normalizeKnowledgeLedger,
+  recordNpcKnowledge,
+  updateNpcKnowledgeState
+} from '../src/js/systems/npc-knowledge.js';
+
+test('new and legacy saves produce an empty knowledge ledger', () => {
+  assert.deepEqual(createEmptyKnowledgeLedger(), { entries: [] });
+  assert.deepEqual(normalizeKnowledgeLedger(undefined), { entries: [] });
+  assert.deepEqual(normalizeKnowledgeLedger({ oldMemory: {} }), { entries: [] });
+});
+
+test('NPC knowledge is attributed and does not establish claim truth', () => {
+  const ledger = createEmptyKnowledgeLedger();
+  const entry = recordNpcKnowledge(ledger, {
+    npcId: 'npc_marta', claimRef: 'claim_court_lights', sourceType: 'rumor',
+    provenance: 'Heard it from a bartender during the late shift.',
+    sourceNpcId: 'npc_pavel', sourceRefs: ['bar_statement_02']
+  });
+  assert.ok(entry);
+  assert.equal(entry.state, 'unverified');
+  assert.equal(entry.sourceType, 'rumor');
+  assert.equal(ledger.entries.length, 1);
+});
+
+test('invalid provenance, self-sourced claims and duplicate IDs are rejected', () => {
+  const ledger = createEmptyKnowledgeLedger();
+  assert.equal(recordNpcKnowledge(ledger, { npcId: 'npc_a', claimRef: 'claim_1', sourceType: 'rumor' }), null);
+  assert.equal(recordNpcKnowledge(ledger, { npcId: 'npc_a', claimRef: 'claim_1', sourceType: 'rumor', provenance: 'A rumor.', sourceNpcId: 'npc_a' }), null);
+  recordNpcKnowledge(ledger, { id: 'fixed', npcId: 'npc_a', claimRef: 'claim_1', sourceType: 'interview', provenance: 'The witness said so.' });
+  assert.equal(recordNpcKnowledge(ledger, { id: 'fixed', npcId: 'npc_b', claimRef: 'claim_2', sourceType: 'document', provenance: 'A report.' }), null);
+  assert.equal(ledger.entries.length, 1);
+});
+
+test('knowledge status changes require a reason and preserve a history', () => {
+  const ledger = createEmptyKnowledgeLedger();
+  const entry = recordNpcKnowledge(ledger, { id: 'k1', npcId: 'npc_a', claimRef: 'claim_1', sourceType: 'direct_observation', provenance: 'Saw the event personally.' });
+  assert.equal(updateNpcKnowledgeState(ledger, 'k1', 'corroborated', ''), null);
+  const updated = updateNpcKnowledgeState(ledger, 'k1', 'corroborated', 'A second independent witness confirms the detail.');
+  assert.equal(updated.state, 'corroborated');
+  assert.equal(updated.stateHistory.length, 1);
+  assert.equal(updated.stateHistory[0].from, 'unverified');
+  assert.equal(updated.stateHistory[0].to, 'corroborated');
+  assert.equal(updateNpcKnowledgeState(ledger, 'missing', 'disputed', 'No matching source.'), null);
+});
+
+test('knowledge queries isolate NPCs and return detached copies', () => {
+  const ledger = createEmptyKnowledgeLedger();
+  recordNpcKnowledge(ledger, { npcId: 'npc_a', claimRef: 'claim_1', sourceType: 'rumor', provenance: 'A bar rumor.' });
+  recordNpcKnowledge(ledger, { npcId: 'npc_a', claimRef: 'claim_2', sourceType: 'document', provenance: 'Read a signed log.' });
+  recordNpcKnowledge(ledger, { npcId: 'npc_b', claimRef: 'claim_1', sourceType: 'interview', provenance: 'Heard from a witness.' });
+  const entries = getNpcKnowledge(ledger, 'npc_a');
+  entries[0].state = 'disputed';
+  assert.equal(ledger.entries[0].state, 'unverified');
+  const context = getNpcKnowledgeContext(ledger, 'npc_a');
+  assert.equal(context.total, 2);
+  assert.equal(context.hearsay, 1);
+});
+
+test('malformed legacy records are filtered and duplicate ids are collapsed', () => {
+  const normalized = normalizeKnowledgeLedger({ entries: [
+    { id: 'k1', npcId: 'npc_a', claimRef: 'claim_1', sourceType: 'document', state: 'unverified', provenance: 'A signed record.' },
+    { id: 'k1', npcId: 'npc_b', claimRef: 'claim_2', sourceType: 'rumor', state: 'unverified', provenance: 'A rumor.' },
+    { id: 'blank', npcId: 'npc_a', claimRef: 'claim_3', sourceType: 'rumor', state: 'unverified', provenance: ' ' }
+  ] });
+  assert.equal(normalized.entries.length, 1);
+  assert.equal(normalized.entries[0].npcId, 'npc_a');
+  assert.deepEqual(normalized.entries[0].sourceRefs, []);
+});
