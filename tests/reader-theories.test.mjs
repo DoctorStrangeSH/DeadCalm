@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { compareReaderTheories, READER_THEORIES, snapshotReaderTheory, evaluateTheoryChanges } from '../src/js/systems/reader-theories.js';
+import { compareReaderTheories, READER_THEORIES, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach } from '../src/js/systems/reader-theories.js';
 
 const clues = JSON.parse(readFileSync(new URL('../src/data/clues.json', import.meta.url), 'utf8'));
 
@@ -75,4 +75,29 @@ test('investigative journal persists theory choice but disallows duplicate uncha
   assert.match(scene, /GameState\.setFlag\('court_reader_theory_history', \[\.\.\.history, snapshot\]\)/);
   assert.match(scene, /latest\?\.theoryId === current\.id && !evaluateTheoryChanges\(latest, current\)\?\.changed/);
   assert.match(scene, /ПЕРЕСМОТРЕТЬ ВЕРСИЮ С НОВЫМИ ДАННЫМИ/);
+});
+
+test('discreet questions and unfounded accusations carry bounded trust consequences', () => {
+  const one = { theoryId: 'single_operator', verifiedChecks: [] };
+  const prepared = { theoryId: 'single_operator', verifiedChecks: ['key_signature_comparison'] };
+  assert.equal(resolveTheoryApproach(one, 'discreet').trustDelta, 2);
+  assert.equal(resolveTheoryApproach(one, 'accusation').trustDelta, -8);
+  assert.equal(resolveTheoryApproach(prepared, 'accusation').trustDelta, -4);
+  assert.equal(resolveTheoryApproach(one, 'accusation').npcId, 'npc_nikolay_klimov');
+  assert.equal(resolveTheoryApproach({ theoryId: 'borrowed_badge', verifiedChecks: [] }, 'accusation').npcId, 'npc_pavel_orlov');
+  assert.match(resolveTheoryApproach(one, 'accusation').response, /не подтверждают личность/);
+  assert.equal(resolveTheoryApproach(one, 'unknown'), null);
+  assert.equal(resolveTheoryApproach({ theoryId: 'unknown' }, 'discreet'), null);
+  assert.equal(resolveTheoryApproach(null, 'discreet'), null);
+});
+
+test('one-time consequence is saved and trust is updated only in the action handler', () => {
+  const scene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  const css = readFileSync(new URL('../src/css/art-direction.css', import.meta.url), 'utf8');
+  assert.match(scene, /id="reader-theory-approaches"/);
+  assert.match(scene, /function handleTheoryApproach\(approach\)/);
+  assert.match(scene, /GameState\.flags\.court_reader_theory_consequence\) return/);
+  assert.match(scene, /GameState\.setFlag\('court_reader_theory_consequence', outcome\)/);
+  assert.match(scene, /GameState\.updateRelationship\(outcome\.npcId, outcome\.trustDelta\)/);
+  assert.match(css, /\.reader-theory-approaches\[hidden\] \{ display:none; \}/);
 });

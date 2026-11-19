@@ -58,3 +58,19 @@ export function evaluateTheoryChanges(snapshot, current) {
   const newChecks = current.verifiedChecks.filter(id => !snapshot.verifiedChecks.includes(id));
   return { newDocuments, newChecks, changed: newDocuments.length + newChecks.length > 0 };
 }
+
+export function resolveTheoryApproach(snapshot, approach) {
+  if (!snapshot || !READER_THEORIES.some(theory => theory.id === snapshot.theoryId)) return null;
+  if (!['discreet', 'accusation'].includes(approach)) return null;
+  const npcId = snapshot.theoryId === 'borrowed_badge' ? 'npc_pavel_orlov' : 'npc_nikolay_klimov';
+  const checked = snapshot.verifiedChecks.length > 0;
+  return {
+    npcId,
+    approach,
+    theoryId: snapshot.theoryId,
+    trustDelta: approach === 'discreet' ? 2 : checked ? -4 : -8,
+    response: approach === 'discreet'
+      ? 'Вы просите уточнить порядок передачи оборудования, не называя подозреваемого. Собеседник соглашается сверить документы; новых показаний пока нет.'
+      : 'Вы озвучиваете версию как обвинение. Собеседник требует назвать прямые доказательства своей причастности и прекращает обсуждение. Документы не подтверждают личность исполнителя.'
+  };
+}

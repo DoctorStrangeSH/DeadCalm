@@ -4,7 +4,7 @@ import { canChallengeGuard, resolveGuardChallenge } from '../systems/court-guard
 import { canTraceSecretary, canConfrontOrlov, resolveOrlovConfrontation, canConfrontKlimov, resolveKlimovConfrontation } from '../systems/witness-provenance.js';
 import { setupCourtWorkflow } from '../systems/court-workflow.js';
 import { canAssembleReaderTimeline, READER_TIMELINE_EVENTS, getReaderTimelineFollowUp } from '../systems/reader-timeline.js';
-import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, READER_THEORIES } from '../systems/reader-theories.js';
+import { compareReaderTheories, snapshotReaderTheory, evaluateTheoryChanges, resolveTheoryApproach, READER_THEORIES } from '../systems/reader-theories.js';
 
 export function render(container, data) {
   var location = data?.location || { name: 'Место преступления', description: 'Зал суда' };
@@ -100,6 +100,12 @@ export function render(container, data) {
         <div id="reader-theories-detail" class="reader-theories-detail" aria-live="polite"></div>
         <button type="button" id="reader-theory-record" class="reader-timeline-follow-up">ЗАКРЕПИТЬ ВЕРСИЮ В ДЕЛЕ</button>
         <p id="reader-theory-change-note" class="reader-theory-change-note" role="status" aria-live="polite"></p>
+        <div id="reader-theory-approaches" class="reader-theory-approaches" hidden>
+          <p>КАК ОБРАТИТЬСЯ К СВИДЕТЕЛЮ ПО ЗАКРЕПЛЁННОЙ ВЕРСИИ?</p>
+          <button type="button" id="reader-theory-discreet" class="reader-theories-option">Попросить уточнить документы</button>
+          <button type="button" id="reader-theory-accusation" class="reader-theories-option">Предъявить обвинение без прямых доказательств</button>
+        </div>
+        <p id="reader-theory-approach-result" class="reader-theory-change-note" role="status" aria-live="polite"></p>
         <div id="reader-theory-history" class="reader-theory-history" aria-label="История версий"></div>
       </section>
 
@@ -311,6 +317,8 @@ export function render(container, data) {
   const theoryRecordButton = container.querySelector('#reader-theory-record');
   const theoryChangeNote = container.querySelector('#reader-theory-change-note');
   const theoryHistory = container.querySelector('#reader-theory-history');
+  const theoryApproaches = container.querySelector('#reader-theory-approaches');
+  const theoryApproachResult = container.querySelector('#reader-theory-approach-result');
   let selectedTheoryId = 'single_operator';
   function refreshReaderTheories() {
     const theories = compareReaderTheories(id => GameState.hasClue(id));
@@ -349,6 +357,7 @@ export function render(container, data) {
     theoryDetail.appendChild(caution);
     const history = Array.isArray(GameState.flags.court_reader_theory_history) ? GameState.flags.court_reader_theory_history : [];
     const latest = history.at(-1);
+    const consequence = GameState.flags.court_reader_theory_consequence;
     const change = latest?.theoryId === selected.id ? evaluateTheoryChanges(latest, selected) : null;
     theoryRecordButton.hidden = false;
     theoryRecordButton.disabled = latest?.theoryId === selected.id && !change?.changed;
@@ -356,6 +365,9 @@ export function render(container, data) {
       : change?.changed ? 'ПЕРЕСМОТРЕТЬ ВЕРСИЮ С НОВЫМИ ДАННЫМИ' : '✓ ВЕРСИЯ ЗАПИСАНА · НОВЫХ ДАННЫХ НЕТ';
     theoryChangeNote.textContent = change?.changed
       ? `После записи версии появились новые материалы: ${change.newDocuments.length} документ(а), ${change.newChecks.length} проверк(и). Вывод по-прежнему не доказан.` : '';
+    theoryApproaches.hidden = !latest || !!consequence;
+    theoryApproachResult.textContent = consequence
+      ? consequence.response + ` Доверие: ${consequence.trustDelta > 0 ? '+' : ''}${consequence.trustDelta}.` : '';
     theoryHistory.replaceChildren();
     if (history.length) {
       const title = document.createElement('p');
@@ -381,6 +393,18 @@ export function render(container, data) {
     GameState.setFlag('court_reader_theory_history', [...history, snapshot]);
     refreshReaderTheories();
   });
+  function handleTheoryApproach(approach) {
+    if (!GameState.hasClue('reader_reconstructed_timeline') || GameState.flags.court_reader_theory_consequence) return;
+    const history = GameState.flags.court_reader_theory_history;
+    const latest = Array.isArray(history) ? history.at(-1) : null;
+    const outcome = resolveTheoryApproach(latest, approach);
+    if (!outcome) return;
+    GameState.setFlag('court_reader_theory_consequence', outcome);
+    GameState.updateRelationship(outcome.npcId, outcome.trustDelta);
+    refreshReaderTheories();
+  }
+  container.querySelector('#reader-theory-discreet').addEventListener('click', () => handleTheoryApproach('discreet'));
+  container.querySelector('#reader-theory-accusation').addEventListener('click', () => handleTheoryApproach('accusation'));
   refreshReaderTheories();
   let selectedTimelineIndex = 0;
   function selectTimelineEvent(index) {
