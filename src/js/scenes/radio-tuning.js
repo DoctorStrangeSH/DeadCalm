@@ -51,13 +51,28 @@ export function render(container) {
 
     const frequency = container.querySelector('#radio-frequency');
     const filter = container.querySelector('#radio-filter');
+    const updateReadouts = (message) => {
+      const current = getRadioSignal(session);
+      container.querySelector('#radio-frequency-value').textContent = session.frequency.toFixed(1) + ' MHz';
+      container.querySelector('#radio-filter-value').textContent = session.filter + '%';
+      container.querySelector('.radio-frequency').innerHTML = session.frequency.toFixed(1) + ' <small>MHz</small>';
+      container.querySelector('.radio-display-status').textContent = current.clarity === 'clear'
+        ? 'ГОЛОС ПРОСТУПАЕТ ЧЁТКО' : current.clarity === 'fragmented' ? 'СЛОВА ТОНУТ В ПОМЕХАХ' : 'ТОЛЬКО ШУМ И ТРЕСК';
+      container.querySelectorAll('.radio-bar').forEach((bar, index) => {
+        bar.classList.toggle('active', current.quality >= [20, 38, 56, 74, 92][index]);
+      });
+      container.querySelector('.radio-needle').style.left = ((session.frequency - 88) / 20) * 100 + '%';
+      container.querySelector('.radio-quality strong').textContent = current.quality + '%';
+      container.querySelector('.radio-quality-track span').style.width = current.quality + '%';
+      container.querySelector('#radio-feedback').textContent = message;
+    };
     frequency.addEventListener('input', () => {
       tuneRadio(session, Number(frequency.value));
-      renderSignal('Вы меняете частоту. Прислушайтесь: голос уже ближе или всё ещё скрыт шумом?');
+      updateReadouts('Вы меняете частоту. Прислушайтесь: голос уже ближе или всё ещё скрыт шумом?');
     });
     filter.addEventListener('input', () => {
       adjustRadioFilter(session, Number(filter.value));
-      renderSignal('Фильтр изменён. Слишком узкая настройка может обрезать сам голос.');
+      updateReadouts('Фильтр изменён. Слишком узкая настройка может обрезать сам голос.');
     });
     container.querySelector('#radio-finish').addEventListener('click', () => {
       const result = completeRadioSession(session);
