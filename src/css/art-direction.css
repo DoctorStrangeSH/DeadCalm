@@ -120,6 +120,11 @@ body { background:#071015; color:#d3d5cc; }
 .board-classified { font:9px 'Courier New',monospace; color:#ba6756; letter-spacing:.12em; border:1px solid #754b43; padding:4px 6px; }
 .investigation-board .board-subtitle { color:#a9b5ae; font-size:12px; margin-top:.5rem; }
 .investigation-board .board-progress { grid-column:2; grid-row:1 / span 2; color:#d5bf8d; font:12px 'Courier New',monospace; padding:10px; border-left:1px solid #536059; }
+.investigation-board .board-search { display:grid; grid-template-columns:minmax(0,2fr) minmax(150px,1fr) auto; gap:10px 14px; align-items:end; padding:14px 17px; background:#142226; border:1px solid #4b5a52; }
+.investigation-board .board-search label { display:grid; gap:6px; color:#d5bf8d; font:10px 'Courier New',monospace; letter-spacing:.12em; }
+.investigation-board .board-search input,.investigation-board .board-search select { width:100%; min-width:0; padding:10px; border:1px solid #6f7565; background:#0d191d; color:#e2ddca; font:13px Georgia,serif; }
+.investigation-board #board-search-count { grid-column:1 / 3; margin:0; color:#adbeb2; font-size:12px; }
+.investigation-board #board-search-reset { grid-column:3; grid-row:1 / span 2; min-height:40px; }
 .investigation-board .board-canvas { flex:0 0 auto; height:var(--board-content-height,500px); min-height:350px; border:12px solid #403228; outline:1px solid #867050; outline-offset:-6px; background:radial-gradient(ellipse at 60% 40%,#70563b 0%,#483423 80%),repeating-linear-gradient(32deg,#704f33 0 3px,#4a3424 4px 6px); box-shadow:inset 0 0 45px #1b1009a8,0 20px 35px #0007; }
 .investigation-board .board-canvas::before { content:""; position:absolute; inset:0; opacity:.24; pointer-events:none; background:repeating-linear-gradient(45deg,transparent 0 7px,#a1805d 8px 9px,transparent 10px 17px); }
 .investigation-board .board-clues { position:absolute; inset:0; }
@@ -129,6 +134,7 @@ body { background:#071015; color:#d3d5cc; }
 .investigation-board .board-clue-card:hover, .investigation-board .board-clue-card:focus-visible { z-index:5; transform:rotate(0) translateY(-4px); box-shadow:3px 10px 19px #130a08ab; border-color:#d7bd8a; }
 .investigation-board .board-clue-card.board-clue-selected { background:#f4dfaf!important; color:#322a20!important; border:3px solid #a34232!important; z-index:6; }
 .investigation-board .board-clue-card.board-clue-connected { border-color:#7d9c7b!important; box-shadow:0 0 0 3px #a0b59e,2px 7px 18px #17110bcc; }
+.investigation-board .board-clue-card.board-clue-filtered { opacity:.18; filter:grayscale(1); pointer-events:none; }
 .clue-card-pin { position:absolute; top:4px; left:50%; width:11px; height:11px; border-radius:50%; background:radial-gradient(circle at 35% 28%,#ecb3a4,#863f38 65%,#402822); box-shadow:1px 3px 3px #0008; transform:translateX(-50%); }
 .investigation-board .clue-card-icon { display:grid; flex:0 0 32px; place-items:center; height:42px; background:#9288706b; color:#514737; font:25px Georgia,serif; }
 .clue-card-content { display:flex; min-width:0; flex-direction:column; gap:7px; }
@@ -148,6 +154,8 @@ body { background:#071015; color:#d3d5cc; }
 .empty-case-stamp { border:3px double #bca783; border-radius:50%; width:100px; height:100px; display:grid; place-items:center; font:75px Georgia,serif; color:#ddcba7; margin-bottom:20px; }
 .noir-board-empty .board-title { color:#f2dba6; }
 @media(max-width:900px) {
+  .investigation-board .board-search { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+  .investigation-board #board-search-count,.investigation-board #board-search-reset { grid-column:auto; grid-row:auto; }
   .investigation-board .board-header { display:block; padding:.85rem; }
   .investigation-board .board-progress { border:0; padding:9px 0 0; }
   .investigation-board .board-canvas { height:auto; min-height:0; }
@@ -158,6 +166,7 @@ body { background:#071015; color:#d3d5cc; }
   .investigation-board #btn-clear-selection { width:100%; }
 }
 @media(max-width:420px) { .investigation-board .board-clues { grid-template-columns:1fr; padding:16px; }.investigation-board .board-clue-card { min-height:95px; } }
+@media(max-width:480px) { .investigation-board .board-search { grid-template-columns:1fr; }.investigation-board #board-search-reset { width:100%; } }
 
 /* Personal journal: a working detective's paper notebook. */
 .dossier-notebook { border:1px solid #72654f; padding:clamp(12px,2vw,25px); background:linear-gradient(90deg,#b09d79 0 5px,#d6c6a5 5px 6px,#cbbd9d 6px); box-shadow:8px 11px 0 #0b1315,0 18px 40px #0008; color:#3c332c; height:auto; min-height:520px; }

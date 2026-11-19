@@ -4,6 +4,7 @@ import { Events } from '../core/events.js';
 import { HYPOTHESIS_STATUS_LABELS, auditHypothesisEvidence, findNewEvidenceLeads, compareHypothesisRevisions } from '../systems/hypotheses.js';
 import { findContradictions } from '../systems/contradictions.js';
 import { getOldCaseBoardDigest } from '../systems/old-case-board-digest.js';
+import { filterBoardClues } from '../systems/board-clue-filter.js';
 
 /**
  * Доска расследования.
@@ -44,6 +45,15 @@ export class InvestigationBoard {
           <div class="board-title-row"><span class="board-title">ДОСЬЕ № 001 / УБИЙСТВО СУДЬИ</span><span class="board-classified">● СЕКРЕТНО</span></div>
           <p class="board-subtitle">Выберите два документа, чтобы проверить связь между ними</p>
           <p class="board-progress">Прогресс: ${Investigation.getProgress().percentage}% (${this.connections.length} связей)</p>
+        </div>
+        <div class="board-search" role="search" aria-label="Поиск по уликам на доске">
+          <label>ПОИСК ДОКУМЕНТА <input id="board-search-query" type="search" placeholder="Название, описание, источник…" autocomplete="off" /></label>
+          <label>ТИП УЛИКИ <select id="board-search-category">
+            <option value="all">Все материалы</option>
+            ${[...new Set(clues.map(clue => clue.category).filter(Boolean))].map(category => `<option value="${self._escapeHtml(category)}">${self._escapeHtml(category)}</option>`).join('')}
+          </select></label>
+          <p id="board-search-count" role="status" aria-live="polite">Показано ${clues.length} из ${clues.length}</p>
+          <button type="button" id="board-search-reset" class="btn-noir">СБРОСИТЬ ПОИСК</button>
         </div>
         
         <div class="board-canvas" id="board-canvas" style="--board-content-height:${Math.max(390, Math.ceil(clues.length / 3) * 155 + 60)}px">
@@ -102,6 +112,7 @@ export class InvestigationBoard {
 
     this._setupDragAndDrop();
     this._setupClickHandlers();
+    this._setupClueSearch(clues);
     this._drawConnectionLines();
     this._observeBoardSize();
     this._setupHypotheses();
@@ -110,6 +121,7 @@ export class InvestigationBoard {
         const card = Array.from(this.container.querySelectorAll('.board-clue-card'))
           .find(element => element.dataset.clueId === button.dataset.archiveClueId);
         if (!card) return;
+        this.container.querySelector('#board-search-reset')?.click();
         card.scrollIntoView({ behavior: 'smooth', block: 'center' });
         card.focus({ preventScroll: true });
       });
@@ -252,6 +264,31 @@ export class InvestigationBoard {
 
     document.getElementById('btn-clear-selection').addEventListener('click', function() {
       self._clearSelection();
+    });
+  }
+
+  _setupClueSearch(clues) {
+    const query = this.container.querySelector('#board-search-query');
+    const category = this.container.querySelector('#board-search-category');
+    const count = this.container.querySelector('#board-search-count');
+    const reset = this.container.querySelector('#board-search-reset');
+    const apply = () => {
+      const matching = new Set(filterBoardClues(clues, query.value, category.value));
+      this._clearSelection();
+      this.container.querySelectorAll('.board-clue-card').forEach(card => {
+        const excluded = !matching.has(card.dataset.clueId);
+        card.classList.toggle('board-clue-filtered', excluded);
+        card.disabled = excluded;
+        card.draggable = !excluded;
+      });
+      count.textContent = `Найдено ${matching.size} из ${clues.length} материалов`;
+    };
+    query.addEventListener('input', apply);
+    category.addEventListener('change', apply);
+    reset.addEventListener('click', () => {
+      query.value = '';
+      category.value = 'all';
+      apply();
     });
   }
 
