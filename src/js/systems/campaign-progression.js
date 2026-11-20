@@ -76,7 +76,8 @@ export function assessFinalEvidence(gameState) {
     ['judge_appointment_card', 'Карточка встречи с Гаррисоном'],
     ['belladonna_invoice', 'Счёт за белладонну'],
     ['matthews_letter', 'Письмо Мэтьюса'],
-    ['port_cargo_ledger', 'Портовая книга грузов']
+    ['port_cargo_ledger', 'Копия портовой книги от Блэквуда'],
+    ['port_cargo_ledger_archive', 'Независимый архивный экземпляр портовой книги']
   ];
   const missing = required.filter(([id]) => !gameState.hasClue(id)).map(([, label]) => label);
   const hasIndependentRecord = gameState.hasClue('restored_film_frame') || gameState.hasClue('port_radio_fragment');
