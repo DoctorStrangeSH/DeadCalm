@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assessCampaignDay, advanceCampaignWhenReady, assessFinalEvidence } from '../src/js/systems/campaign-progression.js';
+import { assessCampaignDay, advanceCampaignWhenReady, assessFinalEvidence, getCampaignCaseSummary } from '../src/js/systems/campaign-progression.js';
 
 function state(day, clues = []) {
   const found = new Set(clues);
@@ -81,7 +81,6 @@ test('final accusation requires independent medical, meeting, poison, archive an
 
 
 test('case summary reflects an active case before the finale', () => {
-  const { getCampaignCaseSummary } = await import('../src/js/systems/campaign-progression.js');
   assert.deepEqual(getCampaignCaseSummary({ campaign: { day: 3, completed: false, ending: null } }), {
     completed: false,
     activeCount: 1,
