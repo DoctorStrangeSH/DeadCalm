@@ -49,8 +49,7 @@ const DAY_SUMMARIES = {
     title: 'Плёнка и след Маркуса',
     established: [
       'Анна показывает часы, ключ и конверт, оставленные Маркусом; назначение этих вещей пока не установлено.',
-      'Аптечная книга связывает покупку белладонны с офисом Блэквуда, но не называет получателя.',
-      'Архивный экземпляр портовой книги независимо подтверждает связь компании Блэквуда с грузами и временным окном 1967 года.'
+      'Аптечная книга связывает покупку белладонны с офисом Блэквуда, но не называет получателя.'
     ],
     refuted: [
       'Счёт за яд не доказывает, кто именно забрал препарат и применил его.',
@@ -67,12 +66,14 @@ export function getCampaignDaySummary(day, gameState = {}, ending = null) {
   if (day === 4) {
     const hasFilm = Boolean(gameState.hasClue?.('restored_film_frame'));
     const hasRadio = Boolean(gameState.hasClue?.('port_radio_fragment'));
+    const hasVerifiedLedger = Boolean(gameState.hasClue?.('port_cargo_ledger_archive'));
     const summary = {
       ...DAY_SUMMARIES[4],
       established: [...DAY_SUMMARIES[4].established],
       refuted: [...DAY_SUMMARIES[4].refuted],
       unknown: [...DAY_SUMMARIES[4].unknown]
     };
+    if (hasVerifiedLedger) summary.established.push('Архивный экземпляр портовой книги независимо подтверждает связь компании Блэквуда с грузами и временным окном 1967 года.');
     if (hasFilm) {
       summary.established.push('Восстановленный кадр помещает Себастьяна и Каллиопу у старого причала незадолго до её смерти; это опровергает часть его алиби.');
       summary.refuted.push('Кадр плёнки не показывает момент убийства и не доказывает, кто применил яд.');
@@ -81,6 +82,7 @@ export function getCampaignDaySummary(day, gameState = {}, ending = null) {
       summary.established.push('Фрагмент радиосвязи подтверждает движение машины и временное окно у причала.');
       summary.refuted.push('Радиозапись не устанавливает личность говорившего.');
     }
+    if (!hasVerifiedLedger) summary.unknown.push('Копия грузовой книги, переданная Себастьяном, ещё не сверена с независимым архивным экземпляром.');
     if (!hasFilm && hasRadio) summary.unknown.push('Присутствие Себастьяна на кадре плёнки пока проверить нельзя: восстановленный фрагмент не получен.');
     if (hasFilm && !hasRadio) summary.unknown.push('Радиофрагмент не восстановлен, поэтому голос и точный смысл переговоров остаются неизвестными.');
     return summary;
