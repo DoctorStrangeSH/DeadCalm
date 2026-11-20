@@ -335,7 +335,7 @@ export var GameState = {
   },
 
   save() {
-    Storage.save('gameState', {
+    const saved = Storage.save('gameState', {
       player: this.player,
       currentCase: this.currentCase,
       campaign: this.campaign,
@@ -349,6 +349,7 @@ export var GameState = {
       notebook: this.notebook,
       settings: this.settings,
     });
+    if (saved) this.saveStatus = 'valid';
   },
 
   /**
@@ -396,7 +397,9 @@ export var GameState = {
   },
 
   hasSave() {
-    return Storage.exists('gameState');
+    const result = Storage.inspect('gameState');
+    this.saveStatus = result.status;
+    return result.status === 'valid';
   },
 
   export() {
