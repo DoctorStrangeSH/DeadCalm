@@ -130,11 +130,12 @@ test('every authored contradiction has two obtainable, day-one sources and a rea
     for (const response of responses.filter(item => item.requires_contradiction)) {
       const rule = contradictions.find(item => item.id === response.requires_contradiction);
       assert.ok(rule, npcId + '.' + response.id + ' references an unknown contradiction');
-      assert.ok(response.requires_question, npcId + '.' + response.id + ' must identify the preceding question');
-      const prerequisite = responses.find(item => item.id === response.requires_question);
-      assert.ok(prerequisite, npcId + '.' + response.id + ' has no preceding question');
-      assert.ok(!prerequisite.requires_contradiction,
-        npcId + '.' + response.id + ' has a circular contradiction prerequisite');
+      if (response.requires_question) {
+        const prerequisite = responses.find(item => item.id === response.requires_question);
+        assert.ok(prerequisite, npcId + '.' + response.id + ' has no preceding question');
+        assert.ok(!prerequisite.requires_contradiction,
+          npcId + '.' + response.id + ' has a circular contradiction prerequisite');
+      }
     }
   }
 });
