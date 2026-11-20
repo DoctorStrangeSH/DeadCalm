@@ -69,6 +69,29 @@ test('a resolved critical prompt is not restored after loading', () => {
   }, memory, 'npc_ray_morgan'), null);
 });
 
+
+test('the dialogue engine restores pending decisions and claims them by persisted node id', () => {
+  const engine = readFileSync(new URL('../src/js/systems/dialogue.js', import.meta.url), 'utf8');
+  assert.match(engine, /findPendingCriticalDialogueNode\(npcData, NPCMemory, npcId\)/);
+  assert.match(engine, /claimCriticalDialogueChoice\(NPCMemory, this\._currentNPC, key\)/);
+});
+
+test('every authored NPC decision can be restored from its actual persisted prompt flag', () => {
+  const dialogues = readJson('../src/data/dialogues.json');
+  const npcIds = Object.keys(dialogues);
+  for (const npcId of npcIds) {
+    const npc = dialogues[npcId];
+    const criticalNode = Object.entries(npc).find(([, node]) => node?.choices?.length && node.trigger_question);
+    assert.ok(criticalNode, npcId + ' needs a critical decision');
+    const [nodeId, node] = criticalNode;
+    const memory = createMemory({ [npcId + ':critical_' + nodeId]: true });
+    const pending = findPendingCriticalDialogueNode(npc, memory, npcId);
+    assert.equal(pending?.id, nodeId);
+    assert.equal(claimCriticalDialogueChoice(memory, npcId, nodeId), true);
+    assert.equal(findPendingCriticalDialogueNode(npc, memory, npcId), null);
+  }
+});
+
 test('all six authored critical decisions are tied to an actual one-time question trigger', () => {
   const dialogues = readJson('../src/data/dialogues.json');
   const expectedNpcCount = 6;
