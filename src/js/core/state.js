@@ -374,7 +374,7 @@ export var GameState = {
     this.npcDailyLife = createEmptyDailyLife();
     this.miniGameProgress = createEmptyMiniGameProgress();
     this.notebook = [];
-    this.settings = { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
+    // Пользовательские настройки сохраняются даже при начале нового расследования.
     
     // Очищаем localStorage
     Storage.clearAll();
