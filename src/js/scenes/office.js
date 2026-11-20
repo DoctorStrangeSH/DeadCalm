@@ -51,8 +51,8 @@ export function render(container) {
         <button id="btn-map" class="card office-card text-left w-full">
           <span class="office-card-icon" aria-hidden="true">⌖</span><span class="office-card-number">01</span>
           <p class="card-title">КАРТА ГОРОДА</p>
-          <p class="card-subtitle">Перемещаться между локациями</p>
-          <p class="hidden md:block text-gray-600 text-xs mt-3">Доступно локаций: 5</p>
+          <p class="card-subtitle">Перемещаться между локациями по мере развития дела</p>
+          <p class="hidden md:block text-gray-600 text-xs mt-3">Локации открываются по сюжету</p>
         </button>
 
         <!-- Доска расследования -->
@@ -125,7 +125,7 @@ export function render(container) {
       <div class="status-bar mt-4 md:mt-8 text-xs md:text-sm">
         <span class="text-gray-500">УЛИКИ: <span class="text-gold">${cluesCount}</span></span>
         <span class="text-gray-500 md:ml-8">ЗАМЕТКИ: <span class="text-gold">${notesCount}</span></span>
-        <span class="text-gray-500 md:ml-8">ДЕНЬ: <span class="text-gold">1</span></span>
+        <span class="text-gray-500 md:ml-8">ДЕНЬ: <span class="text-gold">${GameState.campaign?.day || 1}</span></span>
       </div>
 
       <!-- Кнопка назад -->
