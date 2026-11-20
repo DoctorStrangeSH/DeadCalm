@@ -13,9 +13,9 @@ test('five-day campaign advances sequentially and opens only reached day flags',
     GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
     GameState.flags = {};
     GameState.currentCase = { id: 'case_001', clues: [
-      'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
-      'matthews_letter', 'port_cargo_ledger', 'port_cargo_ledger_archive',
-      'port_radio_fragment'
+      'autopsy_report_01', 'court_switchboard_log', 'judge_appointment_card', 'old_case_details',
+      'marta_source_envelope', 'matthews_letter', 'port_cargo_ledger', 'anna_markus_items',
+      'belladonna_invoice', 'port_cargo_ledger_archive', 'port_radio_fragment'
     ].map(id => ({ id })).concat([{ id: 'restored_film_frame', quality: 100 }]) };
     Storage.save = (key, value) => writes.push({ key, value: structuredClone(value) });
 
@@ -179,6 +179,38 @@ test('final campaign outcome is remembered by Sebastian and restored in the save
     GameState.campaign = originalCampaign;
     GameState.currentCase = originalCurrentCase;
     GameState.npcMemory = originalNpcMemory;
+    Storage.save = originalSave;
+  }
+});
+
+
+test('direct campaign state APIs cannot skip evidence gates', () => {
+  const originalCampaign = GameState.campaign;
+  const originalCurrentCase = GameState.currentCase;
+  const originalSave = Storage.save;
+  try {
+    GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
+    GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
+    Storage.save = () => true;
+
+    assert.equal(GameState.setCampaignDay(2), false,
+      'setting the next day directly cannot bypass day-one evidence');
+    assert.equal(GameState.advanceCampaignDay(), false,
+      'the low-level advance method must enforce the same evidence gate as the office UI');
+    assert.equal(GameState.campaign.day, 1);
+
+    GameState.currentCase.clues = [
+      'autopsy_report_01', 'court_switchboard_log', 'judge_appointment_card', 'old_case_details'
+    ].map(id => ({ id }));
+    assert.equal(GameState.advanceCampaignDay(), true);
+    assert.equal(GameState.campaign.day, 2);
+
+    assert.equal(GameState.setCampaignDay(3), false,
+      'day two still requires both the journalist source and Matthews letter');
+    assert.equal(GameState.campaign.day, 2);
+  } finally {
+    GameState.campaign = originalCampaign;
+    GameState.currentCase = originalCurrentCase;
     Storage.save = originalSave;
   }
 });
