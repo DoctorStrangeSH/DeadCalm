@@ -18,13 +18,13 @@ Ghost Signal's repository README describes it as an interactive detective termin
 - day/night availability changes for locations and NPCs;
 - keeping notes from documents.
 
-These are recognizable Ghost Signal pillars. Dead Calm must not simply reproduce this package under different names. Mini-games are allowed and desired in Dead Calm; their interaction design and fiction must be distinct rather than copied.
+These are recognizable Ghost Signal pillars. Dead Calm must not simply reproduce this package as a reusable, repeatable case-terminal loop under different names. The owner has approved retaining a single authored city map, courtroom evidence sequence, witness conversations and investigation board for case №001. They exist to serve this one story and are not a template that every future case must repeat. Mini-games are allowed and desired in Dead Calm; their interaction design and fiction must be distinct rather than copied.
 
 ## Dead Calm direction
 
 The owner has explicitly approved a stronger detective identity for Dead Calm 1.0. The first release is a character-driven noir investigation: one authored murder case, a carefully constructed evidence trail, unreliable and incomplete testimony, and personal consequences that persist beyond the scene. The player should feel like a detective, but the experience must not become a clone of Ghost Signal's terminal-style case loop.
 
-The existing first courtroom investigation is retained as a single, authored case-specific sequence. Its 61 clues and provenance checks are valuable because they teach the player not to confuse a record with a person or a hypothesis with a fact. This is not permission to repeat the same clue-board structure in every future case.
+The existing first courtroom investigation is retained as a single, authored case-specific sequence. Its authored courtroom evidence sequence and provenance checks are valuable because they teach the player not to confuse a record with a person or a hypothesis with a fact. This is not permission to repeat the same clue-board structure in every future case.
 
 Dead Calm's differentiating foundation remains persistent character state and continuity across the fictional community. Its implemented foundations include:
 - NPC-to-NPC social ties, separate from player-to-NPC trust;
@@ -39,10 +39,10 @@ These foundations should support character-driven narrative consequences: what a
 
 Do not add the following to Dead Calm merely because they exist in Ghost Signal:
 1. A case archive / unsolved-case selection loop.
-2. A city-map navigation loop whose primary purpose is selecting investigation locations.
-3. A clue-hunting scene loop or hidden-object search.
-4. A player-facing evidence board that connects clues to solve a case.
-5. A witness-call / interrogation hub as the central interaction loop.
+2. A generic city-map navigation loop reused as the primary structure for every future case. The existing authored Blackford map for case №001 is retained.
+3. A repeated clue-hunting or hidden-object loop. The existing courtroom evidence sequence for case №001 is retained as authored content.
+4. A generic evidence-board system reused across all cases. The existing case №001 board remains in scope but must not become a universal case-terminal framework.
+5. A reusable witness-call / interrogation hub as the central interaction loop. Authored conversations in the first case remain in scope.
 6. Code-breaking or hidden-object mini-games as default investigation gates. This is not a ban on mini-games: Dead Calm should have its own varied, tactile, character- and world-grounded mini-games as specified in `docs/MINIGAME_DESIGN.md`.
 7. A notebook that duplicates Ghost Signal's document-fragment collection loop.
 8. A day/night system whose main purpose is toggling NPC and location availability.
@@ -57,7 +57,7 @@ Prioritize mechanics that grow naturally from its established persistent-charact
 - Characters remember promises, favors, betrayals, absences, and unresolved personal consequences.
 - Schedules and off-screen occurrences create continuity, not a map-based checklist.
 - The player encounters consequences through authored scenes, character behavior, environmental aftermath, and narrative timing.
-- The first case may use a detailed, authored crime-scene evidence sequence; future cases are free to use different interactions and must not inherit this sequence by default.
+- The first case may use its authored map, courtroom evidence sequence, witness conversations and evidence board; future cases are free to use different interactions and must not inherit this loop by default.
 - The same event can affect different characters differently because they have different histories and knowledge.
 - Choices should change relationships, obligations, access, trust, and future character decisions—not merely add/remove evidence tokens.
 
