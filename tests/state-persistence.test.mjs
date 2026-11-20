@@ -107,3 +107,45 @@ test('GameState.init keeps a clean initial state when no save exists', () => {
     Object.assign(GameState, original);
   }
 });
+
+
+test('GameState.export includes campaign progression and the complete case record', () => {
+  const original = {
+    player: GameState.player,
+    currentCase: GameState.currentCase,
+    campaign: GameState.campaign,
+    flags: GameState.flags,
+    relationships: GameState.relationships,
+    npcMemory: GameState.npcMemory,
+    socialGraph: GameState.socialGraph,
+    knowledgeLedger: GameState.knowledgeLedger,
+    npcDailyLife: GameState.npcDailyLife,
+    miniGameProgress: GameState.miniGameProgress,
+    notebook: GameState.notebook,
+    settings: GameState.settings
+  };
+  try {
+    GameState.player = { name: 'Джон Риверс', reputation: 74 };
+    GameState.campaign = { caseId: 'case_001', day: 4, completed: false, ending: null };
+    GameState.currentCase = {
+      id: 'case_001',
+      clues: [{ id: 'restored_film_frame', quality: 100 }],
+      suspects: [{ id: 'sebastian', status: 'under_investigation' }],
+      timeline: [{ id: 'port_meeting', day: 4 }],
+      hypotheses: [{ id: 'hyp_final', confidence: 'corroborated', sourceRefs: ['restored_film_frame'] }]
+    };
+    GameState.flags = { day_2: true, day_3: true, day_4: true };
+    const backup = GameState.export();
+    assert.deepEqual(backup.campaign, GameState.campaign);
+    assert.deepEqual(backup.currentCase, GameState.currentCase);
+    assert.ok(backup.currentCase.hypotheses.some(item => item.id === 'hyp_final'));
+    assert.equal(backup.currentCase.clues[0].quality, 100);
+    assert.deepEqual(backup.flags, GameState.flags);
+    backup.currentCase.clues[0].quality = 0;
+    backup.campaign.day = 1;
+    assert.equal(GameState.currentCase.clues[0].quality, 100, 'export must not share nested references with live state');
+    assert.equal(GameState.campaign.day, 4);
+  } finally {
+    Object.assign(GameState, original);
+  }
+});
