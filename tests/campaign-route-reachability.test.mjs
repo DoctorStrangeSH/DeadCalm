@@ -103,7 +103,7 @@ test('every authored contradiction has two obtainable, day-one sources and a rea
   const sceneText = crimeScene + '\\n' + portScene;
   const sceneSourceIds = new Set([
     ...[...sceneText.matchAll(/id:\\s*'([a-z0-9_]+)'/g)].map(match => match[1]),
-    ...[...sceneText.matchAll(/inspect(?:CourtRecord|Orlov|ReaderWitness|WitnessRecord)\\(\\s*'[^']+'\\s*,\\s*'([a-z0-9_]+)'/g)].map(match => match[1])
+    ...[...sceneText.matchAll(/inspect(?:CourtRecord|Orlov|ReaderWitness|WitnessRecord)\(\s*'[^']+'\s*,\s*'([a-z0-9_]+)'/g)].map(match => match[1])
   ]);
 
   assert.ok(contradictions.length > 0, 'the case must define explicit contradiction rules');
