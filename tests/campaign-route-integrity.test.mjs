@@ -78,3 +78,20 @@ test('day four retains two independent ways to satisfy its optional evidence gat
   assert.equal(assessCampaignDay(gameWithFilm).canAdvance, true);
   assert.equal(assessCampaignDay(gameWithRadio).canAdvance, true);
 });
+
+
+test('Markus testimony is a deliberate day-five discovery at the port, not an automatic clue', async () => {
+  const portScene = readFileSync(new URL('../src/js/scenes/port.js', import.meta.url), 'utf8');
+  const markus = clues.markus_statement;
+  assert.ok(markus, 'the case must define Markus testimony');
+  assert.equal(markus.location, 'port');
+  assert.equal(markus.day, 5);
+  assert.equal(isLocationUnlocked(locations.port, stateAtDay(5)), true);
+
+  assert.match(portScene, /if \(GameState\.campaign\.day >= 5\) \{/);
+  assert.match(portScene, /meet\.id = 'btn-find-markus'/);
+  assert.match(portScene, /meet\.addEventListener\('click'/);
+  assert.match(portScene, /if \(!GameState\.hasClue\('markus_statement'\)\) GameState\.addClue\(markusStatement\)/);
+  assert.match(portScene, /renderEndingChoices\(container\)/);
+  assert.match(portScene, /Маркус выходит из тени складского навеса/);
+});
