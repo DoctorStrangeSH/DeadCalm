@@ -33,17 +33,20 @@ test('days one to three summarize only facts and limitations supported by requir
 });
 
 test('day four summary adapts to film and radio evidence without describing absent material', () => {
-  const film = getCampaignDaySummary(4, game(5, ['restored_film_frame']));
+  const film = getCampaignDaySummary(4, game(5, ['restored_film_frame', 'port_cargo_ledger_archive']));
   assert.ok(film.established.some(item => item.includes('опровергает часть его алиби')));
   assert.ok(film.refuted.some(item => item.includes('не показывает момент убийства')));
   assert.ok(!film.refuted.some(item => item.includes('Радиозапись')));
 
-  const radio = getCampaignDaySummary(4, game(5, ['port_radio_fragment']));
+  const radio = getCampaignDaySummary(4, game(5, ['port_radio_fragment', 'port_cargo_ledger_archive']));
   assert.ok(radio.established.some(item => item.includes('временное окно')));
   assert.ok(radio.refuted.some(item => item.includes('Радиозапись')));
   assert.ok(!radio.refuted.some(item => item.includes('Кадр плёнки')));
 
-  const both = getCampaignDaySummary(4, game(5, ['restored_film_frame', 'port_radio_fragment']));
+  const noArchive = getCampaignDaySummary(4, game(5, ['restored_film_frame']));
+  assert.ok(noArchive.unknown.some(item => item.includes('не сверена')));
+  assert.ok(!noArchive.established.some(item => item.includes('независимо подтверждает')));
+  const both = getCampaignDaySummary(4, game(5, ['restored_film_frame', 'port_radio_fragment', 'port_cargo_ledger_archive']));
   assert.ok(both.established.some(item => item.includes('кадр')));
   assert.ok(both.established.some(item => item.includes('радиосвязи')));
 });
