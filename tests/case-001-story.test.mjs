@@ -76,6 +76,7 @@ test('the opening establishes the personal hook and the first verifiable contrad
 test('relationship choices persist and receive a one-time authored reaction on the next meeting', () => {
   const dialogues = readJson('../src/data/dialogues.json');
   const engine = readFileSync(new URL('../src/js/systems/dialogue.js', import.meta.url), 'utf8');
+  const dialogBox = readFileSync(new URL('../src/js/components/dialog-box.js', import.meta.url), 'utf8');
   const terminalFlags = new Set(['lydia_refuses', 'ray_hostile']);
   for (const [npcId, npc] of Object.entries(dialogues)) {
     const choices = Object.values(npc).flatMap(node => node?.choices || []);
@@ -95,5 +96,8 @@ test('relationship choices persist and receive a one-time authored reaction on t
     }
   }
   assert.match(engine, /Однократная реакция на прошлый выбор/);
-  assert.match(engine, /NPCMemory\.setFlag\(npcId, returnReaction\.seen_flag\)/);
+  assert.match(engine, /reactionNode\.returnReactionSeenFlag = returnReaction\.seen_flag/);
+  assert.match(engine, /acknowledgeReturnReaction\(seenFlag\)/);
+  assert.doesNotMatch(engine, /NPCMemory\.setFlag\(npcId, returnReaction\.seen_flag\)/);
+  assert.match(dialogBox, /DialogueEngine\.acknowledgeReturnReaction\(node\.returnReactionSeenFlag\)/);
 });
