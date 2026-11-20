@@ -82,4 +82,7 @@ test('day five wrap-up distinguishes both endings and preserves unresolved detai
   assert.ok(silence.title.includes('Цена молчания'));
   assert.ok(open.established.some(item => item.includes('Маркус признал')));
   assert.ok(silence.unknown.some(item => item.includes('закрытой')));
+  assert.ok(silence.established.some(item => item.includes('не признал причастности')));
+  assert.ok(!silence.established.some(item => item.includes('Себастьян признал встречу')));
+  assert.ok(open.refuted.some(item => item.includes('не подтверждает')));
 });
