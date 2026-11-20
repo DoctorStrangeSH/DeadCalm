@@ -5,8 +5,10 @@ export var Storage = {
     try {
       var serialized = JSON.stringify(data);
       localStorage.setItem(this.PREFIX + key, serialized);
+      return true;
     } catch (error) {
       console.error('[Storage] Ошибка сохранения "' + key + '":', error);
+      return false;
     }
   },
 
@@ -31,7 +33,12 @@ export var Storage = {
   },
 
   exists(key) {
-    return localStorage.getItem(this.PREFIX + key) !== null;
+    try {
+      return localStorage.getItem(this.PREFIX + key) !== null;
+    } catch (error) {
+      console.error('[Storage] Не удалось проверить сохранение "' + key + '":', error);
+      return false;
+    }
   },
 
   remove(key) {
