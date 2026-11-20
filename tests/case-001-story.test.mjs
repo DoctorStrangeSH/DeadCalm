@@ -113,4 +113,6 @@ test('port finale scene parses and the silence ending does not invent a poison h
   assert.match(portScene, /его офис купил белладонну/);
   assert.match(portScene, /отказывается назвать получателя препарата/);
   assert.match(portScene, /Себастьян отрицает убийство/);
+  assert.match(portScene, /GameState\.campaign\.completed && GameState\.campaign\.ending/);
+  assert.match(portScene, /renderEnding\(container, GameState\.campaign\.ending\)/);
 });
