@@ -18,9 +18,7 @@ const DAY_REQUIREMENTS = {
   3: {
     label: 'Проверка версии Блэквуда',
     all: [
-      ['port_cargo_ledger', 'Портовая книга грузов'],
-    ['markus_statement', 'Признание Маркуса Холта'],
-    ['markus_statement', 'Признание Маркуса Холта']
+      ['port_cargo_ledger', 'Портовая книга грузов']
     ]
   },
   4: {
