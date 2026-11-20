@@ -55,9 +55,9 @@ export class Map {
       blackwood_mansion: [88, 11], holt_house: [51, 16], port: [12, 82]
     };
     const [x, y] = positions[loc.id] || [loc.position?.x ?? 50, loc.position?.y ?? 50];
-    return `<button type="button" class="atlas-pin ${loc.unlocked ? '' : 'is-locked'}"
-      data-location="${loc.id}" style="left:${x}%;top:${y}%" aria-label="${loc.name}${loc.unlocked ? '' : ', закрыто'}"
-      title="${loc.name}"><span class="atlas-pin-dot">${loc.unlocked ? '◆' : '×'}</span><span class="atlas-pin-label">${loc.name}</span></button>`;
+    return `<button type="button" class="atlas-pin ${this._isUnlocked(loc) ? '' : 'is-locked'}"
+      data-location="${loc.id}" style="left:${x}%;top:${y}%" aria-label="${loc.name}${this._isUnlocked(loc) ? '' : ', закрыто'}"
+      title="${loc.name}"><span class="atlas-pin-dot">${this._isUnlocked(loc) ? '◆' : '×'}</span><span class="atlas-pin-label">${loc.name}</span></button>`;
   }
 
   _selectLocation(locId) {
