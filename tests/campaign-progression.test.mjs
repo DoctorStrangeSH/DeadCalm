@@ -59,6 +59,7 @@ test('final accusation requires independent medical, meeting, poison, archive an
     ['belladonna_invoice', {}],
     ['matthews_letter', {}],
     ['port_cargo_ledger', {}],
+    ['markus_statement', {}],
     ['port_radio_fragment', {}],
     ['restored_film_frame', { quality: 70 }]
   ]);
