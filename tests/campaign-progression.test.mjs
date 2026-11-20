@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assessCampaignDay, advanceCampaignWhenReady } from '../src/js/systems/campaign-progression.js';
+import { assessCampaignDay, advanceCampaignWhenReady, assessFinalEvidence } from '../src/js/systems/campaign-progression.js';
 
 function state(day, clues = []) {
   const found = new Set(clues);
@@ -50,4 +50,31 @@ test('day five is finale-ready and cannot advance to a nonexistent sixth day', (
   assert.equal(status.canAdvance, false);
   assert.equal(advanceCampaignWhenReady(game).advanced, false);
   assert.equal(game.campaign.day, 5);
+});
+
+test('final accusation requires independent medical, meeting, poison, archive and scene evidence', () => {
+  const found = new Map([
+    ['autopsy_report_01', {}],
+    ['judge_appointment_card', {}],
+    ['belladonna_invoice', {}],
+    ['matthews_letter', {}],
+    ['port_cargo_ledger', {}],
+    ['port_radio_fragment', {}],
+    ['restored_film_frame', { quality: 70 }]
+  ]);
+  const game = {
+    hasClue: id => found.has(id),
+    getClue: id => found.get(id) || null
+  };
+  let result = assessFinalEvidence(game);
+  assert.equal(result.ready, true);
+  assert.equal(result.publicReady, false, 'partial film cannot support the full public ending');
+  found.set('restored_film_frame', { quality: 100 });
+  result = assessFinalEvidence(game);
+  assert.equal(result.ready, true);
+  assert.equal(result.publicReady, true);
+  found.delete('belladonna_invoice');
+  result = assessFinalEvidence(game);
+  assert.equal(result.ready, false);
+  assert.ok(result.missing.includes('Счёт за белладонну'));
 });
