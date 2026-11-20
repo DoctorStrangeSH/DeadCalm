@@ -39,7 +39,7 @@ export function buildCase001MiniGameEvidence(type, result) {
   if (type === 'radio-tuning') {
     const quality = Number(result.quality);
     const validClear = result.outcome === 'clear' && quality >= 92;
-    const validFragment = result.outcome === 'fragmented' && quality >= 68 && quality < 92;
+    const validFragment = result.outcome === 'fragmented' && quality >= 68;
     if (!validClear && !validFragment) return null;
   }
   if (type === 'film-restoration') {
