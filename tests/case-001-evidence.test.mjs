@@ -1,0 +1,43 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { buildCase001MiniGameEvidence, recordCase001MiniGameEvidence } from '../src/js/systems/case-001-evidence.js';
+
+test('watch repair rewards its hidden key only after a successful repair', () => {
+  assert.equal(buildCase001MiniGameEvidence('mechanical-repair', { outcome: 'failure' }), null);
+  const clue = buildCase001MiniGameEvidence('mechanical-repair', { outcome: 'success' });
+  assert.equal(clue.id, 'markus_watch_key');
+  assert.match(clue.description, /архивного ящика/);
+});
+
+test('radio evidence preserves the difference between clear and fragmented reception', () => {
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'noise', quality: 20 }), null);
+  const clear = buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 92 });
+  const partial = buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 56 });
+  assert.equal(clear.id, 'port_radio_fragment');
+  assert.match(clear.description, /не устанавливает личность/);
+  assert.match(partial.description, /не идентифицирован/);
+});
+
+test('film evidence distinguishes a clear identification from a partial frame', () => {
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'failure', quality: 30 }), null);
+  const clear = buildCase001MiniGameEvidence('film-restoration', { outcome: 'success', quality: 100 });
+  const partial = buildCase001MiniGameEvidence('film-restoration', { outcome: 'partial', quality: 70 });
+  assert.match(clear.description, /Себастьян Блэквуд и Каллиопа/);
+  assert.match(partial.description, /личности пока нельзя считать подтверждёнными/);
+});
+
+test('replaying a mini-game upgrades evidence quality without duplicating the clue', () => {
+  const state = {
+    clues: [],
+    addClue(clue) { this.clues.push({ ...clue }); },
+    getClue(id) { return this.clues.find(clue => clue.id === id) || null; },
+    save() { this.saved = true; }
+  };
+  assert.equal(recordCase001MiniGameEvidence(state, 'film-restoration', { outcome: 'partial', quality: 70 }), true);
+  assert.equal(state.clues.length, 1);
+  assert.equal(recordCase001MiniGameEvidence(state, 'film-restoration', { outcome: 'success', quality: 100 }), true);
+  assert.equal(state.clues.length, 1);
+  assert.equal(state.clues[0].quality, 100);
+  assert.match(state.clues[0].description, /Себастьян Блэквуд и Каллиопа/);
+  assert.equal(recordCase001MiniGameEvidence(state, 'film-restoration', { outcome: 'partial', quality: 70 }), false);
+});
