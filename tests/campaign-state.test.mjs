@@ -6,6 +6,7 @@ import { Storage } from '../src/js/core/storage.js';
 test('five-day campaign advances sequentially and opens only reached day flags', () => {
   const originalCampaign = GameState.campaign;
   const originalFlags = GameState.flags;
+  const originalCurrentCase = GameState.currentCase;
   const originalSave = Storage.save;
   const writes = [];
   try {
@@ -25,6 +26,14 @@ test('five-day campaign advances sequentially and opens only reached day flags',
     assert.equal(GameState.campaign.day, 5);
     assert.equal(GameState.hasFlag('day_5'), true);
     assert.equal(GameState.completeCampaign('unknown'), false);
+    GameState.currentCase = {
+      ...GameState.currentCase,
+      clues: [
+        'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
+        'matthews_letter', 'port_cargo_ledger', 'markus_statement'
+      ].map(id => ({ id, quality: id === 'restored_film_frame' ? 100 : undefined }))
+        .concat({ id: 'restored_film_frame', quality: 100 })
+    };
     assert.equal(GameState.completeCampaign('open_case'), true);
     assert.equal(GameState.campaign.completed, true);
     assert.equal(GameState.campaign.ending, 'open_case');
@@ -34,6 +43,7 @@ test('five-day campaign advances sequentially and opens only reached day flags',
   } finally {
     GameState.campaign = originalCampaign;
     GameState.flags = originalFlags;
+    GameState.currentCase = originalCurrentCase;
     Storage.save = originalSave;
   }
 });
