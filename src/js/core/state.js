@@ -195,18 +195,28 @@ export var GameState = {
     const evidence = assessFinalEvidence(this);
     if (!evidence.ready) return false;
     if (ending === 'open_case' && !evidence.publicReady) return false;
-    this.campaign.completed = true;
-    this.campaign.ending = ending;
+    const previousCampaign = this.campaign;
+    const previousNpcMemory = this.npcMemory;
+    this.campaign = { ...this.campaign, completed: true, ending };
 
     // The suspect remembers the actual outcome when the detective returns to the mansion.
-    const sebastianMemory = this.npcMemory.npc_sebastian_blackwood ||= {
-      met: false, flags: {}, conversationCount: 0, questionCount: 0,
-      unlockedTopics: [], askedQuestions: [], criticalChoiceMade: false, interviewHistory: []
+    this.npcMemory = { ...this.npcMemory };
+    const sebastianMemory = this.npcMemory.npc_sebastian_blackwood = {
+      ...(this.npcMemory.npc_sebastian_blackwood || {
+        met: false, flags: {}, conversationCount: 0, questionCount: 0,
+        unlockedTopics: [], askedQuestions: [], criticalChoiceMade: false, interviewHistory: []
+      }),
+      flags: { ...(this.npcMemory.npc_sebastian_blackwood?.flags || {}) }
     };
-    sebastianMemory.flags ||= {};
     sebastianMemory.flags.case_001_open_case = ending === 'open_case';
     sebastianMemory.flags.case_001_price_of_silence = ending === 'price_of_silence';
-    this.save();
+
+    // A finale is committed only if its complete state reaches persistent storage.
+    if (!this.save()) {
+      this.campaign = previousCampaign;
+      this.npcMemory = previousNpcMemory;
+      return false;
+    }
     Events.emit('campaign:completed', { caseId: this.campaign.caseId, ending });
     return true;
   },
