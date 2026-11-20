@@ -86,3 +86,19 @@ test('a damaged save does not get silently replaced during initialization', () =
     Object.assign(GameState, original);
   }
 });
+
+
+test('storage write and existence checks fail safely when browser storage is blocked', () => {
+  const originalStorage = globalThis.localStorage;
+  globalThis.localStorage = {
+    getItem() { throw new Error('storage blocked'); },
+    setItem() { throw new Error('quota exceeded'); }
+  };
+  try {
+    assert.equal(Storage.save('gameState', { campaign: { day: 1 } }), false);
+    assert.equal(Storage.exists('gameState'), false);
+  } finally {
+    if (originalStorage === undefined) delete globalThis.localStorage;
+    else globalThis.localStorage = originalStorage;
+  }
+});
