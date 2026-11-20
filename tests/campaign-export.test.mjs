@@ -73,3 +73,24 @@ test('completing either finale persists the exact ending in the save payload', (
     Object.assign(GameState, original);
   }
 });
+
+test('GameState.init restores both saved finale outcomes after reload', () => {
+  const original = preserveState();
+  const originalLoad = Storage.load;
+  try {
+    for (const ending of ['open_case', 'price_of_silence']) {
+      const saved = {
+        player: { name: 'Джон Риверс', reputation: 50 },
+        currentCase: { id: 'case_001', clues: [], suspects: [], timeline: [] },
+        campaign: { caseId: 'case_001', day: 5, completed: true, ending },
+        flags: { day_2: true, day_3: true, day_4: true, day_5: true }
+      };
+      Storage.load = key => key === 'gameState' ? structuredClone(saved) : null;
+      GameState.init();
+      assert.deepEqual(GameState.campaign, saved.campaign);
+    }
+  } finally {
+    Storage.load = originalLoad;
+    Object.assign(GameState, original);
+  }
+});
