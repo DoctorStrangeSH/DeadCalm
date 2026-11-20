@@ -74,6 +74,11 @@ test('final accusation requires independent medical, meeting, poison, archive an
   result = assessFinalEvidence(game);
   assert.equal(result.ready, true);
   assert.equal(result.publicReady, true);
+  found.delete('markus_statement');
+  result = assessFinalEvidence(game);
+  assert.equal(result.ready, false);
+  assert.ok(result.missing.includes('Признание Маркуса Холта'));
+  found.set('markus_statement', {});
   found.delete('belladonna_invoice');
   result = assessFinalEvidence(game);
   assert.equal(result.ready, false);
