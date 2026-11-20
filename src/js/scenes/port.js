@@ -35,7 +35,7 @@ function renderEnding(container, ending) {
       <h3 class="text-gold text-lg tracking-widest mt-2">${openCase ? 'ОТКРЫТОЕ ДЕЛО' : 'ЦЕНА МОЛЧАНИЯ'}</h3>
       <p class="text-gray-300 text-sm leading-relaxed mt-3">${openCase
         ? 'Вы передаёте проверенную цепочку материалов. Себастьян отрицает убийство, но карточка встречи, аптечная книга, экспертиза и восстановленная плёнка дают основания для официального обвинения. Признание Маркуса также становится частью дела: он отвечает за двадцать лет молчания.'
-        : 'Себастьян признаёт, что встретился с Гаррисоном и дал ему яд, но требует оставить часть материалов дела Каллиопы закрытой. Вы принимаете компромисс ради защиты части свидетелей. Маркус избегает публичного разоблачения, а доверие тех, кто вам поверил, зависит от того, сдержите ли вы обещание.'
+        : 'Себастьян признаёт встречу с Гаррисоном и подтверждает, что его офис оплатил белладонну, но отказывается назвать получателя препарата и объяснить, как тот оказался у судьи. Он требует оставить часть материалов дела Каллиопы закрытой. Вы принимаете компромисс ради защиты части свидетелей, понимая, что не устанавливаете всю цепочку. Маркус избегает публичного разоблачения, а доверие тех, кто вам поверил, зависит от того, сдержите ли вы обещание.'
       }</p>
       <p class="text-gray-500 text-xs mt-4">Сохранённый исход: ${openCase ? 'open_case' : 'price_of_silence'}</p>
       ${summaryMarkup}
@@ -92,7 +92,11 @@ export function render(container) {
     }
   });
 
-  container.querySelector('#btn-story-action')?.addEventListener('click', () => {\n    Events.emit('navigate', { scene: 'radio-tuning' });\n  });\n\n  const actions = container.querySelector('.story-location-actions');
+  container.querySelector('#btn-story-action')?.addEventListener('click', () => {
+    Events.emit('navigate', { scene: 'radio-tuning' });
+  });
+
+  const actions = container.querySelector('.story-location-actions');
   if (!GameState.hasClue('port_cargo_ledger_archive')) {
     const ledger = document.createElement('button');
     ledger.id = 'btn-port-ledger';
