@@ -64,7 +64,9 @@ export function assessCampaignDay(gameState) {
 export function advanceCampaignWhenReady(gameState) {
   const status = assessCampaignDay(gameState);
   if (!status.canAdvance) return { advanced: false, status };
-  return { advanced: Boolean(gameState.advanceCampaignDay()), status };
+  const advanced = Boolean(gameState.advanceCampaignDay());
+  if (advanced) gameState.setFlag?.('campaign_day_summary_pending_' + status.day, true);
+  return { advanced, status };
 }
 
 export function assessFinalEvidence(gameState) {
