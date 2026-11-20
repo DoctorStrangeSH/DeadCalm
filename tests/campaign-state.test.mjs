@@ -28,6 +28,8 @@ test('five-day campaign advances sequentially and opens only reached day flags',
     assert.equal(GameState.completeCampaign('open_case'), true);
     assert.equal(GameState.campaign.completed, true);
     assert.equal(GameState.campaign.ending, 'open_case');
+    assert.equal(GameState.completeCampaign('price_of_silence'), false, 'a completed ending cannot be overwritten');
+    assert.equal(GameState.campaign.ending, 'open_case');
     assert.equal(GameState.advanceCampaignDay(), false);
     assert.ok(writes.length >= 5);
     assert.ok(writes.every(write => write.key === 'gameState' && write.value.campaign));
@@ -67,6 +69,41 @@ test('campaign state restores day and synchronizes legacy location flags', () =>
     assert.equal(GameState.hasFlag('day_3'), true);
     assert.equal(GameState.hasFlag('day_4'), false);
     assert.equal(GameState.hasFlag('existing_choice'), true);
+  } finally {
+    Storage.load = originalLoad;
+    Object.assign(GameState, original);
+  }
+});
+
+test('a completed ending survives save loading and cannot be replaced by another outcome', () => {
+  const originalLoad = Storage.load;
+  const original = {
+    player: GameState.player,
+    currentCase: GameState.currentCase,
+    campaign: GameState.campaign,
+    flags: GameState.flags,
+    relationships: GameState.relationships,
+    npcMemory: GameState.npcMemory,
+    socialGraph: GameState.socialGraph,
+    knowledgeLedger: GameState.knowledgeLedger,
+    npcDailyLife: GameState.npcDailyLife,
+    miniGameProgress: GameState.miniGameProgress,
+    notebook: GameState.notebook,
+    settings: GameState.settings
+  };
+  const saved = {
+    campaign: { caseId: 'case_001', day: 5, completed: true, ending: 'price_of_silence' },
+    flags: {},
+    currentCase: { id: 'case_001', clues: [], suspects: [], timeline: [] }
+  };
+  try {
+    Storage.load = key => key === 'gameState' ? structuredClone(saved) : null;
+    GameState.init();
+    assert.equal(GameState.campaign.day, 5);
+    assert.equal(GameState.campaign.completed, true);
+    assert.equal(GameState.campaign.ending, 'price_of_silence');
+    assert.equal(GameState.completeCampaign('open_case'), false);
+    assert.equal(GameState.campaign.ending, 'price_of_silence');
   } finally {
     Storage.load = originalLoad;
     Object.assign(GameState, original);
