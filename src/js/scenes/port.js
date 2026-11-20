@@ -1,6 +1,7 @@
 import { renderStoryLocation } from '../components/story-location.js';
 import { GameState } from '../core/state.js';
 import { Events } from '../core/events.js';
+import { assessFinalEvidence } from '../systems/campaign-progression.js';
 
 const markusStatement = {
   id: 'markus_statement',
@@ -13,17 +14,7 @@ const markusStatement = {
   connections_to: ['old_case_details', 'restored_film_frame', 'port_cargo_ledger']
 };
 
-function hasCoreEvidence() {
-  const hasVisualOrRadio = GameState.hasClue('restored_film_frame')
-    || GameState.hasClue('port_radio_fragment');
-  return GameState.hasClue('autopsy_report_01')
-    && GameState.hasClue('judge_appointment_card')
-    && GameState.hasClue('belladonna_invoice')
-    && GameState.hasClue('matthews_letter')
-    && GameState.hasClue('port_cargo_ledger')
-    && hasVisualOrRadio;
-}
-
+function hasCoreEvidence() {\n  return assessFinalEvidence(GameState).ready;\n}\n
 function renderEnding(container, ending) {
   const openCase = ending === 'open_case';
   container.querySelector('#story-location-result').innerHTML = `
@@ -44,13 +35,14 @@ function renderEnding(container, ending) {
 }
 
 function renderEndingChoices(container) {
-  const publishReady = Number(GameState.getClue('restored_film_frame')?.quality || 0) >= 95;
+  const evidenceStatus = assessFinalEvidence(GameState);
+  const publishReady = evidenceStatus.publicReady;
   const result = container.querySelector('#story-location-result');
-  if (!hasCoreEvidence()) {
+  if (!evidenceStatus.ready) {
     result.innerHTML = `
       <div class="card p-4">
         <p class="text-gold text-sm">ПОКА НЕДОСТАТОЧНО ДОКАЗАТЕЛЬСТВ</p>
-        <p class="text-gray-400 text-sm mt-2">Перед предъявлением версии нужны заключение Лидии, карточка встречи с Гаррисоном, счёт за белладонну, письмо Мэтьюса, портовая книга и хотя бы один независимый фрагмент — плёнка или радиозапись. Признание Маркуса не заменит эти источники.</p>
+        <p class="text-gray-400 text-sm mt-2">Не хватает независимых источников:</p><ul class="text-gray-500 text-xs mt-2">${evidenceStatus.missing.map(item => '<li>— ' + item + '</li>').join('')}</ul><p class="text-gray-500 text-xs mt-2">Признание Маркуса не заменит эти источники.</p>
       </div>
     `;
     return;
