@@ -1,4 +1,6 @@
 import { DialogueEngine } from '../systems/dialogue.js';
+import { GameState } from '../core/state.js';
+import { getTextDelay } from '../systems/settings.js';
 import { Events } from '../core/events.js';
 import { escapeHtml } from '../utils/helpers.js';
 import { resolveTrustFeedback } from '../systems/dialogue-reactions.js';
@@ -160,7 +162,7 @@ export class DialogBox {
           break;
         }
         textEl.textContent += fullText[i];
-        await new Promise(resolve => setTimeout(resolve, 25));
+        await new Promise(resolve => setTimeout(resolve, getTextDelay(GameState.settings?.textSpeed)));
       }
     }
     if (token !== this.renderToken || !this.container) return;
