@@ -8,6 +8,7 @@ test('GameState.init restores the saved campaign before scenes use it', () => {
   const original = {
     player: GameState.player,
     currentCase: GameState.currentCase,
+    campaign: GameState.campaign,
     flags: GameState.flags,
     relationships: GameState.relationships,
     npcMemory: GameState.npcMemory,
@@ -21,6 +22,7 @@ test('GameState.init restores the saved campaign before scenes use it', () => {
 
   const saved = {
     player: { name: 'John Rivers', reputation: 73 },
+    campaign: { caseId: 'case_001', day: 3, completed: false, ending: null },
     currentCase: {
       id: 'case_001',
       clues: [{ id: 'clue_saved', name: 'Saved clue' }],
@@ -54,6 +56,7 @@ test('GameState.init restores the saved campaign before scenes use it', () => {
 
     assert.deepEqual(GameState.player, saved.player);
     assert.deepEqual(GameState.currentCase, saved.currentCase);
+    assert.deepEqual(GameState.campaign, saved.campaign);
     assert.deepEqual(GameState.flags, saved.flags);
     assert.deepEqual(GameState.relationships, saved.relationships);
     assert.deepEqual(GameState.npcMemory, saved.npcMemory);
