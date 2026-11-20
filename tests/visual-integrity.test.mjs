@@ -29,7 +29,8 @@ test('interactive map and locations agree on supported destinations', () => {
     assert.ok(map.includes(`${id}:`) || map.includes(`'${id}':`), `missing map destination: ${id}`);
   }
   assert.ok(map.includes('if (!this._isUnlocked(loc)) return'), 'locked locations must not be enterable');
-  assert.ok(map.includes('isLocationUnlocked(loc, GameState)'), 'map must use the shared campaign access resolver');
+  assert.ok(map.includes("import { isLocationUnlocked } from '../systems/location-access.js'"), 'map must import the shared campaign access resolver');
+  assert.ok(map.includes('return isLocationUnlocked(location, GameState)'), 'map must resolve location access from current game state');
   assert.ok(!map.includes('<svg'), 'map background should be raster rather than SVG');
 });
 
