@@ -18,8 +18,7 @@ const DAY_REQUIREMENTS = {
   3: {
     label: 'Проверка версии Блэквуда',
     all: [
-      ['port_cargo_ledger', 'Копия портовой книги от Блэквуда'],
-    ['port_cargo_ledger_archive', 'Независимый архивный экземпляр портовой книги']
+      ['port_cargo_ledger', 'Копия портовой книги от Блэквуда']
     ]
   },
   4: {
