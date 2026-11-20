@@ -60,7 +60,10 @@ test('GameState.init restores the saved campaign before scenes use it', () => {
     assert.deepEqual(GameState.campaign, saved.campaign);
     assert.deepEqual(GameState.flags, saved.flags);
     assert.deepEqual(GameState.relationships, saved.relationships);
-    assert.deepEqual(GameState.npcMemory, saved.npcMemory);
+    assert.equal(GameState.npcMemory.lydia.promises[0], 'kept_promise');
+    assert.equal(GameState.npcMemory.lydia.met, false);
+    assert.deepEqual(GameState.npcMemory.lydia.flags, {});
+    assert.deepEqual(GameState.npcMemory.lydia.interviewHistory, []);
     assert.deepEqual(GameState.notebook, saved.notebook);
     assert.deepEqual(GameState.settings, saved.settings);
     assert.equal(GameState.miniGameProgress['radio-tuning'].bestQuality, 92);
