@@ -53,6 +53,13 @@ test('completing either finale persists the exact ending in the save payload', (
       completed: false,
       ending: null
     };
+    GameState.currentCase = {
+      ...GameState.currentCase,
+      clues: [
+        'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
+        'matthews_letter', 'port_cargo_ledger', 'markus_statement', 'port_radio_fragment'
+      ].map(id => ({ id }))
+    };
     Storage.save = (key, value) => writes.push({ key, value: structuredClone(value) });
 
     assert.equal(GameState.completeCampaign('price_of_silence'), true);
