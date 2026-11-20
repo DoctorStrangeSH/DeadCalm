@@ -279,6 +279,17 @@ export var GameState = {
     return result;
   },
 
+  ensureRelationship(npcId, initialTrust = 50) {
+    if (!this.relationships[npcId]) {
+      const trust = Number.isFinite(initialTrust)
+        ? Math.max(0, Math.min(100, initialTrust))
+        : 50;
+      this.relationships[npcId] = { trust, met: false };
+      this.save();
+    }
+    return this.relationships[npcId];
+  },
+
   updateRelationship(npcId, delta) {
     if (!this.relationships[npcId]) {
       this.relationships[npcId] = { trust: 50, met: false };
