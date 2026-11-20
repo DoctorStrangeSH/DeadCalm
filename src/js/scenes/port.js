@@ -17,6 +17,8 @@ function hasCoreEvidence() {
   const hasVisualOrRadio = GameState.hasClue('restored_film_frame')
     || GameState.hasClue('port_radio_fragment');
   return GameState.hasClue('autopsy_report_01')
+    && GameState.hasClue('judge_appointment_card')
+    && GameState.hasClue('belladonna_invoice')
     && GameState.hasClue('matthews_letter')
     && GameState.hasClue('port_cargo_ledger')
     && hasVisualOrRadio;
@@ -30,7 +32,7 @@ function renderEnding(container, ending) {
       <h3 class="text-gold text-lg tracking-widest mt-2">${openCase ? 'ОТКРЫТОЕ ДЕЛО' : 'ЦЕНА МОЛЧАНИЯ'}</h3>
       <p class="text-gray-300 text-sm leading-relaxed mt-3">${openCase
         ? 'Вы передаёте проверенную цепочку материалов. Себастьян больше не может скрываться за старым постановлением. Признание Маркуса также становится частью дела: он отвечает за двадцать лет молчания.'
-        : 'Вы добиваетесь немедленного признания Себастьяна и защищаете часть свидетелей, но соглашаетесь оставить часть старых материалов закрытой. Маркус избегает публичного разоблачения, а доверие тех, кто вам поверил, зависит от того, сдержите ли вы обещание.'
+        : 'Себастьян соглашается на ограниченную сделку и признаёт часть своей роли в старом деле. Вы защищаете часть свидетелей, но соглашаетесь оставить часть материалов закрытой. Маркус избегает публичного разоблачения, а доверие тех, кто вам поверил, зависит от того, сдержите ли вы обещание.'
       }</p>
       <p class="text-gray-500 text-xs mt-4">Сохранённый исход: ${openCase ? 'open_case' : 'price_of_silence'}</p>
       <button id="btn-finale-menu" class="btn-noir w-full py-3 mt-4">В КАБИНЕТ</button>
@@ -48,7 +50,7 @@ function renderEndingChoices(container) {
     result.innerHTML = `
       <div class="card p-4">
         <p class="text-gold text-sm">ПОКА НЕДОСТАТОЧНО ДОКАЗАТЕЛЬСТВ</p>
-        <p class="text-gray-400 text-sm mt-2">Перед предъявлением версии нужны заключение о смерти Гаррисона, письмо Мэтьюса, портовая книга и хотя бы один независимый фрагмент — плёнка или радиозапись. Признание Маркуса не заменит эти источники.</p>
+        <p class="text-gray-400 text-sm mt-2">Перед предъявлением версии нужны заключение Лидии, карточка встречи с Гаррисоном, счёт за белладонну, письмо Мэтьюса, портовая книга и хотя бы один независимый фрагмент — плёнка или радиозапись. Признание Маркуса не заменит эти источники.</p>
       </div>
     `;
     return;
@@ -59,7 +61,7 @@ function renderEndingChoices(container) {
       <p class="text-gold text-sm">ДОКАЗАТЕЛЬСТВА СВЕРЕНЫ</p>
       <p class="text-gray-400 text-sm mt-2">Вы можете передать полную цепочку материалов или заключить компромисс ради защиты части свидетелей. Убийца от этого не меняется; меняется цена решения.</p>
             <div class="grid gap-2 mt-4">
-        ${publishReady ? "" : '<p class="text-gray-500 text-xs">Для публичного обвинения нужен чётко восстановленный кадр. Компромиссный исход остаётся доступен.</p>'}
+        ${publishReady ? "" : '<p class="text-gray-500 text-xs">Для публичного обвинения нужен чётко восстановленный кадр и проверенная связь Блэквуда с ядом. Компромиссный исход остаётся доступен.</p>'}
         <button id="btn-ending-open" class="btn-noir py-3" ${publishReady ? "" : "disabled"}>ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ</button>
         <button id="btn-ending-silence" class="btn-noir py-3">ЗАКЛЮЧИТЬ СДЕЛКУ</button>
       </div>
@@ -109,6 +111,28 @@ export function render(container) {
     actions.appendChild(ledger);
   }
 
+  if (!GameState.hasClue('belladonna_invoice')) {
+    const invoice = document.createElement('button');
+    invoice.id = 'btn-port-invoice';
+    invoice.className = 'card text-left w-full';
+    invoice.innerHTML = '<p class="card-title">ПРОВЕРИТЬ АПТЕЧНУЮ КНИГУ</p><p class="card-subtitle">Сверить закупки портового офиса с заключением Лидии.</p>';
+    invoice.addEventListener('click', () => {
+      if (GameState.hasClue('belladonna_invoice')) return;
+      GameState.addClue({
+        id: 'belladonna_invoice',
+        name: 'Счёт за экстракт белладонны',
+        category: 'document',
+        description: 'В портовой аптечной книге зафиксирована покупка экстракта белладонны на счёт офиса Блэквуда за день до смерти судьи. Заказ связан с его компанией, но требует проверки, кто именно получил препарат и куда он был передан.',
+        location: 'port',
+        day: 4,
+        source: 'Портовая аптечная книга',
+        connections_to: ['autopsy_report_01', 'port_cargo_ledger']
+      });
+      invoice.disabled = true;
+      invoice.querySelector('.card-title').textContent = 'СЧЁТ ДОБАВЛЕН В ДЕЛО';
+    });
+    actions.appendChild(invoice);
+  }
   if (GameState.campaign.day >= 5) {
     const meet = document.createElement('button');
     meet.id = 'btn-find-markus';
