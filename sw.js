@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dead-calm-visual-v96';
+const CACHE_NAME = 'dead-calm-visual-v97';
 const ASSETS = [
   "/",
   "/index.html",
@@ -46,6 +46,7 @@ const ASSETS = [
   "/src/data/locations.json",
   "/src/data/timeline-events.json",
   "/src/js/components/dialog-box.js",
+  "/src/js/components/story-location.js",
   "/src/js/components/inventory.js",
   "/src/js/components/investigation-board.js",
   "/src/js/components/map.js",
@@ -63,6 +64,10 @@ const ASSETS = [
   "/src/js/core/state.js",
   "/src/js/core/storage.js",
   "/src/js/scenes/bar.js",
+  "/src/js/scenes/blackwood-mansion.js",
+  "/src/js/scenes/church.js",
+  "/src/js/scenes/holt-house.js",
+  "/src/js/scenes/port.js",
   "/src/js/scenes/chase-scene.js",
   "/src/js/scenes/city-map.js",
   "/src/js/scenes/crime-scene.js",
