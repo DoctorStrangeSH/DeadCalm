@@ -41,7 +41,7 @@ test('five-day campaign advances sequentially and opens only reached day flags',
 });
 
 test('campaign state restores day and synchronizes legacy location flags', () => {
-  const originalLoad = Storage.load;
+  const originalInspect = Storage.inspect;
   const original = {
     player: GameState.player,
     currentCase: GameState.currentCase,
@@ -54,7 +54,8 @@ test('campaign state restores day and synchronizes legacy location flags', () =>
     npcDailyLife: GameState.npcDailyLife,
     miniGameProgress: GameState.miniGameProgress,
     notebook: GameState.notebook,
-    settings: GameState.settings
+    settings: GameState.settings,
+    saveStatus: GameState.saveStatus
   };
   const saved = {
     campaign: { caseId: 'case_001', day: 3, completed: false, ending: null },
@@ -62,7 +63,7 @@ test('campaign state restores day and synchronizes legacy location flags', () =>
     currentCase: { id: 'case_001', clues: [], suspects: [], timeline: [] }
   };
   try {
-    Storage.load = key => key === 'gameState' ? structuredClone(saved) : null;
+    Storage.inspect = key => key === 'gameState' ? { status: 'valid', data: structuredClone(saved) } : { status: 'missing', data: null };
     GameState.init();
     assert.equal(GameState.campaign.day, 3);
     assert.equal(GameState.hasFlag('day_2'), true);
@@ -70,13 +71,13 @@ test('campaign state restores day and synchronizes legacy location flags', () =>
     assert.equal(GameState.hasFlag('day_4'), false);
     assert.equal(GameState.hasFlag('existing_choice'), true);
   } finally {
-    Storage.load = originalLoad;
+    Storage.inspect = originalInspect;
     Object.assign(GameState, original);
   }
 });
 
 test('a completed ending survives save loading and cannot be replaced by another outcome', () => {
-  const originalLoad = Storage.load;
+  const originalInspect = Storage.inspect;
   const original = {
     player: GameState.player,
     currentCase: GameState.currentCase,
@@ -89,7 +90,8 @@ test('a completed ending survives save loading and cannot be replaced by another
     npcDailyLife: GameState.npcDailyLife,
     miniGameProgress: GameState.miniGameProgress,
     notebook: GameState.notebook,
-    settings: GameState.settings
+    settings: GameState.settings,
+    saveStatus: GameState.saveStatus
   };
   const saved = {
     campaign: { caseId: 'case_001', day: 5, completed: true, ending: 'price_of_silence' },
@@ -97,7 +99,7 @@ test('a completed ending survives save loading and cannot be replaced by another
     currentCase: { id: 'case_001', clues: [], suspects: [], timeline: [] }
   };
   try {
-    Storage.load = key => key === 'gameState' ? structuredClone(saved) : null;
+    Storage.inspect = key => key === 'gameState' ? { status: 'valid', data: structuredClone(saved) } : { status: 'missing', data: null };
     GameState.init();
     assert.equal(GameState.campaign.day, 5);
     assert.equal(GameState.campaign.completed, true);
@@ -105,7 +107,7 @@ test('a completed ending survives save loading and cannot be replaced by another
     assert.equal(GameState.completeCampaign('open_case'), false);
     assert.equal(GameState.campaign.ending, 'price_of_silence');
   } finally {
-    Storage.load = originalLoad;
+    Storage.inspect = originalInspect;
     Object.assign(GameState, original);
   }
 });
