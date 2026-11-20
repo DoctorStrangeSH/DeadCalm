@@ -2,6 +2,7 @@ import { renderStoryLocation } from '../components/story-location.js';
 import { GameState } from '../core/state.js';
 import { Events } from '../core/events.js';
 import { assessFinalEvidence } from '../systems/campaign-progression.js';
+import { getCampaignDaySummary } from '../systems/campaign-day-summary.js';
 
 const markusStatement = {
   id: 'markus_statement',
@@ -16,6 +17,18 @@ const markusStatement = {
 
 function renderEnding(container, ending) {
   const openCase = ending === 'open_case';
+  const summary = getCampaignDaySummary(5, GameState, ending);
+  const summaryMarkup = summary ? `
+    <div class="card p-4 mt-4">
+      <p class="office-kicker">ЧТО ОСТАЛОСЬ ПОСЛЕ РАССЛЕДОВАНИЯ</p>
+      <h4 class="text-gold text-sm tracking-widest mt-2">${summary.title}</h4>
+      <p class="text-gray-300 text-xs tracking-widest mt-3">УСТАНОВЛЕНО</p>
+      <ul class="campaign-missing">${summary.established.map(item => '<li>— ' + item + '</li>').join('')}</ul>
+      <p class="text-gray-300 text-xs tracking-widest mt-3">ОПРОВЕРГНУТО</p>
+      <ul class="campaign-missing">${summary.refuted.map(item => '<li>— ' + item + '</li>').join('')}</ul>
+      <p class="text-gray-300 text-xs tracking-widest mt-3">ПОКА НЕИЗВЕСТНО</p>
+      <ul class="campaign-missing">${summary.unknown.map(item => '<li>— ' + item + '</li>').join('')}</ul>
+    </div>` : '';
   container.querySelector('#story-location-result').innerHTML = `
     <section class="card p-5" role="status" aria-live="polite">
       <p class="office-kicker">ДЕЛО № 001 · ФИНАЛ</p>
@@ -25,6 +38,7 @@ function renderEnding(container, ending) {
         : 'Себастьян признаёт, что встретился с Гаррисоном и дал ему яд, но требует оставить часть материалов дела Каллиопы закрытой. Вы принимаете компромисс ради защиты части свидетелей. Маркус избегает публичного разоблачения, а доверие тех, кто вам поверил, зависит от того, сдержите ли вы обещание.'
       }</p>
       <p class="text-gray-500 text-xs mt-4">Сохранённый исход: ${openCase ? 'open_case' : 'price_of_silence'}</p>
+      ${summaryMarkup}
       <button id="btn-finale-menu" class="btn-noir w-full py-3 mt-4">В КАБИНЕТ</button>
     </section>
   `;
