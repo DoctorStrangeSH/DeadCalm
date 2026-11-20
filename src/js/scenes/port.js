@@ -78,6 +78,11 @@ export function render(container) {
     }
   });
 
+  if (GameState.campaign.completed && GameState.campaign.ending) {
+    renderEnding(container, GameState.campaign.ending);
+    return;
+  }
+
   container.querySelector('#btn-story-action')?.addEventListener('click', () => {
     Events.emit('navigate', { scene: 'radio-tuning' });
   });
