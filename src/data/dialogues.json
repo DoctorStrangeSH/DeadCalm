@@ -531,7 +531,7 @@
             "question": "Что происходило в порту в 1967 году?",
             "type": "important",
             "answer": "«Грузов было много, документов ещё больше. Каллиопа работала с накладными. Я не отрицаю, что знал её. Но знакомство — не преступление».",
-            "gives_clue": "old_case_details"
+            "gives_clue": "port_cargo_ledger"
           },
           {
             "id": "sebastian_port_access",
