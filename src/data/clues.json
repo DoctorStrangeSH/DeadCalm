@@ -945,5 +945,19 @@
       "autopsy_report_01",
       "port_cargo_ledger"
     ]
+  },
+  "anna_box_contents": {
+    "id": "anna_box_contents",
+    "name": "Содержимое коробки Маркуса",
+    "category": "object",
+    "description": "В коробке лежат часы Маркуса, старый ключ и запечатанный конверт с пометкой «после проверки плёнки». Это подтверждает, что Маркус оставил Анне предметы и инструкцию, но не раскрывает назначение ключа или содержимое конверта.",
+    "location": "holt_house",
+    "day": 4,
+    "source": "Коробка Маркуса, переданная Анной",
+    "connections_to": [
+      "anna_markus_items",
+      "restored_film_frame",
+      "markus_statement"
+    ]
   }
 }
