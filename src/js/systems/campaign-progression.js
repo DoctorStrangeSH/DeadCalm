@@ -66,3 +66,18 @@ export function advanceCampaignWhenReady(gameState) {
   if (!status.canAdvance) return { advanced: false, status };
   return { advanced: Boolean(gameState.advanceCampaignDay()), status };
 }
+
+export function assessFinalEvidence(gameState) {
+  const required = [
+    ['autopsy_report_01', 'Заключение Лидии'],
+    ['judge_appointment_card', 'Карточка встречи с Гаррисоном'],
+    ['belladonna_invoice', 'Счёт за белладонну'],
+    ['matthews_letter', 'Письмо Мэтьюса'],
+    ['port_cargo_ledger', 'Портовая книга грузов']
+  ];
+  const missing = required.filter(([id]) => !gameState.hasClue(id)).map(([, label]) => label);
+  const hasIndependentRecord = gameState.hasClue('restored_film_frame') || gameState.hasClue('port_radio_fragment');
+  if (!hasIndependentRecord) missing.push('Независимый фрагмент плёнки или радиозаписи');
+  const filmQuality = Number(gameState.getClue?.('restored_film_frame')?.quality || 0);
+  return { ready: missing.length === 0, publicReady: missing.length === 0 && filmQuality >= 95, missing, filmQuality };
+}
