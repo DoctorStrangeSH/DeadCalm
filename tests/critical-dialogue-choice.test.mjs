@@ -27,18 +27,18 @@ test('a critical choice cannot be claimed before its prompt is opened', () => {
 
 test('a critical choice can be claimed once and rejects stale or double-click callbacks', () => {
   const memory = createMemory({ 'npc_ray_morgan:critical_critical_choice_raid': true });
-  assert.equal(claimCriticalDialogueChoice(memory, 'npc_ray_morgan', 'blackwood_power'), true);
-  assert.equal(claimCriticalDialogueChoice(memory, 'npc_ray_morgan', 'blackwood_power'), false);
+  assert.equal(claimCriticalDialogueChoice(memory, 'npc_ray_morgan', 'critical_choice_raid'), true);
+  assert.equal(claimCriticalDialogueChoice(memory, 'npc_ray_morgan', 'critical_choice_raid'), false);
   assert.equal(memory.writes.length, 1);
   assert.equal(memory.hasFlag('npc_ray_morgan', 'critical_choice_resolved_critical_choice_raid'), true);
 });
 
 test('different critical prompts remain independently claimable', () => {
   const memory = createMemory({
-    'npc_ray_morgan:critical_blackwood_power': true,
+    'npc_ray_morgan:critical_critical_choice_raid': true,
     'npc_lydia_winter:critical_critical_choice_trust': true
   });
-  assert.equal(claimCriticalDialogueChoice(memory, 'npc_ray_morgan', 'blackwood_power'), true);
+  assert.equal(claimCriticalDialogueChoice(memory, 'npc_ray_morgan', 'critical_choice_raid'), true);
   assert.equal(claimCriticalDialogueChoice(memory, 'npc_lydia_winter', 'critical_choice_trust'), true);
   assert.equal(memory.writes.length, 2);
 });
