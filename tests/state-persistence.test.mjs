@@ -356,3 +356,59 @@ test('GameState save survives a real Storage JSON round-trip and restores a play
     Object.assign(GameState, original);
   }
 });
+
+
+test('both campaign endings survive real storage reload with their matching Sebastian memory flags', () => {
+  const originalStorage = globalThis.localStorage;
+  const original = {
+    player: GameState.player, currentCase: GameState.currentCase, campaign: GameState.campaign,
+    flags: GameState.flags, relationships: GameState.relationships, npcMemory: GameState.npcMemory,
+    socialGraph: GameState.socialGraph, knowledgeLedger: GameState.knowledgeLedger,
+    npcDailyLife: GameState.npcDailyLife, miniGameProgress: GameState.miniGameProgress,
+    notebook: GameState.notebook, settings: GameState.settings, saveStatus: GameState.saveStatus
+  };
+  const values = new Map();
+  globalThis.localStorage = {
+    setItem(key, value) { values.set(key, String(value)); },
+    getItem(key) { return values.has(key) ? values.get(key) : null; },
+    removeItem(key) { values.delete(key); }
+  };
+
+  try {
+    for (const ending of ['open_case', 'price_of_silence']) {
+      values.clear();
+      GameState.player = { name: 'Джон Риверс', reputation: 80 };
+      GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+      GameState.currentCase = { id: 'case_001', clues: [
+        'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
+        'matthews_letter', 'port_cargo_ledger', 'port_cargo_ledger_archive',
+        'port_radio_fragment'
+      ].map(id => ({ id })).concat([{ id: 'restored_film_frame', quality: 100 }]),
+      suspects: [], timeline: [], hypotheses: [] };
+      GameState.flags = { day_2: true, day_3: true, day_4: true, day_5: true };
+      GameState.npcMemory = {
+        npc_sebastian_blackwood: { met: true, flags: { prior_topic: true }, conversationCount: 3 }
+      };
+
+      assert.equal(GameState.completeCampaign(ending), true, ending + ' should commit');
+      assert.equal(GameState.campaign.completed, true);
+      assert.equal(GameState.campaign.ending, ending);
+      assert.equal(GameState.npcMemory.npc_sebastian_blackwood.flags.case_001_open_case, ending === 'open_case');
+      assert.equal(GameState.npcMemory.npc_sebastian_blackwood.flags.case_001_price_of_silence, ending === 'price_of_silence');
+
+      GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
+      GameState.npcMemory = {};
+      assert.equal(GameState.init(), 'valid');
+      assert.equal(GameState.campaign.completed, true);
+      assert.equal(GameState.campaign.ending, ending);
+      assert.equal(GameState.campaign.day, 5);
+      assert.equal(GameState.npcMemory.npc_sebastian_blackwood.flags.case_001_open_case, ending === 'open_case');
+      assert.equal(GameState.npcMemory.npc_sebastian_blackwood.flags.case_001_price_of_silence, ending === 'price_of_silence');
+      assert.equal(GameState.npcMemory.npc_sebastian_blackwood.flags.prior_topic, true);
+      assert.equal(GameState.completeCampaign(ending === 'open_case' ? 'price_of_silence' : 'open_case'), false);
+    }
+  } finally {
+    globalThis.localStorage = originalStorage;
+    Object.assign(GameState, original);
+  }
+});
