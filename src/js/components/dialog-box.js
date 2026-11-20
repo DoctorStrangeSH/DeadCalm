@@ -358,7 +358,12 @@ export class DialogBox {
       var simpleBtn = document.createElement('button');
       simpleBtn.className = 'dialog-btn primary-btn';
       simpleBtn.textContent = 'ЗАКОНЧИТЬ';
-      simpleBtn.addEventListener('click', function() { self.close(); });
+      simpleBtn.addEventListener('click', function() {
+        if (node.returnReactionSeenFlag) {
+          DialogueEngine.acknowledgeReturnReaction(node.returnReactionSeenFlag);
+        }
+        self.close();
+      });
       choicesEl.appendChild(simpleBtn);
     }
   }
