@@ -139,3 +139,44 @@ test('every authored contradiction has two obtainable, day-one sources and a rea
     }
   }
 });
+
+test('all NPC dialogue prerequisites resolve inside the same authored conversation graph', () => {
+  const dialogues = readJson('../src/data/dialogues.json');
+  const clues = readJson('../src/data/clues.json');
+  const contradictions = readJson('../src/data/contradictions.json');
+  for (const [npcId, npc] of Object.entries(dialogues)) {
+    const topics = npc.topics || {};
+    for (const topicId of npc.first_meeting?.unlocks_topics || []) {
+      assert.ok(topics[topicId], npcId + ' first meeting unlocks missing topic ' + topicId);
+    }
+
+    const responses = Object.entries(topics).flatMap(([topicId, topic]) =>
+      (topic.responses || []).map(response => ({ ...response, topicId }))
+    );
+    const responseIds = responses.map(response => response.id);
+    assert.equal(new Set(responseIds).size, responseIds.length, npcId + ' has duplicate question IDs');
+
+    for (const response of responses) {
+      assert.ok(typeof response.id === 'string' && response.id.length > 0,
+        npcId + '.' + response.topicId + ' contains a response without an ID');
+      if (response.requires_question) {
+        assert.ok(responseIds.includes(response.requires_question),
+          npcId + '.' + response.id + ' depends on a question that this NPC never asks: ' + response.requires_question);
+        assert.notEqual(response.requires_question, response.id,
+          npcId + '.' + response.id + ' cannot require itself');
+      }
+      if (response.requires_clue) {
+        assert.ok(clues[response.requires_clue],
+          npcId + '.' + response.id + ' requires an unknown clue: ' + response.requires_clue);
+      }
+      if (response.requires_contradiction) {
+        assert.ok(contradictions.some(rule => rule.id === response.requires_contradiction),
+          npcId + '.' + response.id + ' requires an unknown contradiction: ' + response.requires_contradiction);
+      }
+      if (response.gives_clue) {
+        assert.ok(clues[response.gives_clue],
+          npcId + '.' + response.id + ' grants an unknown clue: ' + response.gives_clue);
+      }
+    }
+  }
+});
