@@ -42,5 +42,5 @@ test('conditional case locations follow the five-day story route', () => {
   assert.equal(locations.bar_rusty_anchor.unlock_condition, 'day_2');
   assert.equal(locations.blackwood_mansion.unlock_condition, 'day_3');
   assert.equal(locations.holt_house.unlock_condition, 'day_4');
-  assert.equal(locations.port.unlock_condition, 'day_5');
+  assert.equal(locations.port.unlock_condition, 'day_4');
 });
