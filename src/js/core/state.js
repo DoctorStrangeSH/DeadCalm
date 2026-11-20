@@ -5,6 +5,7 @@ import { createEmptySocialGraph, normalizeSocialGraph, upsertSocialTie, appendSo
 import { createEmptyKnowledgeLedger, normalizeKnowledgeLedger, recordNpcKnowledge, updateNpcKnowledgeState, getNpcKnowledge, getNpcKnowledgeContext } from '../systems/npc-knowledge.js';
 import { createEmptyDailyLife, normalizeDailyLife, upsertNpcSchedule, getNpcScheduleAt, recordNpcOccurrence, getNpcOccurrences } from '../systems/npc-daily-life.js';
 import { createEmptyMiniGameProgress, normalizeMiniGameProgress, recordMiniGameResult } from '../systems/minigame-progress.js';
+import { DEFAULT_SETTINGS, normalizeSettings } from '../systems/settings.js';
 
 const INITIAL_CAMPAIGN = Object.freeze({
   caseId: 'case_001',
@@ -48,11 +49,7 @@ export var GameState = {
   notebook: [],
   saveStatus: 'missing',
 
-  settings: {
-    musicVolume: 0.5,
-    sfxVolume: 0.7,
-    textSpeed: 'normal',
-  },
+  settings: { ...DEFAULT_SETTINGS },
 
   init() {
     const loadResult = Storage.inspect('gameState');
@@ -71,7 +68,7 @@ export var GameState = {
       this.npcDailyLife = normalizeDailyLife(saved.npcDailyLife);
       this.miniGameProgress = normalizeMiniGameProgress(saved.miniGameProgress);
       this.notebook = saved.notebook || [];
-      this.settings = saved.settings || this.settings;
+      this.settings = normalizeSettings(saved.settings);
       console.log('[State] Состояние загружено');
       console.log('[State] - npcMemory: ' + Object.keys(this.npcMemory).length + ' NPC');
       console.log('[State] - clues: ' + this.currentCase.clues.length);
@@ -88,7 +85,7 @@ export var GameState = {
       this.npcDailyLife = createEmptyDailyLife();
       this.miniGameProgress = createEmptyMiniGameProgress();
       this.notebook = [];
-      this.settings = { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
+      this.settings = { ...DEFAULT_SETTINGS };
       console.log(this.saveStatus === 'missing'
         ? '[State] Новое состояние (без сохранения)'
         : '[State] Сохранение недоступно; данные не перезаписаны: ' + this.saveStatus);
