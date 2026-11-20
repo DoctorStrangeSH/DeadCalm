@@ -153,3 +153,32 @@ test('final state transition cannot bypass evidence requirements', () => {
     Storage.save = originalSave;
   }
 });
+
+
+test('final campaign outcome is remembered by Sebastian and restored in the saved state', () => {
+  const originalCampaign = GameState.campaign;
+  const originalCurrentCase = GameState.currentCase;
+  const originalNpcMemory = GameState.npcMemory;
+  const originalSave = Storage.save;
+  try {
+    GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+    GameState.currentCase = { id: 'case_001', clues: [
+      'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
+      'matthews_letter', 'port_cargo_ledger', 'port_cargo_ledger_archive',
+      'port_radio_fragment'
+    ].map(id => ({ id })).concat([{ id: 'restored_film_frame', quality: 100 }]) };
+    GameState.npcMemory = {};
+    Storage.save = () => true;
+
+    assert.equal(GameState.completeCampaign('open_case'), true);
+    assert.equal(GameState.npcMemory.npc_sebastian_blackwood.flags.case_001_open_case, true);
+    assert.equal(GameState.npcMemory.npc_sebastian_blackwood.flags.case_001_price_of_silence, false);
+    assert.equal(GameState.completeCampaign('price_of_silence'), false);
+    assert.equal(GameState.npcMemory.npc_sebastian_blackwood.flags.case_001_open_case, true);
+  } finally {
+    GameState.campaign = originalCampaign;
+    GameState.currentCase = originalCurrentCase;
+    GameState.npcMemory = originalNpcMemory;
+    Storage.save = originalSave;
+  }
+});
