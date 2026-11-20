@@ -149,3 +149,60 @@ test('GameState.export includes campaign progression and the complete case recor
     Object.assign(GameState, original);
   }
 });
+
+
+test('GameState.save persists the same complete detached payload as export and reports write failure', () => {
+  const originalSave = Storage.save;
+  const original = {
+    player: GameState.player,
+    currentCase: GameState.currentCase,
+    campaign: GameState.campaign,
+    flags: GameState.flags,
+    relationships: GameState.relationships,
+    npcMemory: GameState.npcMemory,
+    socialGraph: GameState.socialGraph,
+    knowledgeLedger: GameState.knowledgeLedger,
+    npcDailyLife: GameState.npcDailyLife,
+    miniGameProgress: GameState.miniGameProgress,
+    notebook: GameState.notebook,
+    settings: GameState.settings,
+    saveStatus: GameState.saveStatus
+  };
+  let written = null;
+  try {
+    GameState.player = { name: 'Джон Риверс', reputation: 63 };
+    GameState.campaign = { caseId: 'case_001', day: 3, completed: false, ending: null };
+    GameState.currentCase = {
+      id: 'case_001',
+      clues: [{ id: 'port_radio_fragment', quality: 84 }],
+      suspects: [{ id: 'sebastian' }],
+      timeline: [{ id: 'port_departure' }],
+      hypotheses: [{ id: 'hyp_port', sourceRefs: ['port_radio_fragment'] }]
+    };
+    GameState.flags = { day_2: true, day_3: true };
+    GameState.relationships = { npc_marta_hayes: { trust: 67, met: true } };
+    GameState.npcMemory = { npc_marta_hayes: { flags: { promised_help: true } } };
+    GameState.socialGraph = { ties: [{ id: 'tie_1' }], events: [{ id: 'event_1' }] };
+    GameState.knowledgeLedger = { entries: [{ id: 'knowledge_1' }] };
+    GameState.npcDailyLife = { schedules: [{ id: 'schedule_1' }], occurrences: [{ id: 'occ_1' }] };
+    GameState.miniGameProgress = { 'radio-tuning': { attempts: 2, bestOutcome: 'clear', bestQuality: 96, lastOutcome: 'clear', lastQuality: 96, completedAt: '1987-11-04T10:00:00.000Z' } };
+    GameState.notebook = [{ id: 'note_1', text: 'Сверить портовую запись' }];
+    GameState.settings = { musicVolume: 0.3, sfxVolume: 0.6, textSpeed: 'slow' };
+
+    Storage.save = (key, payload) => { written = { key, payload: structuredClone(payload) }; return true; };
+    assert.equal(GameState.save(), true);
+    assert.equal(written.key, 'gameState');
+    assert.deepEqual(written.payload, GameState.export());
+    assert.deepEqual(written.payload.campaign, GameState.campaign);
+    assert.deepEqual(written.payload.currentCase.hypotheses, GameState.currentCase.hypotheses);
+    assert.deepEqual(written.payload.knowledgeLedger, GameState.knowledgeLedger);
+    assert.deepEqual(written.payload.npcDailyLife, GameState.npcDailyLife);
+
+    Storage.save = () => false;
+    assert.equal(GameState.save(), false);
+    assert.equal(GameState.saveStatus, 'unavailable');
+  } finally {
+    Storage.save = originalSave;
+    Object.assign(GameState, original);
+  }
+});
