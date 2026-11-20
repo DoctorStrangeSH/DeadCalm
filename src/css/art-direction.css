@@ -554,3 +554,5 @@ body { background:#071015; color:#d3d5cc; }
   .settings-footer { align-items:stretch; flex-direction:column; }
   .settings-back { width:100%; }
 }
+
+.settings-audio-note { margin:-6px 0 10px; padding:10px 12px; border-left:2px solid #746346; background:#111b1d; color:#9da69b; font-size:11px; line-height:1.5; }
