@@ -113,6 +113,18 @@ export var DialogueEngine = {
     // ПОВТОРНАЯ ВСТРЕЧА
     console.log('[Dialogue] Повторная встреча');
 
+    // Однократная реакция на прошлый выбор: NPC помнит поступок и отвечает на него при следующей встрече.
+    var returnReaction = (npcData.return_dialogues || []).find(function(entry) {
+      return entry && entry.requires_flag && entry.seen_flag && entry.node &&
+        NPCMemory.hasFlag(npcId, entry.requires_flag) &&
+        !NPCMemory.hasFlag(npcId, entry.seen_flag) &&
+        npcData[entry.node]?.text;
+    });
+    if (returnReaction) {
+      NPCMemory.setFlag(npcId, returnReaction.seen_flag);
+      return this._formatSimpleNode(npcData[returnReaction.node], npcId);
+    }
+
     // Проверяем доступные темы
     var availableTopics = this._getAvailableTopics(npcData);
     console.log('[Dialogue] Доступные темы: ' + availableTopics.length);
