@@ -44,7 +44,7 @@ export const Audio = {
    */
   setMusicVolume(value) {
     if (this._musicGain) {
-      this._musicGain.gain.value = Math.max(0, Math.min(1, value));
+      this._musicGain.gain.value = this._clampVolume(value, 0.5);
     }
   },
 
