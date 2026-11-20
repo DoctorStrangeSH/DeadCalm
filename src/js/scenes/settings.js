@@ -32,6 +32,7 @@ export function render(container) {
 
         <section class="settings-section" aria-labelledby="settings-audio-heading">
           <h2 id="settings-audio-heading" class="settings-section-title">ЗВУК</h2>
+          <p class="settings-audio-note">Уровни громкости сохраняются. Музыкальные дорожки и звуковые эффекты пока не подключены к этой сборке.</p>
           ${volumeRow('settings-music', 'Громкость музыки', 'Уровень фонового музыкального сопровождения', GameState.settings.musicVolume)}
           ${volumeRow('settings-sfx', 'Громкость эффектов', 'Уровень звуков интерфейса и игровых событий', GameState.settings.sfxVolume)}
         </section>
