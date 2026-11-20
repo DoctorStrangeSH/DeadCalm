@@ -65,6 +65,13 @@ test('pending daily summary survives navigation and is dismissed exactly once', 
   assert.equal(dismissCampaignDaySummary(state, 1), false);
 });
 
+test('multiple pending summaries are delivered in order instead of being lost after later day transitions', () => {
+  const state = game(4, [], ['campaign_day_summary_pending_1', 'campaign_day_summary_pending_2']);
+  assert.equal(getPendingCampaignDaySummary(state).day, 1);
+  assert.equal(dismissCampaignDaySummary(state, 1), true);
+  assert.equal(getPendingCampaignDaySummary(state).day, 2);
+});
+
 test('day five wrap-up distinguishes both endings and preserves unresolved details', () => {
   const open = getCampaignDaySummary(5, game(5), 'open_case');
   const silence = getCampaignDaySummary(5, game(5), 'price_of_silence');
