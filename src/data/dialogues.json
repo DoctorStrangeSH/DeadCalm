@@ -618,7 +618,7 @@
             "question": "Что внутри?",
             "type": "important",
             "answer": "«Его часы, старый ключ и конверт с пометкой “после проверки плёнки”. Я не открывала всё: отец просил дождаться человека, которому сможет доверять».",
-            "gives_clue": "anna_markus_items"
+            "gives_clue": "anna_box_contents"
           },
           {
             "id": "anna_box_trust",
