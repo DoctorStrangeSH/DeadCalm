@@ -62,3 +62,12 @@ test('case 001 has separate 1987 meeting and poison-source evidence', () => {
   assert.ok(crimeScene.includes("id: 'judge_appointment_card'"));
   assert.ok(portScene.includes("id: 'belladonna_invoice'"));
 });
+
+test('the opening establishes the personal hook and the first verifiable contradiction', () => {
+  const dialogues = readJson('../src/data/dialogues.json');
+  const opening = dialogues.npc_ray_morgan.first_meeting.text;
+  assert.match(opening, /Холт всё-таки написал тебе/);
+  assert.match(opening, /судью Гаррисона/);
+  assert.match(opening, /не верить времени в протоколе/);
+  assert.match(opening, /Начнём с того, что можно проверить/);
+});
