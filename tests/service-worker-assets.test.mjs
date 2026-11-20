@@ -40,14 +40,14 @@ test('retired prototype minigames and debug scenes are absent from the release p
   assert.ok(match, 'ASSETS array must be declared as a literal JSON array');
   const assets = JSON.parse(match[1]);
   for (const retired of [
-    "/src/js/components/minigame-chase.js"
-    "/src/js/components/minigame-cipher.js"
-    "/src/js/components/minigame-fingerprints.js"
-    "/src/js/components/minigame-lockpick.js"
-    "/src/js/components/qte-system.js"
-    "/src/js/scenes/chase-scene.js"
-    "/src/js/scenes/minigame-test.js"
-    "/src/js/systems/minigames.js"
+    "/src/js/components/minigame-chase.js",
+    "/src/js/components/minigame-cipher.js",
+    "/src/js/components/minigame-fingerprints.js",
+    "/src/js/components/minigame-lockpick.js",
+    "/src/js/components/qte-system.js",
+    "/src/js/scenes/chase-scene.js",
+    "/src/js/scenes/minigame-test.js",
+    "/src/js/systems/minigames.js",
     "/src/css/style.css"
   ]) assert.ok(!assets.includes(retired), `retired path remains in precache: ${retired}`);
 });
