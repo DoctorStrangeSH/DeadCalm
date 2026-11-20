@@ -22,7 +22,7 @@ test('GameState.init restores the saved campaign before scenes use it', () => {
 
   const saved = {
     player: { name: 'John Rivers', reputation: 73 },
-    campaign: { caseId: 'case_001', day: 3, completed: false, ending: null },
+    campaign: { caseId: 'case_001', day: 1, completed: false, ending: null },
     currentCase: {
       id: 'case_001',
       clues: [{ id: 'clue_saved', name: 'Saved clue' }],
@@ -75,6 +75,7 @@ test('GameState.init keeps a clean initial state when no save exists', () => {
   const original = {
     player: GameState.player,
     currentCase: GameState.currentCase,
+    campaign: GameState.campaign,
     flags: GameState.flags,
     relationships: GameState.relationships,
     npcMemory: GameState.npcMemory,
