@@ -44,3 +44,11 @@ test('conditional case locations follow the five-day story route', () => {
   assert.equal(locations.holt_house.unlock_condition, 'day_4');
   assert.equal(locations.port.unlock_condition, 'day_4');
 });
+
+test('case 001 evidence text does not present unsupported killer intent as fact', () => {
+  const dialogueText = readFileSync(new URL('../src/data/dialogues.json', import.meta.url), 'utf8');
+  const crimeScene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  assert.doesNotMatch(dialogueText, /Все причастные мертвы|серийный убийца|Сирен/i);
+  assert.doesNotMatch(crimeScene, /Убийца хотел, чтобы он знал|Он хотел, чтобы вы его нашли|этот убийца ничего не делает случайно/i);
+  assert.match(crimeScene, /отпечаток не называет убийцу/);
+});
