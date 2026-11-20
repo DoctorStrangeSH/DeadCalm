@@ -24,7 +24,7 @@ test('all production JavaScript files pass Node syntax validation', () => {
 
 test('all local static JavaScript imports resolve to existing files', () => {
   const files = walk(resolve(root, 'src/js')).filter(path => path.endsWith('.js'));
-  const importPattern = /(?:\bfrom\s*|\bimport\s*(?:\(\s*)?)['"]([^'"]+)['"]/g;
+  const importPattern = /(?:^\s*import\s+(?:[^'"]*?\s+from\s+)?|^\s*export\s+[^'"]*?\s+from\s+|^\s*import\s*\(\s*)['"]([^'"]+)['"]/gm;
   for (const file of files) {
     const source = readFileSync(file, 'utf8');
     for (const match of source.matchAll(importPattern)) {
