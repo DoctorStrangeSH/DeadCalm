@@ -3,6 +3,7 @@ import { Events } from '../core/events.js';
 import { NPCMemory } from './npc-memory.js';
 import { resolveDialogueReaction } from './dialogue-reactions.js';
 import { hasDiscoveredContradiction } from './contradictions.js';
+import { claimCriticalDialogueChoice } from './critical-dialogue-choice.js';
 
 export var DialogueEngine = {
   _dialogues: null,
@@ -303,6 +304,12 @@ export var DialogueEngine = {
       if (node.choices && node.trigger_question) {
         var choice = node.choices.find(function(c) { return c.id === choiceId; });
         if (choice) {
+          var nextNode = npcData[choice.next_dialogue];
+          if (!nextNode || !claimCriticalDialogueChoice(NPCMemory, this._currentNPC, node.trigger_question)) {
+            console.warn('[Dialogue] Критический выбор уже разрешён или не был открыт: ' + choiceId);
+            return null;
+          }
+
           console.log('[Dialogue] Критический выбор: ' + choiceId);
           var trustBefore = NPCMemory.getTrust(this._currentNPC);
 
@@ -316,7 +323,6 @@ export var DialogueEngine = {
             NPCMemory.clearFlag(this._currentNPC, choice.memory_clear);
           }
 
-          var nextNode = npcData[choice.next_dialogue];
           if (nextNode) {
             var addedNote = nextNode.adds_note && this._addToNotebook(nextNode.adds_note)
               ? nextNode.adds_note : null;
