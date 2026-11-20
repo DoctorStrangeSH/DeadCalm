@@ -79,3 +79,59 @@ test('the day-one court call has a complete, discoverable contradiction prerequi
     .flatMap(topic => topic.responses || [])
     .some(response => response.gives_clue === 'autopsy_report_01'));
 });
+
+
+test('every authored contradiction has two obtainable, day-one sources and a reachable follow-up', () => {
+  const dialogues = readJson('../src/data/dialogues.json');
+  const clues = readJson('../src/data/clues.json');
+  const contradictions = readJson('../src/data/contradictions.json');
+  const locations = readJson('../src/data/locations.json');
+  const dialogueSources = new Map();
+  for (const [npcId, npc] of Object.entries(dialogues)) {
+    for (const [topicId, topic] of Object.entries(npc.topics || {})) {
+      for (const response of topic.responses || []) {
+        if (response.gives_clue) {
+          if (!dialogueSources.has(response.gives_clue)) dialogueSources.set(response.gives_clue, []);
+          dialogueSources.get(response.gives_clue).push({ npcId, topicId, response });
+        }
+      }
+    }
+  }
+
+  const crimeScene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  const portScene = readFileSync(new URL('../src/js/scenes/port.js', import.meta.url), 'utf8');
+  const sceneText = crimeScene + '\\n' + portScene;
+  const sceneSourceIds = new Set([...sceneText.matchAll(/id:\\s*'([a-z0-9_]+)'/g)].map(match => match[1]));
+
+  assert.ok(contradictions.length > 0, 'the case must define explicit contradiction rules');
+  for (const rule of contradictions) {
+    assert.ok(Array.isArray(rule.clueIds) && rule.clueIds.length >= 2, rule.id + ' needs at least two sources');
+    assert.equal(new Set(rule.clueIds).size, rule.clueIds.length, rule.id + ' cannot repeat a source');
+    for (const id of rule.clueIds) {
+      const clue = clues[id];
+      assert.ok(clue, rule.id + ' references missing clue ' + id);
+      assert.ok(dialogueSources.has(id) || sceneSourceIds.has(id),
+        rule.id + ' source ' + id + ' has no authored acquisition path');
+      assert.ok(Number.isInteger(clue.day) && clue.day <= 1,
+        rule.id + ' source ' + id + ' must be available during day one');
+      const location = locations[clue.location];
+      assert.ok(location, id + ' points to an unknown location');
+      const unlock = /^day_(\\d+)$/.exec(location.unlock_condition || '');
+      const unlockDay = location.unlocked === true ? 1 : unlock ? Number(unlock[1]) : Infinity;
+      assert.ok(unlockDay <= clue.day, id + ' is locked after its authored evidence day');
+    }
+  }
+
+  for (const [npcId, npc] of Object.entries(dialogues)) {
+    const responses = Object.values(npc.topics || {}).flatMap(topic => topic.responses || []);
+    for (const response of responses.filter(item => item.requires_contradiction)) {
+      const rule = contradictions.find(item => item.id === response.requires_contradiction);
+      assert.ok(rule, npcId + '.' + response.id + ' references an unknown contradiction');
+      assert.ok(response.requires_question, npcId + '.' + response.id + ' must identify the preceding question');
+      const prerequisite = responses.find(item => item.id === response.requires_question);
+      assert.ok(prerequisite, npcId + '.' + response.id + ' has no preceding question');
+      assert.ok(!prerequisite.requires_contradiction,
+        npcId + '.' + response.id + ' has a circular contradiction prerequisite');
+    }
+  }
+});
