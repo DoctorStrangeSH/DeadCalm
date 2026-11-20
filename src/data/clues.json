@@ -943,7 +943,22 @@
     "source": "Портовая аптечная книга",
     "connections_to": [
       "autopsy_report_01",
-      "port_cargo_ledger"
+      "port_cargo_ledger",
+      "port_cargo_ledger_archive"
+    ]
+  },
+  "port_cargo_ledger_archive": {
+    "id": "port_cargo_ledger_archive",
+    "name": "Архивный экземпляр грузовой книги 1967 года",
+    "category": "document",
+    "description": "Архивный экземпляр грузовой книги содержит записи о грузах компании Блэквуда в ночь гибели Каллиопы. Сверка с копией, которую Себастьян передал Джону, подтверждает совпадение части записей и выявляет исправления в обеих версиях. Это независимо подтверждает связь компании с портом и временем, но не устанавливает, кто физически убил Каллиопу.",
+    "location": "port",
+    "day": 4,
+    "source": "Архив портового управления",
+    "connections_to": [
+      "port_cargo_ledger",
+      "old_case_details",
+      "belladonna_invoice"
     ]
   }
 }
