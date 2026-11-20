@@ -6,11 +6,17 @@ import { Storage } from '../src/js/core/storage.js';
 test('five-day campaign advances sequentially and opens only reached day flags', () => {
   const originalCampaign = GameState.campaign;
   const originalFlags = GameState.flags;
+  const originalCurrentCase = GameState.currentCase;
   const originalSave = Storage.save;
   const writes = [];
   try {
     GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
     GameState.flags = {};
+    GameState.currentCase = { id: 'case_001', clues: [
+      'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
+      'matthews_letter', 'port_cargo_ledger', 'port_cargo_ledger_archive',
+      'port_radio_fragment'
+    ].map(id => ({ id })).concat([{ id: 'restored_film_frame', quality: 100 }]) };
     Storage.save = (key, value) => writes.push({ key, value: structuredClone(value) });
 
     assert.equal(GameState.hasFlag('day_2'), false);
@@ -36,6 +42,7 @@ test('five-day campaign advances sequentially and opens only reached day flags',
   } finally {
     GameState.campaign = originalCampaign;
     GameState.flags = originalFlags;
+    GameState.currentCase = originalCurrentCase;
     Storage.save = originalSave;
   }
 });
@@ -109,5 +116,40 @@ test('a completed ending survives save loading and cannot be replaced by another
   } finally {
     Storage.inspect = originalInspect;
     Object.assign(GameState, original);
+  }
+});
+
+
+test('final state transition cannot bypass evidence requirements', () => {
+  const originalCampaign = GameState.campaign;
+  const originalCurrentCase = GameState.currentCase;
+  const originalSave = Storage.save;
+  try {
+    GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+    GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
+    Storage.save = () => true;
+
+    assert.equal(GameState.completeCampaign('price_of_silence'), false,
+      'even the negotiated ending requires the mandatory evidence dossier');
+    assert.equal(GameState.completeCampaign('open_case'), false,
+      'the public accusation cannot be committed without evidence');
+    assert.equal(GameState.campaign.completed, false);
+    assert.equal(GameState.campaign.ending, null);
+
+    GameState.currentCase.clues = [
+      'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
+      'matthews_letter', 'port_cargo_ledger', 'port_cargo_ledger_archive',
+      'port_radio_fragment'
+    ].map(id => ({ id })).concat([{ id: 'restored_film_frame', quality: 70 }]);
+
+    assert.equal(GameState.completeCampaign('open_case'), false,
+      'a partial frame cannot authorize the public accusation');
+    assert.equal(GameState.completeCampaign('price_of_silence'), true,
+      'the negotiated ending remains available with the complete but partial dossier');
+    assert.equal(GameState.campaign.ending, 'price_of_silence');
+  } finally {
+    GameState.campaign = originalCampaign;
+    GameState.currentCase = originalCurrentCase;
+    Storage.save = originalSave;
   }
 });
