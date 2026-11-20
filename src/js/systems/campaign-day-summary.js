@@ -122,10 +122,12 @@ export function getCampaignDaySummary(day, gameState = {}, ending = null) {
 }
 
 export function getPendingCampaignDaySummary(gameState) {
-  const completedDay = (gameState?.campaign?.day || 1) - 1;
-  if (completedDay < 1 || completedDay > 4) return null;
-  if (!gameState.hasFlag?.('campaign_day_summary_pending_' + completedDay)) return null;
-  return { day: completedDay, ...getCampaignDaySummary(completedDay, gameState) };
+  for (let day = 1; day <= 4; day++) {
+    if (gameState.hasFlag?.('campaign_day_summary_pending_' + day)) {
+      return { day, ...getCampaignDaySummary(day, gameState) };
+    }
+  }
+  return null;
 }
 
 export function dismissCampaignDaySummary(gameState, day) {
