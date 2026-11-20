@@ -872,8 +872,28 @@
         "requires_flag": "sebastian_version_requested",
         "node": "sebastian_version_return",
         "seen_flag": "sebastian_version_seen"
+      },
+      {
+        "requires_flag": "case_001_open_case",
+        "node": "case_001_open_case_result",
+        "seen_flag": "case_001_open_case_seen"
+      },
+      {
+        "requires_flag": "case_001_price_of_silence",
+        "node": "case_001_price_silence_result",
+        "seen_flag": "case_001_price_silence_seen"
       }
-    ]
+    ],
+    "case_001_open_case_result": {
+      "type": "narrative",
+      "text": "«Значит, вы всё-таки передали материалы. Я ожидал, что вы выберете осторожность, детектив. Теперь каждый документ будет изучен публично — и моё имя останется в деле. Но не путайте обвинение с приговором: последнее слово ещё за судом».",
+      "end": true
+    },
+    "case_001_price_silence_result": {
+      "type": "narrative",
+      "text": "«Вы сдержали договорённость. Часть материалов останется закрытой, а свидетели не окажутся под чужим давлением. Не называйте это оправданием, детектив. Мы оба знаем, что некоторые вопросы так и остались без ответа».",
+      "end": true
+    }
   },
   "npc_anna_holt": {
     "first_meeting": {
