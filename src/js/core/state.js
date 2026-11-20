@@ -5,7 +5,7 @@ import { createEmptySocialGraph, normalizeSocialGraph, upsertSocialTie, appendSo
 import { createEmptyKnowledgeLedger, normalizeKnowledgeLedger, recordNpcKnowledge, updateNpcKnowledgeState, getNpcKnowledge, getNpcKnowledgeContext } from '../systems/npc-knowledge.js';
 import { createEmptyDailyLife, normalizeDailyLife, upsertNpcSchedule, getNpcScheduleAt, recordNpcOccurrence, getNpcOccurrences } from '../systems/npc-daily-life.js';
 import { createEmptyMiniGameProgress, normalizeMiniGameProgress, recordMiniGameResult } from '../systems/minigame-progress.js';
-import { assessFinalEvidence } from '../systems/campaign-progression.js';
+import { assessCampaignDay, assessFinalEvidence } from '../systems/campaign-progression.js';
 
 const INITIAL_CAMPAIGN = Object.freeze({
   caseId: 'case_001',
@@ -109,6 +109,7 @@ export var GameState = {
   setCampaignDay(day) {
     if (!Number.isInteger(day) || day < 1 || day > 5) return false;
     if (this.campaign.completed || day < this.campaign.day || day > this.campaign.day + 1) return false;
+    if (day > this.campaign.day && !assessCampaignDay(this).canAdvance) return false;
     const previousDay = this.campaign.day;
     this.campaign.day = day;
     this._syncCampaignFlags();
