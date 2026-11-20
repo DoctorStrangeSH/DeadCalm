@@ -1,6 +1,7 @@
 import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { Inventory } from '../components/inventory.js';
+import { assessCampaignDay, advanceCampaignWhenReady } from '../systems/campaign-progression.js';
 
 /**
  * Кабинет детектива — главный хаб игры.
@@ -19,6 +20,10 @@ export function render(container) {
     ? 'Попыток: ' + repairProgress.attempts + ' · Лучший ремонт: ' + (repairProgress.bestOutcome === 'success' ? 'без повреждений' : 'с последствиями')
     : 'Ещё не ремонтировали';
   var filmStatus = filmProgress ? 'Попыток: ' + filmProgress.attempts + ' · Лучший результат: ' + filmProgress.bestQuality + '%' : 'Катушка № 014 · ожидает реставрации';
+  var campaignStatus = assessCampaignDay(GameState);
+  var campaignMissing = campaignStatus.missing.length
+    ? '<ul class="campaign-missing">' + campaignStatus.missing.map(item => '<li>— ' + item + '</li>').join('') + '</ul>'
+    : '<p class="text-gray-500 text-xs mt-2">Все условия текущего дня выполнены.</p>';
 
   container.innerHTML = `
     <div class="scene office-scene">
@@ -121,6 +126,21 @@ export function render(container) {
 
       </div>
 
+      <section class="campaign-progress card p-4 mt-5">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="office-kicker">ДЕЛО № 001 · ДЕНЬ ${campaignStatus.day} / 5</p>
+            <h3 class="text-gold text-sm tracking-widest mt-1">${campaignStatus.label}</h3>
+          </div>
+          <span class="text-gray-500 text-xs">${campaignStatus.complete ? "ЗАВЕРШЕНО" : campaignStatus.finaleReady ? "ФИНАЛ" : campaignStatus.canAdvance ? "ГОТОВО" : "В РАБОТЕ"}</span>
+        </div>
+        ${campaignStatus.day < 5 && !campaignStatus.complete ? campaignMissing : ""}
+        ${campaignStatus.finaleReady ? '<p class="text-gray-400 text-sm mt-2">Последняя встреча ждёт вас на старом причале.</p>' : ""}
+        ${campaignStatus.complete ? '<p class="text-gray-400 text-sm mt-2">Сохранённый финал: ' + GameState.campaign.ending + '</p>' : ""}
+        ${campaignStatus.day < 5 && !campaignStatus.complete ? '<button id="btn-advance-day" class="btn-noir w-full py-3 mt-3" ' + (campaignStatus.canAdvance ? "" : "disabled") + '>ЗАВЕРШИТЬ ДЕНЬ ' + campaignStatus.day + ' →</button>' : ""}
+        ${campaignStatus.finaleReady ? '<button id="btn-go-finale" class="btn-noir w-full py-3 mt-3">ОТПРАВИТЬСЯ В ПОРТ →</button>' : ""}
+      </section>
+
       <!-- Статус-бар -->
       <div class="status-bar mt-4 md:mt-8 text-xs md:text-sm">
         <span class="text-gray-500">УЛИКИ: <span class="text-gold">${cluesCount}</span></span>
@@ -136,6 +156,15 @@ export function render(container) {
   `;
 
   // === ОБРАБОТЧИКИ КНОПОК ===
+
+  document.getElementById('btn-advance-day')?.addEventListener('click', function () {
+    const result = advanceCampaignWhenReady(GameState);
+    if (result.advanced) Events.emit('navigate', { scene: 'office' });
+  });
+
+  document.getElementById('btn-go-finale')?.addEventListener('click', function () {
+    Events.emit('navigate', { scene: 'port' });
+  });
 
   // Радиоприёмная — отдельная сенсорная мини-игра
   document.getElementById('btn-radio').addEventListener('click', function () {
@@ -208,7 +237,7 @@ export function render(container) {
           <div class="card p-4 mb-3">
             <p class="card-title">🔪 УБИЙСТВО СУДЬИ ГАРРИСОНА</p>
             <p class="card-subtitle">Дело №001 — активно</p>
-            <p class="text-gray-500 text-xs mt-2">Судья найден мёртвым в зале суда. Ритуальное убийство. Надпись кровью. Связь с делом 20-летней давности.</p>
+            <p class="text-gray-500 text-xs mt-2">Судья найден мёртвым в зале суда. Несовпадение времени, звонок из комнаты секретарей и старое дело Каллиопы.</p>
           </div>
           <p class="text-gray-600 text-xs mb-4">Завершённых дел: 0</p>
           <button class="dialog-btn primary-btn close-cases">ЗАКРЫТЬ</button>
