@@ -9,7 +9,9 @@ import { NPCMemory } from '../systems/npc-memory.js';
  * Позволяет начать новую игру, продолжить сохранённую или открыть настройки.
  */
 export function render(container) {
-  var hasSave = GameState.hasSave();
+  var saveStatus = GameState.saveStatus || (GameState.hasSave() ? 'valid' : 'missing');
+  var hasSave = saveStatus === 'valid';
+  var hasStoredData = saveStatus !== 'missing';
   var saveInfo = '';
 
   // Формируем информацию о сохранении
@@ -73,7 +75,11 @@ export function render(container) {
         <!-- Информация о сохранении -->
         ${hasSave
           ? '<p class="text-center text-gray-600 text-xs mt-6">' + saveInfo + '</p>'
-          : '<p class="text-center text-gray-700 text-xs mt-6">Нет сохранений</p>'
+          : saveStatus === 'corrupt'
+            ? '<p class="text-center text-amber-500 text-xs mt-6" role="alert">Сохранение повреждено. Продолжение недоступно. Начните новую игру, чтобы создать чистое сохранение.</p>'
+            : saveStatus === 'unavailable'
+              ? '<p class="text-center text-amber-500 text-xs mt-6" role="alert">Хранилище сохранений недоступно. Проверьте настройки браузера.</p>'
+              : '<p class="text-center text-gray-700 text-xs mt-6">Нет сохранений</p>'
         }
 
         <!-- Цитата (только на десктопе) -->
@@ -104,8 +110,8 @@ export function render(container) {
     Audio.init();
 
     // Если есть сохранение — спрашиваем подтверждение
-    if (hasSave) {
-      var confirmed = confirm('У вас есть сохранение. Начать новую игру? Весь прогресс будет потерян.');
+    if (hasStoredData) {
+      var confirmed = confirm('В хранилище есть данные сохранения. Начать новую игру? Текущий прогресс будет заменён.');
       if (!confirmed) return;
     }
 
@@ -150,7 +156,13 @@ export function render(container) {
     Audio.init();
 
     // Загружаем сохранённое состояние
-    GameState.init();
+    const loadStatus = GameState.init();
+    if (loadStatus !== 'valid') {
+      alert(loadStatus === 'corrupt'
+        ? 'Сохранение повреждено. Оно не было перезаписано. Начните новую игру, чтобы продолжить.'
+        : 'Не удалось получить доступ к сохранению. Проверьте настройки браузера.');
+      return;
+    }
 
     console.log('[Menu] 📂 Загрузка сохранения...');
     console.log('[Menu]    - Память NPC: ' + Object.keys(GameState.npcMemory).length + ' записей');
