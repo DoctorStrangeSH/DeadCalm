@@ -100,9 +100,9 @@ test('every authored contradiction has two obtainable, day-one sources and a rea
 
   const crimeScene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
   const portScene = readFileSync(new URL('../src/js/scenes/port.js', import.meta.url), 'utf8');
-  const sceneText = crimeScene + '\\n' + portScene;
+  const sceneText = crimeScene + '\n' + portScene;
   const sceneSourceIds = new Set([
-    ...[...sceneText.matchAll(/id:\\s*'([a-z0-9_]+)'/g)].map(match => match[1]),
+    ...[...sceneText.matchAll(/id:\s*'([a-z0-9_]+)'/g)].map(match => match[1]),
     ...[...sceneText.matchAll(/inspect(?:CourtRecord|Orlov|ReaderWitness|WitnessRecord)\(\s*'[^']+'\s*,\s*'([a-z0-9_]+)'/g)].map(match => match[1])
   ]);
 
@@ -119,7 +119,7 @@ test('every authored contradiction has two obtainable, day-one sources and a rea
         rule.id + ' source ' + id + ' must be available during day one');
       const location = locations[clue.location];
       assert.ok(location, id + ' points to an unknown location');
-      const unlock = /^day_(\\d+)$/.exec(location.unlock_condition || '');
+      const unlock = /^day_(\d+)$/.exec(location.unlock_condition || '');
       const unlockDay = location.unlocked === true ? 1 : unlock ? Number(unlock[1]) : Infinity;
       assert.ok(unlockDay <= clue.day, id + ' is locked after its authored evidence day');
     }
