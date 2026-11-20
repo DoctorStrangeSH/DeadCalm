@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assessCampaignDay, advanceCampaignWhenReady, assessFinalEvidence, getCampaignCaseSummary } from '../src/js/systems/campaign-progression.js';
+import { assessCampaignDay, advanceCampaignWhenReady, assessFinalEvidence, buildFinalEvidenceDossier, getCampaignCaseSummary } from '../src/js/systems/campaign-progression.js';
 
 function state(day, clues = []) {
   const found = new Set(clues);
@@ -108,4 +108,38 @@ test('case summary reflects either saved finale using a player-facing label', as
     completedCount: 1,
     endingLabel: 'ЦЕНА МОЛЧАНИЯ'
   });
+});
+
+
+test('final evidence dossier explains both findings and limits without overstating clues', () => {
+  const found = new Map([
+    ['restored_film_frame', { quality: 100 }],
+    ['port_radio_fragment', { quality: 82 }]
+  ]);
+  const game = {
+    hasClue: id => found.has(id),
+    getClue: id => found.get(id) || null
+  };
+  const dossier = buildFinalEvidenceDossier(game);
+  const film = dossier.find(item => item.title === 'Восстановленная плёнка');
+  const radio = dossier.find(item => item.title === 'Радиофрагмент');
+  const autopsy = dossier.find(item => item.title === 'Причина смерти');
+  const poison = dossier.find(item => item.title === 'Источник белладонны');
+
+  assert.match(film.finding, /Себастьян и Каллиопа/);
+  assert.match(film.limit, /не показывает момент убийства/);
+  assert.match(radio.limit, /Голос не идентифицирован/);
+  assert.match(autopsy.limit, /не устанавливает, кто приобрёл яд/);
+  assert.match(poison.limit, /Получатель препарата/);
+  assert.equal(dossier.length, 7);
+});
+
+test('partial film is described as unidentified and does not become proof of identity', () => {
+  const game = {
+    hasClue: id => id === 'restored_film_frame',
+    getClue: () => ({ quality: 70 })
+  };
+  const film = buildFinalEvidenceDossier(game).find(item => item.title === 'Восстановленная плёнка');
+  assert.match(film.finding, /две фигуры/);
+  assert.match(film.limit, /нельзя считать установленными/);
 });
