@@ -10,14 +10,24 @@ export var Storage = {
     }
   },
 
-  load(key) {
+  inspect(key) {
     try {
       var serialized = localStorage.getItem(this.PREFIX + key);
-      return serialized ? JSON.parse(serialized) : null;
+      if (serialized === null) return { status: 'missing', data: null };
+      var data = JSON.parse(serialized);
+      if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        return { status: 'corrupt', data: null, error: new Error('Сохранение должно содержать объект состояния') };
+      }
+      return { status: 'valid', data };
     } catch (error) {
       console.error('[Storage] Ошибка загрузки "' + key + '":', error);
-      return null;
+      return { status: error instanceof SyntaxError ? 'corrupt' : 'unavailable', data: null, error };
     }
+  },
+
+  load(key) {
+    var result = this.inspect(key);
+    return result.status === 'valid' ? result.data : null;
   },
 
   exists(key) {
