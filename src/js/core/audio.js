@@ -39,6 +39,16 @@ export const Audio = {
     }
   },
 
+  _clampVolume(value, fallback = 0.5) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(0, Math.min(1, number)) : fallback;
+  },
+
+  applySettings(settings = {}) {
+    this.setMusicVolume(settings.musicVolume);
+    this.setSfxVolume(settings.sfxVolume);
+  },
+
   /**
    * Установить громкость музыки
    */
