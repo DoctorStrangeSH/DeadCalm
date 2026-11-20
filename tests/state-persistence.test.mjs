@@ -206,3 +206,68 @@ test('GameState.save persists the same complete detached payload as export and r
     Object.assign(GameState, original);
   }
 });
+
+
+test('GameState.init safely repairs malformed nested save sections without discarding valid progress', () => {
+  const originalInspect = Storage.inspect;
+  const original = {
+    player: GameState.player, currentCase: GameState.currentCase, campaign: GameState.campaign,
+    flags: GameState.flags, relationships: GameState.relationships, npcMemory: GameState.npcMemory,
+    socialGraph: GameState.socialGraph, knowledgeLedger: GameState.knowledgeLedger,
+    npcDailyLife: GameState.npcDailyLife, miniGameProgress: GameState.miniGameProgress,
+    notebook: GameState.notebook, settings: GameState.settings, saveStatus: GameState.saveStatus
+  };
+  try {
+    Storage.inspect = () => ({
+      status: 'valid',
+      data: {
+        player: { name: 'Джон', reputation: 72 },
+        campaign: { day: 3, completed: false },
+        flags: ['invalid-flags'],
+        currentCase: {
+          clues: [{ id: 'port_radio_fragment', quality: 88 }, null, { name: 'broken-no-id' }],
+          suspects: [{ id: 'sebastian' }, false],
+          timeline: 'broken',
+          hypotheses: [{ id: 'hyp_port', sourceRefs: ['port_radio_fragment'] }, {}]
+        },
+        relationships: {
+          npc_marta_hayes: { trust: 140, met: true },
+          npc_broken: null
+        },
+        npcMemory: {
+          npc_marta_hayes: { met: true, flags: { promised_help: true }, conversationCount: 3,
+            questionCount: 2, unlockedTopics: ['port'], askedQuestions: ['where'],
+            interviewHistory: [{ id: 'interview_1' }] },
+          npc_broken: 'not-an-object'
+        },
+        notebook: { invalid: true },
+        socialGraph: { ties: 'broken' },
+        knowledgeLedger: null,
+        npcDailyLife: [],
+        miniGameProgress: null
+      }
+    });
+
+    assert.equal(GameState.init(), 'valid');
+    assert.equal(GameState.campaign.day, 3);
+    assert.deepEqual(GameState.currentCase.clues.map(item => item.id), ['port_radio_fragment']);
+    assert.deepEqual(GameState.currentCase.suspects.map(item => item.id), ['sebastian']);
+    assert.deepEqual(GameState.currentCase.timeline, []);
+    assert.deepEqual(GameState.currentCase.hypotheses.map(item => item.id), ['hyp_port']);
+    assert.deepEqual(GameState.flags, { day_2: true, day_3: true });
+    assert.equal(GameState.relationships.npc_marta_hayes.trust, 100);
+    assert.equal(GameState.relationships.npc_marta_hayes.met, true);
+    assert.equal(GameState.npcMemory.npc_marta_hayes.flags.promised_help, true);
+    assert.equal(GameState.npcMemory.npc_marta_hayes.conversationCount, 3);
+    assert.deepEqual(GameState.npcMemory.npc_marta_hayes.interviewHistory, [{ id: 'interview_1' }]);
+    assert.equal(GameState.npcMemory.npc_broken, undefined);
+    assert.deepEqual(GameState.notebook, []);
+    assert.deepEqual(GameState.socialGraph, { ties: [], events: [] });
+    assert.deepEqual(GameState.knowledgeLedger, { entries: [] });
+    assert.deepEqual(GameState.npcDailyLife, { schedules: [], occurrences: [] });
+    assert.deepEqual(GameState.miniGameProgress, {});
+  } finally {
+    Storage.inspect = originalInspect;
+    Object.assign(GameState, original);
+  }
+});
