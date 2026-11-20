@@ -19,7 +19,7 @@ python -m http.server 8000
 
 Затем откройте http://localhost:8000.
 
-Tailwind CSS сейчас подключается с внешнего CDN, поэтому для полного оформления при первом запуске требуется интернет-соединение.
+Tailwind CSS сейчас подключается с внешнего CDN, поэтому для полного оформления при первом запуске требуется интернет-соединение. Service Worker кеширует same-origin ресурсы и две авторские SVG-иконки приложения; полноценный offline-режим не заявляется до ручной проверки браузера.
 
 ## Тесты
 
@@ -42,6 +42,11 @@ CI использует Node.js 22 и запускает ту же команд�
 - `docs/` — спецификация, канон, сюжет и производственные документы.
 
 ## Документы проекта
+
+- [Master Spec 1.0](docs/MASTER_GAME_SPEC_RU.md) — единственный источник границ релиза.
+- [Story Route Audit](docs/STORY_ROUTE_AUDIT_RU.md) — фактический статус кампании и критерии прохождения.
+- [Repository Cleanup](docs/REPOSITORY_CLEANUP_RU.md) — техническая уборка и release QA.
+- [Investigation System Changelog](docs/INVESTIGATION_SYSTEM_CHANGELOG_RU.md) — исторические инженерные заметки, не канон.
 
 Перед изменением игрового scope обязательно сверяйтесь с [главной спецификацией](docs/MASTER_GAME_SPEC_RU.md). История и причинно-следственные связи дела №001 зафиксированы в [Story Bible](docs/CASE_001_STORY_BIBLE_RU.md), а границы канона — в [Canon Ledger](docs/CANON_LEDGER_RU.md).
 
