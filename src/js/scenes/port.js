@@ -58,8 +58,9 @@ function renderEndingChoices(container) {
     <div class="card p-4">
       <p class="text-gold text-sm">ДОКАЗАТЕЛЬСТВА СВЕРЕНЫ</p>
       <p class="text-gray-400 text-sm mt-2">Вы можете передать полную цепочку материалов или заключить компромисс ради защиты части свидетелей. Убийца от этого не меняется; меняется цена решения.</p>
-      <div class="grid gap-2 mt-4">\n        ${publishReady ? '' : '<p class="text-gray-500 text-xs">Для публичного обвинения нужен чётко восстановленный кадр. Компромиссный исход остаётся доступен.</p>'}
-        <button id="btn-ending-open" class="btn-noir py-3" ' + (publishReady ? '' : 'disabled') + '>ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ</button>
+            <div class="grid gap-2 mt-4">
+        ${publishReady ? "" : '<p class="text-gray-500 text-xs">Для публичного обвинения нужен чётко восстановленный кадр. Компромиссный исход остаётся доступен.</p>'}
+        <button id="btn-ending-open" class="btn-noir py-3" ${publishReady ? "" : "disabled"}>ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ</button>
         <button id="btn-ending-silence" class="btn-noir py-3">ЗАКЛЮЧИТЬ СДЕЛКУ</button>
       </div>
     </div>
