@@ -1,8 +1,10 @@
-const CACHE_NAME = 'dead-calm-visual-v102';
+const CACHE_NAME = 'dead-calm-visual-v103';
 const ASSETS = [
   "/",
   "/index.html",
   "/manifest.json",
+  "/assets/icons/icon-192.svg",
+  "/assets/icons/icon-512.svg",
   "/src/assets/backgrounds/blackford-city-atlas.webp",
   "/src/assets/backgrounds/blackford-courtroom.webp",
   "/src/assets/backgrounds/blackford-harbor.webp",
