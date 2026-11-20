@@ -18,14 +18,16 @@ const DAY_REQUIREMENTS = {
   3: {
     label: 'Проверка версии Блэквуда',
     all: [
-      ['port_cargo_ledger', 'Портовая книга грузов']
+      ['port_cargo_ledger', 'Копия портовой книги от Блэквуда'],
+    ['port_cargo_ledger_archive', 'Независимый архивный экземпляр портовой книги']
     ]
   },
   4: {
     label: 'Подготовка финального предъявления',
     all: [
       ['anna_markus_items', 'Вещи Маркуса от Анны'],
-      ['belladonna_invoice', 'Счёт за экстракт белладонны']
+      ['belladonna_invoice', 'Счёт за экстракт белладонны'],
+      ['port_cargo_ledger_archive', 'Независимый архивный экземпляр грузовой книги']
     ],
     any: [
       ['restored_film_frame', 'Восстановленный кадр плёнки'],
