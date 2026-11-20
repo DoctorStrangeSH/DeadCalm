@@ -6,6 +6,7 @@ import { createEmptyKnowledgeLedger, normalizeKnowledgeLedger, recordNpcKnowledg
 import { createEmptyDailyLife, normalizeDailyLife, upsertNpcSchedule, getNpcScheduleAt, recordNpcOccurrence, getNpcOccurrences } from '../systems/npc-daily-life.js';
 import { createEmptyMiniGameProgress, normalizeMiniGameProgress, recordMiniGameResult } from '../systems/minigame-progress.js';
 import { DEFAULT_SETTINGS, normalizeSettings } from '../systems/settings.js';
+import { assessFinalEvidence } from '../systems/campaign-progression.js';
 
 const INITIAL_CAMPAIGN = Object.freeze({
   caseId: 'case_001',
@@ -138,6 +139,9 @@ export var GameState = {
   completeCampaign(ending) {
     if (this.campaign.completed || this.campaign.day !== 5) return false;
     if (!['open_case', 'price_of_silence'].includes(ending)) return false;
+    const evidence = assessFinalEvidence(this);
+    if (!evidence.ready) return false;
+    if (ending === 'open_case' && !evidence.publicReady) return false;
     this.campaign.completed = true;
     this.campaign.ending = ending;
     this.save();
