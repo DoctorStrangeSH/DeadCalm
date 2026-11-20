@@ -14,7 +14,6 @@ const markusStatement = {
   connections_to: ['old_case_details', 'restored_film_frame', 'port_cargo_ledger']
 };
 
-function hasCoreEvidence() {\n  return assessFinalEvidence(GameState).ready;\n}\n
 function renderEnding(container, ending) {
   const openCase = ending === 'open_case';
   container.querySelector('#story-location-result').innerHTML = `
