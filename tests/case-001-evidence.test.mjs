@@ -19,6 +19,7 @@ test('radio evidence preserves the difference between clear and fragmented recep
   assert.match(clear.description, /установить личность/);
   assert.match(partial.description, /не идентифицирован/);
   assert.equal(partial.quality, 68);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 99 })?.id, 'port_radio_fragment');
 });
 
 test('film evidence distinguishes a clear identification from a partial frame', () => {
