@@ -95,3 +95,18 @@ test('final accusation requires independent medical, meeting, poison, archive an
   assert.equal(result.ready, false);
   assert.ok(result.missing.includes('Счёт за белладонну'));
 });
+
+
+test('Markus confession is not a substitute for independent final evidence', () => {
+  const found = new Set(['markus_statement']);
+  const game = { hasClue: id => found.has(id), getClue: () => null };
+  const result = assessFinalEvidence(game);
+  assert.equal(result.ready, false);
+  assert.equal(result.publicReady, false);
+  assert.equal(result.missing.length, 7,
+    'the confession cannot replace six mandatory records and an independent film/radio source');
+  found.add('restored_film_frame');
+  const stillIncomplete = assessFinalEvidence(game);
+  assert.equal(stillIncomplete.ready, false);
+  assert.ok(stillIncomplete.missing.some(item => item.includes('Заключение Лидии')));
+});
