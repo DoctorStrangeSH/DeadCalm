@@ -385,6 +385,7 @@ export var GameState = {
   export() {
     return {
       player: Object.assign({}, this.player),
+      campaign: Object.assign({}, this.campaign),
       currentCase: {
         id: this.currentCase.id,
         clues: this.currentCase.clues.slice(),
