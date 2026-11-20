@@ -81,3 +81,20 @@ export function assessFinalEvidence(gameState) {
   const filmQuality = Number(gameState.getClue?.('restored_film_frame')?.quality || 0);
   return { ready: missing.length === 0, publicReady: missing.length === 0 && filmQuality >= 95, missing, filmQuality };
 }
+
+export function getCampaignCaseSummary(gameState) {
+  const completed = Boolean(gameState?.campaign?.completed);
+  const ending = gameState?.campaign?.ending;
+  const endingLabel = ending === 'open_case'
+    ? 'ОТКРЫТОЕ ДЕЛО'
+    : ending === 'price_of_silence'
+      ? 'ЦЕНА МОЛЧАНИЯ'
+      : null;
+
+  return {
+    completed,
+    activeCount: completed ? 0 : 1,
+    completedCount: completed ? 1 : 0,
+    endingLabel: completed ? endingLabel : null
+  };
+}
