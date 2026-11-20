@@ -46,6 +46,7 @@ export var GameState = {
   npcDailyLife: createEmptyDailyLife(),
   miniGameProgress: createEmptyMiniGameProgress(),
   notebook: [],
+  saveStatus: 'missing',
 
   settings: {
     musicVolume: 0.5,
@@ -54,7 +55,9 @@ export var GameState = {
   },
 
   init() {
-    var saved = Storage.load('gameState');
+    const loadResult = Storage.inspect('gameState');
+    this.saveStatus = loadResult.status;
+    const saved = loadResult.status === 'valid' ? loadResult.data : null;
     if (saved) {
       this.player = saved.player || this.player;
       this.currentCase = saved.currentCase || this.currentCase;
@@ -74,9 +77,23 @@ export var GameState = {
       console.log('[State] - clues: ' + this.currentCase.clues.length);
       console.log('[State] - notebook: ' + this.notebook.length);
     } else {
+      this.player = { name: 'Джон Риверс', reputation: 50 };
+      this.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
       this.campaign = { ...INITIAL_CAMPAIGN };
-      console.log('[State] Новое состояние (без сохранения)');
+      this.flags = {};
+      this.relationships = {};
+      this.npcMemory = {};
+      this.socialGraph = createEmptySocialGraph();
+      this.knowledgeLedger = createEmptyKnowledgeLedger();
+      this.npcDailyLife = createEmptyDailyLife();
+      this.miniGameProgress = createEmptyMiniGameProgress();
+      this.notebook = [];
+      this.settings = { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
+      console.log(this.saveStatus === 'missing'
+        ? '[State] Новое состояние (без сохранения)'
+        : '[State] Сохранение недоступно; данные не перезаписаны: ' + this.saveStatus);
     }
+    return this.saveStatus;
   },
 
   update(key, value) {
