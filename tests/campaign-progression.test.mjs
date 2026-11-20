@@ -32,6 +32,8 @@ test('day three requires a port ledger source, not only a conversation', () => {
   assert.equal(assessCampaignDay(game).canAdvance, false);
   game.hasClue = id => id === 'port_cargo_ledger';
   assert.equal(assessCampaignDay(game).canAdvance, true);
+  game.hasClue = id => id === 'port_cargo_ledger_archive';
+  assert.equal(assessCampaignDay(game).canAdvance, false, 'archive verification alone does not replace Sebastian’s copy');
 });
 
 test('day four accepts either restored film or radio fragment as an independent source', () => {
@@ -83,6 +85,11 @@ test('final accusation requires independent medical, meeting, poison, archive an
   result = assessFinalEvidence(game);
   assert.equal(result.ready, true);
   assert.equal(result.publicReady, true);
+  found.delete('port_cargo_ledger_archive');
+  result = assessFinalEvidence(game);
+  assert.equal(result.ready, false, 'the suspect copy cannot replace independent archive verification');
+  assert.ok(result.missing.includes('Независимый архивный экземпляр портовой книги'));
+  found.set('port_cargo_ledger_archive', {});
   found.delete('belladonna_invoice');
   result = assessFinalEvidence(game);
   assert.equal(result.ready, false);
