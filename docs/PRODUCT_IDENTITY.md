@@ -22,7 +22,11 @@ These are recognizable Ghost Signal pillars. Dead Calm must not simply reproduce
 
 ## Dead Calm direction
 
-Dead Calm's current development work has established a different emphasis: persistent character state and continuity across the fictional community. Its implemented foundations include:
+The owner has explicitly approved a stronger detective identity for Dead Calm 1.0. The first release is a character-driven noir investigation: one authored murder case, a carefully constructed evidence trail, unreliable and incomplete testimony, and personal consequences that persist beyond the scene. The player should feel like a detective, but the experience must not become a clone of Ghost Signal's terminal-style case loop.
+
+The existing first courtroom investigation is retained as a single, authored case-specific sequence. Its 61 clues and provenance checks are valuable because they teach the player not to confuse a record with a person or a hypothesis with a fact. This is not permission to repeat the same clue-board structure in every future case.
+
+Dead Calm's differentiating foundation remains persistent character state and continuity across the fictional community. Its implemented foundations include:
 - NPC-to-NPC social ties, separate from player-to-NPC trust;
 - attributed NPC knowledge with explicit provenance and uncertainty;
 - authored NPC schedules in in-game time;
@@ -53,6 +57,7 @@ Prioritize mechanics that grow naturally from its established persistent-charact
 - Characters remember promises, favors, betrayals, absences, and unresolved personal consequences.
 - Schedules and off-screen occurrences create continuity, not a map-based checklist.
 - The player encounters consequences through authored scenes, character behavior, environmental aftermath, and narrative timing.
+- The first case may use a detailed, authored crime-scene evidence sequence; future cases are free to use different interactions and must not inherit this sequence by default.
 - The same event can affect different characters differently because they have different histories and knowledge.
 - Choices should change relationships, obligations, access, trust, and future character decisions—not merely add/remove evidence tokens.
 
