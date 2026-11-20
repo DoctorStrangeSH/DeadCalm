@@ -5,43 +5,68 @@ export var Storage = {
     try {
       var serialized = JSON.stringify(data);
       localStorage.setItem(this.PREFIX + key, serialized);
+      return true;
     } catch (error) {
       console.error('[Storage] Ошибка сохранения "' + key + '":', error);
+      return false;
+    }
+  },
+
+  inspect(key) {
+    try {
+      var serialized = localStorage.getItem(this.PREFIX + key);
+      if (serialized === null) return { status: 'missing', data: null };
+      var data = JSON.parse(serialized);
+      if (!data || typeof data !== 'object' || Array.isArray(data)) {
+        return { status: 'corrupt', data: null, error: new Error('Сохранение должно содержать объект состояния') };
+      }
+      return { status: 'valid', data };
+    } catch (error) {
+      console.error('[Storage] Ошибка загрузки "' + key + '":', error);
+      return { status: error instanceof SyntaxError ? 'corrupt' : 'unavailable', data: null, error };
     }
   },
 
   load(key) {
-    try {
-      var serialized = localStorage.getItem(this.PREFIX + key);
-      return serialized ? JSON.parse(serialized) : null;
-    } catch (error) {
-      console.error('[Storage] Ошибка загрузки "' + key + '":', error);
-      return null;
-    }
+    var result = this.inspect(key);
+    return result.status === 'valid' ? result.data : null;
   },
 
   exists(key) {
-    return localStorage.getItem(this.PREFIX + key) !== null;
+    try {
+      return localStorage.getItem(this.PREFIX + key) !== null;
+    } catch (error) {
+      console.error('[Storage] Не удалось проверить сохранение "' + key + '":', error);
+      return false;
+    }
   },
 
   remove(key) {
-    localStorage.removeItem(this.PREFIX + key);
+    try {
+      localStorage.removeItem(this.PREFIX + key);
+      return true;
+    } catch (error) {
+      console.error('[Storage] Не удалось удалить сохранение "' + key + '":', error);
+      return false;
+    }
   },
 
   /**
    * Очистить ВСЕ данные игры
    */
   clearAll() {
-    var keysToRemove = [];
-    for (var i = 0; i < localStorage.length; i++) {
-      var key = localStorage.key(i);
-      if (key && key.startsWith(this.PREFIX)) {
-        keysToRemove.push(key);
+    try {
+      var keysToRemove = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        if (key && key.startsWith(this.PREFIX)) keysToRemove.push(key);
       }
+      keysToRemove.forEach(function(key) { localStorage.removeItem(key); });
+      console.log('[Storage] Удалено сохранений: ' + keysToRemove.length);
+      return true;
+    } catch (error) {
+      console.error('[Storage] Не удалось очистить сохранения:', error);
+      return false;
     }
-    keysToRemove.forEach(function(key) {
-      localStorage.removeItem(key);
-    });
-    console.log('[Storage] Удалено сохранений: ' + keysToRemove.length);
   }
 };

@@ -2,6 +2,7 @@ import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { Inventory } from '../components/inventory.js';
 import { assessCampaignDay, advanceCampaignWhenReady } from '../systems/campaign-progression.js';
+import { getPendingCampaignDaySummary, dismissCampaignDaySummary } from '../systems/campaign-day-summary.js';
 
 /**
  * Кабинет детектива — главный хаб игры.
@@ -21,6 +22,25 @@ export function render(container) {
     : 'Ещё не ремонтировали';
   var filmStatus = filmProgress ? 'Попыток: ' + filmProgress.attempts + ' · Лучший результат: ' + filmProgress.bestQuality + '%' : 'Катушка № 014 · ожидает реставрации';
   var campaignStatus = assessCampaignDay(GameState);
+  var pendingDaySummary = getPendingCampaignDaySummary(GameState);
+  var daySummaryMarkup = pendingDaySummary ? `
+    <section id="campaign-day-summary" class="campaign-progress card p-4 mt-4" aria-labelledby="campaign-day-summary-title">
+      <p class="office-kicker">ИТОГ ДНЯ ${pendingDaySummary.day} / 5</p>
+      <h3 id="campaign-day-summary-title" class="text-gold text-sm tracking-widest mt-1">${pendingDaySummary.title}</h3>
+      <div class="mt-3">
+        <p class="text-gray-300 text-xs tracking-widest">УСТАНОВЛЕНО</p>
+        <ul class="campaign-missing">${pendingDaySummary.established.map(item => '<li>— ' + item + '</li>').join('')}</ul>
+      </div>
+      <div class="mt-3">
+        <p class="text-gray-300 text-xs tracking-widest">ОПРОВЕРГНУТО</p>
+        <ul class="campaign-missing">${pendingDaySummary.refuted.map(item => '<li>— ' + item + '</li>').join('')}</ul>
+      </div>
+      <div class="mt-3">
+        <p class="text-gray-300 text-xs tracking-widest">ПОКА НЕИЗВЕСТНО</p>
+        <ul class="campaign-missing">${pendingDaySummary.unknown.map(item => '<li>— ' + item + '</li>').join('')}</ul>
+      </div>
+      <button id="btn-dismiss-day-summary" class="btn-noir w-full py-3 mt-4">ПРОДОЛЖИТЬ</button>
+    </section>` : '';
   var campaignMissing = campaignStatus.missing.length
     ? '<ul class="campaign-missing">' + campaignStatus.missing.map(item => '<li>— ' + item + '</li>').join('') + '</ul>'
     : '<p class="text-gray-500 text-xs mt-2">Все условия текущего дня выполнены.</p>';
@@ -140,6 +160,7 @@ export function render(container) {
         ${campaignStatus.day < 5 && !campaignStatus.complete ? '<button id="btn-advance-day" class="btn-noir w-full py-3 mt-3" ' + (campaignStatus.canAdvance ? "" : "disabled") + '>ЗАВЕРШИТЬ ДЕНЬ ' + campaignStatus.day + ' →</button>' : ""}
         ${campaignStatus.finaleReady ? '<button id="btn-go-finale" class="btn-noir w-full py-3 mt-3">ОТПРАВИТЬСЯ В ПОРТ →</button>' : ""}
       </section>
+      ${daySummaryMarkup}
 
       <!-- Статус-бар -->
       <div class="status-bar mt-4 md:mt-8 text-xs md:text-sm">
@@ -160,6 +181,11 @@ export function render(container) {
   document.getElementById('btn-advance-day')?.addEventListener('click', function () {
     const result = advanceCampaignWhenReady(GameState);
     if (result.advanced) Events.emit('navigate', { scene: 'office' });
+  });
+
+  document.getElementById('btn-dismiss-day-summary')?.addEventListener('click', function () {
+    dismissCampaignDaySummary(GameState, pendingDaySummary.day);
+    Events.emit('navigate', { scene: 'office' });
   });
 
   document.getElementById('btn-go-finale')?.addEventListener('click', function () {

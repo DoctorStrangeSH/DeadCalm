@@ -9,7 +9,9 @@ import { NPCMemory } from '../systems/npc-memory.js';
  * Позволяет начать новую игру, продолжить сохранённую или открыть настройки.
  */
 export function render(container) {
-  var hasSave = GameState.hasSave();
+  var saveStatus = GameState.saveStatus || (GameState.hasSave() ? 'valid' : 'missing');
+  var hasSave = saveStatus === 'valid';
+  var hasStoredData = saveStatus !== 'missing';
   var saveInfo = '';
 
   // Формируем информацию о сохранении
@@ -73,7 +75,11 @@ export function render(container) {
         <!-- Информация о сохранении -->
         ${hasSave
           ? '<p class="text-center text-gray-600 text-xs mt-6">' + saveInfo + '</p>'
-          : '<p class="text-center text-gray-700 text-xs mt-6">Нет сохранений</p>'
+          : saveStatus === 'corrupt'
+            ? '<p class="text-center text-amber-500 text-xs mt-6" role="alert">Сохранение повреждено. Продолжение недоступно. Начните новую игру, чтобы создать чистое сохранение.</p>'
+            : saveStatus === 'unavailable'
+              ? '<p class="text-center text-amber-500 text-xs mt-6" role="alert">Хранилище сохранений недоступно. Проверьте настройки браузера.</p>'
+              : '<p class="text-center text-gray-700 text-xs mt-6">Нет сохранений</p>'
         }
 
         <!-- Цитата (только на десктопе) -->
@@ -101,11 +107,11 @@ export function render(container) {
    */
   document.getElementById('btn-new-game').addEventListener('click', function() {
     // Инициализируем аудио (требуется взаимодействие пользователя)
-    Audio.init();
+    Audio.init(GameState.settings);
 
     // Если есть сохранение — спрашиваем подтверждение
-    if (hasSave) {
-      var confirmed = confirm('У вас есть сохранение. Начать новую игру? Весь прогресс будет потерян.');
+    if (hasStoredData) {
+      var confirmed = confirm('В хранилище есть данные сохранения. Начать новую игру? Текущий прогресс будет заменён.');
       if (!confirmed) return;
     }
 
@@ -146,11 +152,16 @@ export function render(container) {
     // Если нет сохранения — кнопка не работает
     if (!hasSave) return;
 
-    // Инициализируем аудио
-    Audio.init();
-
-    // Загружаем сохранённое состояние
-    GameState.init();
+    // Сначала восстанавливаем сохранённые настройки, затем запускаем аудиосистему.
+    const loadStatus = GameState.init();
+    if (loadStatus !== 'valid') {
+      alert(loadStatus === 'corrupt'
+        ? 'Сохранение повреждено. Оно не было перезаписано. Начните новую игру, чтобы продолжить.'
+        : 'Не удалось получить доступ к сохранению. Проверьте настройки браузера.');
+      return;
+    }
+    Audio.init(GameState.settings);
+    Audio.applySettings(GameState.settings);
 
     console.log('[Menu] 📂 Загрузка сохранения...');
     console.log('[Menu]    - Память NPC: ' + Object.keys(GameState.npcMemory).length + ' записей');
@@ -163,25 +174,11 @@ export function render(container) {
 
   /**
    * Кнопка «Настройки»
-   * Показывает информационное окно (в будущем — полноценные настройки)
+   * Открывает отдельный экран игровых параметров
    */
   document.getElementById('btn-settings').addEventListener('click', function() {
-    Audio.init();
-
-    // Пока что просто информационное окно
-    var message = '🎮 НАСТРОЙКИ\n\n';
-    message += 'Полноценные настройки появятся в следующих обновлениях.\n\n';
-    message += 'Текущее состояние игры:\n';
-    message += '• NPC в памяти: ' + Object.keys(GameState.npcMemory).length + '\n';
-    message += '• Улик собрано: ' + GameState.currentCase.clues.length + '\n';
-    message += '• Заметок в дневнике: ' + (GameState.notebook ? GameState.notebook.length : 0) + '\n';
-    message += '• Флагов установлено: ' + Object.keys(GameState.flags).length + '\n\n';
-    message += 'Планируется:\n';
-    message += '• Громкость музыки и звуков\n';
-    message += '• Скорость текста\n';
-    message += '• Язык интерфейса\n';
-    message += '• Сброс прогресса';
-
-    alert(message);
+    Audio.init(GameState.settings);
+    Audio.applySettings(GameState.settings);
+    Events.emit('navigate', { scene: 'settings' });
   });
 }

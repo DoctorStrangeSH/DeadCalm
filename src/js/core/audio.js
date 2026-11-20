@@ -16,7 +16,7 @@ export const Audio = {
   /**
    * Инициализация (должна быть вызвана после взаимодействия пользователя)
    */
-  init() {
+  init(settings = {}) {
     if (this._initialized) return;
 
     try {
@@ -26,9 +26,11 @@ export const Audio = {
 
       this._musicGain = this._ctx.createGain();
       this._musicGain.connect(this._masterGain);
+      this._musicGain.gain.value = this._clampVolume(settings.musicVolume, 0.5);
 
       this._sfxGain = this._ctx.createGain();
       this._sfxGain.connect(this._masterGain);
+      this._sfxGain.gain.value = this._clampVolume(settings.sfxVolume, 0.7);
 
       this._initialized = true;
       console.log('[Audio] Инициализирован');
@@ -37,12 +39,22 @@ export const Audio = {
     }
   },
 
+  _clampVolume(value, fallback = 0.5) {
+    const number = Number(value);
+    return Number.isFinite(number) ? Math.max(0, Math.min(1, number)) : fallback;
+  },
+
+  applySettings(settings = {}) {
+    this.setMusicVolume(settings.musicVolume);
+    this.setSfxVolume(settings.sfxVolume);
+  },
+
   /**
    * Установить громкость музыки
    */
   setMusicVolume(value) {
     if (this._musicGain) {
-      this._musicGain.gain.value = Math.max(0, Math.min(1, value));
+      this._musicGain.gain.value = this._clampVolume(value, 0.5);
     }
   },
 
@@ -51,7 +63,7 @@ export const Audio = {
    */
   setSfxVolume(value) {
     if (this._sfxGain) {
-      this._sfxGain.gain.value = Math.max(0, Math.min(1, value));
+      this._sfxGain.gain.value = this._clampVolume(value, 0.7);
     }
   },
 

@@ -525,3 +525,34 @@ body { background:#071015; color:#d3d5cc; }
 .npc-dossier p { margin:0; color:#b9c1b8; font-size:11px; line-height:1.5; }
 .npc-dossier strong { color:#d4b77e; font:600 9px Georgia,serif; letter-spacing:.08em; }
 .npc-dossier p:last-child { padding-top:7px; border-top:1px solid #34413d; color:#899b92; font-style:italic; }
+
+
+/* Functional settings screen — restrained Blackford archive aesthetic. */
+.settings-scene { overflow-y:auto; background:radial-gradient(ellipse at 50% 0%,#233236 0%,#10191c 48%,#080d0f 100%); }
+.settings-panel { margin:auto; padding:clamp(22px,5vw,48px); border:1px solid #665b43; background:linear-gradient(145deg,#182326ee,#0d1416f5); box-shadow:0 24px 70px #0009,inset 0 1px #ffffff12; }
+.settings-eyebrow { margin:0 0 12px; color:#a99770; font:10px 'Courier New',monospace; letter-spacing:.2em; }
+.settings-heading { margin:0; color:#e0c896; font:clamp(27px,5vw,42px) Georgia,serif; letter-spacing:.16em; }
+.settings-intro { max-width:520px; margin:12px 0 30px; color:#9da9a3; font-size:13px; line-height:1.65; }
+.settings-section { padding:20px 0; border-top:1px solid #35413e; }
+.settings-section-title { margin:0 0 18px; color:#c5a978; font:11px 'Courier New',monospace; letter-spacing:.18em; }
+.settings-control { display:flex; align-items:center; justify-content:space-between; gap:22px; padding:14px 0; }
+.settings-control-copy { display:grid; gap:5px; }
+.settings-control-title { color:#e0ded2; font:15px Georgia,serif; }
+.settings-control-description { color:#87958e; font-size:11px; line-height:1.45; }
+.settings-range-wrap { display:flex; align-items:center; gap:12px; width:min(48%,260px); }
+.settings-range { width:100%; accent-color:#c5a572; cursor:pointer; }
+.settings-range-wrap output { min-width:42px; color:#d4bd91; text-align:right; font:11px 'Courier New',monospace; }
+.settings-select { min-width:140px; padding:9px 12px; border:1px solid #62583f; border-radius:0; color:#e1d5b7; background:#111b1d; font:12px Georgia,serif; }
+.settings-select:focus-visible,.settings-range:focus-visible,.settings-back:focus-visible { outline:2px solid #e6c98e; outline-offset:3px; }
+.settings-footer { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-top:22px; border-top:1px solid #35413e; }
+.settings-footer [role=status] { color:#819087; font:10px 'Courier New',monospace; line-height:1.5; }
+.settings-back { padding:12px 16px; font-size:10px; white-space:nowrap; }
+@media(max-width:560px) {
+  .settings-control { align-items:stretch; flex-direction:column; gap:12px; }
+  .settings-range-wrap { width:100%; }
+  .settings-select { width:100%; }
+  .settings-footer { align-items:stretch; flex-direction:column; }
+  .settings-back { width:100%; }
+}
+
+.settings-audio-note { margin:-6px 0 10px; padding:10px 12px; border-left:2px solid #746346; background:#111b1d; color:#9da69b; font-size:11px; line-height:1.5; }

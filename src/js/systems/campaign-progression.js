@@ -18,14 +18,15 @@ const DAY_REQUIREMENTS = {
   3: {
     label: 'Проверка версии Блэквуда',
     all: [
-      ['port_cargo_ledger', 'Портовая книга грузов']
+      ['port_cargo_ledger', 'Копия портовой книги от Блэквуда']
     ]
   },
   4: {
     label: 'Подготовка финального предъявления',
     all: [
       ['anna_markus_items', 'Вещи Маркуса от Анны'],
-      ['belladonna_invoice', 'Счёт за экстракт белладонны']
+      ['belladonna_invoice', 'Счёт за экстракт белладонны'],
+      ['port_cargo_ledger_archive', 'Независимый архивный экземпляр грузовой книги']
     ],
     any: [
       ['restored_film_frame', 'Восстановленный кадр плёнки'],
@@ -64,7 +65,9 @@ export function assessCampaignDay(gameState) {
 export function advanceCampaignWhenReady(gameState) {
   const status = assessCampaignDay(gameState);
   if (!status.canAdvance) return { advanced: false, status };
-  return { advanced: Boolean(gameState.advanceCampaignDay()), status };
+  const advanced = Boolean(gameState.advanceCampaignDay());
+  if (advanced) gameState.setFlag?.('campaign_day_summary_pending_' + status.day, true);
+  return { advanced, status };
 }
 
 export function assessFinalEvidence(gameState) {
@@ -73,7 +76,8 @@ export function assessFinalEvidence(gameState) {
     ['judge_appointment_card', 'Карточка встречи с Гаррисоном'],
     ['belladonna_invoice', 'Счёт за белладонну'],
     ['matthews_letter', 'Письмо Мэтьюса'],
-    ['port_cargo_ledger', 'Портовая книга грузов']
+    ['port_cargo_ledger', 'Копия портовой книги от Блэквуда'],
+    ['port_cargo_ledger_archive', 'Независимый архивный экземпляр портовой книги']
   ];
   const missing = required.filter(([id]) => !gameState.hasClue(id)).map(([, label]) => label);
   const hasIndependentRecord = gameState.hasClue('restored_film_frame') || gameState.hasClue('port_radio_fragment');

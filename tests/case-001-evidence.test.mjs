@@ -10,12 +10,16 @@ test('watch repair rewards its hidden key only after a successful repair', () =>
 });
 
 test('radio evidence preserves the difference between clear and fragmented reception', () => {
-  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'noise', quality: 20 }), null);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'unreadable', quality: 67 }), null);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 67 }), null);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 91 }), null);
   const clear = buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 92 });
-  const partial = buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 56 });
+  const partial = buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 68 });
   assert.equal(clear.id, 'port_radio_fragment');
   assert.match(clear.description, /установить личность/);
   assert.match(partial.description, /не идентифицирован/);
+  assert.equal(partial.quality, 68);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 99 })?.id, 'port_radio_fragment');
 });
 
 test('film evidence distinguishes a clear identification from a partial frame', () => {

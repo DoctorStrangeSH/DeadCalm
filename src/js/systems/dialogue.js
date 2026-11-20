@@ -3,6 +3,8 @@ import { Events } from '../core/events.js';
 import { NPCMemory } from './npc-memory.js';
 import { resolveDialogueReaction } from './dialogue-reactions.js';
 import { hasDiscoveredContradiction } from './contradictions.js';
+import { claimCriticalDialogueChoice, findPendingCriticalDialogueNode } from './critical-dialogue-choice.js';
+import { canSelectDialogueTopic, canAskDialogueQuestion } from './dialogue-access.js';
 
 export var DialogueEngine = {
   _dialogues: null,
@@ -113,6 +115,27 @@ export var DialogueEngine = {
     // ПОВТОРНАЯ ВСТРЕЧА
     console.log('[Dialogue] Повторная встреча');
 
+    // Если игрок сохранился или закрыл игру посреди решающего выбора,
+    // возвращаем незавершённый вопрос вместо потери обязательного решения.
+    var pendingCritical = findPendingCriticalDialogueNode(npcData, NPCMemory, npcId);
+    if (pendingCritical) {
+      return this._formatCriticalChoice(pendingCritical.node);
+    }
+
+    // Однократная реакция на прошлый выбор: NPC помнит поступок и отвечает на него при следующей встрече.
+    var returnReaction = (npcData.return_dialogues || []).find(function(entry) {
+      return entry && entry.requires_flag && entry.seen_flag && entry.node &&
+        NPCMemory.hasFlag(npcId, entry.requires_flag) &&
+        !NPCMemory.hasFlag(npcId, entry.seen_flag) &&
+        npcData[entry.node]?.text;
+    });
+    if (returnReaction) {
+      var reactionNode = this._formatSimpleNode(npcData[returnReaction.node], npcId);
+      // Mark the reaction as seen only after the player acknowledges it in the UI.
+      reactionNode.returnReactionSeenFlag = returnReaction.seen_flag;
+      return reactionNode;
+    }
+
     // Проверяем доступные темы
     var availableTopics = this._getAvailableTopics(npcData);
     console.log('[Dialogue] Доступные темы: ' + availableTopics.length);
@@ -201,7 +224,7 @@ export var DialogueEngine = {
     if (!npcData) return null;
 
     var topic = npcData.topics?.[topicId];
-    if (!topic) {
+    if (!topic || !canSelectDialogueTopic(topicId, this._unlockedTopics)) {
       console.warn('[Dialogue] Тема не найдена: ' + topicId);
       return null;
     }
@@ -231,18 +254,22 @@ export var DialogueEngine = {
 
     // Ищем ответ
     var foundResponse = null;
+    var foundTopicId = null;
     for (var topicId in npcData.topics) {
       var topic = npcData.topics[topicId];
       if (topic.responses) {
         var response = topic.responses.find(function(r) { return r.id === questionId; });
         if (response) {
           foundResponse = response;
+          foundTopicId = topicId;
           break;
         }
       }
     }
 
-    if (!foundResponse || !this._isResponseAvailable(foundResponse)) {
+    if (!canAskDialogueQuestion({ topicId: foundTopicId, unlockedTopics: this._unlockedTopics,
+      askedQuestions: this._askedQuestions, response: foundResponse,
+      isAvailable: response => this._isResponseAvailable(response) })) {
       console.warn('[Dialogue] Ответ не найден для вопроса: ' + questionId);
       return null;
     }
@@ -291,6 +318,12 @@ export var DialogueEngine = {
       if (node.choices && node.trigger_question) {
         var choice = node.choices.find(function(c) { return c.id === choiceId; });
         if (choice) {
+          var nextNode = npcData[choice.next_dialogue];
+          if (!nextNode || !claimCriticalDialogueChoice(NPCMemory, this._currentNPC, key)) {
+            console.warn('[Dialogue] Критический выбор уже разрешён или не был открыт: ' + choiceId);
+            return null;
+          }
+
           console.log('[Dialogue] Критический выбор: ' + choiceId);
           var trustBefore = NPCMemory.getTrust(this._currentNPC);
 
@@ -304,7 +337,6 @@ export var DialogueEngine = {
             NPCMemory.clearFlag(this._currentNPC, choice.memory_clear);
           }
 
-          var nextNode = npcData[choice.next_dialogue];
           if (nextNode) {
             var addedNote = nextNode.adds_note && this._addToNotebook(nextNode.adds_note)
               ? nextNode.adds_note : null;
@@ -332,6 +364,13 @@ export var DialogueEngine = {
       }
     }
     return null;
+  },
+
+  acknowledgeReturnReaction(seenFlag) {
+    if (!this._currentNPC || typeof seenFlag !== 'string' || !seenFlag) return false;
+    if (NPCMemory.hasFlag(this._currentNPC, seenFlag)) return false;
+    NPCMemory.setFlag(this._currentNPC, seenFlag);
+    return true;
   },
 
   backToTopics() {
