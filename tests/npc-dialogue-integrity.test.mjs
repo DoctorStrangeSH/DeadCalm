@@ -28,6 +28,7 @@ test('all six case NPCs have matching character profiles and a complete first me
 
 test('NPC dialogue response IDs are unique and every dependency resolves', () => {
   const responseIds = new Set();
+  const allResponses = [];
   const contradictionIds = new Set(contradictions.map(rule => rule.id));
   for (const [npcId, npc] of Object.entries(dialogues)) {
     for (const [topicId, topic] of Object.entries(npc.topics || {})) {
@@ -36,6 +37,7 @@ test('NPC dialogue response IDs are unique and every dependency resolves', () =>
         assert.ok(response.id, npcId + '/' + topicId + ' response needs an id');
         assert.ok(!responseIds.has(response.id), 'duplicate response id: ' + response.id);
         responseIds.add(response.id);
+        allResponses.push(response);
         if (response.gives_clue) assert.ok(clues[response.gives_clue], response.id + ' gives missing clue ' + response.gives_clue);
         if (response.requires_clue) assert.ok(clues[response.requires_clue], response.id + ' requires missing clue ' + response.requires_clue);
         if (response.requires_contradiction) {
@@ -46,6 +48,11 @@ test('NPC dialogue response IDs are unique and every dependency resolves', () =>
             response.id + ' has invalid trust threshold');
         }
       }
+    }
+  }
+  for (const response of allResponses) {
+    if (response.requires_question) {
+      assert.ok(responseIds.has(response.requires_question), response.id + ' requires missing question ' + response.requires_question);
     }
   }
 });
