@@ -102,3 +102,13 @@ test('dialogue initializes each NPC with profile trust and never overwrites an e
     DialogueEngine._initialized = previous.initialized;
   }
 });
+
+
+test('Anna separates the last-seen account from the physical contents of Markus’s box', () => {
+  const lastSeen = dialogues.npc_anna_holt.topics.about_markus.responses.find(r => r.id === 'anna_markus_last_seen');
+  const box = dialogues.npc_anna_holt.topics.about_box.responses.find(r => r.id === 'anna_box_contents');
+  assert.equal(lastSeen.gives_clue, 'anna_markus_items');
+  assert.equal(box.gives_clue, 'anna_box_contents');
+  assert.notEqual(lastSeen.gives_clue, box.gives_clue);
+  assert.match(clues.anna_box_contents.description, /не раскрывает назначение ключа/);
+});
