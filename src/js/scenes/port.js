@@ -1,5 +1,6 @@
 import { renderStoryLocation } from '../components/story-location.js';
 import { GameState } from '../core/state.js';
+import { Events } from '../core/events.js';
 
 const markusStatement = {
   id: 'markus_statement',
@@ -36,7 +37,7 @@ function renderEnding(container, ending) {
     </section>
   `;
   container.querySelector('#btn-finale-menu')?.addEventListener('click', () => {
-    import('../core/events.js').then(({ Events }) => Events.emit('navigate', { scene: 'office' }));
+    Events.emit('navigate', { scene: 'office' });
   });
 }
 
@@ -82,7 +83,7 @@ export function render(container) {
     }
   });
 
-  const actions = container.querySelector('.story-location-actions');
+  container.querySelector('#btn-story-action')?.addEventListener('click', () => {\n    Events.emit('navigate', { scene: 'radio-tuning' });\n  });\n\n  const actions = container.querySelector('.story-location-actions');
   if (!GameState.hasClue('port_cargo_ledger')) {
     const ledger = document.createElement('button');
     ledger.id = 'btn-port-ledger';
