@@ -14,7 +14,7 @@ function state(day, clues = []) {
 test('day one requires medical finding, court call record and old case link', () => {
   const game = state(1);
   assert.equal(assessCampaignDay(game).canAdvance, false);
-  game.hasClue = id => ['autopsy_report_01', 'court_switchboard_log', 'old_case_details'].includes(id);
+  game.hasClue = id => ['autopsy_report_01', 'court_switchboard_log', 'judge_appointment_card', 'old_case_details'].includes(id);
   assert.equal(assessCampaignDay(game).canAdvance, true);
   assert.equal(advanceCampaignWhenReady(game).advanced, true);
   assert.equal(game.campaign.day, 2);
@@ -35,11 +35,11 @@ test('day three requires a port ledger source, not only a conversation', () => {
 });
 
 test('day four accepts either restored film or radio fragment as an independent source', () => {
-  const game = state(4, ['anna_markus_items', 'port_radio_fragment']);
+  const game = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_radio_fragment']);
   assert.equal(assessCampaignDay(game).canAdvance, true);
-  const withoutIndependentSource = state(4, ['anna_markus_items']);
+  const withoutIndependentSource = state(4, ['anna_markus_items', 'belladonna_invoice']);
   assert.equal(assessCampaignDay(withoutIndependentSource).canAdvance, false);
-  withoutIndependentSource.hasClue = id => ['anna_markus_items', 'restored_film_frame'].includes(id);
+  withoutIndependentSource.hasClue = id => ['anna_markus_items', 'belladonna_invoice', 'restored_film_frame'].includes(id);
   assert.equal(assessCampaignDay(withoutIndependentSource).canAdvance, true);
 });
 
