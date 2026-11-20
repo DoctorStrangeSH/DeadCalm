@@ -52,3 +52,13 @@ test('case 001 evidence text does not present unsupported killer intent as fact'
   assert.doesNotMatch(crimeScene, /Убийца хотел, чтобы он знал|Он хотел, чтобы вы его нашли|этот убийца ничего не делает случайно/i);
   assert.match(crimeScene, /отпечаток не называет убийцу/);
 });
+
+test('case 001 has separate 1987 meeting and poison-source evidence', () => {
+  const clues = readJson('../src/data/clues.json');
+  const crimeScene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
+  const portScene = readFileSync(new URL('../src/js/scenes/port.js', import.meta.url), 'utf8');
+  assert.ok(clues.judge_appointment_card);
+  assert.ok(clues.belladonna_invoice);
+  assert.ok(crimeScene.includes("id: 'judge_appointment_card'"));
+  assert.ok(portScene.includes("id: 'belladonna_invoice'"));
+});
