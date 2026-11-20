@@ -65,7 +65,7 @@ These are direction priorities, not claims that every feature is already impleme
 
 ## Case architecture
 
-The production boundary between shared character/persistence infrastructure and individual case-specific truth, evidence, scenes, and mechanics is documented in `docs/CASE_ARCHITECTURE_RU.md`. Version 1.0 ships only case №001. Future cases may introduce distinct investigation mechanics; do not build a universal case framework before a second real case demonstrates what should be shared.
+The production boundary between shared character/persistence infrastructure and individual case-specific truth, evidence, scenes, and mechanics is documented in `docs/CASE_ARCHITECTURE_POST_1.0_RU.md`. Version 1.0 ships only case №001. Future cases may introduce distinct investigation mechanics; do not build a universal case framework before a second real case demonstrates what should be shared.
 
 ## Feature proposal gate
 
