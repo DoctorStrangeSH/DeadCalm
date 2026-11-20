@@ -1,5 +1,6 @@
 import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
+import { recordCase001MiniGameEvidence } from '../systems/case-001-evidence.js';
 import { createRadioSession, tuneRadio, adjustRadioFilter, getRadioSignal, completeRadioSession } from '../systems/radio-tuning.js';
 
 export function render(container) {
@@ -86,6 +87,7 @@ export function render(container) {
           : 'Запись осталась неразборчивой. В эфире сохранился только шум.';
       Events.emit('minigame:completed', { type: 'radio-tuning', outcome: result.result, quality: result.quality });
       GameState.recordMiniGameResult({ type: 'radio-tuning', outcome: result.result, quality: result.quality });
+      recordCase001MiniGameEvidence(GameState, 'radio-tuning', { outcome: result.result, quality: result.quality });
       renderResult(copy, result);
     });
     container.querySelector('#radio-exit').addEventListener('click', () => Events.emit('navigate', { scene: 'office' }));
