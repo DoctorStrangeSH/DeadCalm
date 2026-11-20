@@ -185,7 +185,7 @@ export function render(container) {
 
   document.getElementById('btn-dismiss-day-summary')?.addEventListener('click', function () {
     dismissCampaignDaySummary(GameState, pendingDaySummary.day);
-    document.getElementById('campaign-day-summary')?.remove();
+    Events.emit('navigate', { scene: 'office' });
   });
 
   document.getElementById('btn-go-finale')?.addEventListener('click', function () {
