@@ -101,7 +101,10 @@ test('every authored contradiction has two obtainable, day-one sources and a rea
   const crimeScene = readFileSync(new URL('../src/js/scenes/crime-scene.js', import.meta.url), 'utf8');
   const portScene = readFileSync(new URL('../src/js/scenes/port.js', import.meta.url), 'utf8');
   const sceneText = crimeScene + '\\n' + portScene;
-  const sceneSourceIds = new Set([...sceneText.matchAll(/id:\\s*'([a-z0-9_]+)'/g)].map(match => match[1]));
+  const sceneSourceIds = new Set([
+    ...[...sceneText.matchAll(/id:\\s*'([a-z0-9_]+)'/g)].map(match => match[1]),
+    ...[...sceneText.matchAll(/inspect(?:CourtRecord|Orlov|ReaderWitness|WitnessRecord)\\(\\s*'[^']+'\\s*,\\s*'([a-z0-9_]+)'/g)].map(match => match[1])
+  ]);
 
   assert.ok(contradictions.length > 0, 'the case must define explicit contradiction rules');
   for (const rule of contradictions) {
