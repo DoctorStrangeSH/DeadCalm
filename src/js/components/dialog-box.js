@@ -234,6 +234,8 @@ export class DialogBox {
           btn.className = 'dialog-btn critical-btn';
           btn.innerHTML = '<span class="tone-icon">' + self._getToneIcon(choice.tone) + '</span> ' + escapeHtml(choice.text);
           btn.addEventListener('click', async function() {
+            // Lock every alternative immediately; only the first click may resolve this decision.
+            choicesEl.querySelectorAll('button').forEach(function(button) { button.disabled = true; });
             var nextNode = DialogueEngine.makeCriticalChoice(choice.id);
             if (nextNode) await self.render(nextNode);
             else self.close();
