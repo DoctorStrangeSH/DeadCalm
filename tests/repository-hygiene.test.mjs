@@ -43,3 +43,13 @@ test('all tracked application JSON data and the PWA manifest are valid JSON', ()
     assert.doesNotThrow(() => JSON.parse(readFileSync(file, 'utf8')), `Invalid JSON: ${file}`);
   }
 });
+
+
+test('every PWA manifest icon points to a tracked local asset', async () => {
+  const manifest = JSON.parse(readFileSync(resolve(root, 'manifest.json'), 'utf8'));
+  assert.ok(Array.isArray(manifest.icons) && manifest.icons.length > 0, 'PWA manifest must declare icons');
+  for (const icon of manifest.icons) {
+    assert.ok(icon.src && !/^(https?:|data:)/i.test(icon.src), 'PWA icon must be a local asset');
+    assert.ok(existsSync(resolve(root, icon.src)), `PWA icon is missing: ${icon.src}`);
+  }
+});
