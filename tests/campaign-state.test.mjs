@@ -214,3 +214,35 @@ test('direct campaign state APIs cannot skip evidence gates', () => {
     Storage.save = originalSave;
   }
 });
+
+
+test('campaign ending is rolled back when persistent storage rejects the final save', () => {
+  const originalCampaign = GameState.campaign;
+  const originalCurrentCase = GameState.currentCase;
+  const originalNpcMemory = GameState.npcMemory;
+  const originalSave = Storage.save;
+  try {
+    GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+    GameState.currentCase = { id: 'case_001', clues: [
+      'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
+      'matthews_letter', 'port_cargo_ledger', 'port_cargo_ledger_archive',
+      'port_radio_fragment'
+    ].map(id => ({ id })) };
+    GameState.npcMemory = { npc_sebastian_blackwood: { met: true, flags: { prior_topic: true }, conversationCount: 2 } };
+    const previousCampaign = GameState.campaign;
+    const previousMemory = GameState.npcMemory;
+    Storage.save = () => false;
+
+    assert.equal(GameState.completeCampaign('price_of_silence'), false);
+    assert.equal(GameState.campaign, previousCampaign);
+    assert.equal(GameState.campaign.completed, false);
+    assert.equal(GameState.campaign.ending, null);
+    assert.equal(GameState.npcMemory, previousMemory);
+    assert.deepEqual(GameState.npcMemory.npc_sebastian_blackwood.flags, { prior_topic: true });
+  } finally {
+    GameState.campaign = originalCampaign;
+    GameState.currentCase = originalCurrentCase;
+    GameState.npcMemory = originalNpcMemory;
+    Storage.save = originalSave;
+  }
+});
