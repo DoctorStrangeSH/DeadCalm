@@ -346,21 +346,9 @@ export var GameState = {
   },
 
   save() {
-    const saved = Storage.save('gameState', {
-      player: this.player,
-      currentCase: this.currentCase,
-      campaign: this.campaign,
-      flags: this.flags,
-      relationships: this.relationships,
-      npcMemory: this.npcMemory,
-      socialGraph: this.socialGraph,
-      knowledgeLedger: this.knowledgeLedger,
-      npcDailyLife: this.npcDailyLife,
-      miniGameProgress: this.miniGameProgress,
-      notebook: this.notebook,
-      settings: this.settings,
-    });
-    if (saved) this.saveStatus = 'valid';
+    const saved = Storage.save('gameState', this.export());
+    this.saveStatus = saved ? 'valid' : 'unavailable';
+    return saved;
   },
 
   /**
