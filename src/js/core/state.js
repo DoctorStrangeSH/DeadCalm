@@ -15,6 +15,55 @@ const INITIAL_CAMPAIGN = Object.freeze({
   ending: null
 });
 
+function isRecord(value) {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeCurrentCase(value) {
+  const saved = isRecord(value) ? value : {};
+  const records = key => Array.isArray(saved[key])
+    ? saved[key].filter(item => isRecord(item) && typeof item.id === 'string' && item.id.trim())
+    : [];
+  return {
+    ...saved,
+    id: 'case_001',
+    clues: records('clues'),
+    suspects: records('suspects'),
+    timeline: records('timeline'),
+    hypotheses: records('hypotheses')
+  };
+}
+
+function normalizeNpcMemory(value) {
+  if (!isRecord(value)) return {};
+  const normalized = {};
+  for (const [npcId, record] of Object.entries(value)) {
+    if (!npcId.trim() || !isRecord(record)) continue;
+    normalized[npcId] = {
+      ...record,
+      met: Boolean(record.met),
+      flags: isRecord(record.flags) ? record.flags : {},
+      conversationCount: Number.isInteger(record.conversationCount) && record.conversationCount >= 0 ? record.conversationCount : 0,
+      questionCount: Number.isInteger(record.questionCount) && record.questionCount >= 0 ? record.questionCount : 0,
+      unlockedTopics: Array.isArray(record.unlockedTopics) ? record.unlockedTopics.filter(item => typeof item === 'string') : [],
+      askedQuestions: Array.isArray(record.askedQuestions) ? record.askedQuestions.filter(item => typeof item === 'string') : [],
+      interviewHistory: Array.isArray(record.interviewHistory) ? record.interviewHistory.filter(isRecord) : []
+    };
+  }
+  return normalized;
+}
+
+function normalizeRelationships(value) {
+  if (!isRecord(value)) return {};
+  const normalized = {};
+  for (const [npcId, relationship] of Object.entries(value)) {
+    if (!npcId.trim() || !isRecord(relationship)) continue;
+    const trust = Number.isFinite(relationship.trust) ? Math.max(0, Math.min(100, relationship.trust)) : 50;
+    normalized[npcId] = { ...relationship, trust, met: Boolean(relationship.met) };
+  }
+  return normalized;
+}
+
 function normalizeCampaignState(savedCampaign, flags = {}) {
   const inferredDay = [5, 4, 3, 2].find(day => flags?.['day_' + day]) || 1;
   const day = Number.isInteger(savedCampaign?.day)
@@ -57,18 +106,21 @@ export var GameState = {
     this.saveStatus = loadResult.status;
     const saved = loadResult.status === 'valid' ? loadResult.data : null;
     if (saved) {
-      this.player = saved.player || this.player;
-      this.currentCase = saved.currentCase || this.currentCase;
-      this.flags = saved.flags || {};
+      this.player = isRecord(saved.player)
+        ? { name: typeof saved.player.name === 'string' ? saved.player.name : 'Джон Риверс',
+            reputation: Number.isFinite(saved.player.reputation) ? saved.player.reputation : 50 }
+        : { name: 'Джон Риверс', reputation: 50 };
+      this.currentCase = normalizeCurrentCase(saved.currentCase);
+      this.flags = isRecord(saved.flags) ? saved.flags : {};
       this.campaign = normalizeCampaignState(saved.campaign, this.flags);
       this._syncCampaignFlags();
-      this.relationships = saved.relationships || {};
-      this.npcMemory = saved.npcMemory || {};
+      this.relationships = normalizeRelationships(saved.relationships);
+      this.npcMemory = normalizeNpcMemory(saved.npcMemory);
       this.socialGraph = normalizeSocialGraph(saved.socialGraph);
       this.knowledgeLedger = normalizeKnowledgeLedger(saved.knowledgeLedger);
       this.npcDailyLife = normalizeDailyLife(saved.npcDailyLife);
       this.miniGameProgress = normalizeMiniGameProgress(saved.miniGameProgress);
-      this.notebook = saved.notebook || [];
+      this.notebook = Array.isArray(saved.notebook) ? saved.notebook : [];
       this.settings = normalizeSettings(saved.settings);
       console.log('[State] Состояние загружено');
       console.log('[State] - npcMemory: ' + Object.keys(this.npcMemory).length + ' NPC');
