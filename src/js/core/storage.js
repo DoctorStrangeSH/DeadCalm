@@ -42,23 +42,31 @@ export var Storage = {
   },
 
   remove(key) {
-    localStorage.removeItem(this.PREFIX + key);
+    try {
+      localStorage.removeItem(this.PREFIX + key);
+      return true;
+    } catch (error) {
+      console.error('[Storage] Не удалось удалить сохранение "' + key + '":', error);
+      return false;
+    }
   },
 
   /**
    * Очистить ВСЕ данные игры
    */
   clearAll() {
-    var keysToRemove = [];
-    for (var i = 0; i < localStorage.length; i++) {
-      var key = localStorage.key(i);
-      if (key && key.startsWith(this.PREFIX)) {
-        keysToRemove.push(key);
+    try {
+      var keysToRemove = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        if (key && key.startsWith(this.PREFIX)) keysToRemove.push(key);
       }
+      keysToRemove.forEach(function(key) { localStorage.removeItem(key); });
+      console.log('[Storage] Удалено сохранений: ' + keysToRemove.length);
+      return true;
+    } catch (error) {
+      console.error('[Storage] Не удалось очистить сохранения:', error);
+      return false;
     }
-    keysToRemove.forEach(function(key) {
-      localStorage.removeItem(key);
-    });
-    console.log('[Storage] Удалено сохранений: ' + keysToRemove.length);
   }
 };
