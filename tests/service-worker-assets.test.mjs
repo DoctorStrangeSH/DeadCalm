@@ -51,3 +51,13 @@ test('retired prototype minigames and debug scenes are absent from the release p
     "/src/css/style.css"
   ]) assert.ok(!assets.includes(retired), `retired path remains in precache: ${retired}`);
 });
+
+
+test('authored PWA icons are included in the Service Worker precache', async () => {
+  const source = await readFile(resolve(root, 'sw.js'), 'utf8');
+  const match = source.match(/const ASSETS = (\\[[\\s\\S]*?\\]);/);
+  assert.ok(match, 'ASSETS array must be declared as a literal JSON array');
+  const assets = JSON.parse(match[1]);
+  assert.ok(assets.includes('/assets/icons/icon-192.svg'));
+  assert.ok(assets.includes('/assets/icons/icon-512.svg'));
+});
