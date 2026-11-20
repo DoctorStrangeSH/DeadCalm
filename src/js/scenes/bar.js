@@ -44,7 +44,12 @@ export function render(container, data) {
     </div>
   `;
 
-  container.querySelector('#btn-talk-marta').addEventListener('click', async function() {\n    const dialog = new DialogBox();\n    await dialog.show('npc_marta_hayes');\n  });\n\n  container.querySelector('#btn-talk-bartender').addEventListener('click', function() {
+  container.querySelector('#btn-talk-marta').addEventListener('click', async function() {
+    const dialog = new DialogBox();
+    await dialog.show('npc_marta_hayes');
+  });
+
+  container.querySelector('#btn-talk-bartender').addEventListener('click', function() {
     var resultEl = container.querySelector('#bar-result');
     resultEl.innerHTML = `
       <div class="blackford-bar-testimony">
