@@ -113,6 +113,14 @@ export function buildFinalEvidenceDossier(gameState) {
     }
   ];
 
+  if (gameState.hasClue('court_switchboard_log')) {
+    dossier.push({
+      title: 'Расхождение во времени',
+      finding: 'Первичный рапорт ссылался на звонок из суда, но журнал не называет абонента; вскрытие не подтверждает версию о мгновенной смерти.',
+      limit: 'Неизвестный звонящий и ошибка в рапорте не устанавливают личность убийцы.'
+    });
+  }
+
   const film = gameState.getClue?.('restored_film_frame');
   if (film) {
     const quality = Number(film.quality || 0);
