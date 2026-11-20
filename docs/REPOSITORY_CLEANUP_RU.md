@@ -77,7 +77,7 @@
 | `CONTRADICTIONS.md` | AUDIT | Сначала сверить записи с CANON_LEDGER и Master Spec |
 | `old-case-*` модули/тесты | KEEP | Подключены к `crime-scene.js` / `police-station.js`, покрыты full-route тестом |
 | `minigame-test.js` | REMOVED | Нет входящих игровых переходов; был единственным тестовым входом к старому менеджеру мини-игр |
-| `investigation.js` | AUDIT | Проверить достижимость и роль в утверждённом маршруте |
+| `investigation.js` | KEEP | Вызывается из `office.js` как активная доска расследования |
 | `chase-scene.js` / chase component | REMOVED | Нет входящих игровых переходов; legacy QTE/chase цепочка вне scope 1.0 |
 | cipher/fingerprints/lockpick components | REMOVED | Загружались только через недостижимый legacy manager; не входят в утверждённый набор мини-игр |
 | `src/css/style.css` | REMOVED | Не подключался приложением и не импортировался другими стилями |
