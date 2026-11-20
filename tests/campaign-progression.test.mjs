@@ -35,12 +35,21 @@ test('day three requires a port ledger source, not only a conversation', () => {
 });
 
 test('day four accepts either restored film or radio fragment as an independent source', () => {
-  const game = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_radio_fragment']);
+  const game = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger_archive', 'port_radio_fragment']);
   assert.equal(assessCampaignDay(game).canAdvance, true);
-  const withoutIndependentSource = state(4, ['anna_markus_items', 'belladonna_invoice']);
+  const withoutIndependentSource = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger_archive']);
   assert.equal(assessCampaignDay(withoutIndependentSource).canAdvance, false);
-  withoutIndependentSource.hasClue = id => ['anna_markus_items', 'belladonna_invoice', 'restored_film_frame'].includes(id);
+  withoutIndependentSource.hasClue = id => ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger_archive', 'restored_film_frame'].includes(id);
   assert.equal(assessCampaignDay(withoutIndependentSource).canAdvance, true);
+});
+
+test('day four cannot advance on the suspect copy alone; independent archive comparison is mandatory', () => {
+  const suspectCopyOnly = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger', 'port_radio_fragment']);
+  assert.equal(assessCampaignDay(suspectCopyOnly).canAdvance, false);
+  assert.ok(assessCampaignDay(suspectCopyOnly).missing.includes('Независимый архивный экземпляр грузовой книги'));
+
+  const verified = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger', 'port_cargo_ledger_archive', 'port_radio_fragment']);
+  assert.equal(assessCampaignDay(verified).canAdvance, true);
 });
 
 test('day five is finale-ready and cannot advance to a nonexistent sixth day', () => {
@@ -59,6 +68,7 @@ test('final accusation requires independent medical, meeting, poison, archive an
     ['belladonna_invoice', {}],
     ['matthews_letter', {}],
     ['port_cargo_ledger', {}],
+    ['port_cargo_ledger_archive', {}],
     ['port_radio_fragment', {}],
     ['restored_film_frame', { quality: 70 }]
   ]);
