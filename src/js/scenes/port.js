@@ -1,7 +1,7 @@
 import { renderStoryLocation } from '../components/story-location.js';
 import { GameState } from '../core/state.js';
 import { Events } from '../core/events.js';
-import { assessFinalEvidence } from '../systems/campaign-progression.js';
+import { assessFinalEvidence, buildFinalEvidenceDossier } from '../systems/campaign-progression.js';
 
 const markusStatement = {
   id: 'markus_statement',
@@ -36,6 +36,7 @@ function renderEnding(container, ending) {
 function renderEndingChoices(container) {
   const evidenceStatus = assessFinalEvidence(GameState);
   const publishReady = evidenceStatus.publicReady;
+  const evidenceDossier = buildFinalEvidenceDossier(GameState);
   const result = container.querySelector('#story-location-result');
   if (!evidenceStatus.ready) {
     result.innerHTML = `
@@ -50,8 +51,16 @@ function renderEndingChoices(container) {
   result.innerHTML = `
     <div class="card p-4">
       <p class="text-gold text-sm">ДОКАЗАТЕЛЬСТВА СВЕРЕНЫ</p>
-      <p class="text-gray-400 text-sm mt-2">Себастьян выходит из тени склада. Он подтверждает, что назначал встречу с Гаррисоном и что его офис купил белладонну, но утверждает, что это ничего не доказывает. Затем предлагает сделку. Теперь его слова можно сверить с независимыми документами.</p>
-            <div class="grid gap-2 mt-4">
+      <p class="text-gray-400 text-sm mt-2">Себастьян выходит из тени склада. Карточка встречи, аптечная запись и его слова совпадают в нескольких точках, но ни один документ отдельно не доказывает, что именно он дал яд. Перед выбором проверьте выводы и пределы каждого источника.</p>
+      <ol class="grid gap-3 mt-4">
+        ${evidenceDossier.map(item => `<li class="border-l-2 border-gray-700 pl-3">
+          <p class="text-gray-200 text-sm font-semibold">${item.title}</p>
+          <p class="text-gray-400 text-xs mt-1">${item.finding}</p>
+          <p class="text-gray-500 text-xs mt-1">Предел доказательства: ${item.limit}</p>
+        </li>`).join('')}
+      </ol>
+      <p class="text-gray-500 text-xs mt-3">Это совокупная версия из нескольких источников. Ни одна отдельная улика не называет убийцу.</p>
+      <div class="grid gap-2 mt-4">
         ${publishReady ? "" : '<p class="text-gray-500 text-xs">Для публичного обвинения нужен чётко восстановленный кадр и проверенная связь Блэквуда с ядом. Компромиссный исход остаётся доступен.</p>'}
         <button id="btn-ending-open" class="btn-noir py-3" ${publishReady ? "" : "disabled"}>ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ</button>
         <button id="btn-ending-silence" class="btn-noir py-3">ЗАКЛЮЧИТЬ СДЕЛКУ</button>
