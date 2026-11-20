@@ -92,6 +92,12 @@ export function render(container) {
     }
   });
 
+  // A completed campaign must restore its saved ending instead of exposing dead choice buttons.
+  if (GameState.campaign.completed && GameState.campaign.ending) {
+    renderEnding(container, GameState.campaign.ending);
+    return;
+  }
+
   container.querySelector('#btn-story-action')?.addEventListener('click', () => {
     Events.emit('navigate', { scene: 'radio-tuning' });
   });
