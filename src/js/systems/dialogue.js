@@ -4,6 +4,7 @@ import { NPCMemory } from './npc-memory.js';
 import { resolveDialogueReaction } from './dialogue-reactions.js';
 import { hasDiscoveredContradiction } from './contradictions.js';
 import { claimCriticalDialogueChoice, findPendingCriticalDialogueNode } from './critical-dialogue-choice.js';
+import { canSelectDialogueTopic, canAskDialogueQuestion } from './dialogue-access.js';
 
 export var DialogueEngine = {
   _dialogues: null,
@@ -223,7 +224,7 @@ export var DialogueEngine = {
     if (!npcData) return null;
 
     var topic = npcData.topics?.[topicId];
-    if (!topic) {
+    if (!topic || !canSelectDialogueTopic(topicId, this._unlockedTopics)) {
       console.warn('[Dialogue] Тема не найдена: ' + topicId);
       return null;
     }
@@ -253,18 +254,22 @@ export var DialogueEngine = {
 
     // Ищем ответ
     var foundResponse = null;
+    var foundTopicId = null;
     for (var topicId in npcData.topics) {
       var topic = npcData.topics[topicId];
       if (topic.responses) {
         var response = topic.responses.find(function(r) { return r.id === questionId; });
         if (response) {
           foundResponse = response;
+          foundTopicId = topicId;
           break;
         }
       }
     }
 
-    if (!foundResponse || !this._isResponseAvailable(foundResponse)) {
+    if (!canAskDialogueQuestion({ topicId: foundTopicId, unlockedTopics: this._unlockedTopics,
+      askedQuestions: this._askedQuestions, response: foundResponse,
+      isAvailable: response => this._isResponseAvailable(response) })) {
       console.warn('[Dialogue] Ответ не найден для вопроса: ' + questionId);
       return null;
     }
