@@ -93,22 +93,22 @@ export function render(container) {
   });
 
   container.querySelector('#btn-story-action')?.addEventListener('click', () => {\n    Events.emit('navigate', { scene: 'radio-tuning' });\n  });\n\n  const actions = container.querySelector('.story-location-actions');
-  if (!GameState.hasClue('port_cargo_ledger')) {
+  if (!GameState.hasClue('port_cargo_ledger_archive')) {
     const ledger = document.createElement('button');
     ledger.id = 'btn-port-ledger';
     ledger.className = 'card text-left w-full';
     ledger.innerHTML = '<p class="card-title">ПРОВЕРИТЬ ГРУЗОВУЮ КНИГУ</p><p class="card-subtitle">Сверить портовые записи с архивом дела Каллиопы.</p>';
     ledger.addEventListener('click', () => {
-      if (GameState.hasClue('port_cargo_ledger')) return;
+      if (GameState.hasClue('port_cargo_ledger_archive')) return;
       GameState.addClue({
-        id: 'port_cargo_ledger',
-        name: 'Книга портовых грузов 1967 года',
+        id: 'port_cargo_ledger_archive',
+        name: 'Архивный экземпляр грузовой книги 1967 года',
         category: 'document',
-        description: 'В копии грузовой книги есть исправления и записи о грузах компании Блэквуда в ночь гибели Каллиопы. Документ связывает его бизнес с местом и временем; страницы требуют независимой сверки.',
+        description: 'Архивный экземпляр грузовой книги содержит записи о грузах компании Блэквуда в ночь гибели Каллиопы. Сверка с копией, которую Себастьян передал Джону, подтверждает совпадение части записей и выявляет исправления в обеих версиях. Это независимо подтверждает связь компании с портом и временем, но не устанавливает, кто физически убил Каллиопу.',
         location: 'port',
         day: 4,
-        source: 'Архив порта',
-        connections_to: ['old_case_details', 'restored_film_frame']
+        source: 'Архив портового управления',
+        connections_to: ['port_cargo_ledger', 'old_case_details', 'belladonna_invoice']
       });
       ledger.disabled = true;
       ledger.querySelector('.card-title').textContent = 'ГРУЗОВАЯ КНИГА ДОБАВЛЕНА';
