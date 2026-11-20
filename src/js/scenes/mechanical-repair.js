@@ -39,7 +39,7 @@ export function render(container) {
               ${session.phase === 'release' ? '<button data-action="release-safe">Плавно снять натяжение</button><button class="repair-danger" data-action="release-force">Применить силу</button>' : ''}
               ${session.phase === 'align' ? '<button data-action="align-good">Совместить по метке</button><button class="repair-secondary" data-action="align-wrong">Установить наоборот</button>' : ''}
               ${session.phase === 'test' ? '<button data-action="test-safe">Осторожно завести часы</button><button class="repair-secondary" data-action="test-force">Резко завести</button>' : ''}
-              ${session.phase === 'completed' ? '<div class="repair-result">${summary.outcome === 'success' ? 'БЕЗУПРЕЧНАЯ РАБОТА' : 'ЧАСЫ ЗАПУЩЕНЫ, НО МЕХАНИЗМ ПОСТРАДАЛ'}</div><button data-action="again">Повторить упражнение</button>' : ''}
+              ${session.phase === 'completed' ? `<div class="repair-result">${summary.outcome === 'success' ? 'БЕЗУПРЕЧНАЯ РАБОТА' : 'ЧАСЫ ЗАПУЩЕНЫ, НО МЕХАНИЗМ ПОСТРАДАЛ'}</div><button data-action="again">Повторить упражнение</button>` : ''}
             </div>
             <div class="repair-meta"><span>ОШИБКИ: ${summary.mistakes}</span><span>ПОВРЕЖДЕНИЯ: ${summary.damage}</span></div>
           </div>
