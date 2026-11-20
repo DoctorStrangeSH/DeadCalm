@@ -107,7 +107,7 @@ export function render(container) {
    */
   document.getElementById('btn-new-game').addEventListener('click', function() {
     // Инициализируем аудио (требуется взаимодействие пользователя)
-    Audio.init();
+    Audio.init(GameState.settings);
 
     // Если есть сохранение — спрашиваем подтверждение
     if (hasStoredData) {
@@ -178,22 +178,8 @@ export function render(container) {
    * Показывает информационное окно (в будущем — полноценные настройки)
    */
   document.getElementById('btn-settings').addEventListener('click', function() {
-    Audio.init();
-
-    // Пока что просто информационное окно
-    var message = '🎮 НАСТРОЙКИ\n\n';
-    message += 'Полноценные настройки появятся в следующих обновлениях.\n\n';
-    message += 'Текущее состояние игры:\n';
-    message += '• NPC в памяти: ' + Object.keys(GameState.npcMemory).length + '\n';
-    message += '• Улик собрано: ' + GameState.currentCase.clues.length + '\n';
-    message += '• Заметок в дневнике: ' + (GameState.notebook ? GameState.notebook.length : 0) + '\n';
-    message += '• Флагов установлено: ' + Object.keys(GameState.flags).length + '\n\n';
-    message += 'Планируется:\n';
-    message += '• Громкость музыки и звуков\n';
-    message += '• Скорость текста\n';
-    message += '• Язык интерфейса\n';
-    message += '• Сброс прогресса';
-
-    alert(message);
+    Audio.init(GameState.settings);
+    Audio.applySettings(GameState.settings);
+    Events.emit('navigate', { scene: 'settings' });
   });
 }
