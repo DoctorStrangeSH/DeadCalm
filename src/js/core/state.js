@@ -415,22 +415,18 @@ export var GameState = {
 
   export() {
     return {
-      player: Object.assign({}, this.player),
-      currentCase: {
-        id: this.currentCase.id,
-        clues: this.currentCase.clues.slice(),
-        suspects: this.currentCase.suspects.slice(),
-        timeline: this.currentCase.timeline.slice()
-      },
-      flags: Object.assign({}, this.flags),
-      relationships: Object.assign({}, this.relationships),
+      player: JSON.parse(JSON.stringify(this.player)),
+      campaign: JSON.parse(JSON.stringify(this.campaign)),
+      currentCase: JSON.parse(JSON.stringify(this.currentCase)),
+      flags: JSON.parse(JSON.stringify(this.flags)),
+      relationships: JSON.parse(JSON.stringify(this.relationships)),
       npcMemory: JSON.parse(JSON.stringify(this.npcMemory)),
       socialGraph: JSON.parse(JSON.stringify(this.socialGraph)),
       knowledgeLedger: JSON.parse(JSON.stringify(this.knowledgeLedger)),
       npcDailyLife: JSON.parse(JSON.stringify(this.npcDailyLife)),
       miniGameProgress: JSON.parse(JSON.stringify(this.miniGameProgress)),
-      notebook: this.notebook.slice(),
-      settings: Object.assign({}, this.settings)
+      notebook: JSON.parse(JSON.stringify(this.notebook)),
+      settings: JSON.parse(JSON.stringify(this.settings))
     };
   }
 };
