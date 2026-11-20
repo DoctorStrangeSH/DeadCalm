@@ -82,3 +82,44 @@ test('campaign state restores day and synchronizes legacy location flags', () =>
     Object.assign(GameState, original);
   }
 });
+
+
+test('finale completion enforces ending-specific evidence at the state boundary', () => {
+  const original = {
+    campaign: GameState.campaign,
+    currentCase: GameState.currentCase
+  };
+  const originalSave = Storage.save;
+  try {
+    Storage.save = () => {};
+    const baseEvidence = [
+      'autopsy_report_01',
+      'judge_appointment_card',
+      'belladonna_invoice',
+      'matthews_letter',
+      'port_cargo_ledger',
+      'markus_statement'
+    ];
+    const setFinaleState = clues => {
+      GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+      GameState.currentCase = { ...original.currentCase, clues };
+    };
+
+    setFinaleState([]);
+    assert.equal(GameState.completeCampaign('price_of_silence'), false, 'no evidence must not unlock a finale');
+    assert.equal(GameState.completeCampaign('open_case'), false, 'no evidence must not unlock a public accusation');
+
+    setFinaleState([...baseEvidence, { id: 'port_radio_fragment' }].map(item => typeof item === 'string' ? { id: item } : item));
+    assert.equal(GameState.completeCampaign('open_case'), false, 'radio evidence alone cannot support a public accusation');
+    assert.equal(GameState.completeCampaign('price_of_silence'), true, 'radio evidence plus the complete case file supports the compromise');
+
+    setFinaleState([...baseEvidence.map(id => ({ id })), { id: 'restored_film_frame', quality: 70 }]);
+    assert.equal(GameState.completeCampaign('open_case'), false, 'a partial frame cannot support a public accusation');
+
+    setFinaleState([...baseEvidence.map(id => ({ id })), { id: 'restored_film_frame', quality: 100 }]);
+    assert.equal(GameState.completeCampaign('open_case'), true, 'a fully identified frame plus the complete case file supports the public accusation');
+  } finally {
+    Storage.save = originalSave;
+    Object.assign(GameState, original);
+  }
+});
