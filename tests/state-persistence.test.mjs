@@ -274,3 +274,85 @@ test('GameState.init safely repairs malformed nested save sections without disca
     Object.assign(GameState, original);
   }
 });
+
+
+test('GameState save survives a real Storage JSON round-trip and restores a playable campaign snapshot', () => {
+  const originalStorage = globalThis.localStorage;
+  const original = {
+    player: GameState.player, currentCase: GameState.currentCase, campaign: GameState.campaign,
+    flags: GameState.flags, relationships: GameState.relationships, npcMemory: GameState.npcMemory,
+    socialGraph: GameState.socialGraph, knowledgeLedger: GameState.knowledgeLedger,
+    npcDailyLife: GameState.npcDailyLife, miniGameProgress: GameState.miniGameProgress,
+    notebook: GameState.notebook, settings: GameState.settings, saveStatus: GameState.saveStatus
+  };
+  const values = new Map();
+  globalThis.localStorage = {
+    setItem(key, value) { values.set(key, String(value)); },
+    getItem(key) { return values.has(key) ? values.get(key) : null; },
+    removeItem(key) { values.delete(key); }
+  };
+
+  try {
+    GameState.player = { name: 'Джон Риверс', reputation: 79 };
+    GameState.campaign = { caseId: 'case_001', day: 3, completed: false, ending: null };
+    GameState.currentCase = {
+      id: 'case_001',
+      clues: [{ id: 'port_radio_fragment', name: 'Фрагмент радиозаписи', source: 'Портовый архив', quality: 91 }],
+      suspects: [{ id: 'sebastian', status: 'under_investigation' }],
+      timeline: [{ id: 'port_meeting', day: 3 }],
+      hypotheses: [{ id: 'hyp_port', confidence: 'corroborated', sourceRefs: ['port_radio_fragment'] }]
+    };
+    GameState.flags = { day_2: true, day_3: true, port_unlocked: true };
+    GameState.relationships = { npc_marta_hayes: { trust: 76, met: true } };
+    GameState.npcMemory = {
+      npc_marta_hayes: {
+        met: true, flags: { promised_help: true }, conversationCount: 4,
+        questionCount: 3, unlockedTopics: ['port'], askedQuestions: ['shipment'],
+        interviewHistory: [{ id: 'interview_marta_1', outcome: 'cooperative' }],
+        promises: ['show_the_manifest']
+      }
+    };
+    GameState.socialGraph = { ties: [], events: [] };
+    GameState.knowledgeLedger = { entries: [] };
+    GameState.npcDailyLife = { schedules: [], occurrences: [] };
+    GameState.miniGameProgress = {
+      'radio-tuning': { attempts: 2, bestOutcome: 'clear', bestQuality: 94,
+        lastOutcome: 'clear', lastQuality: 94, completedAt: '1987-11-04T10:00:00.000Z' }
+    };
+    GameState.notebook = [{ id: 'note_port', text: 'Проверить время передачи' }];
+    GameState.settings = { musicVolume: 0.25, sfxVolume: 0.55, textSpeed: 'slow' };
+
+    assert.equal(GameState.save(), true);
+    assert.ok(values.has('deadCalm_gameState'));
+
+    GameState.player = { name: 'Изменённое состояние', reputation: 0 };
+    GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
+    GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
+    GameState.flags = {};
+    GameState.relationships = {};
+    GameState.npcMemory = {};
+    GameState.socialGraph = { ties: [], events: [] };
+    GameState.knowledgeLedger = { entries: [] };
+    GameState.npcDailyLife = { schedules: [], occurrences: [] };
+    GameState.miniGameProgress = {};
+    GameState.notebook = [];
+    GameState.settings = {};
+
+    assert.equal(GameState.init(), 'valid');
+    assert.equal(GameState.player.name, 'Джон Риверс');
+    assert.equal(GameState.campaign.day, 3);
+    assert.deepEqual(GameState.currentCase.clues.map(clue => clue.id), ['port_radio_fragment']);
+    assert.equal(GameState.currentCase.clues[0].quality, 91);
+    assert.equal(GameState.currentCase.hypotheses[0].id, 'hyp_port');
+    assert.equal(GameState.flags.port_unlocked, true);
+    assert.equal(GameState.relationships.npc_marta_hayes.trust, 76);
+    assert.equal(GameState.npcMemory.npc_marta_hayes.flags.promised_help, true);
+    assert.deepEqual(GameState.npcMemory.npc_marta_hayes.promises, ['show_the_manifest']);
+    assert.equal(GameState.miniGameProgress['radio-tuning'].bestQuality, 94);
+    assert.equal(GameState.notebook[0].id, 'note_port');
+    assert.equal(GameState.settings.musicVolume, 0.25);
+  } finally {
+    globalThis.localStorage = originalStorage;
+    Object.assign(GameState, original);
+  }
+});
