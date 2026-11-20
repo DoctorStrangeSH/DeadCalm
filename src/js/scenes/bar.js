@@ -1,4 +1,5 @@
 import { Events } from '../core/events.js';
+import { DialogBox } from '../components/dialog-box.js';
 
 export function render(container, data) {
   container.innerHTML = `
@@ -29,6 +30,10 @@ export function render(container, data) {
       </div>
 
       <div class="space-y-3 mb-6">
+        <button id="btn-talk-marta" class="card blackford-bar-action text-left w-full">
+          <p class="card-title">ПОГОВОРИТЬ С МАРТОЙ ХЕЙЗ <span aria-hidden="true">↗</span></p>
+          <p class="card-subtitle">Проверить происхождение документов и защитить источник.</p>
+        </button>
         <button id="btn-talk-bartender" class="card blackford-bar-action text-left w-full">
           <p class="card-title">ПОГОВОРИТЬ С БАРМЕНОМ <span aria-hidden="true">↗</span></p>
           <p class="card-subtitle">Бармены слышат всё. Вопрос в том, захотят ли говорить.</p>
@@ -39,7 +44,7 @@ export function render(container, data) {
     </div>
   `;
 
-  container.querySelector('#btn-talk-bartender').addEventListener('click', function() {
+  container.querySelector('#btn-talk-marta').addEventListener('click', async function() {\n    const dialog = new DialogBox();\n    await dialog.show('npc_marta_hayes');\n  });\n\n  container.querySelector('#btn-talk-bartender').addEventListener('click', function() {
     var resultEl = container.querySelector('#bar-result');
     resultEl.innerHTML = `
       <div class="blackford-bar-testimony">
