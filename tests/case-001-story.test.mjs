@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const readJson = path => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
 
@@ -100,4 +102,15 @@ test('relationship choices persist and receive a one-time authored reaction on t
   assert.match(engine, /acknowledgeReturnReaction\(seenFlag\)/);
   assert.doesNotMatch(engine, /NPCMemory\.setFlag\(npcId, returnReaction\.seen_flag\)/);
   assert.match(dialogBox, /DialogueEngine\.acknowledgeReturnReaction\(node\.returnReactionSeenFlag\)/);
+});
+
+test('port finale scene parses and the silence ending does not invent a poison handoff confession', () => {
+  const portPath = fileURLToPath(new URL('../src/js/scenes/port.js', import.meta.url));
+  const portScene = readFileSync(portPath, 'utf8');
+  execFileSync(process.execPath, ['--check', portPath]);
+  assert.doesNotMatch(portScene, /\\\\n/);
+  assert.doesNotMatch(portScene, /дал ему яд/i);
+  assert.match(portScene, /его офис купил белладонну/);
+  assert.match(portScene, /отказывается назвать получателя препарата/);
+  assert.match(portScene, /Себастьян отрицает убийство/);
 });
