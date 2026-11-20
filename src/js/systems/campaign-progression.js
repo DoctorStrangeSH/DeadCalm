@@ -4,6 +4,7 @@ const DAY_REQUIREMENTS = {
     all: [
       ['autopsy_report_01', 'Заключение Лидии о причине смерти'],
       ['court_switchboard_log', 'Выписка о звонке из суда'],
+      ['judge_appointment_card', 'Карточка встречи Гаррисона с Блэквудом'],
       ['old_case_details', 'Связь с делом Каллиопы']
     ]
   },
@@ -23,7 +24,8 @@ const DAY_REQUIREMENTS = {
   4: {
     label: 'Подготовка финального предъявления',
     all: [
-      ['anna_markus_items', 'Вещи Маркуса от Анны']
+      ['anna_markus_items', 'Вещи Маркуса от Анны'],
+      ['belladonna_invoice', 'Счёт за экстракт белладонны']
     ],
     any: [
       ['restored_film_frame', 'Восстановленный кадр плёнки'],
