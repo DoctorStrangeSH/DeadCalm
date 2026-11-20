@@ -1,7 +1,7 @@
 import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { Inventory } from '../components/inventory.js';
-import { assessCampaignDay, advanceCampaignWhenReady } from '../systems/campaign-progression.js';
+import { assessCampaignDay, advanceCampaignWhenReady, getCampaignCaseSummary } from '../systems/campaign-progression.js';
 
 /**
  * Кабинет детектива — главный хаб игры.
@@ -21,6 +21,7 @@ export function render(container) {
     : 'Ещё не ремонтировали';
   var filmStatus = filmProgress ? 'Попыток: ' + filmProgress.attempts + ' · Лучший результат: ' + filmProgress.bestQuality + '%' : 'Катушка № 014 · ожидает реставрации';
   var campaignStatus = assessCampaignDay(GameState);
+  var caseSummary = getCampaignCaseSummary(GameState);
   var campaignMissing = campaignStatus.missing.length
     ? '<ul class="campaign-missing">' + campaignStatus.missing.map(item => '<li>— ' + item + '</li>').join('') + '</ul>'
     : '<p class="text-gray-500 text-xs mt-2">Все условия текущего дня выполнены.</p>';
@@ -119,9 +120,9 @@ export function render(container) {
         <!-- Дела -->
         <button id="btn-cases" class="card office-card text-left w-full">
           <span class="office-card-icon" aria-hidden="true">§</span><span class="office-card-number">06</span>
-          <p class="card-title">АКТИВНЫЕ ДЕЛА</p>
+          <p class="card-title">ДЕЛА</p>
           <p class="card-subtitle">Активные и завершённые расследования</p>
-          <p class="hidden md:block text-gray-600 text-xs mt-3">Активных: 1</p>
+          <p class="hidden md:block text-gray-600 text-xs mt-3">Активных: ${caseSummary.activeCount} · Завершённых: ${caseSummary.completedCount}</p>
         </button>
 
       </div>
