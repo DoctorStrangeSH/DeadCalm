@@ -53,7 +53,7 @@ test('mandatory clue locations are available no later than their authored eviden
     assert.ok(Number.isInteger(clue.day), id + ' needs an authored evidence day');
     assert.ok(locations[clue.location], id + ' points to an unknown location');
     const location = locations[clue.location];
-    const match = /^day_(\\d+)$/.exec(location.unlock_condition || '');
+    const match = /^day_(\d+)$/.exec(location.unlock_condition || '');
     const unlockDay = location.unlocked === true ? 1 : match ? Number(match[1]) : Infinity;
     assert.ok(unlockDay <= clue.day, id + ' is placed in a location that unlocks after its evidence day');
   }
