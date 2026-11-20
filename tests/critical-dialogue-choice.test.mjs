@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { claimCriticalDialogueChoice } from '../src/js/systems/critical-dialogue-choice.js';
+import { claimCriticalDialogueChoice, findPendingCriticalDialogueNode } from '../src/js/systems/critical-dialogue-choice.js';
 
 const readJson = path => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
 
@@ -21,26 +21,52 @@ function createMemory(initialFlags = {}) {
 
 test('a critical choice cannot be claimed before its prompt is opened', () => {
   const memory = createMemory();
-  assert.equal(claimCriticalDialogueChoice(memory, 'npc_ray_morgan', 'blackwood_power'), false);
+  assert.equal(claimCriticalDialogueChoice(memory, 'npc_ray_morgan', 'critical_choice_raid'), false);
   assert.equal(memory.writes.length, 0);
 });
 
 test('a critical choice can be claimed once and rejects stale or double-click callbacks', () => {
-  const memory = createMemory({ 'npc_ray_morgan:critical_blackwood_power': true });
+  const memory = createMemory({ 'npc_ray_morgan:critical_critical_choice_raid': true });
   assert.equal(claimCriticalDialogueChoice(memory, 'npc_ray_morgan', 'blackwood_power'), true);
   assert.equal(claimCriticalDialogueChoice(memory, 'npc_ray_morgan', 'blackwood_power'), false);
   assert.equal(memory.writes.length, 1);
-  assert.equal(memory.hasFlag('npc_ray_morgan', 'critical_choice_resolved_blackwood_power'), true);
+  assert.equal(memory.hasFlag('npc_ray_morgan', 'critical_choice_resolved_critical_choice_raid'), true);
 });
 
 test('different critical prompts remain independently claimable', () => {
   const memory = createMemory({
     'npc_ray_morgan:critical_blackwood_power': true,
-    'npc_lydia_winter:critical_her_background': true
+    'npc_lydia_winter:critical_critical_choice_trust': true
   });
   assert.equal(claimCriticalDialogueChoice(memory, 'npc_ray_morgan', 'blackwood_power'), true);
-  assert.equal(claimCriticalDialogueChoice(memory, 'npc_lydia_winter', 'her_background'), true);
+  assert.equal(claimCriticalDialogueChoice(memory, 'npc_lydia_winter', 'critical_choice_trust'), true);
   assert.equal(memory.writes.length, 2);
+});
+
+
+test('an opened but unresolved critical prompt is restored after loading the dialogue again', () => {
+  const memory = createMemory({
+    'npc_ray_morgan:critical_critical_choice_raid': true,
+    'npc_lydia_winter:critical_critical_choice_trust': true,
+    'npc_lydia_winter:critical_choice_resolved_critical_choice_trust': true
+  });
+  const pending = findPendingCriticalDialogueNode({
+    critical_choice_raid: { trigger_question: 'blackwood_power', choices: [{ id: 'go_with_ray' }] },
+    critical_choice_trust: { trigger_question: 'her_background', choices: [{ id: 'promise_protection' }] }
+  }, memory, 'npc_ray_morgan');
+
+  assert.equal(pending?.id, 'critical_choice_raid');
+  assert.equal(pending?.node.trigger_question, 'blackwood_power');
+});
+
+test('a resolved critical prompt is not restored after loading', () => {
+  const memory = createMemory({
+    'npc_ray_morgan:critical_critical_choice_raid': true,
+    'npc_ray_morgan:critical_choice_resolved_critical_choice_raid': true
+  });
+  assert.equal(findPendingCriticalDialogueNode({
+    critical_choice_raid: { trigger_question: 'blackwood_power', choices: [{ id: 'go_with_ray' }] }
+  }, memory, 'npc_ray_morgan'), null);
 });
 
 test('all six authored critical decisions are tied to an actual one-time question trigger', () => {
