@@ -102,3 +102,24 @@ test('storage write and existence checks fail safely when browser storage is blo
     else globalThis.localStorage = originalStorage;
   }
 });
+
+
+test('GameState.hasSave enables Continue only for a valid save object', () => {
+  const originalStorage = globalThis.localStorage;
+  const originalStatus = GameState.saveStatus;
+  const memory = new MemoryStorage();
+  globalThis.localStorage = memory;
+  try {
+    memory.setItem('deadCalm_gameState', '{invalid');
+    assert.equal(GameState.hasSave(), false);
+    assert.equal(GameState.saveStatus, 'corrupt');
+
+    memory.setItem('deadCalm_gameState', JSON.stringify({ campaign: { day: 2 } }));
+    assert.equal(GameState.hasSave(), true);
+    assert.equal(GameState.saveStatus, 'valid');
+  } finally {
+    GameState.saveStatus = originalStatus;
+    if (originalStorage === undefined) delete globalThis.localStorage;
+    else globalThis.localStorage = originalStorage;
+  }
+});
