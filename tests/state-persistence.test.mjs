@@ -17,7 +17,8 @@ test('GameState.init restores the saved campaign before scenes use it', () => {
     npcDailyLife: GameState.npcDailyLife,
     miniGameProgress: GameState.miniGameProgress,
     notebook: GameState.notebook,
-    settings: GameState.settings
+    settings: GameState.settings,
+    saveStatus: GameState.saveStatus
   };
 
   const saved = {
