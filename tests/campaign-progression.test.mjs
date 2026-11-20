@@ -90,7 +90,6 @@ test('case summary reflects an active case before the finale', () => {
 });
 
 test('case summary reflects either saved finale using a player-facing label', async () => {
-  const { getCampaignCaseSummary } = await import('../src/js/systems/campaign-progression.js');
   assert.deepEqual(getCampaignCaseSummary({ campaign: { day: 5, completed: true, ending: 'open_case' } }), {
     completed: true,
     activeCount: 0,
