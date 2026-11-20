@@ -152,10 +152,7 @@ export function render(container) {
     // Если нет сохранения — кнопка не работает
     if (!hasSave) return;
 
-    // Инициализируем аудио
-    Audio.init();
-
-    // Загружаем сохранённое состояние
+    // Сначала восстанавливаем сохранённые настройки, затем запускаем аудиосистему.
     const loadStatus = GameState.init();
     if (loadStatus !== 'valid') {
       alert(loadStatus === 'corrupt'
@@ -163,6 +160,8 @@ export function render(container) {
         : 'Не удалось получить доступ к сохранению. Проверьте настройки браузера.');
       return;
     }
+    Audio.init(GameState.settings);
+    Audio.applySettings(GameState.settings);
 
     console.log('[Menu] 📂 Загрузка сохранения...');
     console.log('[Menu]    - Память NPC: ' + Object.keys(GameState.npcMemory).length + ' записей');
@@ -175,7 +174,7 @@ export function render(container) {
 
   /**
    * Кнопка «Настройки»
-   * Показывает информационное окно (в будущем — полноценные настройки)
+   * Открывает отдельный экран игровых параметров
    */
   document.getElementById('btn-settings').addEventListener('click', function() {
     Audio.init(GameState.settings);
