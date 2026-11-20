@@ -1,4 +1,6 @@
 import { Events } from '../core/events.js';
+import { GameState } from '../core/state.js';
+import { isLocationUnlocked } from '../systems/location-access.js';
 
 /** Интерактивный атлас Блэкфорда. Открытость локаций задаётся locations.json. */
 export class Map {
@@ -6,6 +8,10 @@ export class Map {
     this.container = container;
     this.locations = locations;
     this.selectedLocation = null;
+  }
+
+  _isUnlocked(location) {
+    return isLocationUnlocked(location, GameState);
   }
 
   render() {
@@ -24,9 +30,9 @@ export class Map {
 
       <div class="atlas-directory" aria-label="Список локаций">
         ${locations.map(loc => `
-          <button type="button" class="atlas-directory-item ${loc.unlocked ? '' : 'is-locked'}" data-location="${loc.id}">
-            <span class="atlas-directory-symbol" aria-hidden="true">${loc.unlocked ? '◆' : '×'}</span>
-            <span>${loc.name}</span><small>${loc.unlocked ? 'ДОСТУПНО' : 'ЗАКРЫТО'}</small>
+          <button type="button" class="atlas-directory-item ${this._isUnlocked(loc) ? '' : 'is-locked'}" data-location="${loc.id}">
+            <span class="atlas-directory-symbol" aria-hidden="true">${this._isUnlocked(loc) ? '◆' : '×'}</span>
+            <span>${loc.name}</span><small>${this._isUnlocked(loc) ? 'ДОСТУПНО' : 'ЗАКРЫТО'}</small>
           </button>
         `).join('')}
       </div>
@@ -62,7 +68,7 @@ export class Map {
     const info = this.container.querySelector('#location-info');
     if (!info) return;
 
-    if (!loc.unlocked) {
+    if (!this._isUnlocked(loc)) {
       info.innerHTML = `<div class="atlas-location-detail"><span class="atlas-detail-seal">×</span><div>
         <p class="text-gold">${loc.name}</p><p class="text-gray-400 text-sm mt-1">Закрыто. Откроется позже по сюжету.</p>
       </div></div>`;
@@ -85,7 +91,7 @@ export class Map {
   }
 
   _goToLocation(loc) {
-    if (!loc.unlocked) return;
+    if (!this._isUnlocked(loc)) return;
     const scenes = {
       office: 'office', morgue: 'morgue', crime_scene_court: 'crime-scene',
       police_station: 'police-station', bar_rusty_anchor: 'bar', church: 'church',
