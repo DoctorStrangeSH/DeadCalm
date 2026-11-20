@@ -77,6 +77,9 @@ export var DialogueEngine = {
       return null;
     }
 
+    var character = this.getCharacter(npcId);
+    GameState.ensureRelationship(npcId, character?.initial_trust ?? 50);
+
     console.log('[Dialogue] === Начало диалога с ' + npcId + ' ===');
     console.log('[Dialogue] Встречались ранее: ' + NPCMemory.hasMet(npcId));
     console.log('[Dialogue] Задано вопросов: ' + this._askedQuestions.length);
