@@ -129,8 +129,10 @@ export var DialogueEngine = {
         npcData[entry.node]?.text;
     });
     if (returnReaction) {
-      NPCMemory.setFlag(npcId, returnReaction.seen_flag);
-      return this._formatSimpleNode(npcData[returnReaction.node], npcId);
+      var reactionNode = this._formatSimpleNode(npcData[returnReaction.node], npcId);
+      // Mark the reaction as seen only after the player acknowledges it in the UI.
+      reactionNode.returnReactionSeenFlag = returnReaction.seen_flag;
+      return reactionNode;
     }
 
     // Проверяем доступные темы
@@ -357,6 +359,13 @@ export var DialogueEngine = {
       }
     }
     return null;
+  },
+
+  acknowledgeReturnReaction(seenFlag) {
+    if (!this._currentNPC || typeof seenFlag !== 'string' || !seenFlag) return false;
+    if (NPCMemory.hasFlag(this._currentNPC, seenFlag)) return false;
+    NPCMemory.setFlag(this._currentNPC, seenFlag);
+    return true;
   },
 
   backToTopics() {
