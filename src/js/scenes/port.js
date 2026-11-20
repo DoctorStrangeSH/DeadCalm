@@ -78,7 +78,11 @@ export function render(container) {
     }
   });
 
-  container.querySelector('#btn-story-action')?.addEventListener('click', () => {\n    Events.emit('navigate', { scene: 'radio-tuning' });\n  });\n\n  const actions = container.querySelector('.story-location-actions');
+  container.querySelector('#btn-story-action')?.addEventListener('click', () => {
+    Events.emit('navigate', { scene: 'radio-tuning' });
+  });
+
+  const actions = container.querySelector('.story-location-actions');
   if (!GameState.hasClue('port_cargo_ledger')) {
     const ledger = document.createElement('button');
     ledger.id = 'btn-port-ledger';
@@ -135,7 +139,7 @@ export function render(container) {
       container.querySelector('#story-location-result').innerHTML = `
         <div class="card p-4">
           <p class="text-gold text-sm">МАРКУС ХОЛТ · ПРИЧАЛ № 4</p>
-          <p class="text-gray-300 text-sm leading-relaxed mt-2">Маркус выходит из тени складского навеса. «Я изменил время в протоколе. Я спрятал плёнку. Я говорил себе, что спасаю невиновного, но на самом деле спасал себя. Себастьян был рядом с Каллиопой в ночь её смерти — это я видел на плёнке. А кто убил Гаррисона, я не видел. Я могу рассказать о его страхе и о том, что он собирался раскрыть, но мои догадки не заменят ваших доказательств»..</p>
+          <p class="text-gray-300 text-sm leading-relaxed mt-2">Маркус выходит из тени складского навеса. «Я изменил время в протоколе. Я спрятал плёнку. Я говорил себе, что спасаю невиновного, но на самом деле спасал себя. Себастьян был рядом с Каллиопой в ночь её смерти — это я видел на плёнке. А кто убил Гаррисона, я не видел. Я могу рассказать о его страхе и о том, что он собирался раскрыть, но мои догадки не заменят ваших доказательств».</p>
           <p class="text-gray-500 text-xs mt-3">Его признание касается его собственных действий. Версию об убийстве необходимо сверить с независимыми материалами.</p>
         </div>
       `;
