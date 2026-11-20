@@ -71,3 +71,29 @@ test('the opening establishes the personal hook and the first verifiable contrad
   assert.match(opening, /не верить времени в протоколе/);
   assert.match(opening, /Начнём с того, что можно проверить/);
 });
+
+
+test('relationship choices persist and receive a one-time authored reaction on the next meeting', () => {
+  const dialogues = readJson('../src/data/dialogues.json');
+  const engine = readFileSync(new URL('../src/js/systems/dialogue.js', import.meta.url), 'utf8');
+  const terminalFlags = new Set(['lydia_refuses', 'ray_hostile']);
+  for (const [npcId, npc] of Object.entries(dialogues)) {
+    const choices = Object.values(npc).flatMap(node => node?.choices || []);
+    assert.ok(choices.length >= 3, npcId + ' needs authored relationship choices');
+    const reactions = npc.return_dialogues || [];
+    assert.ok(reactions.length >= 2, npcId + ' needs return dialogue reactions');
+    for (const choice of choices) {
+      assert.ok(choice.memory_set, npcId + '.' + choice.id + ' must persist a memory flag');
+      assert.ok(npc[choice.next_dialogue]?.text, npcId + '.' + choice.id + ' needs an immediate authored result');
+      if (!terminalFlags.has(choice.memory_set)) {
+        assert.ok(reactions.some(item => item.requires_flag === choice.memory_set), npcId + '.' + choice.id + ' needs a remembered follow-up');
+      }
+    }
+    for (const reaction of reactions) {
+      assert.ok(npc[reaction.node]?.text, npcId + ' has a missing return dialogue node');
+      assert.ok(reaction.seen_flag, npcId + ' return dialogue must be shown only once');
+    }
+  }
+  assert.match(engine, /Однократная реакция на прошлый выбор/);
+  assert.match(engine, /NPCMemory\.setFlag\(npcId, returnReaction\.seen_flag\)/);
+});
