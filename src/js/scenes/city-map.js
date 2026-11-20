@@ -1,4 +1,5 @@
 import { Events } from '../core/events.js';
+import { GameState } from '../core/state.js';
 import { Map } from '../components/map.js';
 import { showNotification } from '../utils/helpers.js';
 
@@ -26,7 +27,7 @@ export async function render(container) {
       <div class="scene-header mb-4">
         <div>
           <h2 class="text-gold text-lg md:text-2xl tracking-widest">БЛЭКФОРД</h2>
-          <p class="text-gray-500 text-xs md:text-sm tracking-wider mt-1">Карта города — День 1</p>
+          <p class="text-gray-500 text-xs md:text-sm tracking-wider mt-1">Карта города — День ${GameState.campaign?.day || 1}</p>
         </div>
         <button id="btn-back" class="text-gray-400 hover:text-gold transition text-sm tracking-widest">
           ← В КАБИНЕТ
