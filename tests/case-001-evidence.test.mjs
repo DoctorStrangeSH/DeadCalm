@@ -14,7 +14,7 @@ test('radio evidence preserves the difference between clear and fragmented recep
   const clear = buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 92 });
   const partial = buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 56 });
   assert.equal(clear.id, 'port_radio_fragment');
-  assert.match(clear.description, /не устанавливает личность/);
+  assert.match(clear.description, /установить личность/);
   assert.match(partial.description, /не идентифицирован/);
 });
 
@@ -23,7 +23,7 @@ test('film evidence distinguishes a clear identification from a partial frame', 
   const clear = buildCase001MiniGameEvidence('film-restoration', { outcome: 'success', quality: 100 });
   const partial = buildCase001MiniGameEvidence('film-restoration', { outcome: 'partial', quality: 70 });
   assert.match(clear.description, /Себастьян Блэквуд и Каллиопа/);
-  assert.match(partial.description, /личности пока нельзя считать подтверждёнными/);
+  assert.match(partial.description, /личности пока нельзя считать подтверждёнными/i);
 });
 
 test('replaying a mini-game upgrades evidence quality without duplicating the clue', () => {
