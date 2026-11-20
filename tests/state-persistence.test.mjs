@@ -4,7 +4,7 @@ import { GameState } from '../src/js/core/state.js';
 import { Storage } from '../src/js/core/storage.js';
 
 test('GameState.init restores the saved campaign before scenes use it', () => {
-  const originalLoad = Storage.load;
+  const originalInspect = Storage.inspect;
   const original = {
     player: GameState.player,
     currentCase: GameState.currentCase,
@@ -51,7 +51,7 @@ test('GameState.init restores the saved campaign before scenes use it', () => {
   };
 
   try {
-    Storage.load = key => key === 'gameState' ? structuredClone(saved) : null;
+    Storage.inspect = key => key === 'gameState' ? { status: 'valid', data: structuredClone(saved) } : { status: 'missing', data: null };
     GameState.init();
 
     assert.deepEqual(GameState.player, saved.player);
@@ -65,13 +65,13 @@ test('GameState.init restores the saved campaign before scenes use it', () => {
     assert.equal(GameState.miniGameProgress['radio-tuning'].bestQuality, 92);
     assert.ok(GameState.currentCase.hypotheses.some(item => item.id === 'hypothesis_saved'));
   } finally {
-    Storage.load = originalLoad;
+    Storage.inspect = originalInspect;
     Object.assign(GameState, original);
   }
 });
 
 test('GameState.init keeps a clean initial state when no save exists', () => {
-  const originalLoad = Storage.load;
+  const originalInspect = Storage.inspect;
   const original = {
     player: GameState.player,
     currentCase: GameState.currentCase,
@@ -88,7 +88,7 @@ test('GameState.init keeps a clean initial state when no save exists', () => {
   };
 
   try {
-    Storage.load = () => null;
+    Storage.inspect = () => ({ status: 'missing', data: null });
     GameState.player = { name: 'John Rivers', reputation: 50 };
     GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
     GameState.flags = {};
@@ -102,7 +102,7 @@ test('GameState.init keeps a clean initial state when no save exists', () => {
     assert.deepEqual(GameState.flags, {});
     assert.deepEqual(GameState.miniGameProgress, {});
   } finally {
-    Storage.load = originalLoad;
+    Storage.inspect = originalInspect;
     Object.assign(GameState, original);
   }
 });
