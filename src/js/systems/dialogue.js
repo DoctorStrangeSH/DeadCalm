@@ -3,7 +3,7 @@ import { Events } from '../core/events.js';
 import { NPCMemory } from './npc-memory.js';
 import { resolveDialogueReaction } from './dialogue-reactions.js';
 import { hasDiscoveredContradiction } from './contradictions.js';
-import { claimCriticalDialogueChoice } from './critical-dialogue-choice.js';
+import { claimCriticalDialogueChoice, findPendingCriticalDialogueNode } from './critical-dialogue-choice.js';
 
 export var DialogueEngine = {
   _dialogues: null,
@@ -113,6 +113,13 @@ export var DialogueEngine = {
 
     // ПОВТОРНАЯ ВСТРЕЧА
     console.log('[Dialogue] Повторная встреча');
+
+    // Если игрок сохранился или закрыл игру посреди решающего выбора,
+    // возвращаем незавершённый вопрос вместо потери обязательного решения.
+    var pendingCritical = findPendingCriticalDialogueNode(npcData, NPCMemory, npcId);
+    if (pendingCritical) {
+      return this._formatCriticalChoice(pendingCritical.node);
+    }
 
     // Однократная реакция на прошлый выбор: NPC помнит поступок и отвечает на него при следующей встрече.
     var returnReaction = (npcData.return_dialogues || []).find(function(entry) {
@@ -305,7 +312,7 @@ export var DialogueEngine = {
         var choice = node.choices.find(function(c) { return c.id === choiceId; });
         if (choice) {
           var nextNode = npcData[choice.next_dialogue];
-          if (!nextNode || !claimCriticalDialogueChoice(NPCMemory, this._currentNPC, node.trigger_question)) {
+          if (!nextNode || !claimCriticalDialogueChoice(NPCMemory, this._currentNPC, key)) {
             console.warn('[Dialogue] Критический выбор уже разрешён или не был открыт: ' + choiceId);
             return null;
           }
