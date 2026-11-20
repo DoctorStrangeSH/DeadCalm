@@ -16,7 +16,7 @@ export const Audio = {
   /**
    * Инициализация (должна быть вызвана после взаимодействия пользователя)
    */
-  init() {
+  init(settings = {}) {
     if (this._initialized) return;
 
     try {
@@ -26,9 +26,11 @@ export const Audio = {
 
       this._musicGain = this._ctx.createGain();
       this._musicGain.connect(this._masterGain);
+      this._musicGain.gain.value = this._clampVolume(settings.musicVolume, 0.5);
 
       this._sfxGain = this._ctx.createGain();
       this._sfxGain.connect(this._masterGain);
+      this._sfxGain.gain.value = this._clampVolume(settings.sfxVolume, 0.7);
 
       this._initialized = true;
       console.log('[Audio] Инициализирован');
@@ -51,7 +53,7 @@ export const Audio = {
    */
   setSfxVolume(value) {
     if (this._sfxGain) {
-      this._sfxGain.gain.value = Math.max(0, Math.min(1, value));
+      this._sfxGain.gain.value = this._clampVolume(value, 0.7);
     }
   },
 
