@@ -1,5 +1,6 @@
 import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
+import { recordCase001MiniGameEvidence } from '../systems/case-001-evidence.js';
 import { adjustFilmTransport, advanceFilm, createFilmRestorationSession, getFilmRestorationSummary, restoreFilmFrame, testFilmProjection } from '../systems/film-restoration.js';
 
 const DEFECTS = {
@@ -116,6 +117,7 @@ export function render(container) {
     completed=true;
     const quality=result.outcome==='success'?100:result.outcome==='partial'?70:30;
     GameState.recordMiniGameResult({type:'film-restoration',outcome:result.outcome,quality});
+    recordCase001MiniGameEvidence(GameState, 'film-restoration', { outcome: result.outcome, quality });
     Events.emit('minigame:completed',{type:'film-restoration',outcome:result.outcome,quality});
     const copy=result.outcome==='success'?'Все три кадра восстановлены без повреждений. Проектор снова работает ровно.':result.outcome==='partial'?'Плёнку удалось спасти, но некоторые следы останутся на изображении.':'Запись удалось частично сохранить. В следующий раз уменьшите натяжение и давление инструментов.';
     container.innerHTML=`
