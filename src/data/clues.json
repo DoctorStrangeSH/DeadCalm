@@ -919,5 +919,31 @@
     "connections_to": [
       "anna_markus_items"
     ]
+  },
+  "judge_appointment_card": {
+    "id": "judge_appointment_card",
+    "name": "Карточка встречи судьи",
+    "category": "document",
+    "description": "На карточке указана встреча Гаррисона с Себастьяном Блэквудом в 19:30 в день смерти. Она подтверждает запланированную встречу, но сама по себе не доказывает, что Блэквуд пришёл или убил судью.",
+    "location": "crime_scene_court",
+    "day": 1,
+    "source": "Ежедневник Гаррисона",
+    "connections_to": [
+      "judge_notes",
+      "autopsy_report_01"
+    ]
+  },
+  "belladonna_invoice": {
+    "id": "belladonna_invoice",
+    "name": "Счёт за экстракт белладонны",
+    "category": "document",
+    "description": "В портовой аптечной книге зафиксирована покупка экстракта белладонны на счёт офиса Блэквуда за день до смерти судьи. Заказ связан с его компанией, но требует проверки, кто именно получил препарат и куда он был передан.",
+    "location": "port",
+    "day": 4,
+    "source": "Портовая аптечная книга",
+    "connections_to": [
+      "autopsy_report_01",
+      "port_cargo_ledger"
+    ]
   }
 }
