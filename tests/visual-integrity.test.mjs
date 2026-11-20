@@ -34,16 +34,29 @@ test('interactive map and locations agree on supported destinations', () => {
   assert.ok(!map.includes('<svg'), 'map background should be raster rather than SVG');
 });
 
+test('all map destinations have loadable story scene modules', () => {
+  const map = read('src/js/components/map.js');
+  for (const scene of ['office', 'morgue', 'crime-scene', 'police-station', 'bar', 'church', 'blackwood-mansion', 'holt-house', 'port']) {
+    assert.ok(existsSync(resolve(root, `src/js/scenes/${scene}.js`)), `missing scene module: ${scene}`);
+    assert.ok(map.includes(`'${scene}'`), `map does not route to scene: ${scene}`);
+  }
+  assert.ok(existsSync(resolve(root, 'src/js/components/story-location.js')));
+});
+
 test('PWA cache includes visual styles, map data and the new image assets', () => {
   const sw = read('sw.js');
   for (const resource of [
     'src/css/art-direction.css', 'src/data/locations.json',
-    'src/js/systems/dialogue-reactions.js',
+    'src/js/systems/dialogue-reactions.js', 'src/js/components/story-location.js',
     'blackford-city-atlas.webp', 'blackford-courtroom.webp',
     'blackford-precinct.webp', 'blackford-morgue.webp', 'blackford-rusty-anchor.webp',
     'lydia-winter.webp', 'lydia-winter-tension.webp', 'lydia-winter-warmth.webp', 'lydia-winter-withdrawal.webp', 'ray-morgan.webp', 'anna-holt.webp', 'marta-hayes.webp',
     'father-thomas.webp', 'father-thomas-tension.webp', 'father-thomas-warmth.webp', 'father-thomas-withdrawal.webp', 'sebastian-blackwood.webp', 'sebastian-blackwood-tension.webp', 'sebastian-blackwood-warmth.webp', 'sebastian-blackwood-withdrawal.webp', 'ray-morgan-tension.webp', 'ray-morgan-warmth.webp', 'ray-morgan-withdrawal.webp', 'anna-holt-tension.webp', 'anna-holt-warmth.webp', 'anna-holt-withdrawal.webp', 'marta-hayes-tension.webp', 'marta-hayes-warmth.webp', 'marta-hayes-withdrawal.webp'
   ]) assert.ok(sw.includes(resource), `cache missing ${resource}`);
+  for (const scene of ['church.js', 'blackwood-mansion.js', 'holt-house.js', 'port.js']) {
+    assert.ok(sw.includes(`/src/js/scenes/${scene}`), `PWA cache missing ${scene}`);
+  }
+  assert.ok(sw.includes('dead-calm-visual-v97'), 'new story scenes require a new cache version');
   assert.ok(sw.includes("self.addEventListener('activate'"), 'old PWA caches should be cleared');
 });
 
