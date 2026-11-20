@@ -3,11 +3,15 @@
     "id": "autopsy_report_01",
     "name": "Отчёт о вскрытии",
     "category": "document",
-    "description": "Судья Гаррисон умер от отравления экстрактом белладонны. По заключению Лидии, действие яда было длительным: судья мучился почти сутки. На теле — следы связывания и надрез в форме буквы 'К'.",
+    "description": "Судья Гаррисон умер от отравления экстрактом белладонны. По заключению Лидии действие яда было длительным. Следы на запястьях и буква «К» зафиксированы отдельно; они не устанавливают личность убийцы.",
     "location": "morgue",
     "day": 1,
     "source": "Доктор Лидия Винтер",
-    "connections_to": ["poison_vial_info", "letter_k_mark", "patrol_initial_report"]
+    "connections_to": [
+      "poison_vial_info",
+      "letter_k_mark",
+      "patrol_initial_report"
+    ]
   },
   "patrol_initial_report": {
     "id": "patrol_initial_report",
@@ -17,7 +21,10 @@
     "location": "police_station",
     "day": 1,
     "source": "Первичный рапорт дежурного",
-    "connections_to": ["autopsy_report_01", "court_switchboard_log"]
+    "connections_to": [
+      "autopsy_report_01",
+      "court_switchboard_log"
+    ]
   },
   "court_switchboard_log": {
     "id": "court_switchboard_log",
@@ -27,7 +34,10 @@
     "location": "police_station",
     "day": 1,
     "source": "Журнал входящих сообщений участка",
-    "connections_to": ["patrol_initial_report", "court_phone_register_copy"]
+    "connections_to": [
+      "patrol_initial_report",
+      "court_phone_register_copy"
+    ]
   },
   "court_phone_register_copy": {
     "id": "court_phone_register_copy",
@@ -37,7 +47,11 @@
     "location": "police_station",
     "day": 1,
     "source": "Заверенная копия регистрационной книги суда",
-    "connections_to": ["court_switchboard_log", "court_extension_directory", "court_access_ledger"]
+    "connections_to": [
+      "court_switchboard_log",
+      "court_extension_directory",
+      "court_access_ledger"
+    ]
   },
   "court_extension_directory": {
     "id": "court_extension_directory",
@@ -47,7 +61,10 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Служебный телефонный справочник",
-    "connections_to": ["court_phone_register_copy", "court_access_ledger"]
+    "connections_to": [
+      "court_phone_register_copy",
+      "court_access_ledger"
+    ]
   },
   "court_access_ledger": {
     "id": "court_access_ledger",
@@ -57,7 +74,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Журнал ключей судебной охраны",
-    "connections_to": ["court_extension_directory", "court_phone_register_copy", "guard_key_testimony", "spare_key_inventory"]
+    "connections_to": [
+      "court_extension_directory",
+      "court_phone_register_copy",
+      "guard_key_testimony",
+      "spare_key_inventory"
+    ]
   },
   "guard_key_testimony": {
     "id": "guard_key_testimony",
@@ -67,7 +89,10 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Виктор Белл, охрана суда",
-    "connections_to": ["court_access_ledger", "spare_key_inventory"]
+    "connections_to": [
+      "court_access_ledger",
+      "spare_key_inventory"
+    ]
   },
   "spare_key_inventory": {
     "id": "spare_key_inventory",
@@ -77,7 +102,10 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Хозяйственная служба суда",
-    "connections_to": ["guard_key_testimony", "court_access_ledger"]
+    "connections_to": [
+      "guard_key_testimony",
+      "court_access_ledger"
+    ]
   },
   "guard_round_sheet": {
     "id": "guard_round_sheet",
@@ -87,7 +115,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Журнал служебных обходов охраны",
-    "connections_to": ["guard_key_testimony", "court_phone_register_copy", "court_access_ledger", "court_visitor_log"]
+    "connections_to": [
+      "guard_key_testimony",
+      "court_phone_register_copy",
+      "court_access_ledger",
+      "court_visitor_log"
+    ]
   },
   "court_visitor_log": {
     "id": "court_visitor_log",
@@ -97,7 +130,10 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Пост контроля доступа суда",
-    "connections_to": ["guard_round_sheet", "secretary_access_testimony"]
+    "connections_to": [
+      "guard_round_sheet",
+      "secretary_access_testimony"
+    ]
   },
   "secretary_access_testimony": {
     "id": "secretary_access_testimony",
@@ -107,7 +143,11 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Елена Савельева, судебный секретарь",
-    "connections_to": ["court_visitor_log", "court_extension_directory", "secretary_source_statement"]
+    "connections_to": [
+      "court_visitor_log",
+      "court_extension_directory",
+      "secretary_source_statement"
+    ]
   },
   "secretary_source_statement": {
     "id": "secretary_source_statement",
@@ -117,7 +157,11 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Повторные показания Елены Савельевой",
-    "connections_to": ["secretary_access_testimony", "guard_key_testimony", "orlov_evening_statement"]
+    "connections_to": [
+      "secretary_access_testimony",
+      "guard_key_testimony",
+      "orlov_evening_statement"
+    ]
   },
   "pass_041_counterfoil": {
     "id": "pass_041_counterfoil",
@@ -127,7 +171,11 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Корешковая книга поста охраны суда",
-    "connections_to": ["court_visitor_log", "secretary_source_statement", "orlov_badge_scan"]
+    "connections_to": [
+      "court_visitor_log",
+      "secretary_source_statement",
+      "orlov_badge_scan"
+    ]
   },
   "orlov_evening_statement": {
     "id": "orlov_evening_statement",
@@ -137,7 +185,10 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Павел Орлов, старший делопроизводитель",
-    "connections_to": ["secretary_source_statement", "orlov_badge_scan"]
+    "connections_to": [
+      "secretary_source_statement",
+      "orlov_badge_scan"
+    ]
   },
   "orlov_badge_scan": {
     "id": "orlov_badge_scan",
@@ -147,7 +198,11 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Система служебных пропусков суда",
-    "connections_to": ["orlov_evening_statement", "pass_041_counterfoil", "orlov_badge_handover"]
+    "connections_to": [
+      "orlov_evening_statement",
+      "pass_041_counterfoil",
+      "orlov_badge_handover"
+    ]
   },
   "orlov_badge_handover": {
     "id": "orlov_badge_handover",
@@ -157,7 +212,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Журнал передачи служебных карточек",
-    "connections_to": ["orlov_badge_scan", "orlov_evening_statement", "court_nk_staff_index", "reader_service_ticket"]
+    "connections_to": [
+      "orlov_badge_scan",
+      "orlov_evening_statement",
+      "court_nk_staff_index",
+      "reader_service_ticket"
+    ]
   },
   "court_nk_staff_index": {
     "id": "court_nk_staff_index",
@@ -167,7 +227,11 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Кадровый указатель суда",
-    "connections_to": ["orlov_badge_handover", "reader_service_ticket", "reader_maintenance_access_log"]
+    "connections_to": [
+      "orlov_badge_handover",
+      "reader_service_ticket",
+      "reader_maintenance_access_log"
+    ]
   },
   "reader_service_ticket": {
     "id": "reader_service_ticket",
@@ -177,7 +241,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Журнал ремонтных работ суда",
-    "connections_to": ["orlov_badge_handover", "court_nk_staff_index", "reader_maintenance_access_log", "reader_service_signoff"]
+    "connections_to": [
+      "orlov_badge_handover",
+      "court_nk_staff_index",
+      "reader_maintenance_access_log",
+      "reader_service_signoff"
+    ]
   },
   "reader_maintenance_access_log": {
     "id": "reader_maintenance_access_log",
@@ -187,7 +256,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Бумажный журнал технического помещения суда",
-    "connections_to": ["reader_service_ticket", "reader_service_signoff", "court_nk_staff_index", "klimov_evening_account"]
+    "connections_to": [
+      "reader_service_ticket",
+      "reader_service_signoff",
+      "court_nk_staff_index",
+      "klimov_evening_account"
+    ]
   },
   "reader_service_signoff": {
     "id": "reader_service_signoff",
@@ -197,7 +271,13 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Акт приёмки работ хозяйственной службы",
-    "connections_to": ["reader_service_ticket", "reader_maintenance_access_log", "orlov_badge_scan", "klimov_evening_account", "kostina_evening_account"]
+    "connections_to": [
+      "reader_service_ticket",
+      "reader_maintenance_access_log",
+      "orlov_badge_scan",
+      "klimov_evening_account",
+      "kostina_evening_account"
+    ]
   },
   "klimov_evening_account": {
     "id": "klimov_evening_account",
@@ -207,7 +287,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Личный опрос Николая Климова",
-    "connections_to": ["reader_service_ticket", "reader_maintenance_access_log", "reader_service_signoff", "maintenance_tool_issue_ledger"]
+    "connections_to": [
+      "reader_service_ticket",
+      "reader_maintenance_access_log",
+      "reader_service_signoff",
+      "maintenance_tool_issue_ledger"
+    ]
   },
   "kostina_evening_account": {
     "id": "kostina_evening_account",
@@ -217,7 +302,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Личный опрос Надежды Костиной",
-    "connections_to": ["court_nk_staff_index", "orlov_badge_handover", "reader_service_signoff", "archive_room_register"]
+    "connections_to": [
+      "court_nk_staff_index",
+      "orlov_badge_handover",
+      "reader_service_signoff",
+      "archive_room_register"
+    ]
   },
   "maintenance_tool_issue_ledger": {
     "id": "maintenance_tool_issue_ledger",
@@ -227,7 +317,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Книга выдачи ключей и инструмента хозяйственной службы",
-    "connections_to": ["klimov_evening_account", "reader_maintenance_access_log", "reader_service_signoff", "key_issue_clerk_note"]
+    "connections_to": [
+      "klimov_evening_account",
+      "reader_maintenance_access_log",
+      "reader_service_signoff",
+      "key_issue_clerk_note"
+    ]
   },
   "key_issue_clerk_note": {
     "id": "key_issue_clerk_note",
@@ -237,7 +332,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Служебная записка сменного кладовщика хозяйственной службы",
-    "connections_to": ["maintenance_tool_issue_ledger", "klimov_evening_account", "key_note_paper_trace", "supply_desk_shift_register"]
+    "connections_to": [
+      "maintenance_tool_issue_ledger",
+      "klimov_evening_account",
+      "key_note_paper_trace",
+      "supply_desk_shift_register"
+    ]
   },
   "key_note_paper_trace": {
     "id": "key_note_paper_trace",
@@ -247,7 +347,11 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Бумажный архив хозяйственной службы и общий блокнот заявок",
-    "connections_to": ["key_issue_clerk_note", "supply_desk_shift_register", "key_note_impression_report"]
+    "connections_to": [
+      "key_issue_clerk_note",
+      "supply_desk_shift_register",
+      "key_note_impression_report"
+    ]
   },
   "supply_desk_shift_register": {
     "id": "supply_desk_shift_register",
@@ -257,7 +361,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Книга дежурств хозяйственной службы",
-    "connections_to": ["key_issue_clerk_note", "key_note_paper_trace", "maintenance_tool_issue_ledger", "supply_counter_access_roster"]
+    "connections_to": [
+      "key_issue_clerk_note",
+      "key_note_paper_trace",
+      "maintenance_tool_issue_ledger",
+      "supply_counter_access_roster"
+    ]
   },
   "supply_counter_access_roster": {
     "id": "supply_counter_access_roster",
@@ -267,7 +376,11 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Пропускной список хозяйственной службы",
-    "connections_to": ["supply_desk_shift_register", "court_nk_staff_index", "key_note_impression_report"]
+    "connections_to": [
+      "supply_desk_shift_register",
+      "court_nk_staff_index",
+      "key_note_impression_report"
+    ]
   },
   "key_note_impression_report": {
     "id": "key_note_impression_report",
@@ -277,7 +390,13 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Протокол осмотра бумаги хозяйственной службы",
-    "connections_to": ["key_note_paper_trace", "court_extension_directory", "supply_counter_access_roster", "supply_evening_request_codes", "switchboard_call_detail"]
+    "connections_to": [
+      "key_note_paper_trace",
+      "court_extension_directory",
+      "supply_counter_access_roster",
+      "supply_evening_request_codes",
+      "switchboard_call_detail"
+    ]
   },
   "supply_evening_request_codes": {
     "id": "supply_evening_request_codes",
@@ -287,7 +406,13 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Книга заявок хозяйственной службы",
-    "connections_to": ["key_note_impression_report", "reader_service_ticket", "switchboard_call_detail", "kit_seventeen_loan_log", "kit_seventeen_service_checklist"]
+    "connections_to": [
+      "key_note_impression_report",
+      "reader_service_ticket",
+      "switchboard_call_detail",
+      "kit_seventeen_loan_log",
+      "kit_seventeen_service_checklist"
+    ]
   },
   "kit_seventeen_loan_log": {
     "id": "kit_seventeen_loan_log",
@@ -297,7 +422,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Журнал учёта инструментальных наборов",
-    "connections_to": ["supply_evening_request_codes", "kit_seventeen_service_checklist", "maintenance_tool_issue_ledger", "reader_reconstructed_timeline"]
+    "connections_to": [
+      "supply_evening_request_codes",
+      "kit_seventeen_service_checklist",
+      "maintenance_tool_issue_ledger",
+      "reader_reconstructed_timeline"
+    ]
   },
   "kit_seventeen_service_checklist": {
     "id": "kit_seventeen_service_checklist",
@@ -307,7 +437,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Контрольный лист хозяйственной службы",
-    "connections_to": ["supply_evening_request_codes", "kit_seventeen_loan_log", "reader_service_signoff", "reader_reconstructed_timeline"]
+    "connections_to": [
+      "supply_evening_request_codes",
+      "kit_seventeen_loan_log",
+      "reader_service_signoff",
+      "reader_reconstructed_timeline"
+    ]
   },
   "reader_reconstructed_timeline": {
     "id": "reader_reconstructed_timeline",
@@ -317,7 +452,16 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Аналитическая сводка следствия по пяти документам",
-    "connections_to": ["kit_seventeen_loan_log", "maintenance_tool_issue_ledger", "orlov_badge_scan", "kit_seventeen_service_checklist", "reader_service_signoff", "key_signature_comparison", "reader_test_diagnostic", "reader_archive_crosscheck"]
+    "connections_to": [
+      "kit_seventeen_loan_log",
+      "maintenance_tool_issue_ledger",
+      "orlov_badge_scan",
+      "kit_seventeen_service_checklist",
+      "reader_service_signoff",
+      "key_signature_comparison",
+      "reader_test_diagnostic",
+      "reader_archive_crosscheck"
+    ]
   },
   "reader_archive_crosscheck": {
     "id": "reader_archive_crosscheck",
@@ -327,7 +471,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Заверенная копия архивной сверки хозяйственной службы",
-    "connections_to": ["reader_reconstructed_timeline", "kit_seventeen_service_checklist", "reader_service_signoff", "kit_seventeen_loan_log"]
+    "connections_to": [
+      "reader_reconstructed_timeline",
+      "kit_seventeen_service_checklist",
+      "reader_service_signoff",
+      "kit_seventeen_loan_log"
+    ]
   },
   "key_signature_comparison": {
     "id": "key_signature_comparison",
@@ -337,7 +486,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Заключение о сопоставлении архивных подписей",
-    "connections_to": ["maintenance_tool_issue_ledger", "reader_reconstructed_timeline", "klimov_evening_account", "kostina_evening_account"]
+    "connections_to": [
+      "maintenance_tool_issue_ledger",
+      "reader_reconstructed_timeline",
+      "klimov_evening_account",
+      "kostina_evening_account"
+    ]
   },
   "reader_test_diagnostic": {
     "id": "reader_test_diagnostic",
@@ -347,7 +501,11 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Технический архив контроллера служебного входа",
-    "connections_to": ["kit_seventeen_service_checklist", "reader_service_signoff", "reader_reconstructed_timeline"]
+    "connections_to": [
+      "kit_seventeen_service_checklist",
+      "reader_service_signoff",
+      "reader_reconstructed_timeline"
+    ]
   },
   "switchboard_call_detail": {
     "id": "switchboard_call_detail",
@@ -357,7 +515,12 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Выписка коммутатора суда",
-    "connections_to": ["court_phone_register_copy", "court_extension_directory", "key_note_impression_report", "supply_evening_request_codes"]
+    "connections_to": [
+      "court_phone_register_copy",
+      "court_extension_directory",
+      "key_note_impression_report",
+      "supply_evening_request_codes"
+    ]
   },
   "archive_room_register": {
     "id": "archive_room_register",
@@ -367,27 +530,36 @@
     "location": "crime_scene_court",
     "day": 1,
     "source": "Журнал архива суда",
-    "connections_to": ["kostina_evening_account", "court_nk_staff_index"]
+    "connections_to": [
+      "kostina_evening_account",
+      "court_nk_staff_index"
+    ]
   },
   "poison_vial_info": {
     "id": "poison_vial_info",
     "name": "Информация о яде",
     "category": "information",
-    "description": "Экстракт белладонны — редкий яд. В Блэкфорде его можно достать только через портовую аптеку или на чёрном рынке.",
+    "description": "Экстракт белладонны редок. В Блэкфорде его можно достать через портовую аптеку или на чёрном рынке. Доступ к яду сам по себе не доказывает, кто его приобрёл.",
     "location": "morgue",
     "day": 1,
     "source": "Доктор Лидия Винтер",
-    "connections_to": ["autopsy_report_01", "pharmacy_lead"]
+    "connections_to": [
+      "autopsy_report_01",
+      "pharmacy_lead"
+    ]
   },
   "letter_k_mark": {
     "id": "letter_k_mark",
     "name": "Буква 'К' на теле",
     "category": "observation",
-    "description": "На груди судьи вырезана буква 'К'. Возможно, это подпись убийцы или инициал.",
+    "description": "На груди судьи вырезана буква «К». Возможная отсылка к Каллиопе; без других источников это лишь версия о значении знака.",
     "location": "morgue",
     "day": 1,
     "source": "Доктор Лидия Винтер",
-    "connections_to": ["autopsy_report_01", "kalliopa_name"]
+    "connections_to": [
+      "autopsy_report_01",
+      "kalliopa_name"
+    ]
   },
   "kalliopa_name": {
     "id": "kalliopa_name",
@@ -397,17 +569,23 @@
     "location": "police_station",
     "day": 1,
     "source": "Детектив Рэй Морган",
-    "connections_to": ["letter_k_mark", "old_case_details"]
+    "connections_to": [
+      "letter_k_mark",
+      "old_case_details"
+    ]
   },
   "old_case_details": {
     "id": "old_case_details",
     "name": "Дело 20-летней давности",
     "category": "information",
-    "description": "20 лет назад в порту нашли тело Каллиопы. Дело закрыли за три дня как несчастный случай. Судья Гаррисон, священник Мэтьюс и мэр Коллинз участвовали в расследовании.",
+    "description": "Двадцать лет назад Каллиопу нашли мёртвой в порту. Дело закрыли за три дня как несчастный случай. Документы и показания указывают на участие судьи Гаррисона, священника Мэтьюса и мэра Коллинза в сокрытии, но каждый источник требует отдельной проверки.",
     "location": "police_station",
     "day": 1,
     "source": "Детектив Рэй Морган",
-    "connections_to": ["kalliopa_name", "suspect_list_01"]
+    "connections_to": [
+      "kalliopa_name",
+      "suspect_list_01"
+    ]
   },
   "old_case_closure_register": {
     "id": "old_case_closure_register",
@@ -417,7 +595,9 @@
     "location": "police_station",
     "day": 1,
     "source": "Заверенная выписка из архивного реестра участка",
-    "connections_to": ["old_case_details"]
+    "connections_to": [
+      "old_case_details"
+    ]
   },
   "old_case_archive_inventory": {
     "id": "old_case_archive_inventory",
@@ -427,7 +607,9 @@
     "location": "police_station",
     "day": 1,
     "source": "Опись архивной папки, представленная канцелярией",
-    "connections_to": ["old_case_closure_register"]
+    "connections_to": [
+      "old_case_closure_register"
+    ]
   },
   "old_case_original_order": {
     "id": "old_case_original_order",
@@ -437,7 +619,10 @@
     "location": "police_station",
     "day": 1,
     "source": "Архивная копия постановления, заверенная канцелярией",
-    "connections_to": ["old_case_closure_register", "old_case_authority_roster"]
+    "connections_to": [
+      "old_case_closure_register",
+      "old_case_authority_roster"
+    ]
   },
   "old_case_authority_roster": {
     "id": "old_case_authority_roster",
@@ -447,7 +632,9 @@
     "location": "police_station",
     "day": 1,
     "source": "Архивный журнал назначений следственной группы",
-    "connections_to": ["old_case_original_order"]
+    "connections_to": [
+      "old_case_original_order"
+    ]
   },
   "old_case_order_physical_original": {
     "id": "old_case_order_physical_original",
@@ -457,7 +644,10 @@
     "location": "police_station",
     "day": 1,
     "source": "Оригинал из архивного фонда участка, выданный по описи",
-    "connections_to": ["old_case_original_order", "old_case_signature_samples"]
+    "connections_to": [
+      "old_case_original_order",
+      "old_case_signature_samples"
+    ]
   },
   "old_case_signature_samples": {
     "id": "old_case_signature_samples",
@@ -467,7 +657,9 @@
     "location": "police_station",
     "day": 1,
     "source": "Подборка подписанных приказов из фонда кадровой службы",
-    "connections_to": ["old_case_order_physical_original"]
+    "connections_to": [
+      "old_case_order_physical_original"
+    ]
   },
   "old_case_specialist_memo": {
     "id": "old_case_specialist_memo",
@@ -477,7 +669,9 @@
     "location": "police_station",
     "day": 1,
     "source": "Служебная записка специалиста-криминалиста",
-    "connections_to": ["old_case_order_physical_original"]
+    "connections_to": [
+      "old_case_order_physical_original"
+    ]
   },
   "old_case_custody_extract": {
     "id": "old_case_custody_extract",
@@ -487,7 +681,9 @@
     "location": "police_station",
     "day": 1,
     "source": "Заверенная выписка из журнала движения архивных фондов",
-    "connections_to": ["old_case_order_physical_original"]
+    "connections_to": [
+      "old_case_order_physical_original"
+    ]
   },
   "old_case_transfer_card": {
     "id": "old_case_transfer_card",
@@ -497,7 +693,10 @@
     "location": "police_station",
     "day": 1,
     "source": "Архивный реестр первичной передачи дел",
-    "connections_to": ["old_case_custody_extract", "old_case_original_order"]
+    "connections_to": [
+      "old_case_custody_extract",
+      "old_case_original_order"
+    ]
   },
   "old_case_clerk_statement": {
     "id": "old_case_clerk_statement",
@@ -507,7 +706,9 @@
     "location": "police_station",
     "day": 1,
     "source": "Запись опроса делопроизводителя из архивного дела Каллиопы",
-    "connections_to": ["old_case_transfer_card"]
+    "connections_to": [
+      "old_case_transfer_card"
+    ]
   },
   "old_case_dock_statement": {
     "id": "old_case_dock_statement",
@@ -517,7 +718,9 @@
     "location": "police_station",
     "day": 1,
     "source": "Запись опроса портового сторожа из архивного дела Каллиопы",
-    "connections_to": ["old_case_details"]
+    "connections_to": [
+      "old_case_details"
+    ]
   },
   "old_case_port_visitor_log": {
     "id": "old_case_port_visitor_log",
@@ -527,7 +730,10 @@
     "location": "police_station",
     "day": 1,
     "source": "Заверенный фрагмент старого журнала пропускного пункта порта",
-    "connections_to": ["old_case_dock_statement", "old_case_details"]
+    "connections_to": [
+      "old_case_dock_statement",
+      "old_case_details"
+    ]
   },
   "old_case_port_waybill": {
     "id": "old_case_port_waybill",
@@ -537,76 +743,99 @@
     "location": "police_station",
     "day": 1,
     "source": "Заверенная копия путевого листа транспортного отдела",
-    "connections_to": ["old_case_port_visitor_log"]
+    "connections_to": [
+      "old_case_port_visitor_log"
+    ]
   },
   "judge_notes": {
     "id": "judge_notes",
     "name": "Дневник судьи",
     "category": "document",
-    "description": "Последняя запись: «Он вернулся. Спустя 20 лет. Боюсь, что справедливость настигнет нас всех». Судья знал, что за ним придут.",
+    "description": "Последняя запись судьи: «Он вернулся. Спустя двадцать лет. Боюсь, что справедливость настигнет нас всех». Местоимение «он» не называет человека и не доказывает, кого именно ждал Гаррисон.",
     "location": "crime_scene_court",
     "day": 1,
     "source": "Осмотр места преступления",
-    "connections_to": ["old_case_details", "wall_inscription"]
+    "connections_to": [
+      "old_case_details",
+      "wall_inscription"
+    ]
   },
   "wall_inscription": {
     "id": "wall_inscription",
     "name": "Надпись на стене",
     "category": "observation",
-    "description": "«СЛЕПОЕ ПРАВОСУДИЕ» — написано кровью жертвы. Отсылка к Фемиде, богине правосудия с завязанными глазами.",
+    "description": "На стене написано «СЛЕПОЕ ПРАВОСУДИЕ». Надпись отсылает к решению суда по делу Каллиопы и может быть частью постановки. Она не устанавливает мотив или личность убийцы.",
     "location": "crime_scene_court",
     "day": 1,
     "source": "Осмотр места преступления",
-    "connections_to": ["judge_notes", "broken_scales"]
+    "connections_to": [
+      "judge_notes",
+      "broken_scales"
+    ]
   },
   "broken_scales": {
     "id": "broken_scales",
     "name": "Сломанные весы",
     "category": "object",
-    "description": "Весы Фемиды разбиты. На одной чаше — отпечаток пальца. Убийца оставил его намеренно.",
+    "description": "Весы Фемиды разбиты. На одной чаше сохранился отпечаток. Сам факт отпечатка не показывает, кто его оставил и когда.",
     "location": "crime_scene_court",
     "day": 1,
     "source": "Осмотр места преступления",
-    "connections_to": ["wall_inscription", "fingerprint"]
+    "connections_to": [
+      "wall_inscription",
+      "fingerprint"
+    ]
   },
   "fingerprint": {
     "id": "fingerprint",
     "name": "Отпечаток пальца",
     "category": "evidence",
-    "description": "Отпечаток с разбитых весов. Отправлен на анализ. Возможно, совпадёт с кем-то из базы данных.",
+    "description": "Отпечаток с разбитых весов. До надёжного сравнения с контрольным образцом нельзя приписывать его судье, свидетелю или убийце.",
     "location": "crime_scene_court",
     "day": 1,
     "source": "Осмотр места преступления",
-    "connections_to": ["broken_scales", "suspect_list_01"]
+    "connections_to": [
+      "broken_scales",
+      "suspect_list_01"
+    ]
   },
   "suspect_list_01": {
     "id": "suspect_list_01",
     "name": "Список подозреваемых",
     "category": "document",
-    "description": "Все жертвы были связаны с делом Каллиопы 20 лет назад. Возможный убийца — тот, кто пострадал от их решения.",
+    "description": "Рабочий список версий по убийству Гаррисона и старому делу Каллиопы. Наличие мотива не доказывает причастность; версии должны проверяться независимыми источниками.",
     "location": "office",
     "day": 1,
     "source": "Анализ детектива",
-    "connections_to": ["old_case_details", "gabriel_identity"]
+    "connections_to": [
+      "old_case_details",
+      "gabriel_identity"
+    ]
   },
   "gabriel_identity": {
     "id": "gabriel_identity",
     "name": "Габриэль — брат Лидии",
     "category": "important",
-    "description": "Брат Лидии Винтер — Габриэль. 20 лет назад убили его невесту Каллиопу. Он провёл 20 лет в психиатрической клинике. У него есть мотив для мести.",
+    "description": "Габриэль — брат Лидии и жених Каллиопы. После её смерти его сделали удобным подозреваемым; он пережил тяжёлый срыв и оказался в клинике. Доказательств, что он убил Каллиопу, нет.",
     "location": "morgue",
     "day": 1,
     "source": "Доктор Лидия Винтер",
-    "connections_to": ["suspect_list_01", "kalliopa_name"]
+    "connections_to": [
+      "suspect_list_01",
+      "kalliopa_name"
+    ]
   },
   "body_examination": {
     "id": "body_examination",
     "name": "Осмотр тела судьи",
     "category": "observation",
-    "description": "Судья был отравлен. Запястья стёрты верёвками. Глаза завязаны при жизни. Убийца хотел, чтобы он знал, что умирает.",
+    "description": "На теле обнаружены следы связывания и повязка на глазах. Эти детали указывают на подготовленную постановку, но не доказывают, что жертва была жива в момент завязывания повязки или что убийца хотел передать конкретный символ.",
     "location": "crime_scene_court",
     "day": 1,
     "source": "Осмотр места преступления",
-    "connections_to": ["autopsy_report_01", "wall_inscription"]
+    "connections_to": [
+      "autopsy_report_01",
+      "wall_inscription"
+    ]
   }
 }
