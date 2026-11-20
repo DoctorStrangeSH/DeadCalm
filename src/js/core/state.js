@@ -6,6 +6,23 @@ import { createEmptyKnowledgeLedger, normalizeKnowledgeLedger, recordNpcKnowledg
 import { createEmptyDailyLife, normalizeDailyLife, upsertNpcSchedule, getNpcScheduleAt, recordNpcOccurrence, getNpcOccurrences } from '../systems/npc-daily-life.js';
 import { createEmptyMiniGameProgress, normalizeMiniGameProgress, recordMiniGameResult } from '../systems/minigame-progress.js';
 
+const INITIAL_CAMPAIGN = Object.freeze({
+  caseId: 'case_001',
+  day: 1,
+  completed: false,
+  ending: null
+});
+
+function normalizeCampaignState(savedCampaign, flags = {}) {
+  const inferredDay = [5, 4, 3, 2].find(day => flags?.['day_' + day]) || 1;
+  const day = Number.isInteger(savedCampaign?.day)
+    ? Math.max(1, Math.min(5, savedCampaign.day))
+    : inferredDay;
+  const ending = ['open_case', 'price_of_silence'].includes(savedCampaign?.ending)
+    ? savedCampaign.ending
+    : null;
+  return { caseId: 'case_001', day, completed: Boolean(savedCampaign?.completed && ending), ending };
+}
 export var GameState = {
   player: {
     name: 'Джон Риверс',
@@ -18,6 +35,8 @@ export var GameState = {
     suspects: [],
     timeline: [],
   },
+
+  campaign: { ...INITIAL_CAMPAIGN },
 
   flags: {},
   relationships: {},
@@ -40,6 +59,8 @@ export var GameState = {
       this.player = saved.player || this.player;
       this.currentCase = saved.currentCase || this.currentCase;
       this.flags = saved.flags || {};
+      this.campaign = normalizeCampaignState(saved.campaign, this.flags);
+      this._syncCampaignFlags();
       this.relationships = saved.relationships || {};
       this.npcMemory = saved.npcMemory || {};
       this.socialGraph = normalizeSocialGraph(saved.socialGraph);
@@ -53,6 +74,7 @@ export var GameState = {
       console.log('[State] - clues: ' + this.currentCase.clues.length);
       console.log('[State] - notebook: ' + this.notebook.length);
     } else {
+      this.campaign = { ...INITIAL_CAMPAIGN };
       console.log('[State] Новое состояние (без сохранения)');
     }
   },
@@ -76,6 +98,38 @@ export var GameState = {
     this.save();
   },
 
+  _syncCampaignFlags() {
+    for (let day = 2; day <= 5; day++) {
+      if (this.campaign.day >= day) this.flags['day_' + day] = true;
+      else delete this.flags['day_' + day];
+    }
+  },
+
+  setCampaignDay(day) {
+    if (!Number.isInteger(day) || day < 1 || day > 5) return false;
+    if (this.campaign.completed || day < this.campaign.day || day > this.campaign.day + 1) return false;
+    const previousDay = this.campaign.day;
+    this.campaign.day = day;
+    this._syncCampaignFlags();
+    this.save();
+    Events.emit('campaign:day_changed', { previousDay, day });
+    return true;
+  },
+
+  advanceCampaignDay() {
+    if (this.campaign.completed || this.campaign.day >= 5) return false;
+    return this.setCampaignDay(this.campaign.day + 1);
+  },
+
+  completeCampaign(ending) {
+    if (this.campaign.completed || this.campaign.day !== 5) return false;
+    if (!['open_case', 'price_of_silence'].includes(ending)) return false;
+    this.campaign.completed = true;
+    this.campaign.ending = ending;
+    this.save();
+    Events.emit('campaign:completed', { caseId: this.campaign.caseId, ending });
+    return true;
+  },
   hasFlag(flagName) {
     return !!this.flags[flagName];
   },
@@ -267,6 +321,7 @@ export var GameState = {
     Storage.save('gameState', {
       player: this.player,
       currentCase: this.currentCase,
+      campaign: this.campaign,
       flags: this.flags,
       relationships: this.relationships,
       npcMemory: this.npcMemory,
@@ -295,6 +350,7 @@ export var GameState = {
     // Сбрасываем
     this.player = { name: 'Джон Риверс', reputation: 50 };
     this.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
+    this.campaign = { ...INITIAL_CAMPAIGN };
     this.flags = {};
     this.relationships = {};
     this.npcMemory = {};
