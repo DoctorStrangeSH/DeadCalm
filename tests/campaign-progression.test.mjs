@@ -114,7 +114,8 @@ test('case summary reflects either saved finale using a player-facing label', as
 test('final evidence dossier explains both findings and limits without overstating clues', () => {
   const found = new Map([
     ['restored_film_frame', { quality: 100 }],
-    ['port_radio_fragment', { quality: 82 }]
+    ['port_radio_fragment', { quality: 82 }],
+    ['court_switchboard_log', {}]
   ]);
   const game = {
     hasClue: id => found.has(id),
@@ -125,13 +126,15 @@ test('final evidence dossier explains both findings and limits without overstati
   const radio = dossier.find(item => item.title === 'Радиофрагмент');
   const autopsy = dossier.find(item => item.title === 'Причина смерти');
   const poison = dossier.find(item => item.title === 'Источник белладонны');
+  const timeline = dossier.find(item => item.title === 'Расхождение во времени');
 
   assert.match(film.finding, /Себастьян и Каллиопа/);
   assert.match(film.limit, /не показывает момент убийства/);
   assert.match(radio.limit, /Голос не идентифицирован/);
   assert.match(autopsy.limit, /не устанавливает, кто приобрёл яд/);
   assert.match(poison.limit, /Получатель препарата/);
-  assert.equal(dossier.length, 7);
+  assert.match(timeline.limit, /не устанавливают личность убийцы/);
+  assert.equal(dossier.length, 8);
 });
 
 test('partial film is described as unidentified and does not become proof of identity', () => {
