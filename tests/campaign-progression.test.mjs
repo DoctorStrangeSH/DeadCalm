@@ -78,3 +78,30 @@ test('final accusation requires independent medical, meeting, poison, archive an
   assert.equal(result.ready, false);
   assert.ok(result.missing.includes('Счёт за белладонну'));
 });
+
+
+test('case summary reflects an active case before the finale', () => {
+  const { getCampaignCaseSummary } = await import('../src/js/systems/campaign-progression.js');
+  assert.deepEqual(getCampaignCaseSummary({ campaign: { day: 3, completed: false, ending: null } }), {
+    completed: false,
+    activeCount: 1,
+    completedCount: 0,
+    endingLabel: null
+  });
+});
+
+test('case summary reflects either saved finale using a player-facing label', async () => {
+  const { getCampaignCaseSummary } = await import('../src/js/systems/campaign-progression.js');
+  assert.deepEqual(getCampaignCaseSummary({ campaign: { day: 5, completed: true, ending: 'open_case' } }), {
+    completed: true,
+    activeCount: 0,
+    completedCount: 1,
+    endingLabel: 'ОТКРЫТОЕ ДЕЛО'
+  });
+  assert.deepEqual(getCampaignCaseSummary({ campaign: { day: 5, completed: true, ending: 'price_of_silence' } }), {
+    completed: true,
+    activeCount: 0,
+    completedCount: 1,
+    endingLabel: 'ЦЕНА МОЛЧАНИЯ'
+  });
+});
