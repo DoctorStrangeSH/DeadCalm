@@ -471,20 +471,27 @@ export var GameState = {
     const migration = migrateSave(payload);
     if (migration.status !== 'ok') return false;
     const data = migration.data;
+    const campaign = normalizeCampaignState(data.campaign, data.flags);
+    const flags = { ...(data.flags || {}) };
+    for (let day = 2; day <= 5; day++) {
+      if (campaign.day >= day) flags['day_' + day] = true;
+      else delete flags['day_' + day];
+    }
     const savePayload = {
       ...data,
+      campaign,
+      flags,
       schemaVersion: CURRENT_SAVE_VERSION
     };
 
-    // Commit to persistent storage before changing the live in-memory campaign.
+    // Commit the canonical campaign and matching day flags before changing live state.
     if (!Storage.save('gameState', savePayload)) return false;
 
     this.saveBlocked = false;
     this.player = data.player || { name: 'Джон Риверс', reputation: 50 };
     this.currentCase = data.currentCase || { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] };
-    this.flags = data.flags || {};
-    this.campaign = normalizeCampaignState(data.campaign, this.flags);
-    this._syncCampaignFlags();
+    this.flags = flags;
+    this.campaign = campaign;
     this.relationships = data.relationships || {};
     this.npcMemory = data.npcMemory || {};
     this.socialGraph = normalizeSocialGraph(data.socialGraph);
