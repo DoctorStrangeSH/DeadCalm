@@ -74,7 +74,7 @@ export function render(container) {
               <button class="film-action" id="film-restore" ${frame.restored?'disabled':''}>${frame.restored?'КАДР ВОССТАНОВЛЕН':defect.button}</button>
             ` : '<p class="film-defect-title">КАТУШКА ГОТОВА К ПРОСМОТРУ</p><p class="film-description">Все кадры обработаны. Запустите контрольную проекцию.</p>'}
             <div class="film-feedback" id="film-feedback" aria-live="polite">${message}</div>
-            <div class="film-progress"><span>СОСТОЯНИЕ КАТУШКИ</span><strong>${progress}%</strong></div><div class="film-progress-track"><i style="width:${progress}%"></i></div>
+            <div class="film-progress" id="film-progress-label"><span>СОСТОЯНИЕ КАТУШКИ</span><strong>${progress}%</strong></div><div class="film-progress-track" role="progressbar" aria-labelledby="film-progress-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}"><i style="width:${progress}%"></i></div>
             <div class="film-actions-row"><button class="film-secondary" id="film-advance" ${!frame?.restored || !safe?'disabled':''}>${session.phase==='projection'?'ЗАПУСТИТЬ ПРОЕКТОР':'СЛЕДУЮЩИЙ КАДР →'}</button><button class="film-exit" id="film-exit">ВЫХОД</button></div>
           </div>
         </div>
