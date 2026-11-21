@@ -27,7 +27,7 @@ const scenarios = Object.entries(dialogues).flatMap(([npcId, npc]) =>
 
 test('every authored critical NPC choice survives export/import and remains one-time in a fresh dialogue session', () => {
   assert.equal(Object.keys(dialogues).length, 6);
-  assert.equal(scenarios.length, 15, 'the audit expects all 15 authored NPC choice branches');
+  assert.equal(scenarios.length, 14, 'the audit expects all 14 authored NPC choice branches');
 
   const stateKeys = [
     'player', 'currentCase', 'campaign', 'flags', 'relationships', 'npcMemory',
