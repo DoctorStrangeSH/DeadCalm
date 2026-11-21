@@ -213,7 +213,7 @@ test('procedural audio is unlocked by user gesture and connected to story events
   assert.ok(app.includes("addEventListener('keydown', unlockAudio"), 'keyboard users must also unlock audio');
   assert.ok(app.includes("addEventListener('visibilitychange'"), 'audio lifecycle must follow page visibility');
   assert.ok(app.includes("Events.on('clue:added', () => Audio.playSfx('clue-found'))"), 'new evidence must have an audio cue');
-  assert.ok(app.includes("Events.on('minigame:completed', () => Audio.playSfx('success'))"), 'mini-game success must have an audio cue');
+  assert.ok(app.includes('getMiniGameResultCue(data.outcome)'), 'mini-game audio must respect the actual result quality');
   assert.ok(app.includes("Events.on('minigame:failed', () => Audio.playSfx('failure'))"), 'mini-game failure must have an audio cue');
   assert.ok(dialog.includes("Events.emit('dialogue:opened'"), 'dialogue opening must emit an audio event');
   assert.ok(audio.includes("rain: {") && audio.includes("harbor: {") && audio.includes("interior: {"), 'location ambience profiles must exist');
