@@ -156,6 +156,21 @@ export var Notebook = {
       });
     }
 
+    // The journal export is a complete case notebook: personal notes alone
+    // are not enough to reconstruct what evidence the investigator found.
+    var clues = this.getAllClues();
+    text += '\\n=== ОБНАРУЖЕННЫЕ УЛИКИ (' + clues.length + ') ===\\n\\n';
+    clues.forEach(function(clue) {
+      text += '[' + String(clue.category || 'прочее').toUpperCase() + '] ' +
+        (clue.name || 'Без названия') + '\\n';
+      text += (clue.description || '') + '\\n';
+      text += 'Источник: ' + (clue.source || 'Не установлен') + '\\n';
+      text += 'Место обнаружения: ' + (clue.location || 'Не зафиксировано') + '\\n';
+      text += 'День: ' + (clue.day || 1) + '\\n';
+      if (clue.foundAt) text += 'Обнаружено: ' + clue.foundAt + '\\n';
+      text += 'ID: ' + (clue.id || 'не указан') + '\\n---\\n\\n';
+    });
+
     return text;
   }
 };
