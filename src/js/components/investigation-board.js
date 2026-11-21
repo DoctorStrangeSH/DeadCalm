@@ -113,7 +113,7 @@ export class InvestigationBoard {
             <label>ПОИСК ВЕРСИИ <input id="hypothesis-search-query" type="search" placeholder="Название, обоснование, улика…" autocomplete="off" /></label>
             <label>СТАТУС <select id="hypothesis-search-status">
               <option value="all">Все версии</option>
-              ${Object.entries(HYPOTHESIS_STATUS_LABELS).filter(([value]) => value !== 'confirmed' || item.status === 'confirmed').map(([value, label]) => `<option value="${value}" ${item.status === value ? 'selected' : ''} ${value === 'confirmed' ? 'disabled' : ''}>${value === 'confirmed' ? 'Подтверждена (ранее сохранено)' : label}</option>`).join('')}}
+              ${Object.entries(HYPOTHESIS_STATUS_LABELS).map(([value, label]) => `<option value="${value}">${self._escapeHtml(label)}</option>`).join('')}
               <option value="review">Есть новые материалы</option>
             </select></label>
             <p id="hypothesis-search-count" role="status" aria-live="polite"></p>
@@ -252,7 +252,7 @@ export class InvestigationBoard {
         </aside>` : ''}
         <label>ОЦЕНКА ДЕТЕКТИВА
           <select data-hypothesis-id="${this._escapeHtml(item.id)}" aria-label="Статус гипотезы ${this._escapeHtml(item.title)}">
-            ${Object.entries(HYPOTHESIS_STATUS_LABELS).map(([value, label]) => `<option value="${value}" ${item.status === value ? 'selected' : ''}>${label}</option>`).join('')}
+            ${Object.entries(HYPOTHESIS_STATUS_LABELS).filter(([value]) => value !== 'confirmed' || item.status === 'confirmed').map(([value, label]) => `<option value="${value}" ${item.status === value ? 'selected' : ''} ${value === 'confirmed' ? 'disabled' : ''}>${value === 'confirmed' ? 'Подтверждена (ранее сохранено)' : label}</option>`).join('')}
           </select>
         </label>
         <details class="hypothesis-edit"><summary>ИЗМЕНИТЬ ВЕРСИЮ</summary>
