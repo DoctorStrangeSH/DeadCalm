@@ -75,10 +75,34 @@ async function init() {
     console.log('[NPC] ' + data.npcId + ': доверие ' + data.trust + '% ' + emoji);
   });
 
-  // Смена сцены
+  // Смена сцены и соответствующая музыка/атмосфера.
   Events.on('scene:changed', function(data) {
+    Audio.setScene(data.scene);
     console.log('[Scene] Переход: ' + data.scene);
   });
+
+  // Разблокируем AudioContext только после явного жеста пользователя.
+  let audioUnlocked = false;
+  const unlockAudio = function() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    Audio.unlock(GameState.settings);
+    Audio.setScene(Router.getCurrentScene() || 'main-menu');
+  };
+  document.addEventListener('pointerdown', unlockAudio, { once: true, capture: true });
+  document.addEventListener('keydown', unlockAudio, { once: true, capture: true });
+
+  // Единые тактильные звуковые сигналы для интерфейса и игровых событий.
+  document.addEventListener('click', function(event) {
+    if (event.target.closest('button, [role="button"]')) Audio.playSfx('ui-click');
+  }, true);
+  document.addEventListener('input', function(event) {
+    if (event.target.matches('input[type="range"]')) Audio.playSfx('ui-adjust');
+  }, true);
+  Events.on('clue:added', () => Audio.playSfx('clue-found'));
+  Events.on('minigame:completed', () => Audio.playSfx('success'));
+  Events.on('minigame:failed', () => Audio.playSfx('failure'));
+  Events.on('dialogue:closed', () => Audio.playSfx('dialogue-close'));
 
   // Сброс состояния (новая игра)
   Events.on('state:reset', function() {
