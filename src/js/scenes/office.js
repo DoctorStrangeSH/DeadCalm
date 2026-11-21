@@ -2,6 +2,7 @@ import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { Inventory } from '../components/inventory.js';
 import { assessCampaignDay, advanceCampaignWhenReady, getCampaignCaseSummary } from '../systems/campaign-progression.js';
+import { canAccessCase001MiniGame } from '../systems/minigame-access.js';
 
 /**
  * Кабинет детектива — главный хаб игры.
@@ -13,6 +14,9 @@ export function render(container) {
   var radioProgress = GameState.miniGameProgress?.['radio-tuning'];
   var repairProgress = GameState.miniGameProgress?.['mechanical-repair'];
   var filmProgress = GameState.miniGameProgress?.['film-restoration'];
+  var canRadio = canAccessCase001MiniGame('radio-tuning', GameState);
+  var canRepair = canAccessCase001MiniGame('mechanical-repair', GameState);
+  var canFilm = canAccessCase001MiniGame('film-restoration', GameState);
   var radioStatus = radioProgress
     ? 'Попыток: ' + radioProgress.attempts + ' · Лучший приём: ' + (radioProgress.bestOutcome === 'clear' ? 'чистый' : radioProgress.bestOutcome === 'fragmented' ? 'фрагменты' : 'неразборчиво')
     : 'Ещё не настраивали';
@@ -94,26 +98,26 @@ export function render(container) {
         </button>
 
         <!-- Радиоприёмная -->
-        <button id="btn-radio" class="card office-card text-left w-full">
+        <button id="btn-radio" class="card office-card text-left w-full" ${canRadio ? "" : "disabled"}>
           <span class="office-card-icon" aria-hidden="true">⌁</span><span class="office-card-number">08</span>
           <p class="card-title">РАДИОПРИЁМНАЯ</p>
-          <p class="card-subtitle">Настроить коротковолновый приёмник</p>
+          <p class="card-subtitle">${canRadio ? "Настроить коротковолновый приёмник" : "Доступно с четвёртого дня расследования"}</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">${radioStatus}</p>
         </button>
 
         <!-- Мастерская -->
-        <button id="btn-repair" class="card office-card text-left w-full">
+        <button id="btn-repair" class="card office-card text-left w-full" ${canRepair ? "" : "disabled"}>
           <span class="office-card-icon" aria-hidden="true">⚙</span><span class="office-card-number">07</span>
           <p class="card-title">МАСТЕРСКАЯ</p>
-          <p class="card-subtitle">Практика ремонта механизма</p>
+          <p class="card-subtitle">${canRepair ? "Практика ремонта механизма" : "Сначала получите вещи Маркуса от Анны · день 4"}</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">${repairStatus}</p>
         </button>
 
         <!-- Реставрация киноплёнки -->
-        <button id="btn-film" class="card office-card text-left w-full">
+        <button id="btn-film" class="card office-card text-left w-full" ${canFilm ? "" : "disabled"}>
           <span class="office-card-icon" aria-hidden="true">▥</span><span class="office-card-number">09</span>
           <p class="card-title">АРХИВ КИНОПЛЁНКИ</p>
-          <p class="card-subtitle">Восстановить повреждённую катушку</p>
+          <p class="card-subtitle">${canFilm ? "Восстановить повреждённую катушку" : "Нужен ключ из часов Маркуса · день 4"}</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">${filmStatus}</p>
         </button>
 
@@ -169,16 +173,19 @@ export function render(container) {
 
   // Радиоприёмная — отдельная сенсорная мини-игра
   document.getElementById('btn-radio').addEventListener('click', function () {
+    if (!canRadio) return;
     Events.emit('navigate', { scene: 'radio-tuning' });
   });
 
   // Архивная киноплёнка — отдельная сенсорная мини-игра
   document.getElementById('btn-film').addEventListener('click', function () {
+    if (!canFilm) return;
     Events.emit('navigate', { scene: 'film-restoration' });
   });
 
   // Мастерская — отдельная игровая мини-сцена
   document.getElementById('btn-repair').addEventListener('click', function () {
+    if (!canRepair) return;
     Events.emit('navigate', { scene: 'mechanical-repair' });
   });
 
