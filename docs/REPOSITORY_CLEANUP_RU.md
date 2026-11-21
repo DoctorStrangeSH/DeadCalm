@@ -327,3 +327,15 @@
 - `Storage.load()` recovers from valid backup or pending JSON if primary is missing/corrupt; a valid primary always wins, so a failed newer write cannot silently replace a known-good save.
 - `exists`, `remove`, and `clearAll` now include auxiliary records. Added five storage regression tests: backup rotation, corrupt-primary fallback, pending recovery, cleanup scope, and simulated quota failure.
 - GitHub Actions run `44899585246`: **324/324 PASS**, 0 failures, HEAD `97190d685d8b7eda59b90b4fa17cc74126b94e8f`.
+
+
+### Versioned save migrations and compatibility guard — 2026-11-21
+- Added `src/js/core/save-migrations.js` with schema version 1 and a v0 migration for unversioned legacy saves.
+- Migration supplies safe defaults for supported collections while retaining unknown top-level, case-level and clue-level fields. Applying it twice is idempotent.
+- New GameState writes include `schemaVersion`; successful legacy migrations are persisted immediately.
+- Future schema versions and malformed versions are rejected without downgrade. `GameState.save()` is blocked until an explicit new-game/reset action.
+- Added `Storage.hasAnyRecord()` so unrecoverable corrupt primary/backup/pending records are distinguished from a genuinely absent save. Startup refuses to silently create a blank campaign over existing unreadable data.
+- Main menu displays the incompatibility/corruption message and disables Continue; explicit New Game remains available with confirmation.
+- Added migration and integration regression tests. Latest code/test HEAD: `1222a42543952a0485134e599f5428ad9862db14`.
+- GitHub Actions run `44900170637` remains pending; no PASS claim until the run completes. Vercel Preview is READY; production unchanged.
+- Remaining QA: CI result, manual browser reload/recovery, and import/export round-trip.
