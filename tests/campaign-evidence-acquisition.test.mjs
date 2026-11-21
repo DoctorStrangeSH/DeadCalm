@@ -133,8 +133,11 @@ test('the two independent day-four evidence routes are actually wired to their m
   assert.match(radioScene, /recordCase001MiniGameEvidence\(GameState, 'radio-tuning'/);
   assert.equal(buildCase001MiniGameEvidence('film-restoration', { quality: 69 }), null);
   assert.equal(buildCase001MiniGameEvidence('film-restoration', { quality: 70 }).id, 'restored_film_frame');
-  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { quality: 37 }), null);
-  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { quality: 38 }).id, 'port_radio_fragment');
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'unreadable', quality: 67 }), null,
+    'an unreadable signal must never become a story clue');
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 68 }).id, 'port_radio_fragment',
+    'a fragmentary but intelligible signal may become a qualified clue');
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 92 }).id, 'port_radio_fragment');
   assert.match(evidence, /if \(type === 'film-restoration' && !\(Number\(result\.quality\) >= 70\)\) return null/);
   assert.match(evidence, /if \(type === 'radio-tuning' && !\(Number\(result\.quality\) >= 38\)\) return null/);
 });
