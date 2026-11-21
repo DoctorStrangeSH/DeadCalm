@@ -28,6 +28,8 @@ export async function createSaveFile(payload, exportedAt = new Date().toISOStrin
     throw new Error('Нельзя экспортировать некорректное или несовместимое сохранение.');
   }
   const data = migrated.data;
+  const shape = validatePayload(data);
+  if (!shape.valid) throw new Error('Сохранение содержит некорректные данные: ' + shape.reason);
   const checksum = await sha256(canonicalJson(data));
   return {
     format: SAVE_FILE_FORMAT,
