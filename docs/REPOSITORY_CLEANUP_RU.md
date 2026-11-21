@@ -360,3 +360,9 @@
 - Added `tests/finale-narrative-integrity.test.mjs` to prevent unsupported confession and keep both ending choices wired to the evidence-gated GameState boundary.
 - GitHub Actions run `44901287238`: **345/345 PASS**, 0 failures, HEAD `18da2b1a2a07426ddae2780f4bc2bba1fa64a2f1`.
 - Manual playthrough of both endings remains open QA; do not mark the narrative acceptance as fully player-tested.
+
+
+### NPC choice persistence regression — 2026-11-21
+- Added `tests/npc-choice-persistence.test.mjs`: executes Anna's first meeting and critical choice, exports and imports the full GameState, opens a new dialogue session, then verifies trust, consequence flags, critical-choice guard and asked-question lock all persist.
+- CI run `44901573943`: **346/346 tests passed**, 0 failures, HEAD `d28c0cfc768afdc7109bcd5ba24082b9e46c9e59`.
+- Coverage is a save/load integration test for one representative full critical choice; it does not claim all six NPC branches have been manually played.
