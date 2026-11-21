@@ -148,8 +148,10 @@ export var Notebook = {
     for (var day in days) {
       text += '\n--- ДЕНЬ ' + day + ' ---\n\n';
       days[day].forEach(function(n) {
-        text += '[' + n.category.toUpperCase() + '] ' + n.title + '\n';
-        text += n.text + '\n';
+        text += '[' + String(n.category || 'общее').toUpperCase() + '] ' + (n.title || 'Без названия') + '\n';
+        text += (n.text || '') + '\n';
+        if (n.source) text += 'Источник: ' + n.source + '\n';
+        if (n.timestamp) text += 'Записано: ' + n.timestamp + '\n';
         text += '---\n\n';
       });
     }
