@@ -62,6 +62,7 @@ export class DialogBox {
   async show(npcId) {
     var node = DialogueEngine.startDialogue(npcId);
     if (!node) return;
+    Events.emit('dialogue:opened', { npcId });
 
     // Создаём оверлей
     this._createOverlay();
