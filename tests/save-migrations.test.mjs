@@ -94,3 +94,28 @@ test('GameState writes the current schema version for all new saves', () => {
     GameState.saveBlocked = originalBlocked;
   }
 });
+
+
+test('GameState does not replace unrecoverable corrupt saves with a fresh campaign', () => {
+  const originalLoad = Storage.load;
+  const originalHasAnyRecord = Storage.hasAnyRecord;
+  const originalSave = Storage.save;
+  const originalBlocked = GameState.saveBlocked;
+  let writes = 0;
+
+  try {
+    Storage.load = () => null;
+    Storage.hasAnyRecord = () => true;
+    Storage.save = () => { writes += 1; return true; };
+
+    assert.equal(GameState.init(), false);
+    assert.equal(GameState.saveBlocked, true);
+    assert.equal(GameState.save(), false);
+    assert.equal(writes, 0);
+  } finally {
+    Storage.load = originalLoad;
+    Storage.hasAnyRecord = originalHasAnyRecord;
+    Storage.save = originalSave;
+    GameState.saveBlocked = originalBlocked;
+  }
+});
