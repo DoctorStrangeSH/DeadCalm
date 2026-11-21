@@ -49,20 +49,36 @@ export var Storage = {
 
   load(key) {
     var storageKey = this.PREFIX + key;
+    var backupKey = storageKey + this.BACKUP_SUFFIX;
+    var pendingKey = storageKey + this.PENDING_SUFFIX;
     try {
+      // A staged payload is the newest complete save. Recover it before
+      // considering the previous primary/backup versions.
+      var pending = this._parse(localStorage.getItem(pendingKey));
+      if (pending !== null) {
+        var previous = this._parse(localStorage.getItem(storageKey));
+        try {
+          if (previous !== null) {
+            localStorage.setItem(backupKey, JSON.stringify(previous));
+          }
+          localStorage.setItem(storageKey, JSON.stringify(pending));
+          localStorage.removeItem(pendingKey);
+        } catch (recoveryError) {
+          // The staged JSON is still usable even when storage quota or
+          // browser permissions prevent promoting it to the primary slot.
+          console.warn('[Storage] Не удалось закрепить восстановленную копию "' + key + '":', recoveryError);
+        }
+        console.warn('[Storage] Восстановлена последняя staged-копия сохранения "' + key + '"');
+        return pending;
+      }
+
       var primary = this._parse(localStorage.getItem(storageKey));
       if (primary !== null) return primary;
 
-      var backup = this._parse(localStorage.getItem(storageKey + this.BACKUP_SUFFIX));
+      var backup = this._parse(localStorage.getItem(backupKey));
       if (backup !== null) {
         console.warn('[Storage] Основное сохранение повреждено; восстановлена резервная копия "' + key + '"');
         return backup;
-      }
-
-      var pending = this._parse(localStorage.getItem(storageKey + this.PENDING_SUFFIX));
-      if (pending !== null) {
-        console.warn('[Storage] Основное сохранение отсутствует или повреждено; восстановлена staged-копия "' + key + '"');
-        return pending;
       }
 
       return null;
