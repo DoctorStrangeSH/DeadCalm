@@ -41,3 +41,27 @@ test('replaying a mini-game upgrades evidence quality without duplicating the cl
   assert.match(state.clues[0].description, /Себастьян Блэквуд и Каллиопа/);
   assert.equal(recordCase001MiniGameEvidence(state, 'film-restoration', { outcome: 'partial', quality: 70 }), false);
 });
+
+
+test('radio evidence rejects outcomes that contradict the measured signal quality', () => {
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 91 }), null);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 92 }), null);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 120 }), null);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: NaN }), null);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'unreadable', quality: 100 }), null);
+});
+
+test('film evidence rejects damaged or quality-inconsistent outcomes', () => {
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'success', quality: 94 }), null);
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'partial', quality: 95 }), null);
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'damaged', quality: 100 }), null);
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'success', quality: 101 }), null);
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'partial', quality: NaN }), null);
+});
+
+test('valid radio and film evidence retain their established quality bands', () => {
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 91 }).quality, 91);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 92 }).quality, 92);
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'partial', quality: 94 }).quality, 94);
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'success', quality: 95 }).quality, 95);
+});
