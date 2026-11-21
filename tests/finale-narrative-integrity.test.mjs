@@ -17,7 +17,7 @@ test('compromise ending records Sebastian’s sealed confession without publishi
 });
 
 test('finale evidence briefing does not claim Sebastian corroborated the case in dialogue', () => {
-  assert.match(portScene, /независимые свидетельства складываются в подозрение/);
+  assert.match(portScene, /в совокупности дают основания для официального обвинения/);
   assert.match(portScene, /Сам Себастьян не признаёт убийство/);
   assert.doesNotMatch(portScene, /его слова совпадают в нескольких точках/);
 });
@@ -30,18 +30,19 @@ test('both endings remain explicit player choices with evidence gates enforced b
 });
 
 
-test('open-case ending opens an investigation without declaring Sebastian the proven killer', () => {
-  assert.match(portScene, /для независимого официального расследования/);
-  assert.match(portScene, /не доказывают, кто передал яд Гаррисону/);
-  assert.match(portScene, /помогает проверить старое алиби, а не устанавливает убийцу судьи/);
-  assert.doesNotMatch(portScene, /дают основания для официального обвинения/);
+test('open-case ending files a formal accusation without presenting it as a conviction', () => {
+  assert.match(portScene, /передаёте материалы властям/);
+  assert.match(portScene, /даёт основания для официального обвинения Себастьяна/);
+  assert.match(portScene, /Это процессуальное обвинение, а не судебный приговор/);
+  assert.match(portScene, /Фальсификация Маркуса раскрыта/);
+  assert.match(portScene, /Лидия — основания добиваться пересмотра дела Габриэля/);
   assert.doesNotMatch(portScene, /Себастьян убил Гаррисона/);
 });
 
 
 test('full public disclosure gate is not described as proof that Sebastian administered the poison', () => {
   assert.match(portScene, /fullDisclosureReady/);
-  assert.match(portScene, /не заменяет доказательств того, кто передал яд Гаррисону/);
+  assert.match(portScene, /Это ещё не судебный приговор/);
   assert.doesNotMatch(portScene, /Для публичного обвинения нужен/);
   assert.match(portScene, /ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ/);
 });
