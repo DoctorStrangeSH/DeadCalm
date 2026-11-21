@@ -119,3 +119,56 @@ test('GameState does not replace unrecoverable corrupt saves with a fresh campai
     GameState.saveBlocked = originalBlocked;
   }
 });
+
+
+test('GameState automatically persists a migrated legacy save in the current schema', () => {
+  const originalLoad = Storage.load;
+  const originalSave = Storage.save;
+  const originalState = {
+    player: GameState.player,
+    currentCase: GameState.currentCase,
+    campaign: GameState.campaign,
+    flags: GameState.flags,
+    relationships: GameState.relationships,
+    npcMemory: GameState.npcMemory,
+    socialGraph: GameState.socialGraph,
+    knowledgeLedger: GameState.knowledgeLedger,
+    npcDailyLife: GameState.npcDailyLife,
+    miniGameProgress: GameState.miniGameProgress,
+    notebook: GameState.notebook,
+    settings: GameState.settings,
+    saveBlocked: GameState.saveBlocked
+  };
+  const legacy = {
+    player: { name: 'John Rivers', reputation: 66 },
+    currentCase: {
+      id: 'case_001',
+      clues: [{ id: 'old_clue', customEvidenceNote: 'do not drop' }],
+      suspects: [],
+      timeline: [],
+      legacyCaseMetadata: { imported: true }
+    },
+    campaign: { caseId: 'case_001', day: 2, completed: false, ending: null },
+    flags: { day_2: true }
+  };
+  let persisted = null;
+
+  try {
+    Storage.load = () => structuredClone(legacy);
+    Storage.save = (key, data) => {
+      if (key === 'gameState') persisted = structuredClone(data);
+      return true;
+    };
+
+    assert.equal(GameState.init(), true);
+    assert.equal(persisted.schemaVersion, CURRENT_SAVE_VERSION);
+    assert.equal(persisted.currentCase.clues[0].customEvidenceNote, 'do not drop');
+    assert.deepEqual(persisted.currentCase.legacyCaseMetadata, { imported: true });
+    assert.deepEqual(persisted.relationships, {});
+    assert.deepEqual(persisted.currentCase.hypotheses, []);
+  } finally {
+    Storage.load = originalLoad;
+    Storage.save = originalSave;
+    Object.assign(GameState, originalState);
+  }
+});
