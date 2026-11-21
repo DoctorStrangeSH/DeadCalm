@@ -382,3 +382,11 @@
 - Test fixture was corrected to avoid inventing an unsupported sibling relation or an unrecorded NPC-to-NPC event; no new story content or production relationship was seeded.
 - Latest code CI run `44902367935`: **348/348 passed**, 0 failures on HEAD `1498512d96b24b1d37930e3021bea14e10eb5839`.
 - Important scope boundary: social graph and knowledge ledger are persistence/data APIs, not a completed cross-NPC consequence system. Producers/consumers that propagate authored knowledge or change other NPCs' dialogue based on the player's choices remain open; do not infer these from proximity or rumor.
+
+
+### Contradiction evidence integrity fix — 2026-11-21
+- Hardened `src/js/systems/contradictions.js`: authored rules with duplicate evidence IDs are rejected; malformed hypothesis/clue/rule collections and invalid clue records fail closed without exceptions.
+- Added regression coverage in `tests/contradictions.test.mjs` for `['a','a']` fake two-clue rules, duplicate discovered records, null/malformed collections and clue records.
+- Existing discovery + same-hypothesis attachment requirements are unchanged.
+- GitHub Actions run `44902590231`: **350/350 tests passed**, 0 failures, HEAD `9f277c1e4238a6cd1e6f25f40f8a17ee6c5c8c3a`.
+- Next audit item: inspect whether the UI can manually label a hypothesis `confirmed` without a minimum evidence/independence threshold; no policy changed yet.
