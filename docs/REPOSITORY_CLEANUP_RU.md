@@ -291,3 +291,11 @@
 
 - Film Restoration final-projection blocker fixed and verified: CI run `44896892950` passed **311/311 tests, 0 failures** on code head `9faf63ec2b1e54463c7691acd033157a3d78e953`.
 - Preview for that code head: READY, `https://dead-calm-2guobdop3-sherlock-ds.vercel.app` (`dpl_69oAvMuqS6gqQvjkuz9uHy2JFCFK`, SSO protected). Production unchanged. Manual gameplay/browser QA remains open.
+
+
+### Outcome-aware mini-game audio — 2026-11-21
+- Исправлено ложное звуковое подтверждение: раньше любое событие `minigame:completed` проигрывало success cue, даже если результат был `damaged` или `unreadable`.
+- Добавлен чистый resolver `getMiniGameResultCue(outcome)`: `success`/`clear` → success; `failure`/`damaged`/`unreadable` → failure; `partial`/`fragmented` и неизвестные значения → без ложного победного/штрафного сигнала.
+- Добавлены unit-тесты результата и обновлена проверка интеграции звука.
+- GitHub Actions run `44897303654`: **314/314 tests passed**, 0 failures, head `47ad10ee8ff5480fa5cccc4dc9371e40f25a6a1e`.
+- Ручная проверка звука в браузере остаётся открытой; автоматический тест проверяет маршрутизацию cue, а не фактическое звучание Web Audio.
