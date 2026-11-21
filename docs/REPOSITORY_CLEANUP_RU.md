@@ -609,5 +609,8 @@
 - Corrected the contradiction pipeline test: discovering a new clue does not silently attach it to an existing hypothesis; the player must explicitly add it during revision.
 - Corrected storage recovery expectation: a complete staged payload is newer than the old primary and must be returned when promotion fails, remaining staged for retry.
 - No gameplay or storage protections were weakened.
-- Commits: 175427ed, cba3e3f2.
-- Awaiting a fresh CI run.
+- Commits: 175427ed, cba3e3f2, 579753be.
+- GitHub Actions run 44921717853: **395/395 passed, 0 failures** on HEAD 579753be.
+- The test now verifies that a contradiction unlocks only after both clues are discovered and explicitly attached to the same hypothesis.
+- Storage recovery test confirms that a newer complete staged payload wins over an older primary when promotion fails.
+- Manual browser, PWA and gameplay acceptance remain open.
