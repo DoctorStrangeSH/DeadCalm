@@ -14,6 +14,21 @@ const INITIAL_CAMPAIGN = Object.freeze({
   ending: null
 });
 
+const DEFAULT_SETTINGS = Object.freeze({ musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' });
+const TEXT_SPEEDS = new Set(['slow', 'normal', 'fast', 'instant']);
+
+function normalizeSettings(settings) {
+  const source = settings && typeof settings === 'object' ? settings : {};
+  const volume = (value, fallback) => Number.isFinite(Number(value))
+    ? Math.max(0, Math.min(1, Number(value)))
+    : fallback;
+  return {
+    musicVolume: volume(source.musicVolume, DEFAULT_SETTINGS.musicVolume),
+    sfxVolume: volume(source.sfxVolume, DEFAULT_SETTINGS.sfxVolume),
+    textSpeed: TEXT_SPEEDS.has(source.textSpeed) ? source.textSpeed : DEFAULT_SETTINGS.textSpeed
+  };
+}
+
 function normalizeCampaignState(savedCampaign, flags = {}) {
   const inferredDay = [5, 4, 3, 2].find(day => flags?.['day_' + day]) || 1;
   const day = Number.isInteger(savedCampaign?.day)
@@ -69,13 +84,14 @@ export var GameState = {
       this.npcDailyLife = normalizeDailyLife(saved.npcDailyLife);
       this.miniGameProgress = normalizeMiniGameProgress(saved.miniGameProgress);
       this.notebook = saved.notebook || [];
-      this.settings = saved.settings || this.settings;
+      this.settings = normalizeSettings(saved.settings);
       console.log('[State] Состояние загружено');
       console.log('[State] - npcMemory: ' + Object.keys(this.npcMemory).length + ' NPC');
       console.log('[State] - clues: ' + this.currentCase.clues.length);
       console.log('[State] - notebook: ' + this.notebook.length);
     } else {
       this.campaign = { ...INITIAL_CAMPAIGN };
+      this.settings = normalizeSettings(null);
       console.log('[State] Новое состояние (без сохранения)');
     }
   },
@@ -374,7 +390,7 @@ export var GameState = {
     this.npcDailyLife = createEmptyDailyLife();
     this.miniGameProgress = createEmptyMiniGameProgress();
     this.notebook = [];
-    this.settings = { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
+    this.settings = normalizeSettings(null);
     
     // Очищаем localStorage
     Storage.clearAll();
