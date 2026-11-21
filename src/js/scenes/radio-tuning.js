@@ -2,8 +2,14 @@ import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { recordCase001MiniGameEvidence } from '../systems/case-001-evidence.js';
 import { createRadioSession, tuneRadio, adjustRadioFilter, getRadioSignal, completeRadioSession } from '../systems/radio-tuning.js';
+import { canAccessCase001MiniGame } from '../systems/minigame-access.js';
+import { renderMiniGameLockScreen } from '../components/minigame-lock-screen.js';
 
 export function render(container) {
+  if (!canAccessCase001MiniGame('radio-tuning', GameState)) {
+    renderMiniGameLockScreen(container, 'ПОРТОВАЯ РАДИОЧАСТОТА', 'Эта частота появится в расследовании, когда вы доберётесь до старого порта на четвёртый день.');
+    return;
+  }
   const session = createRadioSession({ id: 'blackford_shortwave_01' });
   let finished = false;
 
