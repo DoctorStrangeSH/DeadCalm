@@ -10,15 +10,18 @@ import { NPCMemory } from '../systems/npc-memory.js';
  */
 export function render(container) {
   var hasSave = GameState.hasSave();
+  var saveBlocked = GameState.saveBlocked;
   var saveInfo = '';
   var settings = GameState.settings || { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
 
   // Формируем информацию о сохранении
-  if (hasSave) {
+  if (hasSave && !saveBlocked) {
     var cluesCount = GameState.currentCase.clues.length;
     var notesCount = GameState.notebook ? GameState.notebook.length : 0;
     var npcCount = GameState.npcMemory ? Object.keys(GameState.npcMemory).length : 0;
     saveInfo = 'Улик: ' + cluesCount + ' | Заметок: ' + notesCount + ' | NPC в памяти: ' + npcCount;
+  } else if (saveBlocked) {
+    saveInfo = 'Сохранение повреждено или создано более новой версией. Продолжение временно заблокировано.';
   }
 
   container.innerHTML = `
@@ -58,8 +61,8 @@ export function render(container) {
           <!-- Продолжить (неактивна, если нет сохранения) -->
           <button
             id="btn-continue"
-            class="btn-noir py-3 md:py-4 px-6 md:px-10 ${hasSave ? '' : 'opacity-40'}"
-            ${hasSave ? '' : 'disabled'}
+            class="btn-noir py-3 md:py-4 px-6 md:px-10 ${hasSave && !saveBlocked ? '' : 'opacity-40'}"
+            ${hasSave && !saveBlocked ? '' : 'disabled'}
           >
             <span>02</span> ПРОДОЛЖИТЬ <b>↗</b>
           </button>
@@ -73,7 +76,7 @@ export function render(container) {
 
         <!-- Информация о сохранении -->
         ${hasSave
-          ? '<p class="text-center text-gray-600 text-xs mt-6">' + saveInfo + '</p>'
+          ? '<p class="text-center ' + (saveBlocked ? 'text-amber-500' : 'text-gray-600') + ' text-xs mt-6" role="status">' + saveInfo + '</p>'
           : '<p class="text-center text-gray-700 text-xs mt-6">Нет сохранений</p>'
         }
 
@@ -193,7 +196,10 @@ export function render(container) {
     Audio.init(GameState.settings);
 
     // Загружаем сохранённое состояние
-    GameState.init();
+    if (GameState.init() === false) {
+      alert('Это сохранение нельзя безопасно открыть в текущей версии. Исходные данные сохранены. Обновите игру до совместимой версии или начните новую игру после подтверждения сброса.');
+      return;
+    }
 
     console.log('[Menu] 📂 Загрузка сохранения...');
     console.log('[Menu]    - Память NPC: ' + Object.keys(GameState.npcMemory).length + ' записей');
