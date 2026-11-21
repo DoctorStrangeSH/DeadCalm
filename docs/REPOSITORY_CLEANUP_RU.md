@@ -3,7 +3,7 @@
 **Дата:** 2026-11-20  
 **Базовая ветка:** `main`  
 **Рабочая ветка:** `chore/pre-release-repository-hygiene`  
-**Статус:** безопасная уборка и статические проверки выполнены; процедурная аудиосистема реализована; GitHub Actions run `44896518558` ожидает запуска/завершения проверки актуального HEAD; ручной браузерный/gameplay/PWA и listening QA остаются открытыми.
+**Статус:** безопасная уборка и статические проверки выполнены; процедурная аудиосистема реализована; GitHub Actions run `44896658535` успешно прошёл: 309/309 тестов на кодовом HEAD `c3c494d`; после этого выполнено только обновление release register; ручной браузерный/gameplay/PWA и listening QA остаются открытыми.
 
 Этот документ фиксирует уборку репозитория как отдельную техническую задачу. Он не меняет игровой scope и не заменяет `docs/MASTER_GAME_SPEC_RU.md`.
 
@@ -277,6 +277,8 @@
 - [x] Разделить music/SFX/ambient gain; ambient подчиняется регулятору музыки.
 - [x] Добавить cleanup для oscillator/filter/source и тест защиты от stale ambience callback при переходе сцены.
 - [x] Устранить первый-click cooldown edge case; обновить тесты Web Audio AudioParam mock.
-- [ ] Получить зелёный CI на последнем HEAD `4460105a23e4504c9fe0ec1b465a092534de53a8`; run `44896518558` пока pending (jobs API пока не вернул job).
+- [x] Получить зелёный CI на кодовом HEAD `c3c494dafe72d451d253dde870090f41b7d7f913`: run `44896658535`, **309/309**, 0 failures. После этого выполнено только обновление release register.
 - [ ] Ручная проверка слухом: дождь/порт/интерьер, четыре музыкальные темы, громкость, пауза вкладки, autoplay policy, desktop/mobile.
 - Latest Vercel Preview: `dpl_9ccETTgGJvbFe6Y3j4fjRxaPSJvY`, READY, `https://dead-calm-jlr8c4e6g-sherlock-ds.vercel.app`; SSO protection enabled. Production не менялся.
+
+- Final confirmed Preview after the cache-test correction: `dpl_DA2i4sUJaerMU211yyw8azUhX3H6`, READY, commit `c3c494dafe72d451d253dde870090f41b7d7f913`, URL `https://dead-calm-dp0e8v78j-sherlock-ds.vercel.app` (SSO protected). No production promotion.
