@@ -196,3 +196,85 @@ test('partial legacy nested records receive defaults without losing supplied or 
   assert.equal(result.data.settings.sfxVolume, 0.7);
   assert.equal(result.data.settings.customSetting, 'keep');
 });
+
+
+test('save import persists canonical campaign flags and all investigation progress before reload', () => {
+  const keys = [
+    'player', 'currentCase', 'campaign', 'flags', 'relationships', 'npcMemory',
+    'socialGraph', 'knowledgeLedger', 'npcDailyLife', 'miniGameProgress',
+    'notebook', 'settings', 'saveBlocked'
+  ];
+  const original = Object.fromEntries(keys.map(key => [key, GameState[key]]));
+  const originalSave = Storage.save;
+  const originalLoad = Storage.load;
+  let persisted = null;
+
+  const payload = {
+    schemaVersion: CURRENT_SAVE_VERSION,
+    player: { name: 'Джон Риверс', reputation: 77 },
+    currentCase: {
+      id: 'case_001',
+      clues: [
+        { id: 'restored_film_frame', quality: 100, source: 'Архивная плёнка' },
+        { id: 'markus_watch_key', name: 'Латунный ключ' }
+      ],
+      suspects: [{ id: 'sebastian_blackwood', status: 'under_review' }],
+      timeline: [{ id: 'harbor_meeting', time: '21:10' }],
+      hypotheses: [{ id: 'hyp_01', clueIds: ['restored_film_frame'], history: [{ status: 'possible' }] }]
+    },
+    campaign: { caseId: 'case_001', day: 3, completed: false, ending: null },
+    flags: { day_5: true, old_choice: true },
+    relationships: { anna_holt: { trust: 73, met: true } },
+    npcMemory: { anna_holt: { flags: { shared_archive: true }, promises: [{ id: 'p1', status: 'kept' }] } },
+    socialGraph: { ties: [{ id: 'tie_01', npcId: 'anna_holt', strength: 4 }], events: [] },
+    knowledgeLedger: { entries: [{ id: 'knowledge_01', npcId: 'anna_holt', topic: 'archive' }] },
+    npcDailyLife: { schedules: [{ id: 'schedule_01', npcId: 'anna_holt', day: 3 }], occurrences: [] },
+    miniGameProgress: { 'film-restoration': { attempts: 3, bestOutcome: 'success', bestQuality: 100, lastOutcome: 'success', lastQuality: 100 } },
+    notebook: [{ id: 'note_01', text: 'Проверить портовый журнал' }],
+    settings: { musicVolume: 0.3, sfxVolume: 0.8, textSpeed: 'fast' }
+  };
+
+  try {
+    Storage.save = (key, value) => {
+      if (key === 'gameState') persisted = structuredClone(value);
+      return true;
+    };
+    Storage.load = key => key === 'gameState' && persisted ? structuredClone(persisted) : null;
+
+    assert.equal(GameState.importSave(payload), true);
+    assert.equal(persisted.campaign.day, 3);
+    assert.equal(persisted.flags.day_2, true);
+    assert.equal(persisted.flags.day_3, true);
+    assert.equal('day_4' in persisted.flags, false);
+    assert.equal('day_5' in persisted.flags, false);
+    assert.equal(persisted.flags.old_choice, true);
+
+    assert.equal(GameState.campaign.day, 3);
+    assert.equal(GameState.hasFlag('day_3'), true);
+    assert.equal(GameState.hasFlag('day_4'), false);
+    assert.equal(GameState.getClue('restored_film_frame').quality, 100);
+    assert.equal(GameState.relationships.anna_holt.trust, 73);
+    assert.equal(GameState.npcMemory.anna_holt.promises[0].status, 'kept');
+    assert.equal(GameState.socialGraph.ties[0].id, 'tie_01');
+    assert.equal(GameState.knowledgeLedger.entries[0].id, 'knowledge_01');
+    assert.equal(GameState.npcDailyLife.schedules[0].id, 'schedule_01');
+    assert.equal(GameState.miniGameProgress['film-restoration'].bestQuality, 100);
+    assert.equal(GameState.notebook[0].text, 'Проверить портовый журнал');
+    assert.equal(GameState.settings.textSpeed, 'fast');
+
+    assert.equal(GameState.init(), true, 'the imported file must be loadable as a fresh application session');
+    assert.equal(GameState.campaign.day, 3);
+    assert.equal(GameState.hasFlag('day_2'), true);
+    assert.equal(GameState.hasFlag('day_3'), true);
+    assert.equal(GameState.hasFlag('day_4'), false);
+    assert.equal(GameState.getClue('restored_film_frame').quality, 100);
+    assert.equal(GameState.relationships.anna_holt.trust, 73);
+    assert.equal(GameState.npcMemory.anna_holt.promises[0].status, 'kept');
+    assert.equal(GameState.miniGameProgress['film-restoration'].bestQuality, 100);
+    assert.equal(GameState.notebook[0].text, 'Проверить портовый журнал');
+  } finally {
+    Storage.save = originalSave;
+    Storage.load = originalLoad;
+    Object.assign(GameState, original);
+  }
+});
