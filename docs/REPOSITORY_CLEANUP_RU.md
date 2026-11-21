@@ -199,5 +199,17 @@
 - В `index.html` используются локальные CSS и ES module entrypoint; шрифты Google Fonts и внешние изображения не подключены. Игровые шрифты — системные Courier/Georgia.
 - В `src/js/core/app.js` регистрация Service Worker задана абсолютным путём `/sw.js`; `sw.js` использует origin-root пути `/...` для всего precache; CSS/HTML также содержат пути от корня. Такой вариант рассчитан на публикацию в корне origin.
 - GitHub API подтверждает, что Pages включён для репозитория, но у репозитория нет `homepage` и в репозитории не найдено явного deployment-конфига, однозначно фиксирующего production URL. Поэтому нельзя утверждать, что root-origin предположение соответствует фактической публикации.
-- **Открытый release blocker:** подтвердить production URL и base path. Если сайт обслуживается из подпапки вида `/DeadCalm/`, нужно отдельной задачей сделать все entrypoint/manifest/Service Worker/precache пути base-path-aware и добавить тесты для root и subpath; не менять пути до фиксации целевого хоста.
+- [x] Зафиксировать целевой хостинг: Vercel, статическая публикация из корня origin. Это соответствует текущим абсолютным путям `/...` и не требует GitHub Pages project-subpath адаптации.
+- [x] Добавить `vercel.json`: entrypoint, manifest и Service Worker получают no-cache; Service Worker явно разрешён для корня origin.
+- [x] Добавить `tests/vercel-deployment.test.mjs` для cache headers, Service-Worker-Allowed и отсутствия выдуманного build/runtime dependency.
+- [ ] Создать/подключить Vercel project без публикации production и подтвердить Git-интеграцию; проверить preview deployment только после согласования branch/commit.
+- [ ] Подтвердить фактический preview URL и проверить в браузере загрузку ресурсов, сохранения и PWA. Production не публиковать до RC.
 - Ручная проверка загрузки Tailwind при отключённой сети и install/update/offline Service Worker остаётся частью браузерного QA.
+
+
+### Vercel static hosting preparation — 2026-11-21
+- Выбран Vercel как целевой хостинг: приложение является статическим ES-module сайтом без runtime npm dependencies и build step; root-origin размещение совместимо с текущими путями и Service Worker scope.
+- Добавлен `vercel.json` с no-cache для `/`, `/index.html`, `/manifest.json`, `/sw.js`, а также `Service-Worker-Allowed: /` для SW.
+- Добавлен `tests/vercel-deployment.test.mjs`: проверяет Vercel cache rules, Service Worker scope и отсутствие runtime/build dependency.
+- Vercel account context: team `SherlockDS` (Hobby); репозиторий DeadCalm пока не числится среди linked projects. Никакой deployment не создан и production не менялся.
+- Следующий gate: связать репозиторий с Vercel без production deployment, затем открыть preview только для тестирования утверждённого commit.
