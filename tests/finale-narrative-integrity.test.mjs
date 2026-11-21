@@ -36,3 +36,11 @@ test('open-case ending opens an investigation without declaring Sebastian the pr
   assert.doesNotMatch(portScene, /дают основания для официального обвинения/);
   assert.doesNotMatch(portScene, /Себастьян убил Гаррисона/);
 });
+
+
+test('full public disclosure gate is not described as proof that Sebastian administered the poison', () => {
+  assert.match(portScene, /fullDisclosureReady/);
+  assert.match(portScene, /не заменяет доказательств того, кто передал яд Гаррисону/);
+  assert.doesNotMatch(portScene, /Для публичного обвинения нужен/);
+  assert.match(portScene, /ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ/);
+});
