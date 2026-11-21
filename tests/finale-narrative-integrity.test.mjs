@@ -7,12 +7,13 @@ const portScene = read('../src/js/scenes/port.js');
 const dialogues = JSON.parse(read('../src/data/dialogues.json'));
 const sebastian = dialogues.npc_sebastian_blackwood;
 
-test('compromise finale does not invent a confession Sebastian never made', () => {
-  assert.match(sebastian.sebastian_records_result.text, /не подтверждает ни время встречи/);
-  assert.match(sebastian.sebastian_challenged_result.text, /не признаёт и не подтверждает обстоятельства убийства/);
-
-  assert.match(portScene, /Себастьян не признаёт, что дал судье яд/);
-  assert.doesNotMatch(portScene, /Себастьян признаёт, что встретился с Гаррисоном и дал ему яд/);
+test('compromise ending records Sebastian’s sealed confession without publishing it', () => {
+  assert.match(portScene, /Запечатанное признание Себастьяна/);
+  assert.match(portScene, /сам передал ему белладонну/);
+  assert.match(portScene, /Признание запечатано и передано следствию/);
+  assert.match(portScene, /не публикуется/);
+  assert.match(portScene, /GameState\.addClue\(/);
+  assert.match(portScene, /GameState\.completeCampaign\('price_of_silence'\)/);
 });
 
 test('finale evidence briefing does not claim Sebastian corroborated the case in dialogue', () => {
