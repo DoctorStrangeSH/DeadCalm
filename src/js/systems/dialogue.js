@@ -253,9 +253,22 @@ export var DialogueEngine = {
       return null;
     }
 
-    // Отмечаем как заданный
-    this._askedQuestions.push(questionId);
-    NPCMemory.markQuestionAsked(this._currentNPC, questionId);
+    // Критический вопрос остаётся доступным, пока игрок не подтвердит один
+    // из вариантов. Это позволяет восстановить сам выбор после закрытия игры.
+    const pendingCriticalNode = foundResponse.triggers_critical
+      ? npcData[foundResponse.triggers_critical]
+      : null;
+    const criticalFlag = foundResponse.triggers_critical
+      ? 'critical_' + foundResponse.triggers_critical
+      : null;
+    const opensUnresolvedChoice = !!(pendingCriticalNode &&
+      Array.isArray(pendingCriticalNode.choices) &&
+      !NPCMemory.hasFlag(this._currentNPC, criticalFlag));
+
+    if (!opensUnresolvedChoice) {
+      this._askedQuestions.push(questionId);
+      NPCMemory.markQuestionAsked(this._currentNPC, questionId);
+    }
     console.log('[Dialogue] Задан вопрос: ' + questionId);
 
     // Добавляем заметку (только для важных)
@@ -278,9 +291,9 @@ export var DialogueEngine = {
       var criticalNode = npcData[foundResponse.triggers_critical];
       var flagName = 'critical_' + foundResponse.triggers_critical;
 
-      if (criticalNode && !NPCMemory.hasFlag(this._currentNPC, flagName)) {
-        NPCMemory.setFlag(this._currentNPC, flagName);
-        console.log('[Dialogue] 🔴 КРИТИЧЕСКИЙ ВЫБОР!');
+      if (criticalNode && Array.isArray(criticalNode.choices) &&
+          !NPCMemory.hasFlag(this._currentNPC, flagName)) {
+        console.log('[Dialogue] 🔴 КРИТИЧЕСКИЙ ВЫБОР ОЖИДАЕТ РЕШЕНИЯ');
         return this._formatCriticalChoice(criticalNode, { addedNote, addedClue });
       }
     }
@@ -298,6 +311,13 @@ export var DialogueEngine = {
         var choice = node.choices.find(function(c) { return c.id === choiceId; });
         if (choice) {
           console.log('[Dialogue] Критический выбор: ' + choiceId);
+          // Commit the one-time choice only after an explicit player decision.
+          const questionId = node.trigger_question;
+          if (questionId) {
+            if (!this._askedQuestions.includes(questionId)) this._askedQuestions.push(questionId);
+            NPCMemory.markQuestionAsked(this._currentNPC, questionId);
+          }
+          NPCMemory.setFlag(this._currentNPC, 'critical_' + key);
           var trustBefore = NPCMemory.getTrust(this._currentNPC);
 
           if (choice.effects?.trust) {
