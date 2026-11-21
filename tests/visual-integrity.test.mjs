@@ -203,3 +203,20 @@ test('main-menu settings are accessible, persistent and wired to dialogue pacing
   assert.ok(css.includes('.settings-panel') && css.includes('.settings-control :focus-visible'), 'settings must use the project style and visible keyboard focus');
   assert.ok(!menu.includes('alert(message)'), 'settings placeholder alert must be removed');
 });
+
+
+test('procedural audio is unlocked by user gesture and connected to story events', () => {
+  const app = read('src/js/core/app.js');
+  const audio = read('src/js/core/audio.js');
+  const dialog = read('src/js/components/dialog-box.js');
+  assert.ok(app.includes("addEventListener('pointerdown', unlockAudio"), 'audio must unlock on a user pointer gesture');
+  assert.ok(app.includes("addEventListener('keydown', unlockAudio"), 'keyboard users must also unlock audio');
+  assert.ok(app.includes("addEventListener('visibilitychange'"), 'audio lifecycle must follow page visibility');
+  assert.ok(app.includes("Events.on('clue:added', () => Audio.playSfx('clue-found'))"), 'new evidence must have an audio cue');
+  assert.ok(app.includes("Events.on('minigame:completed', () => Audio.playSfx('success'))"), 'mini-game success must have an audio cue');
+  assert.ok(app.includes("Events.on('minigame:failed', () => Audio.playSfx('failure'))"), 'mini-game failure must have an audio cue');
+  assert.ok(dialog.includes("Events.emit('dialogue:opened'"), 'dialogue opening must emit an audio event');
+  assert.ok(audio.includes("rain: {") && audio.includes("harbor: {") && audio.includes("interior: {"), 'location ambience profiles must exist');
+  assert.ok(audio.includes("finale: {") && audio.includes("this.playMusic(theme)"), 'story music themes must include the finale');
+  assert.ok(audio.includes('this._ambientGain.gain.value = 1'), 'ambient bus must not attenuate its own signal');
+});
