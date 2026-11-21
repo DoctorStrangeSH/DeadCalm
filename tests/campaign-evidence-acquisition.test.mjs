@@ -143,5 +143,6 @@ test('the two independent day-four evidence routes are actually wired to their m
     'a fragmentary but intelligible signal may become a qualified clue');
   assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 92 }).id, 'port_radio_fragment');
   assert.match(evidence, /if \(type === 'film-restoration' && !\(Number\(result\.quality\) >= 70\)\) return null/);
-  assert.match(evidence, /if \(type === 'radio-tuning' && !\(Number\(result\.quality\) >= 38\)\) return null/);
+  assert.match(evidence, /Number\\(result\\.quality\\) >= 68/);
+  assert.match(evidence, /includes\\(result\\.outcome\\)/);
 });
