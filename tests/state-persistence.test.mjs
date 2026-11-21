@@ -453,3 +453,57 @@ test('episode conclusions, review history, directives, and narrative choices sur
     Object.assign(GameState, original);
   }
 });
+
+
+test('save import downgrades unverified confirmed labels and preserves a visible review trail', () => {
+  const keys = [
+    'player', 'currentCase', 'campaign', 'flags', 'relationships', 'npcMemory',
+    'socialGraph', 'knowledgeLedger', 'npcDailyLife', 'miniGameProgress',
+    'notebook', 'settings', 'saveBlocked'
+  ];
+  const original = Object.fromEntries(keys.map(key => [key, GameState[key]]));
+  const originalSave = Storage.save;
+  let persisted = null;
+  const payload = {
+    schemaVersion: 1,
+    player: { name: 'Джон Риверс', reputation: 50 },
+    currentCase: {
+      id: 'case_001', clues: [{ id: 'clue_a' }], suspects: [], timeline: [],
+      hypotheses: [{
+        id: 'hyp_imported', title: 'Версия из файла', reasoning: 'Непроверенное утверждение',
+        status: 'confirmed', clueIds: ['clue_a'],
+        history: [{ at: '2026-11-20T10:00:00.000Z', type: 'revised', status: 'confirmed',
+          clueIds: ['clue_a'], title: 'Версия из файла', reasoning: 'Непроверенное утверждение' }]
+      }]
+    },
+    campaign: { caseId: 'case_001', day: 2, completed: false, ending: null },
+    flags: {}, relationships: {}, npcMemory: {},
+    socialGraph: { ties: [], events: [] }, knowledgeLedger: { entries: [] },
+    npcDailyLife: { schedules: [], occurrences: [] }, miniGameProgress: {},
+    notebook: [], settings: { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' }
+  };
+
+  try {
+    Storage.save = (key, data) => {
+      if (key === 'gameState') persisted = structuredClone(data);
+      return true;
+    };
+    assert.equal(GameState.importSave(payload), true);
+    const imported = GameState.currentCase.hypotheses[0];
+    assert.equal(imported.status, 'probable');
+    assert.equal(imported.importReviewRequired, true);
+    assert.equal(imported.history.at(-1).status, 'probable');
+    assert.equal(imported.history.length, 2);
+    assert.equal(persisted.currentCase.hypotheses[0].status, 'probable');
+
+    const reviewed = GameState.reviseHypothesis(imported.id, {
+      reasoning: 'Проверено повторно: подтверждающих независимых источников пока недостаточно.'
+    });
+    assert.equal(reviewed.status, 'probable');
+    assert.equal(reviewed.importReviewRequired, false);
+    assert.equal(reviewed.history.length, 3);
+  } finally {
+    Storage.save = originalSave;
+    Object.assign(GameState, original);
+  }
+});
