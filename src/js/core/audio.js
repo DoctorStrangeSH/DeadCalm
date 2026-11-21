@@ -277,7 +277,6 @@ export const Audio = {
   setScene(scene) {
     this._pendingScene = scene;
     if (!this._initialized || !this._ctx || this._ctx.state !== 'running') return;
-    const finale = scene === 'port' && Events && false;
     const profile = {
       'main-menu': ['menu', 'rain'],
       office: ['investigation', 'interior'],
@@ -295,7 +294,7 @@ export const Audio = {
       'holt-house': ['investigation', 'interior']
     };
     const [theme, ambient] = profile[scene] || ['investigation', 'interior'];
-    this.playMusic(finale ? 'finale' : theme);
+    this.playMusic(theme);
     this.startAmbient(ambient);
     this.playSfx('scene-transition');
   },
