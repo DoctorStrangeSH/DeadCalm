@@ -52,7 +52,7 @@ test('day five is finale-ready and cannot advance to a nonexistent sixth day', (
   assert.equal(game.campaign.day, 5);
 });
 
-test('final accusation requires independent medical, meeting, poison, archive and scene evidence', () => {
+test('final disclosure dossier requires the authored case materials and a clear film restoration', () => {
   const found = new Map([
     ['autopsy_report_01', {}],
     ['judge_appointment_card', {}],
