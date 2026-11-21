@@ -28,7 +28,7 @@ export function reviseHypothesis(hypothesis, change, availableClues, now = new D
   if (hypothesis.status === 'confirmed' && status === 'confirmed') {
     throw new Error('Сначала измените статус подтверждённой версии: её обоснование и улики нельзя менять без повторной проверки.');
   }
-  const next = { ...hypothesis, title, status, clueIds, reasoning, updatedAt: now };
+  const next = { ...hypothesis, title, status, clueIds, reasoning, updatedAt: now, importReviewRequired: false };
   next.history = [...(hypothesis.history || []), { at: now, type: 'revised', status,
     clueIds: [...clueIds], reasoning, title }];
   return next;
