@@ -477,3 +477,13 @@ Autosave — по завершении значимых сцен и при бе�
 - GitHub Actions run `44902367935`: **348/348 PASS**, 0 failures, HEAD `1498512d96b24b1d37930e3021bea14e10eb5839`.
 - [ ] Межперсонажные последствия конкретных 14 критических выборов пока не реализованы как narrative producers/consumers. Не добавлять связи или распространение слухов без утверждённого сюжетом источника и доказательной цепочки.
 - [ ] Необходимо отдельно решить в рамках уже существующего канона, какие из выборов игрока должны менять отношение других NPC, какие сведения кому и каким способом передаются, и где эти изменения должны влиять на диалог/финал. До этого этапа считать проверку модели и сохранения закрытой, а игровые межперсонажные последствия — открытыми.
+
+
+### Contradiction evidence integrity — 2026-11-21
+
+- [x] `findContradictions` now requires at least two distinct clue IDs in each authored rule; duplicate IDs cannot masquerade as independent evidence.
+- [x] Contradiction evaluation now fails closed for missing/malformed hypothesis, discovered-clue collection, malformed clue records, or missing rules rather than throwing.
+- [x] Existing gates remain: every required clue must be discovered and attached to the same hypothesis before a contradiction is exposed.
+- [x] Added regression tests for duplicate clue IDs, duplicated discovered records, malformed input collections, and null clue records.
+- GitHub Actions run `44902590231`: **350/350 PASS**, 0 failures, HEAD `9f277c1e4238a6cd1e6f25f40f8a17ee6c5c8c3a`.
+- [ ] Further investigation audit remains: ensure player-facing hypothesis status `confirmed` cannot be assigned without sufficient independent evidence; inspect actual UI and persistence call path before changing the rule.
