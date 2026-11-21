@@ -27,3 +27,12 @@ test('both endings remain explicit player choices with evidence gates enforced b
   assert.match(portScene, /GameState\.completeCampaign\('open_case'\)/);
   assert.match(portScene, /GameState\.completeCampaign\('price_of_silence'\)/);
 });
+
+
+test('open-case ending opens an investigation without declaring Sebastian the proven killer', () => {
+  assert.match(portScene, /для независимого официального расследования/);
+  assert.match(portScene, /не доказывают, кто передал яд Гаррисону/);
+  assert.match(portScene, /помогает проверить старое алиби, а не устанавливает убийцу судьи/);
+  assert.doesNotMatch(portScene, /дают основания для официального обвинения/);
+  assert.doesNotMatch(portScene, /Себастьян убил Гаррисона/);
+});
