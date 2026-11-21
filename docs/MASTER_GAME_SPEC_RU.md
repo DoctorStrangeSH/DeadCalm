@@ -544,3 +544,13 @@ Autosave — по завершении значимых сцен и при бе�
 - [x] Обновлены `port.js`, `campaign-progression.js`, `campaign-progression.test.mjs`, `finale-narrative-integrity.test.mjs`, `CASE_001_DETECTIVE_BLUEPRINT_RU.md`.
 - [x] GitHub Actions run #537 (`d001a739dd7df79ca6c338fe281983bc7fb4e002`): **354/354 PASS**, 0 failures.
 - [ ] Осталась ручная приёмка обоих финалов и полного пятидневного прохождения; automated tests не заменяют desktop/mobile playthrough.
+
+
+### Сквозная проверка альтернативного маршрута улик дня 4 — 2026-11-21
+
+- [x] Проверен сценарий: игрок сначала получает радиофрагмент (допустимый независимый источник дня 4), но не восстанавливает плёнку.
+- [x] Подтверждено, что этот путь открывает компромиссную концовку, но не открывает полное публичное раскрытие без кадра качества ≥95.
+- [x] Проверено отсутствие softlock: полученные от Анны вещи Маркуса позволяют пройти ремонт часов; успешный ремонт выдаёт `markus_watch_key`; ключ открывает реставрацию плёнки; качественный результат добавляет `restored_film_frame` и открывает `fullDisclosureReady`.
+- [x] Добавлен integration regression test в `tests/campaign-evidence-acquisition.test.mjs` на полный путь radio → watch repair → film restoration → open-case gate.
+- GitHub Actions run #541 (`7675c5608da3984b53d9a9c676070852298a9bc8`): **355/355 PASS**, 0 failures.
+- [ ] Ручная приёмка всей кампании, обеих концовок, desktop/mobile и сохранений остаётся обязательной перед релизом.
