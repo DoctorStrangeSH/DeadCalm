@@ -439,7 +439,8 @@
             "id": "marta_publication_risk",
             "question": "Почему вы не опубликовали материалы?",
             "type": "narrative",
-            "answer": "«Потому что копия без происхождения — подарок адвокату. Мне нужен оригинал или подтверждение из независимого источника. Иначе я подставлю не только себя, но и того, кто мне доверился»."
+            "answer": "«Потому что копия без происхождения — подарок адвокату. Мне нужен оригинал или подтверждение из независимого источника. Иначе я подставлю не только себя, но и того, кто мне доверился».",
+            "triggers_critical": "critical_choice_source"
           }
         ]
       }
@@ -447,6 +448,43 @@
     "all_topics_exhausted": {
       "type": "narrative",
       "text": "Марта складывает бумаги обратно в конверт: «Когда появится что-то проверяемое, возвращайтесь. Я не печатаю догадки под видом фактов».",
+      "end": true
+    },
+    "critical_choice_source": {
+      "type": "critical",
+      "trigger_question": "marta_publication_risk",
+      "text": "Марта закрывает папку: «Мне важно понять, что вы сделаете с этими материалами. Если источник окажется под угрозой, я больше не смогу работать с вами».",
+      "choices": [
+        {
+          "id": "marta_protect_source",
+          "text": "Сначала проверим документы и не раскроем источник.",
+          "tone": "kind",
+          "effects": {
+            "trust": 10
+          },
+          "memory_set": "marta_source_respected",
+          "next_dialogue": "marta_source_respected_result"
+        },
+        {
+          "id": "marta_demand_publish",
+          "text": "Публикуйте сейчас. Риск источника меня не остановит.",
+          "tone": "aggressive",
+          "effects": {
+            "trust": -20
+          },
+          "memory_set": "marta_source_pressured",
+          "next_dialogue": "marta_source_pressured_result"
+        }
+      ]
+    },
+    "marta_source_respected_result": {
+      "type": "narrative",
+      "text": "Марта чуть расслабляется: «Тогда договорились. Я помогу сверить копию с архивом, но личность источника останется за пределами публикации. Пока у нас нет оригинала, выводы должны быть осторожными».",
+      "end": true
+    },
+    "marta_source_pressured_result": {
+      "type": "narrative",
+      "text": "Марта резко закрывает папку: «Нет. Я не стану подвергать человека опасности ради громкого заголовка. Копию вы уже видели; новых материалов от меня не будет».",
       "end": true
     }
   },
@@ -500,7 +538,8 @@
             "id": "thomas_fear",
             "question": "Почему вы молчали?",
             "type": "narrative",
-            "answer": "«Я боялся, что письмо используют как доказательство того, чего в нём нет. Теперь понимаю: молчание тоже защищает ложь»."
+            "answer": "«Я боялся, что письмо используют как доказательство того, чего в нём нет. Теперь понимаю: молчание тоже защищает ложь».",
+            "triggers_critical": "critical_choice_letter"
           }
         ]
       }
@@ -508,6 +547,43 @@
     "all_topics_exhausted": {
       "type": "narrative",
       "text": "Томас осторожно закрывает архив: «Я рассказал всё, что знаю сам. Остальное принадлежит тем, кто оставил эти записи».",
+      "end": true
+    },
+    "critical_choice_letter": {
+      "type": "critical",
+      "trigger_question": "thomas_fear",
+      "text": "Отец Томас смотрит на письмо: «Я могу передать его следствию, но боюсь, что вы придадите словам Мэтьюса смысл, которого там нет. Как вы поступите с этим признанием?»",
+      "choices": [
+        {
+          "id": "thomas_preserve_context",
+          "text": "Зафиксируем письмо целиком и отдельно отметим, чего оно не доказывает.",
+          "tone": "kind",
+          "effects": {
+            "trust": 10
+          },
+          "memory_set": "thomas_context_respected",
+          "next_dialogue": "thomas_context_result"
+        },
+        {
+          "id": "thomas_threaten_publication",
+          "text": "Если вы не поможете, я назову вас соучастником сокрытия.",
+          "tone": "aggressive",
+          "effects": {
+            "trust": -15
+          },
+          "memory_set": "thomas_pressured",
+          "next_dialogue": "thomas_pressured_result"
+        }
+      ]
+    },
+    "thomas_context_result": {
+      "type": "narrative",
+      "text": "Он кивает: «Так будет честно. Письмо подтверждает ложное алиби, но не говорит, кто убил Каллиопу и что именно Мэтьюс видел. Я передам вам его копию с датой и местом хранения».",
+      "end": true
+    },
+    "thomas_pressured_result": {
+      "type": "narrative",
+      "text": "Отец Томас отступает: «Угроза не сделает письмо яснее. Я уже передал вам то, что нашёл. Больше без официального запроса я ничего не добавлю».",
       "end": true
     }
   },
@@ -568,7 +644,8 @@
             "id": "sebastian_judge",
             "question": "Судья собирался пересмотреть старое дело?",
             "type": "narrative",
-            "answer": "«Гаррисон был стар и боялся последствий своих решений. Люди иногда называют это раскаянием. Я называю это страхом»."
+            "answer": "«Гаррисон был стар и боялся последствий своих решений. Люди иногда называют это раскаянием. Я называю это страхом».",
+            "triggers_critical": "critical_choice_judge"
           }
         ]
       }
@@ -576,6 +653,43 @@
     "all_topics_exhausted": {
       "type": "narrative",
       "text": "Себастьян провожает вас до двери: «Вы ищете простую историю, детектив. Боюсь, Блэкфорд вам её не даст».",
+      "end": true
+    },
+    "critical_choice_judge": {
+      "type": "critical",
+      "trigger_question": "sebastian_judge",
+      "text": "Себастьян складывает руки: «Вы пришли за фактами или за признанием, которое уже придумали? От вашего ответа зависит, будет ли этот разговор полезен».",
+      "choices": [
+        {
+          "id": "sebastian_request_record",
+          "text": "Мне нужны проверяемые сведения. Начнём с документов о вашей встрече.",
+          "tone": "logical",
+          "effects": {
+            "trust": 5
+          },
+          "memory_set": "sebastian_requested_records",
+          "next_dialogue": "sebastian_records_result"
+        },
+        {
+          "id": "sebastian_reject_framing",
+          "text": "Ваши оценки судьи не заменяют ответа о ваших действиях.",
+          "tone": "aggressive",
+          "effects": {
+            "trust": -10
+          },
+          "memory_set": "sebastian_challenged",
+          "next_dialogue": "sebastian_challenged_result"
+        }
+      ]
+    },
+    "sebastian_records_result": {
+      "type": "narrative",
+      "text": "«Разумно. Мои юристы подготовят перечень документов, которые компания обязана хранить. Это не означает, что вы получите всё без процедуры». Он не подтверждает ни время встречи, ни своё присутствие у суда.",
+      "end": true
+    },
+    "sebastian_challenged_result": {
+      "type": "narrative",
+      "text": "Улыбка Себастьяна становится холоднее: «Вы вправе задавать вопросы, детектив. Но не путайте жёсткий тон с доказательством. На этом пока остановимся». Он не признаёт и не подтверждает обстоятельства убийства.",
       "end": true
     }
   },
@@ -624,7 +738,8 @@
             "id": "anna_box_trust",
             "question": "Почему вы должны доверять мне?",
             "type": "narrative",
-            "answer": "«Не должны. Покажите, что вы не собираетесь использовать меня как удобный источник, и тогда поговорим ещё»."
+            "answer": "«Не должны. Покажите, что вы не собираетесь использовать меня как удобный источник, и тогда поговорим ещё».",
+            "triggers_critical": "critical_choice_box"
           }
         ]
       },
@@ -644,6 +759,43 @@
     "all_topics_exhausted": {
       "type": "narrative",
       "text": "Анна убирает коробку со стола: «Я сказала всё, что могу. Не обещайте мне, что найдёте его, если не уверены».",
+      "end": true
+    },
+    "critical_choice_box": {
+      "type": "critical",
+      "trigger_question": "anna_box_trust",
+      "text": "Анна не отводит взгляда: «Отец оставил мне эту коробку не просто так. Я хочу знать, что вы не заберёте её и не исчезнете, как остальные».",
+      "choices": [
+        {
+          "id": "anna_respect_boundary",
+          "text": "Коробка остаётся у вас. Я объясню каждый следующий шаг.",
+          "tone": "kind",
+          "effects": {
+            "trust": 10
+          },
+          "memory_set": "anna_boundary_respected",
+          "next_dialogue": "anna_boundary_result"
+        },
+        {
+          "id": "anna_take_box",
+          "text": "Это улика. Я забираю коробку как вещдок.",
+          "tone": "aggressive",
+          "effects": {
+            "trust": -20
+          },
+          "memory_set": "anna_box_taken",
+          "next_dialogue": "anna_box_taken_result"
+        }
+      ]
+    },
+    "anna_boundary_result": {
+      "type": "narrative",
+      "text": "Анна впервые смотрит вам прямо в глаза: «Хорошо. Пока коробка останется здесь. Если появится причина открыть её, вы сначала объясните мне почему. Я не обещаю доверять вам сразу».",
+      "end": true
+    },
+    "anna_box_taken_result": {
+      "type": "narrative",
+      "text": "Анна отступает от стола: «Тогда вы ничем не лучше тех, кто уже приходил. Я не буду помогать вам с вещами отца».",
       "end": true
     }
   }
