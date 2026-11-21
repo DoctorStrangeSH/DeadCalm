@@ -3,7 +3,7 @@
 **Дата:** 2026-11-20  
 **Базовая ветка:** `main`  
 **Рабочая ветка:** `chore/pre-release-repository-hygiene`  
-**Статус:** безопасная уборка и статические проверки выполнены; GitHub Actions CI успешно прошёл (305/305 тестов на run `44894671507`); ручной браузерный/gameplay/PWA QA остаётся открытым.
+**Статус:** безопасная уборка и статические проверки выполнены; процедурная аудиосистема реализована; GitHub Actions run `44896518558` ожидает запуска/завершения проверки актуального HEAD; ручной браузерный/gameplay/PWA и listening QA остаются открытыми.
 
 Этот документ фиксирует уборку репозитория как отдельную техническую задачу. Он не меняет игровой scope и не заменяет `docs/MASTER_GAME_SPEC_RU.md`.
 
@@ -182,7 +182,7 @@
 - В дереве проекта найдено 33 визуальных файлов: 7 фоновых WebP, 24 портрета (6 персонажей × 4 состояния) и 2 SVG-иконки PWA.
 - Крупнейший ресурс: 415862 байт (406.1 KiB); файлов с одинаковым Git blob SHA: 0.
 - Фоновые ресурсы используются сценами, картой города или общей арт-дирекцией; 24 портретных состояния перечислены в src/js/components/dialog-box.js; PWA-иконки указаны в manifest и Service Worker.
-- В репозитории нет отдельных аудиофайлов. `Audio` mixer теперь принимает и сохраняет уровни музыки/SFX, но `playSfx()` и `startAmbient()` пока заглушки; источники музыки, атмосферы и эффектов не реализованы. Это остаётся открытой задачей аудио 1.0.
+- В репозитории нет отдельных аудиофайлов: вместо них реализован оригинальный процедурный Web Audio слой. Музыка, ambience и SFX синтезируются локально без сетевых запросов и npm dependencies. Ручная проверка звучания/баланса остаётся открытой.
 - Главное меню теперь содержит доступную панель настроек: громкость музыки/SFX, скорость текста, Escape/focus trap, сохранение и нормализация настроек. Настройка скорости применяется к печати диалогов. Проверено CI; визуальный браузерный QA панели ещё открыт.
 
 
@@ -203,7 +203,8 @@
 - [x] Добавить `vercel.json`: entrypoint, manifest и Service Worker получают no-cache; Service Worker явно разрешён для корня origin.
 - [x] Добавить `tests/vercel-deployment.test.mjs` для cache headers, Service-Worker-Allowed и отсутствия выдуманного build/runtime dependency.
 - [x] Создать Vercel project `dead-calm` в команде `SherlockDS` и подключить `DoctorStrangeSH/DeadCalm`; feature branch получает Preview deployment.
-- [ ] Подтвердить фактический preview URL и проверить в браузере загрузку ресурсов, сохранения и PWA. Production не публиковать до RC.
+- [x] Подтвердить Preview URL: `https://dead-calm-jlr8c4e6g-sherlock-ds.vercel.app` (READY, commit `4460105a23e4504c9fe0ec1b465a092534de53a8`, SSO protected).
+- [ ] Проверить в браузере загрузку ресурсов, сохранения, звук и PWA. Production не публиковать до RC.
 - Ручная проверка загрузки Tailwind при отключённой сети и install/update/offline Service Worker остаётся частью браузерного QA.
 
 
@@ -213,8 +214,8 @@
 - Добавлен `tests/vercel-deployment.test.mjs`: проверяет Vercel cache rules, Service Worker scope и отсутствие runtime/build dependency.
 - Vercel project `dead-calm` создан в team `SherlockDS` (Hobby), GitHub-репозиторий подключён. Project ID: `prj_0Zz8xgWCU80YWg8JGhoN6Nns47nx`; production branch — `main`.
 - При первом push сразу после создания Git-проекта Vercel создал bootstrap deployment `dpl_Ab5U8Hbp3KFrMXihL4cMKqEG43L4` с `target: production` и стандартным alias `dead-calm.vercel.app`; Git metadata указывает feature branch. Интеграция при создании сообщила production branch `main`.
-- Последующие push в ту же feature branch создали корректные preview deployments (`target: null` в API; Preview в deployment card) с отдельным branch alias. Последний подтверждённый Preview указан ниже.
-- В качестве защиты включён SSO для **всех** deployment targets (`deploymentType: all`), включая bootstrap production alias и preview. Анонимный публичный доступ закрыт; пользовательские домены не подключались.
+- Последующие push в ту же feature branch создают корректные preview deployments (`target: null` в API; Preview в deployment card) с отдельным branch alias. Последний подтверждённый Preview указан ниже.
+- В качестве защиты включён SSO для **всех** deployment targets (`deploymentType: all`), включая bootstrap production alias и preview. Анонимный публичный доступ закрыт; пользовательские домены не подключались. Первый bootstrap deployment не означает production release.
 - Попытка включить Vercel Deployment Policies отклонена тарифом Hobby (`pro_plan_required`); автоматическая Git production deployment policy не настраивалась. Production branch reported as `main`; перед релизом проверить её в Vercel Project Settings.
 - Preview build READY подтверждает сборку и публикацию файлов, но не заменяет ручной браузерный smoke test.
 
@@ -241,7 +242,7 @@
 - `GameState` нормализует сохранённые настройки: громкость ограничена 0..1, неподдерживаемая скорость текста возвращается к `normal`.
 - `Audio.init(settings)` применяет сохранённые уровни к mixer gain nodes; setters ограничивают значения и игнорируют нечисловые.
 - Скорость диалогового typewriter теперь учитывает `slow` (42 ms), `normal` (25 ms), `fast` (12 ms), `instant` (0 ms); `prefers-reduced-motion` по-прежнему показывает реплику сразу.
-- Service Worker cache version повышен до `dead-calm-visual-v105`; тесты ожидают новую версию.
+- Service Worker cache version в последующем аудио-срезе повышен до `dead-calm-visual-v106`; тесты ожидают актуальную версию.
 - Добавлены проверки `tests/audio-settings.test.mjs`, нормализации сохранённых настроек и интеграции панели в `tests/visual-integrity.test.mjs`.
 - GitHub Actions run `44894671507`: **305/305 tests passed**, 0 failures. Vercel preview `dpl_876z4rFcXyvb74ELz9pGMekZijoy` READY на commit `d816a4e`; более новый deployment создаётся автоматически при последующих push.
 - Ограничение: реальное воспроизведение музыки/SFX/ambient не завершено — `playSfx()`/`startAmbient()` остаются заглушками, аудиоисточников в репозитории нет. Не помечать весь аудио-этап как готовый.
@@ -265,3 +266,17 @@
 
 - Follow-up lifecycle hardening: old ambience callbacks capture their own filter/gain nodes before a scene switch, so delayed `onended` cleanup cannot disconnect the newly started location ambience. Sustained music filters are also disconnected after fade-out.
 - Mini-game-specific clicks use a distinct short mechanical cue; sliders retain a rate-limited adjustment tick.
+
+
+### Audio 1.0 implementation — 2026-11-21
+- [x] Синтезировать четыре музыкальных темы: меню, расследование, напряжённая мини-игра, финал.
+- [x] Добавить атмосферу дождя, порта и тихого интерьера на основе локального noise buffer и фильтров.
+- [x] Добавить UI/dialogue/evidence/mini-game сигналы; отдельный rate-limited tick для регуляторов.
+- [x] Подключить аудио к смене сцен, завершению дела и результатам мини-игр.
+- [x] Разблокировать AudioContext только после pointer/keyboard жеста; suspend/resume при смене видимости вкладки.
+- [x] Разделить music/SFX/ambient gain; ambient подчиняется регулятору музыки.
+- [x] Добавить cleanup для oscillator/filter/source и тест защиты от stale ambience callback при переходе сцены.
+- [x] Устранить первый-click cooldown edge case; обновить тесты Web Audio AudioParam mock.
+- [ ] Получить зелёный CI на последнем HEAD `4460105a23e4504c9fe0ec1b465a092534de53a8`; run `44896518558` пока pending (jobs API пока не вернул job).
+- [ ] Ручная проверка слухом: дождь/порт/интерьер, четыре музыкальные темы, громкость, пауза вкладки, autoplay policy, desktop/mobile.
+- Latest Vercel Preview: `dpl_9ccETTgGJvbFe6Y3j4fjRxaPSJvY`, READY, `https://dead-calm-jlr8c4e6g-sherlock-ds.vercel.app`; SSO protection enabled. Production не менялся.
