@@ -74,6 +74,12 @@ export var GameState = {
   init() {
     var rawSaved = Storage.load('gameState');
     this.saveBlocked = false;
+    if (!rawSaved && Storage.hasAnyRecord('gameState')) {
+      this.saveBlocked = true;
+      Events.emit('save:invalid', { reason: 'no-valid-recovery-copy' });
+      console.error('[State] Все копии сохранения повреждены. Исходные данные оставлены нетронутыми; запись заблокирована.');
+      return false;
+    }
     const migration = rawSaved ? migrateSave(rawSaved) : null;
     if (migration && migration.status === 'unsupported') {
       this.saveBlocked = true;
