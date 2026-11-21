@@ -59,10 +59,14 @@ test('scene profiles start original procedural music and location ambience', () 
     assert.ok(Audio._ambientSource?.started);
     assert.equal(Audio._musicGain.gain.value, 0.4);
 
+    const previousAmbient = Audio._ambientSource;
     Audio.setScene('port');
+    const harborFilter = Audio._ambientFilter;
     assert.equal(Audio._musicTheme, 'investigation');
     assert.equal(Audio._ambientType, 'harbor');
     assert.equal(Audio._ambientSource?.started, true);
+    previousAmbient.onended();
+    assert.notEqual(harborFilter.disconnected, true, 'retiring rain ambience must not disconnect the new harbor filter');
     Audio._stopMusic();
     Audio.stopAmbient();
   } finally {
