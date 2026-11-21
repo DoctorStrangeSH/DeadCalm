@@ -81,7 +81,8 @@ test('legacy payload is migrated during import and retains unknown fields', asyn
   const file = await createSaveFile(legacy);
   const parsed = await parseSaveFile(file);
   assert.equal(parsed.status, 'ok');
-  assert.equal(parsed.migrated, true);
+  assert.equal(file.payload.schemaVersion, CURRENT_SAVE_VERSION);
+  assert.equal(parsed.migrated, false);
   assert.equal(parsed.data.schemaVersion, CURRENT_SAVE_VERSION);
   assert.equal(parsed.data.currentCase.legacyNote, 'retain me');
 });
