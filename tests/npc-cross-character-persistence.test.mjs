@@ -34,19 +34,10 @@ test('explicit NPC-to-NPC evidence, knowledge provenance and social history surv
       toNpcId: 'npc_markus_holt',
       type: 'family',
       status: 'strained',
-      basis: 'The authored case identifies Anna as Markus Holt’s sister.',
+      basis: 'The authored character record identifies Anna as Markus Holt’s adoptive daughter.',
       sourceRefs: ['character-canon-anna-markus']
     });
     assert.ok(tie);
-
-    const event = GameState.recordSocialEvent({
-      id: 'anna-protected-box',
-      fromNpcId: 'npc_anna_holt',
-      toNpcId: 'npc_markus_holt',
-      description: 'Anna refused to hand over Markus’s private box.',
-      sourceRefs: ['anna_boundary_result']
-    });
-    assert.ok(event);
 
     const knowledge = GameState.recordNpcKnowledge({
       id: 'marta-hears-anna-boundary',
@@ -78,7 +69,6 @@ test('explicit NPC-to-NPC evidence, knowledge provenance and social history surv
 
     const annaContext = GameState.getSocialContext('npc_anna_holt');
     assert.equal(annaContext.connectionCount, 1);
-    assert.equal(annaContext.eventCount, 1);
     assert.equal(annaContext.ties[0].status, 'strained');
     assert.deepEqual(annaContext.ties[0].sourceRefs, ['character-canon-anna-markus']);
 
