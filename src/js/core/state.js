@@ -6,6 +6,7 @@ import { createEmptyKnowledgeLedger, normalizeKnowledgeLedger, recordNpcKnowledg
 import { createEmptyDailyLife, normalizeDailyLife, upsertNpcSchedule, getNpcScheduleAt, recordNpcOccurrence, getNpcOccurrences } from '../systems/npc-daily-life.js';
 import { createEmptyMiniGameProgress, normalizeMiniGameProgress, recordMiniGameResult } from '../systems/minigame-progress.js';
 import { assessCampaignDay, assessFinalEvidence } from '../systems/campaign-progression.js';
+import { migrateSave, CURRENT_SAVE_VERSION } from './save-migrations.js';
 
 const INITIAL_CAMPAIGN = Object.freeze({
   caseId: 'case_001',
@@ -62,6 +63,7 @@ export var GameState = {
   npcDailyLife: createEmptyDailyLife(),
   miniGameProgress: createEmptyMiniGameProgress(),
   notebook: [],
+  saveBlocked: false,
 
   settings: {
     musicVolume: 0.5,
@@ -70,7 +72,22 @@ export var GameState = {
   },
 
   init() {
-    var saved = Storage.load('gameState');
+    var rawSaved = Storage.load('gameState');
+    this.saveBlocked = false;
+    const migration = rawSaved ? migrateSave(rawSaved) : null;
+    if (migration && migration.status === 'unsupported') {
+      this.saveBlocked = true;
+      Events.emit('save:unsupported_version', { found: migration.fromVersion, supported: CURRENT_SAVE_VERSION });
+      console.error('[State] Сохранение создано более новой версией игры. Запись заблокирована для защиты данных.');
+      return false;
+    }
+    if (migration && migration.status === 'invalid') {
+      this.saveBlocked = true;
+      Events.emit('save:invalid', { reason: migration.reason });
+      console.error('[State] Формат сохранения неизвестен. Запись заблокирована для защиты данных.');
+      return false;
+    }
+    var saved = migration ? migration.data : null;
     if (saved) {
       this.player = saved.player || this.player;
       this.currentCase = saved.currentCase || this.currentCase;
@@ -85,6 +102,10 @@ export var GameState = {
       this.miniGameProgress = normalizeMiniGameProgress(saved.miniGameProgress);
       this.notebook = saved.notebook || [];
       this.settings = normalizeSettings(saved.settings);
+      if (migration.migrated) {
+        console.log('[State] Сохранение обновлено со схемы ' + migration.fromVersion + ' до ' + migration.toVersion);
+        this.save();
+      }
       console.log('[State] Состояние загружено');
       console.log('[State] - npcMemory: ' + Object.keys(this.npcMemory).length + ' NPC');
       console.log('[State] - clues: ' + this.currentCase.clues.length);
@@ -94,6 +115,7 @@ export var GameState = {
       this.settings = normalizeSettings(null);
       console.log('[State] Новое состояние (без сохранения)');
     }
+    return true;
   },
 
   update(key, value) {
@@ -349,7 +371,11 @@ export var GameState = {
   },
 
   save() {
-    Storage.save('gameState', {
+    if (this.saveBlocked) {
+      console.warn('[State] Сохранение заблокировано: исходные данные требуют более новой версии игры или проверки.');
+      return false;
+    }
+    return Storage.save('gameState', {
       player: this.player,
       currentCase: this.currentCase,
       campaign: this.campaign,
@@ -362,6 +388,7 @@ export var GameState = {
       miniGameProgress: this.miniGameProgress,
       notebook: this.notebook,
       settings: this.settings,
+      schemaVersion: CURRENT_SAVE_VERSION
     });
   },
 
@@ -378,6 +405,9 @@ export var GameState = {
     console.log('[State] - notebook: ' + this.notebook.length);
     console.log('[State] - flags: ' + Object.keys(this.flags).length);
     
+    // Explicit user reset is the only operation that may discard an unsupported save.
+    this.saveBlocked = false;
+
     // Сбрасываем
     this.player = { name: 'Джон Риверс', reputation: 50 };
     this.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
