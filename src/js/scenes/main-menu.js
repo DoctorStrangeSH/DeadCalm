@@ -3,6 +3,7 @@ import { GameState } from '../core/state.js';
 import { Audio } from '../core/audio.js';
 import { NPCMemory } from '../systems/npc-memory.js';
 import { createSaveFile, parseSaveFile } from '../core/save-transfer.js';
+import { assessCampaignDay } from '../systems/campaign-progression.js';
 
 /**
  * Главное меню игры «Мёртвый штиль».
@@ -19,8 +20,17 @@ export function render(container) {
   if (hasSave && !saveBlocked) {
     var cluesCount = GameState.currentCase.clues.length;
     var notesCount = GameState.notebook ? GameState.notebook.length : 0;
-    var npcCount = GameState.npcMemory ? Object.keys(GameState.npcMemory).length : 0;
-    saveInfo = 'Улик: ' + cluesCount + ' | Заметок: ' + notesCount + ' | NPC в памяти: ' + npcCount;
+    var campaignStatus = assessCampaignDay(GameState);
+    var day = GameState.campaign?.day || 1;
+    var progressLabel = campaignStatus.complete
+      ? 'Расследование завершено'
+      : campaignStatus.finaleReady
+        ? 'Финальная встреча ждёт вас'
+        : campaignStatus.canAdvance
+          ? 'Можно завершить текущий день'
+          : 'Осталось обязательных доказательств: ' + campaignStatus.missing.length;
+    saveInfo = 'День ' + day + ' из 5 · ' + progressLabel +
+      ' · Улик: ' + cluesCount + ' · Заметок: ' + notesCount;
   } else if (saveBlocked) {
     saveInfo = 'Сохранение повреждено или создано более новой версией. Продолжение временно заблокировано.';
   }
