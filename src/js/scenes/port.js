@@ -35,7 +35,7 @@ function renderEnding(container, ending) {
 
 function renderEndingChoices(container) {
   const evidenceStatus = assessFinalEvidence(GameState);
-  const publishReady = evidenceStatus.publicReady;
+  const fullDisclosureReady = evidenceStatus.fullDisclosureReady;
   const evidenceDossier = buildFinalEvidenceDossier(GameState);
   const result = container.querySelector('#story-location-result');
   if (!evidenceStatus.ready) {
@@ -61,8 +61,8 @@ function renderEndingChoices(container) {
       </ol>
       <p class="text-gray-500 text-xs mt-3">Это совокупная версия из нескольких источников. Ни одна отдельная улика не называет убийцу.</p>
       <div class="grid gap-2 mt-4">
-        ${publishReady ? "" : '<p class="text-gray-500 text-xs">Для публичного обвинения нужен чётко восстановленный кадр и проверенная связь Блэквуда с ядом. Компромиссный исход остаётся доступен.</p>'}
-        <button id="btn-ending-open" class="btn-noir py-3" ${publishReady ? "" : "disabled"}>ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ</button>
+        ${fullDisclosureReady ? "" : '<p class="text-gray-500 text-xs">Для полного публичного раскрытия материалов старого дела нужен чётко восстановленный кадр. Это не заменяет доказательств того, кто передал яд Гаррисону; открытое дело передаётся на дальнейшее расследование.</p>'}
+        <button id="btn-ending-open" class="btn-noir py-3" ${fullDisclosureReady ? "" : "disabled"}>ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ</button>
         <button id="btn-ending-silence" class="btn-noir py-3">ЗАКЛЮЧИТЬ СДЕЛКУ</button>
       </div>
     </div>
