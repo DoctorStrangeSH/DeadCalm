@@ -362,3 +362,94 @@ test('full investigation state survives save/load and exports nested hypotheses'
     Object.assign(GameState, original);
   }
 });
+
+
+test('episode conclusions, review history, directives, and narrative choices survive a fresh save reload', () => {
+  const keys = [
+    'player', 'currentCase', 'campaign', 'flags', 'relationships', 'npcMemory',
+    'socialGraph', 'knowledgeLedger', 'npcDailyLife', 'miniGameProgress',
+    'notebook', 'settings', 'saveBlocked'
+  ];
+  const original = Object.fromEntries(keys.map(key => [key, GameState[key]]));
+  const originalLoad = Storage.load;
+  const originalSave = Storage.save;
+  let persisted = null;
+
+  try {
+    GameState.saveBlocked = false;
+    GameState.player = { name: 'Джон Риверс', reputation: 71 };
+    GameState.currentCase = {
+      id: 'case_001',
+      clues: [{ id: 'reader_reconstructed_timeline' }, { id: 'reader_archive_crosscheck' }],
+      suspects: [{ id: 'sebastian_blackwood', status: 'under_review' }],
+      timeline: [{ id: 'harbor_evening', time: '20:58' }],
+      hypotheses: [{ id: 'hyp_reader_01', status: 'probable', clueIds: ['reader_archive_crosscheck'], history: [{ status: 'possible' }, { status: 'probable' }] }]
+    };
+    GameState.campaign = { caseId: 'case_001', day: 4, completed: false, ending: null };
+    GameState.flags = {
+      day_2: true, day_3: true, day_4: true,
+      court_reader_conclusions: [{
+        version: 2,
+        status: 'Промежуточное заключение',
+        documentIds: ['reader_archive_crosscheck'],
+        contradictionIds: [],
+        unresolved: ['Проверить журнал порта']
+      }],
+      court_reader_conclusion_reviews: [{
+        conclusionVersion: 2,
+        status: 'Возвращено на уточнение',
+        comments: ['Проверить недостающие материалы']
+      }],
+      court_reader_review_directives: [{
+        conclusionVersion: 2,
+        kind: 'additional_check',
+        targetClueId: 'port_cargo_ledger'
+      }],
+      npc_anna_trust_consequence: 'kept_promise',
+      npc_sebastian_critical_choice: 'refused_compromise'
+    };
+    GameState.relationships = { anna_holt: { trust: 76, met: true } };
+    GameState.npcMemory = { anna_holt: { promises: [{ id: 'promise_01', status: 'kept' }], flags: { archive_shared: true } } };
+    GameState.socialGraph = { ties: [], events: [] };
+    GameState.knowledgeLedger = { entries: [] };
+    GameState.npcDailyLife = { schedules: [], occurrences: [] };
+    GameState.miniGameProgress = {};
+    GameState.notebook = [{ id: 'note_01', text: 'Сверить портовый журнал с хронологией' }];
+    GameState.settings = { musicVolume: 0.35, sfxVolume: 0.65, textSpeed: 'fast' };
+
+    Storage.save = (key, data) => {
+      if (key === 'gameState') persisted = structuredClone(data);
+      return true;
+    };
+    Storage.load = key => key === 'gameState' && persisted ? structuredClone(persisted) : null;
+
+    assert.equal(GameState.save(), true);
+    const exported = GameState.export();
+    exported.flags.court_reader_conclusions[0].documentIds.push('forged_export_mutation');
+    assert.equal(GameState.flags.court_reader_conclusions[0].documentIds.includes('forged_export_mutation'), false);
+
+    // Simulate a completely new application session using only the persisted payload.
+    GameState.flags = {};
+    GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] };
+    GameState.relationships = {};
+    GameState.npcMemory = {};
+    assert.equal(GameState.init(), true);
+
+    assert.equal(GameState.campaign.day, 4);
+    assert.equal(GameState.flags.court_reader_conclusions[0].version, 2);
+    assert.deepEqual(GameState.flags.court_reader_conclusions[0].documentIds, ['reader_archive_crosscheck']);
+    assert.equal(GameState.flags.court_reader_conclusion_reviews[0].status, 'Возвращено на уточнение');
+    assert.equal(GameState.flags.court_reader_review_directives[0].targetClueId, 'port_cargo_ledger');
+    assert.equal(GameState.flags.npc_anna_trust_consequence, 'kept_promise');
+    assert.equal(GameState.flags.npc_sebastian_critical_choice, 'refused_compromise');
+    assert.equal(GameState.relationships.anna_holt.trust, 76);
+    assert.equal(GameState.npcMemory.anna_holt.promises[0].status, 'kept');
+    assert.equal(GameState.currentCase.hypotheses[0].history.length, 2);
+    assert.equal(GameState.notebook[0].text, 'Сверить портовый журнал с хронологией');
+    assert.equal(GameState.settings.textSpeed, 'fast');
+  } finally {
+    Storage.load = originalLoad;
+    Storage.save = originalSave;
+    Object.assign(GameState, original);
+  }
+});
