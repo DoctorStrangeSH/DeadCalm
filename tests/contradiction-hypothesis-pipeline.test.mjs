@@ -50,10 +50,9 @@ test('evidence → hypothesis → contradiction → revision survives save and r
       'a catalog reference to an undiscovered clue must not unlock the contradiction');
 
     GameState.addClue(clues[secondId]);
-    assert.deepEqual(findContradictions(hypothesis, GameState.currentCase.clues, rules).map(item => item.id), [rule.id],
-      'both pieces must be discovered and attached to the same hypothesis');
+    assert.deepEqual(findContradictions(hypothesis, GameState.currentCase.clues, rules), [],
+      'discovering a second document must not silently attach it to an existing theory');
 
-    // Discovery alone does not silently attach a new document to an existing theory.
     // The player explicitly adds the second record while revising the hypothesis.
     hypothesis = GameState.reviseHypothesis(hypothesis.id, {
       status: 'probable',
@@ -61,6 +60,8 @@ test('evidence → hypothesis → contradiction → revision survives save and r
       reasoning: 'Обе записи доступны и вручную сопоставлены. Есть расхождение, но неизвестно, какая запись ошибочна.'
     });
     assert.equal(hypothesis.status, 'probable');
+    assert.deepEqual(findContradictions(hypothesis, GameState.currentCase.clues, rules).map(item => item.id), [rule.id],
+      'both pieces must be discovered and explicitly attached to the same hypothesis');
     assert.deepEqual(findContradictions(hypothesis, GameState.currentCase.clues, rules).map(item => item.id), [rule.id]);
 
     const saved = GameState.export();
