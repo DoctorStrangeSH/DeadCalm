@@ -1,7 +1,8 @@
 const DAY_FOUR = 4;
 
 export function canAccessCase001MiniGame(type, gameState) {
-  if (!gameState || Number(gameState.campaign?.day || 1) < DAY_FOUR) return false;
+  const day = Number(gameState?.campaign?.day);
+  if (!Number.isInteger(day) || day < DAY_FOUR) return false;
   const hasClue = id => typeof gameState.hasClue === 'function' && gameState.hasClue(id);
 
   switch (type) {
