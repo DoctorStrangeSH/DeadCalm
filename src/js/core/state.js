@@ -450,19 +450,49 @@ export var GameState = {
   },
 
   export() {
-    return {
-      player: Object.assign({}, this.player),
-      campaign: Object.assign({}, this.campaign),
-      currentCase: JSON.parse(JSON.stringify(this.currentCase)),
-      flags: Object.assign({}, this.flags),
-      relationships: Object.assign({}, this.relationships),
-      npcMemory: JSON.parse(JSON.stringify(this.npcMemory)),
-      socialGraph: JSON.parse(JSON.stringify(this.socialGraph)),
-      knowledgeLedger: JSON.parse(JSON.stringify(this.knowledgeLedger)),
-      npcDailyLife: JSON.parse(JSON.stringify(this.npcDailyLife)),
-      miniGameProgress: JSON.parse(JSON.stringify(this.miniGameProgress)),
-      notebook: this.notebook.slice(),
-      settings: Object.assign({}, this.settings)
+    return JSON.parse(JSON.stringify({
+      player: this.player,
+      currentCase: this.currentCase,
+      campaign: this.campaign,
+      flags: this.flags,
+      relationships: this.relationships,
+      npcMemory: this.npcMemory,
+      socialGraph: this.socialGraph,
+      knowledgeLedger: this.knowledgeLedger,
+      npcDailyLife: this.npcDailyLife,
+      miniGameProgress: this.miniGameProgress,
+      notebook: this.notebook,
+      settings: this.settings,
+      schemaVersion: CURRENT_SAVE_VERSION
+    }));
+  },
+
+  importSave(payload) {
+    const migration = migrateSave(payload);
+    if (migration.status !== 'ok') return false;
+    const data = migration.data;
+    const savePayload = {
+      ...data,
+      schemaVersion: CURRENT_SAVE_VERSION
     };
-  }
-};
+
+    // Commit to persistent storage before changing the live in-memory campaign.
+    if (!Storage.save('gameState', savePayload)) return false;
+
+    this.saveBlocked = false;
+    this.player = data.player || { name: 'Джон Риверс', reputation: 50 };
+    this.currentCase = data.currentCase || { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] };
+    this.flags = data.flags || {};
+    this.campaign = normalizeCampaignState(data.campaign, this.flags);
+    this._syncCampaignFlags();
+    this.relationships = data.relationships || {};
+    this.npcMemory = data.npcMemory || {};
+    this.socialGraph = normalizeSocialGraph(data.socialGraph);
+    this.knowledgeLedger = normalizeKnowledgeLedger(data.knowledgeLedger);
+    this.npcDailyLife = normalizeDailyLife(data.npcDailyLife);
+    this.miniGameProgress = normalizeMiniGameProgress(data.miniGameProgress);
+    this.notebook = data.notebook || [];
+    this.settings = normalizeSettings(data.settings);
+    Events.emit('state:imported', { campaign: this.campaign });
+    return true;
+  }};
