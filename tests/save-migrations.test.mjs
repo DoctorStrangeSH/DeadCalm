@@ -172,3 +172,27 @@ test('GameState automatically persists a migrated legacy save in the current sch
     Object.assign(GameState, originalState);
   }
 });
+
+
+test('partial legacy nested records receive defaults without losing supplied or unknown values', () => {
+  const result = migrateSave({
+    player: { reputation: 61, customTitle: 'Witness' },
+    campaign: { day: 3, customChapter: 'harbor' },
+    socialGraph: { ties: [{ id: 'tie_1' }], customGraphFlag: true },
+    settings: { musicVolume: 0.2, customSetting: 'keep' }
+  });
+
+  assert.equal(result.status, 'ok');
+  assert.equal(result.data.player.name, 'Джон Риверс');
+  assert.equal(result.data.player.reputation, 61);
+  assert.equal(result.data.campaign.day, 3);
+  assert.equal(result.data.campaign.completed, false);
+  assert.equal(result.data.campaign.ending, null);
+  assert.equal(result.data.campaign.customChapter, 'harbor');
+  assert.deepEqual(result.data.socialGraph.ties, [{ id: 'tie_1' }]);
+  assert.deepEqual(result.data.socialGraph.events, []);
+  assert.equal(result.data.socialGraph.customGraphFlag, true);
+  assert.equal(result.data.settings.musicVolume, 0.2);
+  assert.equal(result.data.settings.sfxVolume, 0.7);
+  assert.equal(result.data.settings.customSetting, 'keep');
+});
