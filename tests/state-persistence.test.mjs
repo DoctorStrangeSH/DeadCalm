@@ -73,6 +73,7 @@ test('GameState.init restores the saved campaign before scenes use it', () => {
 
 test('GameState.init keeps a clean initial state when no save exists', () => {
   const originalLoad = Storage.load;
+  const originalHasAnyRecord = Storage.hasAnyRecord;
   const original = {
     player: GameState.player,
     currentCase: GameState.currentCase,
@@ -90,6 +91,7 @@ test('GameState.init keeps a clean initial state when no save exists', () => {
 
   try {
     Storage.load = () => null;
+    Storage.hasAnyRecord = () => false;
     GameState.player = { name: 'John Rivers', reputation: 50 };
     GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
     GameState.flags = {};
@@ -104,6 +106,7 @@ test('GameState.init keeps a clean initial state when no save exists', () => {
     assert.deepEqual(GameState.miniGameProgress, {});
   } finally {
     Storage.load = originalLoad;
+    Storage.hasAnyRecord = originalHasAnyRecord;
     Object.assign(GameState, original);
   }
 });
