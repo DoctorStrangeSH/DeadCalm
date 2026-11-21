@@ -633,7 +633,7 @@ export function render(container, data) {
     const history = GameState.flags.court_reader_conclusions;
     const latest = Array.isArray(history) ? history.at(-1) : null;
     const reviews = Array.isArray(GameState.flags.court_reader_conclusion_reviews) ? GameState.flags.court_reader_conclusion_reviews : [];
-    const result = reviewReaderConclusion(latest, reviews);
+    const result = reviewReaderConclusion(latest, reviews, undefined, GameState.currentCase, qualityRules);
     if (!result) return;
     GameState.setFlag('court_reader_conclusion_reviews', [...reviews, result]);
     refreshReaderQuality();
