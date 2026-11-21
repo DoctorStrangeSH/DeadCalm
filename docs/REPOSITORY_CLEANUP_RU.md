@@ -390,3 +390,11 @@
 - Existing discovery + same-hypothesis attachment requirements are unchanged.
 - GitHub Actions run `44902590231`: **350/350 tests passed**, 0 failures, HEAD `9f277c1e4238a6cd1e6f25f40f8a17ee6c5c8c3a`.
 - Next audit item: inspect whether the UI can manually label a hypothesis `confirmed` without a minimum evidence/independence threshold; no policy changed yet.
+
+
+### Защита статуса подтверждения гипотезы — 2026-11-21
+- Проверен полный путь от `<select>` на доске расследования до `GameState.reviseHypothesis()` и доменной функции.
+- Ручная установка `confirmed` теперь отклоняется в `src/js/systems/hypotheses.js`, а опция убрана из новых оценок интерфейса. Для старых сохранений сохранена обратная совместимость: legacy статус отображается отдельно, доступно понижение, но повторное ручное подтверждение невозможно.
+- Добавлены регрессионные проверки в `tests/hypotheses.test.mjs`.
+- Автоматическое подтверждение не добавлялось: нет формально утверждённого критерия достаточности/независимости доказательств. Финальное обвинение потребует отдельной проверки доказательной базы.
+- CI run `44902916208` для `3d580207090aa12b7eb9487661e08ad6ea8e4254` ожидает завершения.
