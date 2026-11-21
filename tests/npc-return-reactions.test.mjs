@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { GameState } from '../src/js/core/state.js';
+import { Storage } from '../src/js/core/storage.js';
 import { DialogueEngine } from '../src/js/systems/dialogue.js';
 import { NPCMemory } from '../src/js/systems/npc-memory.js';
 
@@ -18,6 +19,7 @@ test('all non-terminal critical NPC choices produce one authored return reaction
     'notebook', 'settings', 'saveBlocked', 'save'
   ];
   const previousState = Object.fromEntries(stateKeys.map(key => [key, GameState[key]]));
+  const previousStorageSave = Storage.save;
   const previousDialogue = {
     dialogues: DialogueEngine._dialogues,
     characters: DialogueEngine._characters,
@@ -32,6 +34,7 @@ test('all non-terminal critical NPC choices produce one authored return reaction
 
   try {
     GameState.save = () => {};
+    Storage.save = () => true;
     DialogueEngine._dialogues = dialogues;
     DialogueEngine._characters = characters;
     DialogueEngine._clues = clues;
@@ -102,6 +105,7 @@ test('all non-terminal critical NPC choices produce one authored return reaction
     }
     assert.equal(tested, 12, '12 non-terminal choices should have authored return reactions');
   } finally {
+    Storage.save = previousStorageSave;
     Object.assign(GameState, previousState);
     Object.assign(DialogueEngine, {
       _dialogues: previousDialogue.dialogues,
