@@ -134,6 +134,22 @@
           "memory_set": "lydia_refuses",
           "next_dialogue": "lydia_shuts_down_forever"
         }
+      ],
+      "return_reactions": [
+        {
+          "id": "lydia_return_promise",
+          "choice_id": "promise_protection",
+          "required_flag": "lydia_trusts_player",
+          "consumed_flag": "return_seen_lydia_return_promise",
+          "text": "Лидия встречает вас чуть мягче прежнего: «Я помню ваше обещание. Не прошу решать за меня, детектив. Просто не превращайте историю Габриэля в удобную версию дела»."
+        },
+        {
+          "id": "lydia_return_neutral",
+          "choice_id": "stay_neutral",
+          "required_flag": "lydia_cautious",
+          "consumed_flag": "return_seen_lydia_return_neutral",
+          "text": "Лидия кивает сдержанно: «Вы не стали давать обещаний, которых не можете выполнить. Я это ценю. Если появятся проверяемые факты о Габриэле, я выслушаю»."
+        }
       ]
     },
     "lydia_reveals_secret": {
@@ -347,6 +363,22 @@
           "memory_set": "ray_hostile",
           "next_dialogue": "ray_betrayed"
         }
+      ],
+      "return_reactions": [
+        {
+          "id": "ray_return_cooperation",
+          "choice_id": "go_with_ray",
+          "required_flag": "ray_official_cooperation",
+          "consumed_flag": "return_seen_ray_return_cooperation",
+          "text": "Рэй кладёт на стол заверенные копии: «Как и договаривались, всё оформлено. Теперь у нас есть документы, которые не исчезнут при первой проверке»."
+        },
+        {
+          "id": "ray_return_caution",
+          "choice_id": "decline_raid",
+          "required_flag": "ray_records_first",
+          "consumed_flag": "return_seen_ray_return_caution",
+          "text": "Рэй показывает журнал регистрации: «Я поднял оригиналы, но оставил след каждого действия. После той истории иначе нельзя»."
+        }
       ]
     },
     "ray_raid_together": {
@@ -475,6 +507,22 @@
           "memory_set": "marta_source_pressured",
           "next_dialogue": "marta_source_pressured_result"
         }
+      ],
+      "return_reactions": [
+        {
+          "id": "marta_return_protected",
+          "choice_id": "marta_protect_source",
+          "required_flag": "marta_source_respected",
+          "consumed_flag": "return_seen_marta_return_protected",
+          "text": "Марта сама подходит к вам: «Я проверила копию. Источник не раскрыт, как мы и договорились. Теперь можно говорить о фактах, а не о том, кто их принёс»."
+        },
+        {
+          "id": "marta_return_pressured",
+          "choice_id": "marta_demand_publish",
+          "required_flag": "marta_source_pressured",
+          "consumed_flag": "return_seen_marta_return_pressured",
+          "text": "Марта держит папку закрытой: «Я помню, что вы требовали публикации. Новых материалов не будет, пока я не пойму, что источник в безопасности»."
+        }
       ]
     },
     "marta_source_respected_result": {
@@ -573,6 +621,22 @@
           },
           "memory_set": "thomas_pressured",
           "next_dialogue": "thomas_pressured_result"
+        }
+      ],
+      "return_reactions": [
+        {
+          "id": "thomas_return_respected",
+          "choice_id": "thomas_preserve_context",
+          "required_flag": "thomas_context_respected",
+          "consumed_flag": "return_seen_thomas_return_respected",
+          "text": "Отец Томас приготовил копию письма: «Я сохранил контекст и происхождение документа. Надеюсь, теперь мы сможем говорить о том, что он подтверждает, и о том, чего он не доказывает»."
+        },
+        {
+          "id": "thomas_return_pressured",
+          "choice_id": "thomas_threaten_publication",
+          "required_flag": "thomas_pressured",
+          "consumed_flag": "return_seen_thomas_return_pressured",
+          "text": "Отец Томас остаётся на расстоянии: «Я помню вашу угрозу публикацией. Письмо не станет яснее от давления. Всё, что могу передать без официального запроса, уже передано»."
         }
       ]
     },
@@ -680,6 +744,22 @@
           "memory_set": "sebastian_challenged",
           "next_dialogue": "sebastian_challenged_result"
         }
+      ],
+      "return_reactions": [
+        {
+          "id": "sebastian_return_records",
+          "choice_id": "sebastian_request_record",
+          "required_flag": "sebastian_requested_records",
+          "consumed_flag": "return_seen_sebastian_return_records",
+          "text": "Себастьян протягивает перечень архивных документов: «Вы просили записи — вот список того, что компания обязана хранить. Доступ к ним по-прежнему будет оформлен официально»."
+        },
+        {
+          "id": "sebastian_return_challenged",
+          "choice_id": "sebastian_reject_framing",
+          "required_flag": "sebastian_challenged",
+          "consumed_flag": "return_seen_sebastian_return_challenged",
+          "text": "Себастьян встречает вас холодной улыбкой: «Я помню, что вы отвергли мою трактовку. Это ваше право. Но дальше нам придётся опираться на документы, а не на тон разговора»."
+        }
       ]
     },
     "sebastian_records_result": {
@@ -785,6 +865,22 @@
           },
           "memory_set": "anna_box_taken",
           "next_dialogue": "anna_box_taken_result"
+        }
+      ],
+      "return_reactions": [
+        {
+          "id": "anna_return_respected",
+          "choice_id": "anna_respect_boundary",
+          "required_flag": "anna_boundary_respected",
+          "consumed_flag": "return_seen_anna_return_respected",
+          "text": "Анна сама открывает дверь кабинета: «Я помню, что вы не стали забирать коробку. Пока я не готова отдать её, но теперь могу спокойно обсудить, что отец оставил внутри»."
+        },
+        {
+          "id": "anna_return_taken",
+          "choice_id": "anna_take_box",
+          "required_flag": "anna_box_taken",
+          "consumed_flag": "return_seen_anna_return_taken",
+          "text": "Анна замечает вас и отодвигается от стола: «Я помню, как вы забрали коробку. Не ждите, что я помогу разбирать вещи отца после этого»."
         }
       ]
     },
