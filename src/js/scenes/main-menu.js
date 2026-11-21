@@ -2,6 +2,7 @@ import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { Audio } from '../core/audio.js';
 import { NPCMemory } from '../systems/npc-memory.js';
+import { createSaveFile, parseSaveFile } from '../core/save-transfer.js';
 
 /**
  * Главное меню игры «Мёртвый штиль».
@@ -66,6 +67,17 @@ export function render(container) {
           >
             <span>02</span> ПРОДОЛЖИТЬ <b>↗</b>
           </button>
+
+          <!-- Перенос сохранения -->
+          <div class="grid grid-cols-2 gap-3">
+            <button id="btn-export-save" class="btn-noir py-3 px-4 text-sm" ${hasSave && !saveBlocked ? '' : 'disabled opacity-40'}>
+              <span>↥</span> ЭКСПОРТ
+            </button>
+            <button id="btn-import-save" class="btn-noir py-3 px-4 text-sm">
+              <span>↧</span> ИМПОРТ
+            </button>
+          </div>
+          <input id="save-import-file" type="file" accept="application/json,.json" hidden>
 
           <!-- Настройки -->
           <button id="btn-settings" class="btn-noir py-3 md:py-4 px-6 md:px-10 opacity-70">
@@ -208,6 +220,71 @@ export function render(container) {
 
     // Переходим в кабинет
     Events.emit('navigate', { scene: 'office' });
+  });
+
+  // === ЭКСПОРТ / ИМПОРТ СОХРАНЕНИЯ ===
+  const exportSaveButton = document.getElementById('btn-export-save');
+  const importSaveButton = document.getElementById('btn-import-save');
+  const importFileInput = document.getElementById('save-import-file');
+
+  exportSaveButton.addEventListener('click', async function() {
+    if (GameState.saveBlocked || !GameState.hasSave()) return;
+    try {
+      const saveFile = await createSaveFile(GameState.export());
+      const blob = new Blob([JSON.stringify(saveFile, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'dead-calm-save-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('[Save Transfer] Ошибка экспорта:', error);
+      alert('Не удалось экспортировать сохранение. Попробуйте ещё раз.');
+    }
+  });
+
+  importSaveButton.addEventListener('click', function() {
+    importFileInput.value = '';
+    importFileInput.click();
+  });
+
+  importFileInput.addEventListener('change', async function() {
+    const file = importFileInput.files && importFileInput.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Файл слишком большой. Максимальный размер сохранения — 5 МБ.');
+      return;
+    }
+
+    try {
+      const parsed = await parseSaveFile(await file.text());
+      if (parsed.status !== 'ok') {
+        const reason = parsed.reason === 'checksum-mismatch'
+          ? 'Контрольная сумма не совпадает. Файл повреждён или изменён.'
+          : parsed.status === 'unsupported'
+            ? 'Формат файла создан более новой версией игры.'
+            : 'Файл сохранения недействителен или несовместим.';
+        alert(reason + ' Текущий прогресс не изменён.');
+        return;
+      }
+
+      const confirmed = confirm('Импортировать расследование? Текущий прогресс будет заменён, а его резервная копия останется доступна для восстановления.');
+      if (!confirmed) return;
+
+      if (!GameState.importSave(parsed.data)) {
+        alert('Не удалось записать импортированное сохранение. Текущий прогресс не был заменён.');
+        return;
+      }
+
+      alert('Сохранение успешно импортировано. Игра перезагрузит текущее расследование.');
+      window.location.reload();
+    } catch (error) {
+      console.error('[Save Transfer] Ошибка импорта:', error);
+      alert('Не удалось прочитать файл сохранения. Текущий прогресс не изменён.');
+    }
   });
 
   // === НАСТРОЙКИ ===
