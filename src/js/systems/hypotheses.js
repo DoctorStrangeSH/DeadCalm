@@ -25,6 +25,9 @@ export function reviseHypothesis(hypothesis, change, availableClues, now = new D
   if (!title) throw new Error('Название не может быть пустым');
   if (status === hypothesis.status && title === hypothesis.title && reasoning === hypothesis.reasoning &&
       JSON.stringify(clueIds) === JSON.stringify(hypothesis.clueIds || [])) return hypothesis;
+  if (hypothesis.status === 'confirmed' && status === 'confirmed') {
+    throw new Error('Сначала измените статус подтверждённой версии: её обоснование и улики нельзя менять без повторной проверки.');
+  }
   const next = { ...hypothesis, title, status, clueIds, reasoning, updatedAt: now };
   next.history = [...(hypothesis.history || []), { at: now, type: 'revised', status,
     clueIds: [...clueIds], reasoning, title }];
