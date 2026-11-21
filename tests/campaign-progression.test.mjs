@@ -69,11 +69,13 @@ test('final accusation requires independent medical, meeting, poison, archive an
   };
   let result = assessFinalEvidence(game);
   assert.equal(result.ready, true);
-  assert.equal(result.publicReady, false, 'partial film cannot support the full public ending');
+  assert.equal(result.fullDisclosureReady, false, 'partial film cannot support full public disclosure');
+  assert.equal(result.publicReady, result.fullDisclosureReady, 'legacy alias must remain consistent');
   found.set('restored_film_frame', { quality: 100 });
   result = assessFinalEvidence(game);
   assert.equal(result.ready, true);
-  assert.equal(result.publicReady, true);
+  assert.equal(result.fullDisclosureReady, true);
+  assert.equal(result.publicReady, result.fullDisclosureReady, 'legacy alias must remain consistent');
   found.delete('markus_statement');
   result = assessFinalEvidence(game);
   assert.equal(result.ready, false);
