@@ -216,3 +216,146 @@ test('partial mini-game evidence survives reload and upgrades in place after a s
     Object.assign(GameState, original);
   }
 });
+
+
+test('full investigation state survives save/load and exports nested hypotheses', () => {
+  const originalLoad = Storage.load;
+  const originalSave = Storage.save;
+  const original = {
+    player: GameState.player,
+    currentCase: GameState.currentCase,
+    campaign: GameState.campaign,
+    flags: GameState.flags,
+    relationships: GameState.relationships,
+    npcMemory: GameState.npcMemory,
+    socialGraph: GameState.socialGraph,
+    knowledgeLedger: GameState.knowledgeLedger,
+    npcDailyLife: GameState.npcDailyLife,
+    miniGameProgress: GameState.miniGameProgress,
+    notebook: GameState.notebook,
+    settings: GameState.settings
+  };
+  let persisted = null;
+
+  try {
+    GameState.player = { name: 'Джон Риверс', reputation: 64 };
+    GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] };
+    GameState.campaign = { caseId: 'case_001', day: 3, completed: false, ending: null };
+    GameState.flags = { anna_spoke_about_markus: true, day_2: true, day_3: true };
+    GameState.relationships = {};
+    GameState.npcMemory = {
+      anna_holt: {
+        promises: [{ id: 'promise_anna_01', status: 'kept', subject: 'Передать вещи Маркуса' }],
+        lastConversation: 'После разговора в доме Holt'
+      }
+    };
+    GameState.socialGraph = { ties: [], events: [] };
+    GameState.knowledgeLedger = { entries: [] };
+    GameState.npcDailyLife = { schedules: [], occurrences: [] };
+    GameState.miniGameProgress = {};
+    GameState.notebook = [{ id: 'note_timeline', text: 'Звонок из суда был раньше указанного времени.' }];
+    GameState.settings = { musicVolume: 0.4, sfxVolume: 0.6, textSpeed: 'fast' };
+
+    Storage.save = (key, data) => {
+      if (key === 'gameState') persisted = structuredClone(data);
+    };
+    Storage.load = key => key === 'gameState' && persisted ? structuredClone(persisted) : null;
+
+    GameState.addClue({
+      id: 'court_switchboard_log',
+      name: 'Журнал телефонной станции',
+      category: 'document',
+      description: 'В журнале отмечен звонок из суда.',
+      source: 'Первичный журнал телефонной станции',
+      location: 'Полицейский участок',
+      day: 1,
+      connections_to: ['judge_appointment_card']
+    });
+    const hypothesis = GameState.addHypothesis({
+      title: 'Время звонка было изменено',
+      reasoning: 'Запись в журнале не совпадает с временем в первичном рапорте.',
+      clueIds: ['court_switchboard_log']
+    });
+    GameState.reviseHypothesis(hypothesis.id, {
+      status: 'probable',
+      reasoning: 'Журнал подтверждает расхождение, но пока не устанавливает, кто изменил рапорт.'
+    });
+
+    GameState.updateRelationship('anna_holt', 18);
+    GameState.recordSocialTie({
+      fromNpcId: 'anna_holt', toNpcId: 'markus_holt',
+      type: 'family', status: 'strained',
+      basis: 'Анна передала детективу вещи брата после долгого молчания.',
+      sourceRefs: ['anna_holt_interview']
+    });
+    GameState.recordSocialEvent({
+      fromNpcId: 'anna_holt', toNpcId: 'markus_holt',
+      description: 'Анна передала вещи Маркуса детективу.',
+      sourceRefs: ['anna_holt_interview']
+    });
+    const knowledge = GameState.recordNpcKnowledge({
+      id: 'knowledge_anna_court',
+      npcId: 'anna_holt',
+      claimRef: 'claim_court_report_altered',
+      sourceType: 'interview',
+      provenance: 'Анна рассказала, что брат просил её хранить бумаги.',
+      sourceRefs: ['anna_holt_interview']
+    });
+    GameState.updateNpcKnowledgeState(
+      knowledge.id, 'disputed', 'Позднее найденный документ противоречит части рассказа.'
+    );
+    GameState.setNpcSchedule({
+      id: 'schedule_anna_home',
+      npcId: 'anna_holt',
+      activity: 'private',
+      startMinute: 1080,
+      endMinute: 1320,
+      days: [1, 2, 3, 4, 5, 6, 7],
+      locationId: 'holt_house',
+      basis: 'Авторское расписание персонажа.',
+      sourceRefs: ['character_dossier_anna']
+    });
+    GameState.recordNpcOccurrence({
+      id: 'occurrence_anna_home',
+      npcId: 'anna_holt',
+      scheduleId: 'schedule_anna_home',
+      day: 3,
+      minute: 1200,
+      locationId: 'holt_house',
+      description: 'Анна вернулась домой после визита в участок.',
+      basis: 'Игрок лично встретил Анну у дома.',
+      sourceRefs: ['player_observation_anna']
+    });
+
+    GameState.save();
+    const exported = GameState.export();
+    assert.equal(exported.currentCase.hypotheses.length, 1);
+    assert.equal(exported.currentCase.hypotheses[0].history.length, 2);
+    exported.currentCase.hypotheses[0].history[0].reasoning = 'mutated export';
+    assert.notEqual(GameState.currentCase.hypotheses[0].history[0].reasoning, 'mutated export');
+
+    GameState.init();
+
+    assert.equal(GameState.campaign.day, 3);
+    assert.equal(GameState.flags.anna_spoke_about_markus, true);
+    assert.equal(GameState.flags.day_3, true);
+    assert.equal(GameState.currentCase.clues.length, 1);
+    assert.equal(GameState.currentCase.hypotheses.length, 1);
+    assert.equal(GameState.currentCase.hypotheses[0].status, 'probable');
+    assert.equal(GameState.currentCase.hypotheses[0].history.length, 2);
+    assert.equal(GameState.relationships.anna_holt.trust, 68);
+    assert.equal(GameState.npcMemory.anna_holt.promises[0].status, 'kept');
+    assert.equal(GameState.socialGraph.ties[0].status, 'strained');
+    assert.equal(GameState.socialGraph.events[0].description, 'Анна передала вещи Маркуса детективу.');
+    assert.equal(GameState.knowledgeLedger.entries[0].state, 'disputed');
+    assert.equal(GameState.knowledgeLedger.entries[0].stateHistory.length, 1);
+    assert.equal(GameState.npcDailyLife.schedules[0].locationId, 'holt_house');
+    assert.equal(GameState.npcDailyLife.occurrences[0].id, 'occurrence_anna_home');
+    assert.equal(GameState.notebook[0].id, 'note_timeline');
+    assert.equal(GameState.settings.textSpeed, 'fast');
+  } finally {
+    Storage.load = originalLoad;
+    Storage.save = originalSave;
+    Object.assign(GameState, original);
+  }
+});
