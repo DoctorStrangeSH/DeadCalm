@@ -113,7 +113,7 @@ export class InvestigationBoard {
             <label>ПОИСК ВЕРСИИ <input id="hypothesis-search-query" type="search" placeholder="Название, обоснование, улика…" autocomplete="off" /></label>
             <label>СТАТУС <select id="hypothesis-search-status">
               <option value="all">Все версии</option>
-              ${Object.entries(HYPOTHESIS_STATUS_LABELS).map(([value, label]) => `<option value="${value}">${self._escapeHtml(label)}</option>`).join('')}
+              ${Object.entries(HYPOTHESIS_STATUS_LABELS).filter(([value]) => value !== 'confirmed' || item.status === 'confirmed').map(([value, label]) => `<option value="${value}" ${item.status === value ? 'selected' : ''} ${value === 'confirmed' ? 'disabled' : ''}>${value === 'confirmed' ? 'Подтверждена (ранее сохранено)' : label}</option>`).join('')}}
               <option value="review">Есть новые материалы</option>
             </select></label>
             <p id="hypothesis-search-count" role="status" aria-live="polite"></p>
