@@ -594,3 +594,12 @@
 - Updated crime-scene integration and added forged-reference/fail-closed regression tests.
 - Commits: 588cec41, 66773fee, 37f55ce5.
 - Full CI and browser acceptance remain unconfirmed.
+
+
+### Investigation history save/reload coverage — 2026-11-21
+- Added a fresh-session persistence regression test for conclusion versions, review history, review directives, NPC narrative choices, relationships, promises, hypotheses, notebook and settings.
+- Exported snapshot mutation is verified not to alter live game state.
+- The test restores only from the persisted payload via GameState.init().
+- Save schema remains version 1; no migration behavior was changed.
+- Commit: 067b0cf5.
+- CI and browser acceptance remain unconfirmed.
