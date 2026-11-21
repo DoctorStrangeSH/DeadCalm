@@ -212,10 +212,11 @@
 - Добавлен `vercel.json` с no-cache для `/`, `/index.html`, `/manifest.json`, `/sw.js`, а также `Service-Worker-Allowed: /` для SW.
 - Добавлен `tests/vercel-deployment.test.mjs`: проверяет Vercel cache rules, Service Worker scope и отсутствие runtime/build dependency.
 - Vercel project `dead-calm` создан в team `SherlockDS` (Hobby), GitHub-репозиторий подключён. Project ID: `prj_0Zz8xgWCU80YWg8JGhoN6Nns47nx`; production branch — `main`.
-- Проект создан в режиме link-only, но последующий push документационного коммита в feature branch автоматически создал deployment `dpl_Ab5U8Hbp3KFrMXihL4cMKqEG43L4` со статусом READY. Vercel API пометил его `target: production` и назначил стандартные алиасы `dead-calm.vercel.app` и branch alias, хотя Git ref в metadata — `chore/pre-release-repository-hygiene`; причина расхождения требует проверки в настройках Git production branch.
-- В качестве немедленной защиты включён SSO для **всех** deployment targets (`deploymentType: all`); публичный анонимный доступ не должен быть доступен. Пользовательские домены не подключались.
-- Попытка включить Vercel Deployment Policies отклонена тарифом Hobby (`pro_plan_required`); поэтому нельзя заявлять, что Git production deploys технически заблокированы политикой. Не делать новых push-коммитов в эту ветку до проверки production branch в Vercel UI; не назначать пользовательский домен и не продвигать релиз.
-- Доступ к deployment и его фактический браузерный smoke test остаются открытыми; текущий статус READY подтверждает только сборку/публикацию файлов.
+- При первом push сразу после создания Git-проекта Vercel создал bootstrap deployment `dpl_Ab5U8Hbp3KFrMXihL4cMKqEG43L4` с `target: production` и стандартным alias `dead-calm.vercel.app`; Git metadata указывает feature branch. Интеграция при создании сообщила production branch `main`.
+- Следующий push в ту же feature branch создал корректный preview deployment `dpl_8u8ZCKEjP5QSYTkVH5GbxHVLGfhG` (`target: null` в API; preview в deployment card) с отдельным branch alias. Значит последующие feature pushes маршрутизируются в Preview.
+- В качестве защиты включён SSO для **всех** deployment targets (`deploymentType: all`), включая bootstrap production alias и preview. Анонимный публичный доступ закрыт; пользовательские домены не подключались.
+- Попытка включить Vercel Deployment Policies отклонена тарифом Hobby (`pro_plan_required`); автоматическая Git production deployment policy не настраивалась. Production branch reported as `main`; перед релизом проверить её в Vercel Project Settings.
+- Preview build READY подтверждает сборку и публикацию файлов, но не заменяет ручной браузерный smoke test.
 
 
 ### Vercel deployment protection follow-up — 2026-11-21
@@ -224,3 +225,12 @@
 - SSO protection was changed from `all_except_custom_domains` to `all`, covering default aliases and any future custom domain until deliberately changed.
 - Deployment Policies are unavailable on current Hobby plan (`403 pro_plan_required`). This limitation is explicit; do not claim Git production deployment prevention is configured.
 - No production release was intentionally promoted, no custom domain was added, and no manual browser QA has been completed.
+
+
+### Latest Vercel preview verification — 2026-11-21
+- Latest feature-branch deployment: `dpl_8u8ZCKEjP5QSYTkVH5GbxHVLGfhG`, state READY, preview target, commit `9cf66a86888d9c6792815caace4ddd56b7f86194`.
+- Preview URL: `https://dead-calm-3587vqq6i-sherlock-ds.vercel.app`; branch alias: `https://dead-calm-git-chore-pre-release-repository-hygiene-sherlock-ds.vercel.app`.
+- Bootstrap production deployment remains SSO-protected; project SSO mode is `all`. No custom domain or public release was configured.
+- Vercel Hobby does not support Deployment Policies; do not claim a Git-production policy gate exists. Verify production branch `main` in the dashboard before a release.
+- GitHub Actions run `44894131637`: **301/301 tests passed**, 0 failures. This run includes `tests/vercel-deployment.test.mjs`.
+- Browser QA is still outstanding; deployment READY is not a gameplay acceptance result.
