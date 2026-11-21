@@ -614,3 +614,13 @@
 - The test now verifies that a contradiction unlocks only after both clues are discovered and explicitly attached to the same hypothesis.
 - Storage recovery test confirms that a newer complete staged payload wins over an older primary when promotion fails.
 - Manual browser, PWA and gameplay acceptance remain open.
+
+
+### Untrusted imported hypothesis status — 2026-11-21
+- Audited the investigation-board UI, domain transition, save persistence, and save-file import path.
+- Current UI excludes `confirmed` from new choices; the domain function also rejects manual promotion.
+- Save-file SHA-256 is an integrity checksum, not proof of an in-game evidence review. Imported `confirmed` labels are now downgraded to `probable`, original history is retained, a review entry is appended, and the UI explains the downgrade until the player revises the hypothesis.
+- Existing local legacy saves remain readable as historical records; no automatic confirmation rule was introduced.
+- Added state-import, revision-history and player-facing UI regression tests.
+- GitHub Actions run 44922019068: **397/397 passed, 0 failures** on HEAD `90470aee`.
+- Independent-evidence criteria for a future automatic `confirmed` state remain intentionally open.
