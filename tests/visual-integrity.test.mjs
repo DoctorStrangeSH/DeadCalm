@@ -165,3 +165,20 @@ test('detective journal has a separate searchable evidence archive', () => {
   assert.ok(ui.includes('_showClueDetail(title)'), 'clues should have readable detail view');
   assert.ok(css.includes('.notebook-evidence-detail'), 'evidence details should match the noir journal');
 });
+
+
+test('mini-games expose keyboard focus, touch-sized controls and announced progress', () => {
+  const css = read('src/css/main.css');
+  const radio = read('src/js/scenes/radio-tuning.js');
+  const film = read('src/js/scenes/film-restoration.js');
+  const repair = read('src/js/scenes/mechanical-repair.js');
+  assert.match(css, /\.radio-range:focus-visible/);
+  assert.match(css, /\.film-range:focus-visible/);
+  assert.match(css, /min-height:\s*44px/);
+  assert.match(css, /touch-action:\s*pan-y/);
+  assert.match(radio, /aria-live="polite"/);
+  assert.match(radio, /role="progressbar"/);
+  assert.match(radio, /setAttribute\('aria-valuenow'/);
+  assert.match(film, /role="progressbar"/);
+  assert.match(repair, /aria-live="polite"/);
+});
