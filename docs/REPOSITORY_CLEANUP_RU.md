@@ -583,3 +583,14 @@
 - Изменение версии не удаляет уже обнаруженные улики; исключение одной улики из версии закрывает только зависимое продолжение.
 - Commit: 8e8de6ad.
 - CI и браузерная приёмка не подтверждены.
+
+
+### Authenticity validation for provisional conclusions — 2026-11-21
+- Review no longer trusts documentIds/contradictionIds supplied by a saved report.
+- Review now requires the live case and authored contradiction rules.
+- Document references are checked against discovered audit materials; contradictions are recomputed from currently discovered clues attached to one hypothesis.
+- Forged, unavailable, and unsupported references cause the report to be returned for clarification.
+- Missing live case/rules fails closed.
+- Updated crime-scene integration and added forged-reference/fail-closed regression tests.
+- Commits: 588cec41, 66773fee, 37f55ce5.
+- Full CI and browser acceptance remain unconfirmed.
