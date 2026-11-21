@@ -366,3 +366,11 @@
 - Added `tests/npc-choice-persistence.test.mjs`: executes Anna's first meeting and critical choice, exports and imports the full GameState, opens a new dialogue session, then verifies trust, consequence flags, critical-choice guard and asked-question lock all persist.
 - CI run `44901573943`: **346/346 tests passed**, 0 failures, HEAD `d28c0cfc768afdc7109bcd5ba24082b9e46c9e59`.
 - Coverage is a save/load integration test for one representative full critical choice; it does not claim all six NPC branches have been manually played.
+
+
+### Full NPC critical-choice persistence matrix — 2026-11-21
+- Added `tests/npc-all-choice-persistence.test.mjs`, deriving scenarios from authored dialogue data rather than a hand-maintained list. It covers all 14 choice branches across all six NPCs (Lydia 3, Ray 3, Marta 2, Father Thomas 2, Anna 2, Sebastian 2).
+- Each branch is executed, exported, imported into GameState, and reopened in a fresh DialogueEngine session. Assertions cover clamped trust, choice/node memory flags, one-time guard, asked-question history, and no re-offer after restore.
+- Two initial test-only assumptions were corrected against actual authored data/closed-topic behavior: the source contains 14 (not 15) branches; a closed topic may return no `questions` array, which is also a valid no-reoffer result.
+- Final CI run `44902111642`: **347/347 tests passed**, 0 failures, HEAD `a034a68fea7ae517b751d797df536db1120983b9`.
+- Manual browser playthrough remains open; automated persistence coverage is not described as manual acceptance.
