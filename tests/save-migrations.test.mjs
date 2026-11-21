@@ -226,9 +226,9 @@ test('save import persists canonical campaign flags and all investigation progre
     flags: { day_5: true, old_choice: true },
     relationships: { anna_holt: { trust: 73, met: true } },
     npcMemory: { anna_holt: { flags: { shared_archive: true }, promises: [{ id: 'p1', status: 'kept' }] } },
-    socialGraph: { ties: [{ id: 'tie_01', npcId: 'anna_holt', strength: 4 }], events: [] },
-    knowledgeLedger: { entries: [{ id: 'knowledge_01', npcId: 'anna_holt', topic: 'archive' }] },
-    npcDailyLife: { schedules: [{ id: 'schedule_01', npcId: 'anna_holt', day: 3 }], occurrences: [] },
+    socialGraph: { ties: [{ id: 'tie_01', fromNpcId: 'anna_holt', toNpcId: 'sebastian_blackwood', type: 'colleague', status: 'strained', basis: 'Shared archive records' }], events: [] },
+    knowledgeLedger: { entries: [{ id: 'knowledge_01', npcId: 'anna_holt', claimRef: 'archive_record_01', sourceType: 'document', state: 'corroborated', provenance: 'Read the signed archive register' }] },
+    npcDailyLife: { schedules: [{ id: 'schedule_01', npcId: 'anna_holt', activity: 'work', startMinute: 540, endMinute: 1020, days: [1, 2, 3, 4, 5], locationId: 'police_station', basis: 'Observed weekday shift' }], occurrences: [] },
     miniGameProgress: { 'film-restoration': { attempts: 3, bestOutcome: 'success', bestQuality: 100, lastOutcome: 'success', lastQuality: 100 } },
     notebook: [{ id: 'note_01', text: 'Проверить портовый журнал' }],
     settings: { musicVolume: 0.3, sfxVolume: 0.8, textSpeed: 'fast' }
