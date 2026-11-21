@@ -12,7 +12,26 @@ function cleanRefs(refs) {
 }
 
 function cloneEntry(entry) {
-  return { ...entry, sourceRefs: [...entry.sourceRefs] };
+  return {
+    ...entry,
+    sourceRefs: [...(entry.sourceRefs || [])],
+    stateHistory: Array.isArray(entry.stateHistory)
+      ? entry.stateHistory.map(item => ({ ...item }))
+      : []
+  };
+}
+
+function normalizeStateHistory(history) {
+  if (!Array.isArray(history)) return [];
+  return history.filter(item =>
+    item && KNOWLEDGE_STATES.has(item.from) && KNOWLEDGE_STATES.has(item.to) &&
+    item.from !== item.to && typeof item.reason === 'string' && !!item.reason.trim()
+  ).map(item => ({
+    from: item.from,
+    to: item.to,
+    reason: item.reason.trim(),
+    changedAt: typeof item.changedAt === 'string' ? item.changedAt : null
+  }));
 }
 
 function isValidEntry(entry) {
@@ -37,7 +56,8 @@ export function normalizeKnowledgeLedger(value) {
       return true;
     }).map(entry => ({
       ...entry,
-      sourceRefs: cleanRefs(entry.sourceRefs)
+      sourceRefs: cleanRefs(entry.sourceRefs),
+      stateHistory: normalizeStateHistory(entry.stateHistory)
     }))
   };
 }
@@ -65,6 +85,7 @@ export function recordNpcKnowledge(ledger, input) {
     id, npcId, claimRef, sourceType, state, provenance: provenance.trim(),
     sourceNpcId,
     sourceRefs: cleanRefs(input.sourceRefs),
+    stateHistory: [],
     recordedAt: typeof input.recordedAt === 'string' ? input.recordedAt : new Date().toISOString()
   };
   ledger.entries.push(entry);
@@ -78,9 +99,9 @@ export function updateNpcKnowledgeState(ledger, entryId, state, reason) {
   if (!entry || entry.state === state) return null;
   const previousState = entry.state;
   entry.state = state;
-  entry.stateHistory = Array.isArray(entry.stateHistory) ? entry.stateHistory : [];
+  entry.stateHistory = normalizeStateHistory(entry.stateHistory);
   entry.stateHistory.push({
-    from: entry.stateHistory.length ? entry.stateHistory[entry.stateHistory.length - 1].to : previousState,
+    from: previousState,
     to: state,
     reason: reason.trim(),
     changedAt: new Date().toISOString()
