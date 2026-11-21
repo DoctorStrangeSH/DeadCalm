@@ -95,7 +95,9 @@ async function init() {
 
   // Единые тактильные звуковые сигналы для интерфейса и игровых событий.
   document.addEventListener('click', function(event) {
-    if (event.target.closest('button, [role="button"]')) Audio.playSfx('ui-click');
+    if (!event.target.closest('button, [role="button"]')) return;
+    const minigameControl = event.target.closest('.radio-range, .film-range, [data-action], #radio-finish, #film-restore, #film-advance');
+    Audio.playSfx(minigameControl ? 'minigame-action' : 'ui-click');
   }, true);
   document.addEventListener('input', function(event) {
     if (event.target.matches('input[type="range"]')) Audio.playSfx('ui-adjust');
