@@ -71,6 +71,18 @@ function renderEndingChoices(container) {
     if (GameState.completeCampaign('open_case')) renderEnding(container, 'open_case');
   });
   result.querySelector('#btn-ending-silence')?.addEventListener('click', () => {
+    if (!GameState.hasClue('sebastian_sealed_confession')) {
+      GameState.addClue({
+        id: 'sebastian_sealed_confession',
+        name: 'Запечатанное признание Себастьяна',
+        category: 'testimony',
+        description: 'В приложении к закрытому соглашению Себастьян письменно признаёт, что встретился с Гаррисоном в вечер убийства и сам передал ему белладонну, зная о смертельном действии вещества. Признание запечатано и передано следствию; его происхождение и обстоятельства получения должны быть проверены независимо.',
+        location: 'port',
+        day: 5,
+        source: 'Подписанное заявление Себастьяна Блэквуда',
+        connections_to: ['autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice']
+      });
+    }
     if (GameState.completeCampaign('price_of_silence')) renderEnding(container, 'price_of_silence');
   });
 }
