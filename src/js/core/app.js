@@ -102,7 +102,9 @@ async function init() {
   Events.on('clue:added', () => Audio.playSfx('clue-found'));
   Events.on('minigame:completed', () => Audio.playSfx('success'));
   Events.on('minigame:failed', () => Audio.playSfx('failure'));
+  Events.on('dialogue:opened', () => Audio.playSfx('dialogue-open'));
   Events.on('dialogue:closed', () => Audio.playSfx('dialogue-close'));
+  Events.on('campaign:completed', () => Audio.playMusic('finale'));
 
   // Сброс состояния (новая игра)
   Events.on('state:reset', function() {
