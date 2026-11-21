@@ -114,6 +114,9 @@ export var DialogueEngine = {
     }
 
     // ПОВТОРНАЯ ВСТРЕЧА
+    const returnReaction = this._getPendingReturnReaction(npcData);
+    if (returnReaction) return returnReaction;
+
     console.log('[Dialogue] Повторная встреча');
 
     // Проверяем доступные темы
@@ -464,6 +467,32 @@ export var DialogueEngine = {
       addedClue: context.addedClue || null,
       isEnd: !!node.end
     };
+  },
+
+  _getPendingReturnReaction(npcData) {
+    for (const node of Object.values(npcData || {})) {
+      if (!Array.isArray(node?.return_reactions)) continue;
+      for (const reaction of node.return_reactions) {
+        if (!reaction || typeof reaction.text !== 'string' ||
+            !reaction.required_flag || !reaction.consumed_flag) continue;
+        if (!NPCMemory.hasFlag(this._currentNPC, reaction.required_flag) ||
+            NPCMemory.hasFlag(this._currentNPC, reaction.consumed_flag)) continue;
+
+        NPCMemory.setFlag(this._currentNPC, reaction.consumed_flag);
+        const character = this.getCharacter(this._currentNPC);
+        return {
+          type: 'simple',
+          text: reaction.text,
+          speaker: character?.name || this._currentNPC,
+          speakerRole: character?.role || '',
+          trust: NPCMemory.getTrust(this._currentNPC),
+          isEnd: true,
+          isReturnReaction: true,
+          reactionId: reaction.id
+        };
+      }
+    }
+    return null;
   },
 
   _formatSimpleNode(node, npcId) {
