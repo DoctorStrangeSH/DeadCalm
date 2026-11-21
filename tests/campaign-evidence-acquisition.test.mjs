@@ -4,7 +4,9 @@ import { readFileSync } from 'node:fs';
 import { GameState } from '../src/js/core/state.js';
 import { DialogueEngine } from '../src/js/systems/dialogue.js';
 import { NPCMemory } from '../src/js/systems/npc-memory.js';
-import { buildCase001MiniGameEvidence } from '../src/js/systems/case-001-evidence.js';
+import { buildCase001MiniGameEvidence, recordCase001MiniGameEvidence } from '../src/js/systems/case-001-evidence.js';
+import { canAccessCase001MiniGame } from '../src/js/systems/minigame-access.js';
+import { assessFinalEvidence } from '../src/js/systems/campaign-progression.js';
 import { isLocationUnlocked } from '../src/js/systems/location-access.js';
 
 const readJson = path => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
@@ -147,4 +149,42 @@ test('the two independent day-four evidence routes are actually wired to their m
   assert.match(evidence, /result\.outcome === 'success' && reportedQuality < 95/);
   assert.match(evidence, /result\.outcome === 'fragmented'/);
   assert.match(evidence, /Number\.isFinite\(reportedQuality\)/);
+});
+
+
+test('radio-first day-four route can still reach the film evidence required for full public disclosure', () => {
+  const found = new Map([
+    ['autopsy_report_01', { id: 'autopsy_report_01' }],
+    ['judge_appointment_card', { id: 'judge_appointment_card' }],
+    ['belladonna_invoice', { id: 'belladonna_invoice' }],
+    ['matthews_letter', { id: 'matthews_letter' }],
+    ['port_cargo_ledger', { id: 'port_cargo_ledger' }],
+    ['markus_statement', { id: 'markus_statement' }],
+    ['anna_markus_items', { id: 'anna_markus_items' }],
+    ['port_radio_fragment', { id: 'port_radio_fragment', quality: 82 }]
+  ]);
+  const game = {
+    campaign: { day: 5, completed: false },
+    hasClue: id => found.has(id),
+    getClue: id => found.get(id) || null,
+    addClue: clue => found.set(clue.id, { ...clue }),
+    save() {}
+  };
+
+  assert.equal(assessFinalEvidence(game).ready, true,
+    'radio is a valid independent day-four source and should permit the compromise route');
+  assert.equal(assessFinalEvidence(game).fullDisclosureReady, false,
+    'radio alone must not unlock the full public-disclosure ending');
+  assert.equal(canAccessCase001MiniGame('mechanical-repair', game), true,
+    'Anna’s items must keep the watch-repair route available on day five');
+
+  assert.equal(recordCase001MiniGameEvidence(game, 'mechanical-repair', { outcome: 'success' }), true);
+  assert.equal(game.hasClue('markus_watch_key'), true);
+  assert.equal(canAccessCase001MiniGame('film-restoration', game), true,
+    'the repaired watch key must unlock film restoration after choosing radio first');
+
+  assert.equal(recordCase001MiniGameEvidence(game, 'film-restoration', { outcome: 'success', quality: 100 }), true);
+  assert.equal(game.hasClue('restored_film_frame'), true);
+  assert.equal(assessFinalEvidence(game).fullDisclosureReady, true,
+    'the player can still earn the high-quality film and complete the open-case route');
 });
