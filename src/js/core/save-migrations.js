@@ -36,7 +36,7 @@ export function migrateSave(rawSave) {
     data = {
       ...data,
       schemaVersion: 1,
-      player: isRecord(data.player) ? data.player : { name: 'Джон Риверс', reputation: 50 },
+      player: { name: 'Джон Риверс', reputation: 50, ...(isRecord(data.player) ? data.player : {}) },
       currentCase: isRecord(data.currentCase)
         ? {
             ...data.currentCase,
@@ -47,16 +47,16 @@ export function migrateSave(rawSave) {
             hypotheses: Array.isArray(data.currentCase.hypotheses) ? data.currentCase.hypotheses : []
           }
         : { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] },
-      campaign: isRecord(data.campaign) ? data.campaign : { caseId: 'case_001', day: 1, completed: false, ending: null },
+      campaign: { caseId: 'case_001', day: 1, completed: false, ending: null, ...(isRecord(data.campaign) ? data.campaign : {}) },
       flags: isRecord(data.flags) ? data.flags : {},
       relationships: isRecord(data.relationships) ? data.relationships : {},
       npcMemory: isRecord(data.npcMemory) ? data.npcMemory : {},
-      socialGraph: isRecord(data.socialGraph) ? data.socialGraph : { ties: [], events: [] },
-      knowledgeLedger: isRecord(data.knowledgeLedger) ? data.knowledgeLedger : { entries: [] },
-      npcDailyLife: isRecord(data.npcDailyLife) ? data.npcDailyLife : { schedules: [], occurrences: [] },
+      socialGraph: { ties: [], events: [], ...(isRecord(data.socialGraph) ? data.socialGraph : {}) },
+      knowledgeLedger: { entries: [], ...(isRecord(data.knowledgeLedger) ? data.knowledgeLedger : {}) },
+      npcDailyLife: { schedules: [], occurrences: [], ...(isRecord(data.npcDailyLife) ? data.npcDailyLife : {}) },
       miniGameProgress: isRecord(data.miniGameProgress) ? data.miniGameProgress : {},
       notebook: Array.isArray(data.notebook) ? data.notebook : [],
-      settings: isRecord(data.settings) ? data.settings : { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' }
+      settings: { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal', ...(isRecord(data.settings) ? data.settings : {}) }
     };
   }
 
