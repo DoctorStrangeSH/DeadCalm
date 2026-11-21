@@ -1,5 +1,3 @@
-import { Events } from './events.js';
-
 const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
 
 const MUSIC_THEMES = Object.freeze({
@@ -73,7 +71,7 @@ export const Audio = {
       this._sfxGain.connect(this._masterGain);
 
       this._ambientGain = this._ctx.createGain();
-      this._ambientGain.gain.value = 0.0001;
+      this._ambientGain.gain.value = 1;
       this._ambientGain.connect(this._musicGain);
 
       this._initialized = true;
