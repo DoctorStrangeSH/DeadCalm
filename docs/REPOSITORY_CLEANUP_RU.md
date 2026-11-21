@@ -336,6 +336,6 @@
 - Future schema versions and malformed versions are rejected without downgrade. `GameState.save()` is blocked until an explicit new-game/reset action.
 - Added `Storage.hasAnyRecord()` so unrecoverable corrupt primary/backup/pending records are distinguished from a genuinely absent save. Startup refuses to silently create a blank campaign over existing unreadable data.
 - Main menu displays the incompatibility/corruption message and disables Continue; explicit New Game remains available with confirmation.
-- Added migration and integration regression tests. Latest code/test HEAD: `1222a42543952a0485134e599f5428ad9862db14`.
-- GitHub Actions run `44900170637` remains pending; no PASS claim until the run completes. Vercel Preview is READY; production unchanged.
+- Added migration and integration regression tests. Code/test HEAD: `1222a42543952a0485134e599f5428ad9862db14`.
+- GitHub Actions run `44900170637`: **332/332 PASS**, 0 failures. Later commits changed documentation only. Vercel Preview is READY; production unchanged.
 - Remaining QA: CI result, manual browser reload/recovery, and import/export round-trip.
