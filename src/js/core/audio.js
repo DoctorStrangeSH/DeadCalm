@@ -124,9 +124,9 @@ export const Audio = {
     const cue = SOUND_CUES[name];
     if (!cue) return;
     const now = this._ctx.currentTime;
-    const last = this._lastCueAt.get(name) || 0;
+    const last = this._lastCueAt.get(name);
     const cooldown = name === 'ui-adjust' ? 0.075 : 0.025;
-    if (now - last < cooldown) return;
+    if (last !== undefined && now - last < cooldown) return;
     this._lastCueAt.set(name, now);
     for (const note of cue) {
       this._tone(note.frequency, now + (note.delay || 0), note.duration, note.volume, note.wave || 'sine');
