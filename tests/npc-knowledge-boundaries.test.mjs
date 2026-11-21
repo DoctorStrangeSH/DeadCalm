@@ -29,7 +29,7 @@ test('Lydia distinguishes her brother’s wrongful accusation from complete know
   assert.match(answer, /Он не убивал её/);
   assert.match(answer, /боялась, что ему снова не поверят/);
   assert.doesNotMatch(answer, /Маркус/);
-  assert.match(ldydia.lydia_reveals_secret.text, /Я не знаю всех деталей старого дела/);
+  assert.match(lydia.lydia_reveals_secret.text, /Я не знаю всех деталей старого дела/);
 });
 
 
