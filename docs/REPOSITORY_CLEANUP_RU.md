@@ -339,3 +339,15 @@
 - Added migration and integration regression tests. Code/test HEAD: `1222a42543952a0485134e599f5428ad9862db14`.
 - GitHub Actions run `44900170637`: **332/332 PASS**, 0 failures. Later commits changed documentation only. Vercel Preview is READY; production unchanged.
 - Remaining QA: CI result, manual browser reload/recovery, and import/export round-trip.
+
+
+### Save export/import implementation — 2026-11-21
+- Added `src/js/core/save-transfer.js`: versioned `dead-calm-save` JSON envelope, canonical JSON SHA-256 checksum, format/schema compatibility checks, and structural validation for campaign sections/settings.
+- `GameState.export()` now returns a deep detached snapshot of the full save payload including schemaVersion. `GameState.importSave()` validates/migrates first, commits through resilient Storage before changing in-memory state, and returns false without applying state if storage rejects the write.
+- Main menu now offers Export and Import. Export downloads a JSON file. Import limits files to 5 MB, verifies the file before asking to replace the current campaign, commits transactionally, and reloads only after success. Previous primary is rotated to Storage backup.
+- Legacy partial nested records now receive safe defaults while preserving supplied and unknown fields.
+- Tests cover round-trip, checksum tampering, invalid JSON/format, future transfer format and game schema, invalid structure with recomputed checksum, legacy migration, detached export, successful import and failed-write rollback.
+- GitHub Actions run `44900954168`: **342/342 PASS**, 0 failures on code/test HEAD `9eb4250d39294e96fffee11c20d3b9ded145ac29`. A subsequent UI copy-only commit is `02f0533784dc29cc03a18015dc428c4d8b7e0f23`.
+- Vercel Preview for latest UI HEAD is READY. Production unchanged.
+- Security scope: SHA-256 detects accidental corruption/content mismatch; without a trusted signing key it does not authenticate the sender or prevent a malicious party from recomputing the checksum. Do not describe it as a digital signature.
+- Remaining QA: manual download/import in a second browser profile, cancellation path, and reload verification.
