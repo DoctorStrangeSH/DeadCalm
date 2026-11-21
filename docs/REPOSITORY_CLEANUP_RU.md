@@ -306,3 +306,10 @@
 - Радио: fragmented 68–91, clear 92–100. Плёнка: partial 70–94, success 95–100. Повреждённый/неразборчивый результат не создаёт улику.
 - Обновлён интеграционный тест, который ранее ожидал разрешение выдавать улику только по одному quality без outcome; теперь он проверяет полную согласованность результата.
 - GitHub Actions run `44897945012`: **317/317 tests passed**, 0 failures, HEAD `6cc44258f2813d1dd2f65858a0be0fa8208dda74`.
+
+
+### Mini-game save/load evidence regression — 2026-11-21
+- Добавлен интеграционный тест `partial mini-game evidence survives reload and upgrades in place after a stronger replay`.
+- Проверен сценарий partial radio 78 → сохранение → clear radio 96 → повторная загрузка. После восстановления сохранения одна улика содержит обновлённое описание и качество; история попыток и лучший результат сохранены.
+- Проверка выполняется через фактические `GameState.recordMiniGameResult`, `recordCase001MiniGameEvidence`, `GameState.save` и `GameState.init` с тестовым хранилищем.
+- GitHub Actions run `44898592744`: **318/318 PASS**, 0 failures, HEAD `e49f72cf9bb50b3a5b2d6428080316b73f391399`.
