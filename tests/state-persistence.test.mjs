@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { GameState } from '../src/js/core/state.js';
 import { Storage } from '../src/js/core/storage.js';
+import { recordCase001MiniGameEvidence } from '../src/js/systems/case-001-evidence.js';
 
 test('GameState.init restores the saved campaign before scenes use it', () => {
   const originalLoad = Storage.load;
@@ -139,5 +140,79 @@ test('GameState.init clamps invalid saved settings and falls back to supported t
     Storage.load = originalLoad;
     Object.assign(GameState, original);
     GameState.settings = originalSettings;
+  }
+});
+
+
+test('partial mini-game evidence survives reload and upgrades in place after a stronger replay', () => {
+  const originalLoad = Storage.load;
+  const originalSave = Storage.save;
+  const original = {
+    player: GameState.player,
+    currentCase: GameState.currentCase,
+    campaign: GameState.campaign,
+    flags: GameState.flags,
+    relationships: GameState.relationships,
+    npcMemory: GameState.npcMemory,
+    socialGraph: GameState.socialGraph,
+    knowledgeLedger: GameState.knowledgeLedger,
+    npcDailyLife: GameState.npcDailyLife,
+    miniGameProgress: GameState.miniGameProgress,
+    notebook: GameState.notebook,
+    settings: GameState.settings
+  };
+  let persisted = null;
+
+  try {
+    GameState.player = { name: 'Джон Риверс', reputation: 50 };
+    GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
+    GameState.campaign = { caseId: 'case_001', day: 4, completed: false, ending: null };
+    GameState.flags = {};
+    GameState.relationships = {};
+    GameState.npcMemory = {};
+    GameState.socialGraph = { ties: [], events: [] };
+    GameState.knowledgeLedger = { entries: [] };
+    GameState.npcDailyLife = { schedules: [], occurrences: [] };
+    GameState.miniGameProgress = {};
+    GameState.notebook = [];
+    GameState.settings = { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
+
+    Storage.save = (key, data) => {
+      if (key === 'gameState') persisted = structuredClone(data);
+    };
+    Storage.load = key => key === 'gameState' && persisted ? structuredClone(persisted) : null;
+
+    GameState.recordMiniGameResult({
+      type: 'radio-tuning', outcome: 'fragmented', quality: 78
+    }, '1987-11-04T18:00:00.000Z');
+    assert.equal(recordCase001MiniGameEvidence(GameState, 'radio-tuning', {
+      outcome: 'fragmented', quality: 78
+    }), true);
+    assert.equal(persisted.currentCase.clues.length, 1);
+    assert.equal(persisted.currentCase.clues[0].quality, 78);
+
+    GameState.recordMiniGameResult({
+      type: 'radio-tuning', outcome: 'clear', quality: 96
+    }, '1987-11-04T18:10:00.000Z');
+    assert.equal(recordCase001MiniGameEvidence(GameState, 'radio-tuning', {
+      outcome: 'clear', quality: 96
+    }), true);
+    assert.equal(GameState.currentCase.clues.length, 1);
+    assert.equal(GameState.currentCase.clues[0].quality, 96);
+
+    GameState.init();
+
+    assert.equal(GameState.currentCase.clues.length, 1,
+      'replaying must upgrade the existing clue rather than create a duplicate');
+    assert.equal(GameState.currentCase.clues[0].quality, 96);
+    assert.match(GameState.currentCase.clues[0].description, /Приём чистый/);
+    assert.equal(GameState.miniGameProgress['radio-tuning'].attempts, 2);
+    assert.equal(GameState.miniGameProgress['radio-tuning'].bestOutcome, 'clear');
+    assert.equal(GameState.miniGameProgress['radio-tuning'].bestQuality, 96);
+    assert.equal(GameState.miniGameProgress['radio-tuning'].lastOutcome, 'clear');
+  } finally {
+    Storage.load = originalLoad;
+    Storage.save = originalSave;
+    Object.assign(GameState, original);
   }
 });
