@@ -2,8 +2,14 @@ import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { recordCase001MiniGameEvidence } from '../systems/case-001-evidence.js';
 import { createRadioSession, tuneRadio, adjustRadioFilter, getRadioSignal, completeRadioSession } from '../systems/radio-tuning.js';
+import { canAccessCase001MiniGame } from '../systems/minigame-access.js';
+import { renderMiniGameLockScreen } from '../components/minigame-lock-screen.js';
 
 export function render(container) {
+  if (!canAccessCase001MiniGame('radio-tuning', GameState)) {
+    renderMiniGameLockScreen(container, 'ПОРТОВАЯ РАДИОЧАСТОТА', 'Эта частота появится в расследовании, когда вы доберётесь до старого порта на четвёртый день.');
+    return;
+  }
   const session = createRadioSession({ id: 'blackford_shortwave_01' });
   let finished = false;
 
@@ -26,7 +32,7 @@ export function render(container) {
               <div class="radio-display-label">FREQUENCY / MHz</div>
               <div class="radio-frequency">${session.frequency.toFixed(1)} <small>MHz</small></div>
               <div class="radio-bars">${bars}</div>
-              <div class="radio-display-status">${status}</div>
+              <div class="radio-display-status" aria-live="polite">${status}</div>
             </div>
             <div class="radio-dial-wrap"><div class="radio-dial"><span>88</span><span>92</span><span>96</span><span>100</span><span>104</span><span>108</span></div><div class="radio-needle" style="left:${((session.frequency - 88) / 20) * 100}%"></div></div>
             <div class="radio-speaker"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
@@ -42,8 +48,8 @@ export function render(container) {
             <input id="radio-filter" class="radio-range filter-range" type="range" min="0" max="100" step="1" value="${session.filter}" aria-label="Фильтр радиопомех">
             <div class="radio-range-ends"><span>ШИРОКО</span><span>УЗКО</span></div>
             <div class="radio-feedback" id="radio-feedback" aria-live="polite">${message}</div>
-            <div class="radio-quality"><span>КАЧЕСТВО ПРИЁМА</span><strong>${signal.quality}%</strong></div>
-            <div class="radio-quality-track"><span style="width:${signal.quality}%"></span></div>
+            <div class="radio-quality" id="radio-quality-label"><span>КАЧЕСТВО ПРИЁМА</span><strong>${signal.quality}%</strong></div>
+            <div class="radio-quality-track" role="progressbar" aria-labelledby="radio-quality-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${signal.quality}"><span style="width:${signal.quality}%"></span></div>
             <button class="radio-finish" id="radio-finish" ${finished ? 'disabled' : ''}>ЗАВЕРШИТЬ ПРИЁМ</button>
             <p class="radio-hint">Совет: максимум сигнала достигается настройкой частоты и умеренным фильтром.</p>
           </div>
@@ -65,6 +71,7 @@ export function render(container) {
       });
       container.querySelector('.radio-needle').style.left = ((session.frequency - 88) / 20) * 100 + '%';
       container.querySelector('.radio-quality strong').textContent = current.quality + '%';
+      container.querySelector('.radio-quality-track').setAttribute('aria-valuenow', String(current.quality));
       container.querySelector('.radio-quality-track span').style.width = current.quality + '%';
       container.querySelector('#radio-feedback').textContent = message;
     };

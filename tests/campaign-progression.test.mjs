@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assessCampaignDay, advanceCampaignWhenReady, assessFinalEvidence } from '../src/js/systems/campaign-progression.js';
+import { assessCampaignDay, advanceCampaignWhenReady, assessFinalEvidence, buildFinalEvidenceDossier, getCampaignCaseSummary } from '../src/js/systems/campaign-progression.js';
 
 function state(day, clues = []) {
   const found = new Set(clues);
@@ -59,6 +59,7 @@ test('final accusation requires independent medical, meeting, poison, archive an
     ['belladonna_invoice', {}],
     ['matthews_letter', {}],
     ['port_cargo_ledger', {}],
+    ['markus_statement', {}],
     ['port_radio_fragment', {}],
     ['restored_film_frame', { quality: 70 }]
   ]);
@@ -73,8 +74,75 @@ test('final accusation requires independent medical, meeting, poison, archive an
   result = assessFinalEvidence(game);
   assert.equal(result.ready, true);
   assert.equal(result.publicReady, true);
+  found.delete('markus_statement');
+  result = assessFinalEvidence(game);
+  assert.equal(result.ready, false);
+  assert.ok(result.missing.includes('Признание Маркуса Холта'));
+  found.set('markus_statement', {});
   found.delete('belladonna_invoice');
   result = assessFinalEvidence(game);
   assert.equal(result.ready, false);
   assert.ok(result.missing.includes('Счёт за белладонну'));
+});
+
+
+test('case summary reflects an active case before the finale', () => {
+  assert.deepEqual(getCampaignCaseSummary({ campaign: { day: 3, completed: false, ending: null } }), {
+    completed: false,
+    activeCount: 1,
+    completedCount: 0,
+    endingLabel: null
+  });
+});
+
+test('case summary reflects either saved finale using a player-facing label', async () => {
+  assert.deepEqual(getCampaignCaseSummary({ campaign: { day: 5, completed: true, ending: 'open_case' } }), {
+    completed: true,
+    activeCount: 0,
+    completedCount: 1,
+    endingLabel: 'ОТКРЫТОЕ ДЕЛО'
+  });
+  assert.deepEqual(getCampaignCaseSummary({ campaign: { day: 5, completed: true, ending: 'price_of_silence' } }), {
+    completed: true,
+    activeCount: 0,
+    completedCount: 1,
+    endingLabel: 'ЦЕНА МОЛЧАНИЯ'
+  });
+});
+
+
+test('final evidence dossier explains both findings and limits without overstating clues', () => {
+  const found = new Map([
+    ['restored_film_frame', { quality: 100 }],
+    ['port_radio_fragment', { quality: 82 }],
+    ['court_switchboard_log', {}]
+  ]);
+  const game = {
+    hasClue: id => found.has(id),
+    getClue: id => found.get(id) || null
+  };
+  const dossier = buildFinalEvidenceDossier(game);
+  const film = dossier.find(item => item.title === 'Восстановленная плёнка');
+  const radio = dossier.find(item => item.title === 'Радиофрагмент');
+  const autopsy = dossier.find(item => item.title === 'Причина смерти');
+  const poison = dossier.find(item => item.title === 'Источник белладонны');
+  const timeline = dossier.find(item => item.title === 'Расхождение во времени');
+
+  assert.match(film.finding, /Себастьян и Каллиопа/);
+  assert.match(film.limit, /не показывает момент убийства/);
+  assert.match(radio.limit, /Голос не идентифицирован/);
+  assert.match(autopsy.limit, /не устанавливает, кто приобрёл яд/);
+  assert.match(poison.limit, /Получатель препарата/);
+  assert.match(timeline.limit, /не устанавливают личность убийцы/);
+  assert.equal(dossier.length, 8);
+});
+
+test('partial film is described as unidentified and does not become proof of identity', () => {
+  const game = {
+    hasClue: id => id === 'restored_film_frame',
+    getClue: () => ({ quality: 70 })
+  };
+  const film = buildFinalEvidenceDossier(game).find(item => item.title === 'Восстановленная плёнка');
+  assert.match(film.finding, /две фигуры/);
+  assert.match(film.limit, /нельзя считать установленными/);
 });

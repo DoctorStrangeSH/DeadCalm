@@ -71,3 +71,12 @@ test('the opening establishes the personal hook and the first verifiable contrad
   assert.match(opening, /не верить времени в протоколе/);
   assert.match(opening, /Начнём с того, что можно проверить/);
 });
+
+
+test('Marta does not identify Markus as her anonymous source during the first meeting', () => {
+  const dialogues = readJson('../src/data/dialogues.json');
+  const firstMeeting = dialogues.npc_marta_hayes.first_meeting.text;
+  assert.match(firstMeeting, /В записке было сказано/);
+  assert.match(firstMeeting, /Кто её оставил — не знаю/);
+  assert.doesNotMatch(firstMeeting, /Маркус|Холт/);
+});

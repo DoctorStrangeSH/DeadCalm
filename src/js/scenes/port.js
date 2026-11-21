@@ -1,7 +1,7 @@
 import { renderStoryLocation } from '../components/story-location.js';
 import { GameState } from '../core/state.js';
 import { Events } from '../core/events.js';
-import { assessFinalEvidence } from '../systems/campaign-progression.js';
+import { assessFinalEvidence, buildFinalEvidenceDossier } from '../systems/campaign-progression.js';
 
 const markusStatement = {
   id: 'markus_statement',
@@ -22,9 +22,9 @@ function renderEnding(container, ending) {
       <h3 class="text-gold text-lg tracking-widest mt-2">${openCase ? 'ОТКРЫТОЕ ДЕЛО' : 'ЦЕНА МОЛЧАНИЯ'}</h3>
       <p class="text-gray-300 text-sm leading-relaxed mt-3">${openCase
         ? 'Вы передаёте проверенную цепочку материалов. Себастьян отрицает убийство, но карточка встречи, аптечная книга, экспертиза и восстановленная плёнка дают основания для официального обвинения. Признание Маркуса также становится частью дела: он отвечает за двадцать лет молчания.'
-        : 'Себастьян признаёт, что встретился с Гаррисоном и дал ему яд, но требует оставить часть материалов дела Каллиопы закрытой. Вы принимаете компромисс ради защиты части свидетелей. Маркус избегает публичного разоблачения, а доверие тех, кто вам поверил, зависит от того, сдержите ли вы обещание.'
+        : 'Вы принимаете закрытое соглашение: материалы о смерти Гаррисона передаются для дальнейшего разбирательства без публичной кампании, а спорные документы о деле Каллиопы не публикуются до независимой проверки. Себастьян не признаёт, что дал судье яд, но соглашается открыть часть корпоративного архива по установленной процедуре. Маркус не становится публичным обвинителем; его признание остаётся в материалах дела.'
       }</p>
-      <p class="text-gray-500 text-xs mt-4">Сохранённый исход: ${openCase ? 'open_case' : 'price_of_silence'}</p>
+      <p class="text-gray-500 text-xs mt-4">Сохранённый исход: ${openCase ? 'Открытое дело' : 'Цена молчания'}</p>
       <button id="btn-finale-menu" class="btn-noir w-full py-3 mt-4">В КАБИНЕТ</button>
     </section>
   `;
@@ -36,6 +36,7 @@ function renderEnding(container, ending) {
 function renderEndingChoices(container) {
   const evidenceStatus = assessFinalEvidence(GameState);
   const publishReady = evidenceStatus.publicReady;
+  const evidenceDossier = buildFinalEvidenceDossier(GameState);
   const result = container.querySelector('#story-location-result');
   if (!evidenceStatus.ready) {
     result.innerHTML = `
@@ -50,8 +51,16 @@ function renderEndingChoices(container) {
   result.innerHTML = `
     <div class="card p-4">
       <p class="text-gold text-sm">ДОКАЗАТЕЛЬСТВА СВЕРЕНЫ</p>
-      <p class="text-gray-400 text-sm mt-2">Себастьян выходит из тени склада. Он подтверждает, что назначал встречу с Гаррисоном и что его офис купил белладонну, но утверждает, что это ничего не доказывает. Затем предлагает сделку. Теперь его слова можно сверить с независимыми документами.</p>
-            <div class="grid gap-2 mt-4">
+      <p class="text-gray-400 text-sm mt-2">Себастьян выходит из тени склада. Карточка встречи, аптечная запись и независимые свидетельства складываются в подозрение, но ни один документ отдельно не доказывает, что именно он дал яд. Сам Себастьян не признаёт убийство. Перед выбором проверьте выводы и пределы каждого источника.</p>
+      <ol class="grid gap-3 mt-4">
+        ${evidenceDossier.map(item => `<li class="border-l-2 border-gray-700 pl-3">
+          <p class="text-gray-200 text-sm font-semibold">${item.title}</p>
+          <p class="text-gray-400 text-xs mt-1">${item.finding}</p>
+          <p class="text-gray-500 text-xs mt-1">Предел доказательства: ${item.limit}</p>
+        </li>`).join('')}
+      </ol>
+      <p class="text-gray-500 text-xs mt-3">Это совокупная версия из нескольких источников. Ни одна отдельная улика не называет убийцу.</p>
+      <div class="grid gap-2 mt-4">
         ${publishReady ? "" : '<p class="text-gray-500 text-xs">Для публичного обвинения нужен чётко восстановленный кадр и проверенная связь Блэквуда с ядом. Компромиссный исход остаётся доступен.</p>'}
         <button id="btn-ending-open" class="btn-noir py-3" ${publishReady ? "" : "disabled"}>ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ</button>
         <button id="btn-ending-silence" class="btn-noir py-3">ЗАКЛЮЧИТЬ СДЕЛКУ</button>
@@ -78,7 +87,16 @@ export function render(container) {
     }
   });
 
-  container.querySelector('#btn-story-action')?.addEventListener('click', () => {\n    Events.emit('navigate', { scene: 'radio-tuning' });\n  });\n\n  const actions = container.querySelector('.story-location-actions');
+  if (GameState.campaign.completed && GameState.campaign.ending) {
+    renderEnding(container, GameState.campaign.ending);
+    return;
+  }
+
+  container.querySelector('#btn-story-action')?.addEventListener('click', () => {
+    Events.emit('navigate', { scene: 'radio-tuning' });
+  });
+
+  const actions = container.querySelector('.story-location-actions');
   if (!GameState.hasClue('port_cargo_ledger')) {
     const ledger = document.createElement('button');
     ledger.id = 'btn-port-ledger';
@@ -135,7 +153,7 @@ export function render(container) {
       container.querySelector('#story-location-result').innerHTML = `
         <div class="card p-4">
           <p class="text-gold text-sm">МАРКУС ХОЛТ · ПРИЧАЛ № 4</p>
-          <p class="text-gray-300 text-sm leading-relaxed mt-2">Маркус выходит из тени складского навеса. «Я изменил время в протоколе. Я спрятал плёнку. Я говорил себе, что спасаю невиновного, но на самом деле спасал себя. Себастьян был рядом с Каллиопой в ночь её смерти — это я видел на плёнке. А кто убил Гаррисона, я не видел. Я могу рассказать о его страхе и о том, что он собирался раскрыть, но мои догадки не заменят ваших доказательств»..</p>
+          <p class="text-gray-300 text-sm leading-relaxed mt-2">Маркус выходит из тени складского навеса. «Я изменил время в протоколе. Я спрятал плёнку. Я говорил себе, что спасаю невиновного, но на самом деле спасал себя. Себастьян был рядом с Каллиопой в ночь её смерти — это я видел на плёнке. А кто убил Гаррисона, я не видел. Я могу рассказать о его страхе и о том, что он собирался раскрыть, но мои догадки не заменят ваших доказательств».</p>
           <p class="text-gray-500 text-xs mt-3">Его признание касается его собственных действий. Версию об убийстве необходимо сверить с независимыми материалами.</p>
         </div>
       `;

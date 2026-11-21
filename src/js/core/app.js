@@ -1,7 +1,7 @@
 import { Router } from './router.js';
 import { GameState } from './state.js';
 import { Events } from './events.js';
-import { Audio } from './audio.js';
+import { Audio, getMiniGameResultCue } from './audio.js';
 import { DialogueEngine } from '../systems/dialogue.js';
 import { Investigation } from '../systems/investigation.js';
 
@@ -75,10 +75,42 @@ async function init() {
     console.log('[NPC] ' + data.npcId + ': доверие ' + data.trust + '% ' + emoji);
   });
 
-  // Смена сцены
+  // Смена сцены и соответствующая музыка/атмосфера.
   Events.on('scene:changed', function(data) {
+    Audio.setScene(data.scene);
+    if (GameState.campaign?.completed) Audio.playMusic('finale');
     console.log('[Scene] Переход: ' + data.scene);
   });
+
+  // Разблокируем AudioContext только после явного жеста пользователя.
+  let audioUnlocked = false;
+  const unlockAudio = function() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    Audio.unlock(GameState.settings);
+    Audio.setScene(Router.getCurrentScene() || 'main-menu');
+  };
+  document.addEventListener('pointerdown', unlockAudio, { once: true, capture: true });
+  document.addEventListener('keydown', unlockAudio, { once: true, capture: true });
+
+  // Единые тактильные звуковые сигналы для интерфейса и игровых событий.
+  document.addEventListener('click', function(event) {
+    if (!event.target.closest('button, [role="button"]')) return;
+    const minigameControl = event.target.closest('.radio-range, .film-range, [data-action], #radio-finish, #film-restore, #film-advance');
+    Audio.playSfx(minigameControl ? 'minigame-action' : 'ui-click');
+  }, true);
+  document.addEventListener('input', function(event) {
+    if (event.target.matches('input[type="range"]')) Audio.playSfx('ui-adjust');
+  }, true);
+  Events.on('clue:added', () => Audio.playSfx('clue-found'));
+  Events.on('minigame:completed', function(data = {}) {
+    const cue = getMiniGameResultCue(data.outcome);
+    if (cue) Audio.playSfx(cue);
+  });
+  Events.on('minigame:failed', () => Audio.playSfx('failure'));
+  Events.on('dialogue:opened', () => Audio.playSfx('dialogue-open'));
+  Events.on('dialogue:closed', () => Audio.playSfx('dialogue-close'));
+  Events.on('campaign:completed', () => Audio.playMusic('finale'));
 
   // Сброс состояния (новая игра)
   Events.on('state:reset', function() {

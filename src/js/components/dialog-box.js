@@ -1,5 +1,6 @@
 import { DialogueEngine } from '../systems/dialogue.js';
 import { Events } from '../core/events.js';
+import { GameState } from '../core/state.js';
 import { escapeHtml } from '../utils/helpers.js';
 import { resolveTrustFeedback } from '../systems/dialogue-reactions.js';
 
@@ -61,6 +62,7 @@ export class DialogBox {
   async show(npcId) {
     var node = DialogueEngine.startDialogue(npcId);
     if (!node) return;
+    Events.emit('dialogue:opened', { npcId });
 
     // Создаём оверлей
     this._createOverlay();
@@ -150,7 +152,9 @@ export class DialogBox {
     this.isTyping = true;
     textEl.textContent = '';
     const fullText = String(node.text || '');
-    if (reducedMotion) {
+    const textDelays = { slow: 42, normal: 25, fast: 12, instant: 0 };
+    const textDelay = textDelays[GameState.settings?.textSpeed] ?? textDelays.normal;
+    if (reducedMotion || textDelay === 0) {
       textEl.textContent = fullText;
     } else {
       for (let i = 0; i < fullText.length; i++) {
@@ -160,7 +164,7 @@ export class DialogBox {
           break;
         }
         textEl.textContent += fullText[i];
-        await new Promise(resolve => setTimeout(resolve, 25));
+        await new Promise(resolve => setTimeout(resolve, textDelay));
       }
     }
     if (token !== this.renderToken || !this.container) return;

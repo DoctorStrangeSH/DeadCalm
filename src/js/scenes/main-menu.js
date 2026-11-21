@@ -2,6 +2,7 @@ import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { Audio } from '../core/audio.js';
 import { NPCMemory } from '../systems/npc-memory.js';
+import { createSaveFile, parseSaveFile } from '../core/save-transfer.js';
 
 /**
  * Главное меню игры «Мёртвый штиль».
@@ -10,14 +11,18 @@ import { NPCMemory } from '../systems/npc-memory.js';
  */
 export function render(container) {
   var hasSave = GameState.hasSave();
+  var saveBlocked = GameState.saveBlocked;
   var saveInfo = '';
+  var settings = GameState.settings || { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
 
   // Формируем информацию о сохранении
-  if (hasSave) {
+  if (hasSave && !saveBlocked) {
     var cluesCount = GameState.currentCase.clues.length;
     var notesCount = GameState.notebook ? GameState.notebook.length : 0;
     var npcCount = GameState.npcMemory ? Object.keys(GameState.npcMemory).length : 0;
     saveInfo = 'Улик: ' + cluesCount + ' | Заметок: ' + notesCount + ' | NPC в памяти: ' + npcCount;
+  } else if (saveBlocked) {
+    saveInfo = 'Сохранение повреждено или создано более новой версией. Продолжение временно заблокировано.';
   }
 
   container.innerHTML = `
@@ -57,11 +62,22 @@ export function render(container) {
           <!-- Продолжить (неактивна, если нет сохранения) -->
           <button
             id="btn-continue"
-            class="btn-noir py-3 md:py-4 px-6 md:px-10 ${hasSave ? '' : 'opacity-40'}"
-            ${hasSave ? '' : 'disabled'}
+            class="btn-noir py-3 md:py-4 px-6 md:px-10 ${hasSave && !saveBlocked ? '' : 'opacity-40'}"
+            ${hasSave && !saveBlocked ? '' : 'disabled'}
           >
             <span>02</span> ПРОДОЛЖИТЬ <b>↗</b>
           </button>
+
+          <!-- Перенос сохранения -->
+          <div class="grid grid-cols-2 gap-3">
+            <button id="btn-export-save" class="btn-noir py-3 px-4 text-sm" ${hasSave && !saveBlocked ? '' : 'disabled opacity-40'}>
+              <span>↥</span> ЭКСПОРТ
+            </button>
+            <button id="btn-import-save" class="btn-noir py-3 px-4 text-sm">
+              <span>↧</span> ИМПОРТ
+            </button>
+          </div>
+          <input id="save-import-file" type="file" accept="application/json,.json" hidden>
 
           <!-- Настройки -->
           <button id="btn-settings" class="btn-noir py-3 md:py-4 px-6 md:px-10 opacity-70">
@@ -72,7 +88,7 @@ export function render(container) {
 
         <!-- Информация о сохранении -->
         ${hasSave
-          ? '<p class="text-center text-gray-600 text-xs mt-6">' + saveInfo + '</p>'
+          ? '<p class="text-center ' + (saveBlocked ? 'text-amber-500' : 'text-gray-600') + ' text-xs mt-6" role="status">' + saveInfo + '</p>'
           : '<p class="text-center text-gray-700 text-xs mt-6">Нет сохранений</p>'
         }
 
@@ -84,6 +100,47 @@ export function render(container) {
           <p class="text-gray-700 text-xs mt-2">— Маркус Холт, детектив</p>
         </div>
 
+      </div>
+
+
+      <div class="settings-overlay" id="settings-overlay" hidden aria-hidden="true">
+        <section class="settings-panel" role="dialog" aria-modal="true" aria-labelledby="settings-title" tabindex="-1">
+          <header class="settings-header">
+            <div>
+              <p class="settings-kicker">BLACKFORD · ПАРАМЕТРЫ</p>
+              <h2 id="settings-title">Настройки</h2>
+            </div>
+            <button class="settings-close" id="settings-close" type="button" aria-label="Закрыть настройки">×</button>
+          </header>
+          <p class="settings-intro">Настройте звучание и темп чтения под себя. Изменения сохраняются автоматически.</p>
+          <div class="settings-controls">
+            <label class="settings-control" for="settings-music">
+              <span><strong>Музыка</strong><output id="settings-music-value">${Math.round(settings.musicVolume * 100)}%</output></span>
+              <input id="settings-music" type="range" min="0" max="100" step="1" value="${Math.round(settings.musicVolume * 100)}">
+              <small>Громкость музыкального сопровождения</small>
+            </label>
+            <label class="settings-control" for="settings-sfx">
+              <span><strong>Звуковые эффекты</strong><output id="settings-sfx-value">${Math.round(settings.sfxVolume * 100)}%</output></span>
+              <input id="settings-sfx" type="range" min="0" max="100" step="1" value="${Math.round(settings.sfxVolume * 100)}">
+              <small>Громкость интерфейса и игровых сигналов</small>
+            </label>
+            <label class="settings-control" for="settings-text-speed">
+              <span><strong>Скорость текста</strong></span>
+              <select id="settings-text-speed">
+                <option value="slow" ${settings.textSpeed === 'slow' ? 'selected' : ''}>Медленно</option>
+                <option value="normal" ${settings.textSpeed === 'normal' ? 'selected' : ''}>Обычно</option>
+                <option value="fast" ${settings.textSpeed === 'fast' ? 'selected' : ''}>Быстро</option>
+                <option value="instant" ${settings.textSpeed === 'instant' ? 'selected' : ''}>Мгновенно</option>
+              </select>
+              <small>Темп появления реплик в диалогах</small>
+            </label>
+          </div>
+          <p class="settings-status" id="settings-status" role="status" aria-live="polite">Настройки будут сохранены на этом устройстве.</p>
+          <div class="settings-footer">
+            <span>МЁРТВЫЙ ШТИЛЬ · 1.0</span>
+            <button class="settings-done" id="settings-done" type="button">ГОТОВО</button>
+          </div>
+        </section>
       </div>
 
       <!-- Версия игры -->
@@ -101,7 +158,7 @@ export function render(container) {
    */
   document.getElementById('btn-new-game').addEventListener('click', function() {
     // Инициализируем аудио (требуется взаимодействие пользователя)
-    Audio.init();
+    Audio.init(GameState.settings);
 
     // Если есть сохранение — спрашиваем подтверждение
     if (hasSave) {
@@ -116,6 +173,7 @@ export function render(container) {
 
     // 1. Сбрасываем игровое состояние (улики, заметки, флаги)
     GameState.reset();
+    Audio.init(GameState.settings);
 
     // 2. Явно очищаем память всех NPC
     NPCMemory.resetAll();
@@ -147,10 +205,13 @@ export function render(container) {
     if (!hasSave) return;
 
     // Инициализируем аудио
-    Audio.init();
+    Audio.init(GameState.settings);
 
     // Загружаем сохранённое состояние
-    GameState.init();
+    if (GameState.init() === false) {
+      alert('Это сохранение нельзя безопасно открыть в текущей версии. Исходные данные сохранены. Обновите игру до совместимой версии или начните новую игру после подтверждения сброса.');
+      return;
+    }
 
     console.log('[Menu] 📂 Загрузка сохранения...');
     console.log('[Menu]    - Память NPC: ' + Object.keys(GameState.npcMemory).length + ' записей');
@@ -161,27 +222,144 @@ export function render(container) {
     Events.emit('navigate', { scene: 'office' });
   });
 
-  /**
-   * Кнопка «Настройки»
-   * Показывает информационное окно (в будущем — полноценные настройки)
-   */
-  document.getElementById('btn-settings').addEventListener('click', function() {
-    Audio.init();
+  // === ЭКСПОРТ / ИМПОРТ СОХРАНЕНИЯ ===
+  const exportSaveButton = document.getElementById('btn-export-save');
+  const importSaveButton = document.getElementById('btn-import-save');
+  const importFileInput = document.getElementById('save-import-file');
 
-    // Пока что просто информационное окно
-    var message = '🎮 НАСТРОЙКИ\n\n';
-    message += 'Полноценные настройки появятся в следующих обновлениях.\n\n';
-    message += 'Текущее состояние игры:\n';
-    message += '• NPC в памяти: ' + Object.keys(GameState.npcMemory).length + '\n';
-    message += '• Улик собрано: ' + GameState.currentCase.clues.length + '\n';
-    message += '• Заметок в дневнике: ' + (GameState.notebook ? GameState.notebook.length : 0) + '\n';
-    message += '• Флагов установлено: ' + Object.keys(GameState.flags).length + '\n\n';
-    message += 'Планируется:\n';
-    message += '• Громкость музыки и звуков\n';
-    message += '• Скорость текста\n';
-    message += '• Язык интерфейса\n';
-    message += '• Сброс прогресса';
-
-    alert(message);
+  exportSaveButton.addEventListener('click', async function() {
+    if (GameState.saveBlocked || !GameState.hasSave()) return;
+    try {
+      const saveFile = await createSaveFile(GameState.export());
+      const blob = new Blob([JSON.stringify(saveFile, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'dead-calm-save-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('[Save Transfer] Ошибка экспорта:', error);
+      alert('Не удалось экспортировать сохранение. Попробуйте ещё раз.');
+    }
   });
+
+  importSaveButton.addEventListener('click', function() {
+    importFileInput.value = '';
+    importFileInput.click();
+  });
+
+  importFileInput.addEventListener('change', async function() {
+    const file = importFileInput.files && importFileInput.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      alert('Файл слишком большой. Максимальный размер сохранения — 5 МБ.');
+      return;
+    }
+
+    try {
+      const parsed = await parseSaveFile(await file.text());
+      if (parsed.status !== 'ok') {
+        const reason = parsed.reason === 'checksum-mismatch'
+          ? 'Контрольная сумма не совпадает. Файл повреждён или изменён.'
+          : parsed.status === 'unsupported'
+            ? 'Формат файла создан более новой версией игры.'
+            : 'Файл сохранения недействителен или несовместим.';
+        alert(reason + ' Текущий прогресс не изменён.');
+        return;
+      }
+
+      const confirmed = confirm('Импортировать расследование? Текущий прогресс будет заменён. Предыдущее сохранение будет сохранено в резервной копии.');
+      if (!confirmed) return;
+
+      if (!GameState.importSave(parsed.data)) {
+        alert('Не удалось записать импортированное сохранение. Текущий прогресс не был заменён.');
+        return;
+      }
+
+      alert('Сохранение успешно импортировано. Игра перезагрузит текущее расследование.');
+      window.location.reload();
+    } catch (error) {
+      console.error('[Save Transfer] Ошибка импорта:', error);
+      alert('Не удалось прочитать файл сохранения. Текущий прогресс не изменён.');
+    }
+  });
+
+  // === НАСТРОЙКИ ===
+  const settingsOverlay = document.getElementById('settings-overlay');
+  const settingsDialog = settingsOverlay.querySelector('.settings-panel');
+  const settingsButton = document.getElementById('btn-settings');
+  const closeSettingsButton = document.getElementById('settings-close');
+  const doneSettingsButton = document.getElementById('settings-done');
+  const settingsStatus = document.getElementById('settings-status');
+
+  function closeSettings() {
+    if (settingsOverlay.hidden) return;
+    GameState.save();
+    settingsOverlay.hidden = true;
+    settingsOverlay.setAttribute('aria-hidden', 'true');
+    settingsButton.focus();
+  }
+
+  function openSettings() {
+    Audio.init(GameState.settings);
+    settingsOverlay.hidden = false;
+    settingsOverlay.setAttribute('aria-hidden', 'false');
+    closeSettingsButton.focus();
+  }
+
+  settingsButton.addEventListener('click', openSettings);
+  closeSettingsButton.addEventListener('click', closeSettings);
+  doneSettingsButton.addEventListener('click', closeSettings);
+  settingsOverlay.addEventListener('click', function(event) {
+    if (event.target === settingsOverlay) closeSettings();
+  });
+  settingsDialog.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      closeSettings();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const focusable = Array.from(settingsDialog.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled])'));
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+
+  function updateVolume(setting, outputId, value) {
+    const normalized = Math.max(0, Math.min(100, Number(value))) / 100;
+    GameState.settings[setting] = normalized;
+    document.getElementById(outputId).value = Math.round(normalized * 100) + '%';
+    if (setting === 'musicVolume') Audio.setMusicVolume(normalized);
+    else Audio.setSfxVolume(normalized);
+    settingsStatus.textContent = 'Изменения применяются сразу и сохраняются автоматически.';
+  }
+
+  const musicControl = document.getElementById('settings-music');
+  const sfxControl = document.getElementById('settings-sfx');
+  musicControl.addEventListener('input', function() {
+    updateVolume('musicVolume', 'settings-music-value', musicControl.value);
+  });
+  sfxControl.addEventListener('input', function() {
+    updateVolume('sfxVolume', 'settings-sfx-value', sfxControl.value);
+  });
+  musicControl.addEventListener('change', function() { GameState.save(); });
+  sfxControl.addEventListener('change', function() { GameState.save(); });
+
+  document.getElementById('settings-text-speed').addEventListener('change', function(event) {
+    GameState.settings.textSpeed = event.target.value;
+    GameState.save();
+    settingsStatus.textContent = 'Скорость текста сохранена.';
+  });
+
 }

@@ -32,3 +32,43 @@ test('Service Worker has a versioned cache and offline navigation fallback', asy
   assert.match(source, /caches\.match\('\/index\.html'\)/);
   assert.match(source, /event\.request\.method !== 'GET'/);
 });
+
+
+test('retired prototype minigames and debug scenes are absent from the release precache', async () => {
+  const source = await readFile(resolve(root, 'sw.js'), 'utf8');
+  const match = source.match(/const ASSETS = (\[[\s\S]*?\]);/);
+  assert.ok(match, 'ASSETS array must be declared as a literal JSON array');
+  const assets = JSON.parse(match[1]);
+  for (const retired of [
+    "/src/js/components/minigame-chase.js",
+    "/src/js/components/minigame-cipher.js",
+    "/src/js/components/minigame-fingerprints.js",
+    "/src/js/components/minigame-lockpick.js",
+    "/src/js/components/qte-system.js",
+    "/src/js/scenes/chase-scene.js",
+    "/src/js/scenes/minigame-test.js",
+    "/src/js/systems/minigames.js",
+    "/src/css/style.css"
+  ]) assert.ok(!assets.includes(retired), `retired path remains in precache: ${retired}`);
+});
+
+
+test('authored PWA icons are included in the Service Worker precache', async () => {
+  const source = await readFile(resolve(root, 'sw.js'), 'utf8');
+  const match = source.match(/const ASSETS = (\[[\s\S]*?\]);/);
+  assert.ok(match, 'ASSETS array must be declared as a literal JSON array');
+  const assets = JSON.parse(match[1]);
+  assert.ok(assets.includes('/assets/icons/icon-192.svg'));
+  assert.ok(assets.includes('/assets/icons/icon-512.svg'));
+});
+
+
+test('story-gated mini-game modules are included in the offline precache', async () => {
+  const source = await readFile(resolve(root, 'sw.js'), 'utf8');
+  const match = source.match(/const ASSETS = (\[[\s\S]*?\]);/);
+  assert.ok(match, 'ASSETS array must be declared as a literal JSON array');
+  const assets = JSON.parse(match[1]);
+  assert.ok(assets.includes('/src/js/components/minigame-lock-screen.js'));
+  assert.ok(assets.includes('/src/js/systems/minigame-access.js'));
+  assert.match(source, /dead-calm-visual-v106/);
+});

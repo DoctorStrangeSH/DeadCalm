@@ -5,6 +5,8 @@ import { createEmptySocialGraph, normalizeSocialGraph, upsertSocialTie, appendSo
 import { createEmptyKnowledgeLedger, normalizeKnowledgeLedger, recordNpcKnowledge, updateNpcKnowledgeState, getNpcKnowledge, getNpcKnowledgeContext } from '../systems/npc-knowledge.js';
 import { createEmptyDailyLife, normalizeDailyLife, upsertNpcSchedule, getNpcScheduleAt, recordNpcOccurrence, getNpcOccurrences } from '../systems/npc-daily-life.js';
 import { createEmptyMiniGameProgress, normalizeMiniGameProgress, recordMiniGameResult } from '../systems/minigame-progress.js';
+import { assessCampaignDay, assessFinalEvidence } from '../systems/campaign-progression.js';
+import { migrateSave, CURRENT_SAVE_VERSION } from './save-migrations.js';
 
 const INITIAL_CAMPAIGN = Object.freeze({
   caseId: 'case_001',
@@ -12,6 +14,21 @@ const INITIAL_CAMPAIGN = Object.freeze({
   completed: false,
   ending: null
 });
+
+const DEFAULT_SETTINGS = Object.freeze({ musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' });
+const TEXT_SPEEDS = new Set(['slow', 'normal', 'fast', 'instant']);
+
+function normalizeSettings(settings) {
+  const source = settings && typeof settings === 'object' ? settings : {};
+  const volume = (value, fallback) => Number.isFinite(Number(value))
+    ? Math.max(0, Math.min(1, Number(value)))
+    : fallback;
+  return {
+    musicVolume: volume(source.musicVolume, DEFAULT_SETTINGS.musicVolume),
+    sfxVolume: volume(source.sfxVolume, DEFAULT_SETTINGS.sfxVolume),
+    textSpeed: TEXT_SPEEDS.has(source.textSpeed) ? source.textSpeed : DEFAULT_SETTINGS.textSpeed
+  };
+}
 
 function normalizeCampaignState(savedCampaign, flags = {}) {
   const inferredDay = [5, 4, 3, 2].find(day => flags?.['day_' + day]) || 1;
@@ -46,6 +63,7 @@ export var GameState = {
   npcDailyLife: createEmptyDailyLife(),
   miniGameProgress: createEmptyMiniGameProgress(),
   notebook: [],
+  saveBlocked: false,
 
   settings: {
     musicVolume: 0.5,
@@ -54,7 +72,28 @@ export var GameState = {
   },
 
   init() {
-    var saved = Storage.load('gameState');
+    var rawSaved = Storage.load('gameState');
+    this.saveBlocked = false;
+    if (!rawSaved && Storage.hasAnyRecord('gameState')) {
+      this.saveBlocked = true;
+      Events.emit('save:invalid', { reason: 'no-valid-recovery-copy' });
+      console.error('[State] Все копии сохранения повреждены. Исходные данные оставлены нетронутыми; запись заблокирована.');
+      return false;
+    }
+    const migration = rawSaved ? migrateSave(rawSaved) : null;
+    if (migration && migration.status === 'unsupported') {
+      this.saveBlocked = true;
+      Events.emit('save:unsupported_version', { found: migration.fromVersion, supported: CURRENT_SAVE_VERSION });
+      console.error('[State] Сохранение создано более новой версией игры. Запись заблокирована для защиты данных.');
+      return false;
+    }
+    if (migration && migration.status === 'invalid') {
+      this.saveBlocked = true;
+      Events.emit('save:invalid', { reason: migration.reason });
+      console.error('[State] Формат сохранения неизвестен. Запись заблокирована для защиты данных.');
+      return false;
+    }
+    var saved = migration ? migration.data : null;
     if (saved) {
       this.player = saved.player || this.player;
       this.currentCase = saved.currentCase || this.currentCase;
@@ -68,15 +107,21 @@ export var GameState = {
       this.npcDailyLife = normalizeDailyLife(saved.npcDailyLife);
       this.miniGameProgress = normalizeMiniGameProgress(saved.miniGameProgress);
       this.notebook = saved.notebook || [];
-      this.settings = saved.settings || this.settings;
+      this.settings = normalizeSettings(saved.settings);
+      if (migration.migrated) {
+        console.log('[State] Сохранение обновлено со схемы ' + migration.fromVersion + ' до ' + migration.toVersion);
+        this.save();
+      }
       console.log('[State] Состояние загружено');
       console.log('[State] - npcMemory: ' + Object.keys(this.npcMemory).length + ' NPC');
       console.log('[State] - clues: ' + this.currentCase.clues.length);
       console.log('[State] - notebook: ' + this.notebook.length);
     } else {
       this.campaign = { ...INITIAL_CAMPAIGN };
+      this.settings = normalizeSettings(null);
       console.log('[State] Новое состояние (без сохранения)');
     }
+    return true;
   },
 
   update(key, value) {
@@ -108,6 +153,7 @@ export var GameState = {
   setCampaignDay(day) {
     if (!Number.isInteger(day) || day < 1 || day > 5) return false;
     if (this.campaign.completed || day < this.campaign.day || day > this.campaign.day + 1) return false;
+    if (day > this.campaign.day && !assessCampaignDay(this).canAdvance) return false;
     const previousDay = this.campaign.day;
     this.campaign.day = day;
     this._syncCampaignFlags();
@@ -124,6 +170,8 @@ export var GameState = {
   completeCampaign(ending) {
     if (this.campaign.completed || this.campaign.day !== 5) return false;
     if (!['open_case', 'price_of_silence'].includes(ending)) return false;
+    const evidence = assessFinalEvidence(this);
+    if (ending === 'open_case' ? !evidence.publicReady : !evidence.ready) return false;
     this.campaign.completed = true;
     this.campaign.ending = ending;
     this.save();
@@ -275,6 +323,17 @@ export var GameState = {
     return result;
   },
 
+  ensureRelationship(npcId, initialTrust = 50) {
+    if (!this.relationships[npcId]) {
+      const trust = Number.isFinite(initialTrust)
+        ? Math.max(0, Math.min(100, initialTrust))
+        : 50;
+      this.relationships[npcId] = { trust, met: false };
+      this.save();
+    }
+    return this.relationships[npcId];
+  },
+
   updateRelationship(npcId, delta) {
     if (!this.relationships[npcId]) {
       this.relationships[npcId] = { trust: 50, met: false };
@@ -318,7 +377,11 @@ export var GameState = {
   },
 
   save() {
-    Storage.save('gameState', {
+    if (this.saveBlocked) {
+      console.warn('[State] Сохранение заблокировано: исходные данные требуют более новой версии игры или проверки.');
+      return false;
+    }
+    return Storage.save('gameState', {
       player: this.player,
       currentCase: this.currentCase,
       campaign: this.campaign,
@@ -331,6 +394,7 @@ export var GameState = {
       miniGameProgress: this.miniGameProgress,
       notebook: this.notebook,
       settings: this.settings,
+      schemaVersion: CURRENT_SAVE_VERSION
     });
   },
 
@@ -347,6 +411,9 @@ export var GameState = {
     console.log('[State] - notebook: ' + this.notebook.length);
     console.log('[State] - flags: ' + Object.keys(this.flags).length);
     
+    // Explicit user reset is the only operation that may discard an unsupported save.
+    this.saveBlocked = false;
+
     // Сбрасываем
     this.player = { name: 'Джон Риверс', reputation: 50 };
     this.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
@@ -359,7 +426,7 @@ export var GameState = {
     this.npcDailyLife = createEmptyDailyLife();
     this.miniGameProgress = createEmptyMiniGameProgress();
     this.notebook = [];
-    this.settings = { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
+    this.settings = normalizeSettings(null);
     
     // Очищаем localStorage
     Storage.clearAll();
@@ -379,27 +446,53 @@ export var GameState = {
   },
 
   hasSave() {
-    return Storage.exists('gameState');
+    return Storage.hasAnyRecord('gameState');
   },
 
   export() {
-    return {
-      player: Object.assign({}, this.player),
-      currentCase: {
-        id: this.currentCase.id,
-        clues: this.currentCase.clues.slice(),
-        suspects: this.currentCase.suspects.slice(),
-        timeline: this.currentCase.timeline.slice()
-      },
-      flags: Object.assign({}, this.flags),
-      relationships: Object.assign({}, this.relationships),
-      npcMemory: JSON.parse(JSON.stringify(this.npcMemory)),
-      socialGraph: JSON.parse(JSON.stringify(this.socialGraph)),
-      knowledgeLedger: JSON.parse(JSON.stringify(this.knowledgeLedger)),
-      npcDailyLife: JSON.parse(JSON.stringify(this.npcDailyLife)),
-      miniGameProgress: JSON.parse(JSON.stringify(this.miniGameProgress)),
-      notebook: this.notebook.slice(),
-      settings: Object.assign({}, this.settings)
+    return JSON.parse(JSON.stringify({
+      player: this.player,
+      currentCase: this.currentCase,
+      campaign: this.campaign,
+      flags: this.flags,
+      relationships: this.relationships,
+      npcMemory: this.npcMemory,
+      socialGraph: this.socialGraph,
+      knowledgeLedger: this.knowledgeLedger,
+      npcDailyLife: this.npcDailyLife,
+      miniGameProgress: this.miniGameProgress,
+      notebook: this.notebook,
+      settings: this.settings,
+      schemaVersion: CURRENT_SAVE_VERSION
+    }));
+  },
+
+  importSave(payload) {
+    const migration = migrateSave(payload);
+    if (migration.status !== 'ok') return false;
+    const data = migration.data;
+    const savePayload = {
+      ...data,
+      schemaVersion: CURRENT_SAVE_VERSION
     };
-  }
-};
+
+    // Commit to persistent storage before changing the live in-memory campaign.
+    if (!Storage.save('gameState', savePayload)) return false;
+
+    this.saveBlocked = false;
+    this.player = data.player || { name: 'Джон Риверс', reputation: 50 };
+    this.currentCase = data.currentCase || { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] };
+    this.flags = data.flags || {};
+    this.campaign = normalizeCampaignState(data.campaign, this.flags);
+    this._syncCampaignFlags();
+    this.relationships = data.relationships || {};
+    this.npcMemory = data.npcMemory || {};
+    this.socialGraph = normalizeSocialGraph(data.socialGraph);
+    this.knowledgeLedger = normalizeKnowledgeLedger(data.knowledgeLedger);
+    this.npcDailyLife = normalizeDailyLife(data.npcDailyLife);
+    this.miniGameProgress = normalizeMiniGameProgress(data.miniGameProgress);
+    this.notebook = data.notebook || [];
+    this.settings = normalizeSettings(data.settings);
+    Events.emit('state:imported', { campaign: this.campaign });
+    return true;
+  }};

@@ -2,8 +2,14 @@ import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { recordCase001MiniGameEvidence } from '../systems/case-001-evidence.js';
 import { createRepairSession, inspectMechanism, releasePressure, alignComponent, testMechanism, getRepairSummary } from '../systems/mechanical-repair.js';
+import { canAccessCase001MiniGame } from '../systems/minigame-access.js';
+import { renderMiniGameLockScreen } from '../components/minigame-lock-screen.js';
 
 export function render(container) {
+  if (!canAccessCase001MiniGame('mechanical-repair', GameState)) {
+    renderMiniGameLockScreen(container, 'МАСТЕРСКАЯ МАРКУСА', 'Анна должна передать вам вещи Маркуса. Вернитесь к ремонту на четвёртый день, когда часы окажутся у вас.');
+    return;
+  }
   const session = createRepairSession({ id: 'blackford_watch_repair' });
   const paint = (message = 'Осмотрите механизм и прислушайтесь к пружине.') => {
     const phaseCopy = {
@@ -39,7 +45,7 @@ export function render(container) {
               ${session.phase === 'release' ? '<button data-action="release-safe">Плавно снять натяжение</button><button class="repair-danger" data-action="release-force">Применить силу</button>' : ''}
               ${session.phase === 'align' ? '<button data-action="align-good">Совместить по метке</button><button class="repair-secondary" data-action="align-wrong">Установить наоборот</button>' : ''}
               ${session.phase === 'test' ? '<button data-action="test-safe">Осторожно завести часы</button><button class="repair-secondary" data-action="test-force">Резко завести</button>' : ''}
-              ${session.phase === 'completed' ? '<div class="repair-result">${summary.outcome === 'success' ? 'БЕЗУПРЕЧНАЯ РАБОТА' : 'ЧАСЫ ЗАПУЩЕНЫ, НО МЕХАНИЗМ ПОСТРАДАЛ'}</div><button data-action="again">Повторить упражнение</button>' : ''}
+              ${session.phase === 'completed' ? `<div class="repair-result">${summary.outcome === 'success' ? 'БЕЗУПРЕЧНАЯ РАБОТА' : 'ЧАСЫ ЗАПУЩЕНЫ, НО МЕХАНИЗМ ПОСТРАДАЛ'}</div><button data-action="again">Повторить упражнение</button>` : ''}
             </div>
             <div class="repair-meta"><span>ОШИБКИ: ${summary.mistakes}</span><span>ПОВРЕЖДЕНИЯ: ${summary.damage}</span></div>
           </div>

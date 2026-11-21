@@ -1,7 +1,8 @@
 import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { Inventory } from '../components/inventory.js';
-import { assessCampaignDay, advanceCampaignWhenReady } from '../systems/campaign-progression.js';
+import { assessCampaignDay, advanceCampaignWhenReady, getCampaignCaseSummary } from '../systems/campaign-progression.js';
+import { canAccessCase001MiniGame } from '../systems/minigame-access.js';
 
 /**
  * Кабинет детектива — главный хаб игры.
@@ -13,6 +14,9 @@ export function render(container) {
   var radioProgress = GameState.miniGameProgress?.['radio-tuning'];
   var repairProgress = GameState.miniGameProgress?.['mechanical-repair'];
   var filmProgress = GameState.miniGameProgress?.['film-restoration'];
+  var canRadio = canAccessCase001MiniGame('radio-tuning', GameState);
+  var canRepair = canAccessCase001MiniGame('mechanical-repair', GameState);
+  var canFilm = canAccessCase001MiniGame('film-restoration', GameState);
   var radioStatus = radioProgress
     ? 'Попыток: ' + radioProgress.attempts + ' · Лучший приём: ' + (radioProgress.bestOutcome === 'clear' ? 'чистый' : radioProgress.bestOutcome === 'fragmented' ? 'фрагменты' : 'неразборчиво')
     : 'Ещё не настраивали';
@@ -21,6 +25,7 @@ export function render(container) {
     : 'Ещё не ремонтировали';
   var filmStatus = filmProgress ? 'Попыток: ' + filmProgress.attempts + ' · Лучший результат: ' + filmProgress.bestQuality + '%' : 'Катушка № 014 · ожидает реставрации';
   var campaignStatus = assessCampaignDay(GameState);
+  var caseSummary = getCampaignCaseSummary(GameState);
   var campaignMissing = campaignStatus.missing.length
     ? '<ul class="campaign-missing">' + campaignStatus.missing.map(item => '<li>— ' + item + '</li>').join('') + '</ul>'
     : '<p class="text-gray-500 text-xs mt-2">Все условия текущего дня выполнены.</p>';
@@ -93,35 +98,35 @@ export function render(container) {
         </button>
 
         <!-- Радиоприёмная -->
-        <button id="btn-radio" class="card office-card text-left w-full">
+        <button id="btn-radio" class="card office-card text-left w-full" ${canRadio ? "" : "disabled"}>
           <span class="office-card-icon" aria-hidden="true">⌁</span><span class="office-card-number">08</span>
           <p class="card-title">РАДИОПРИЁМНАЯ</p>
-          <p class="card-subtitle">Настроить коротковолновый приёмник</p>
+          <p class="card-subtitle">${canRadio ? "Настроить коротковолновый приёмник" : "Доступно с четвёртого дня расследования"}</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">${radioStatus}</p>
         </button>
 
         <!-- Мастерская -->
-        <button id="btn-repair" class="card office-card text-left w-full">
+        <button id="btn-repair" class="card office-card text-left w-full" ${canRepair ? "" : "disabled"}>
           <span class="office-card-icon" aria-hidden="true">⚙</span><span class="office-card-number">07</span>
           <p class="card-title">МАСТЕРСКАЯ</p>
-          <p class="card-subtitle">Практика ремонта механизма</p>
+          <p class="card-subtitle">${canRepair ? "Практика ремонта механизма" : "Сначала получите вещи Маркуса от Анны · день 4"}</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">${repairStatus}</p>
         </button>
 
         <!-- Реставрация киноплёнки -->
-        <button id="btn-film" class="card office-card text-left w-full">
+        <button id="btn-film" class="card office-card text-left w-full" ${canFilm ? "" : "disabled"}>
           <span class="office-card-icon" aria-hidden="true">▥</span><span class="office-card-number">09</span>
           <p class="card-title">АРХИВ КИНОПЛЁНКИ</p>
-          <p class="card-subtitle">Восстановить повреждённую катушку</p>
+          <p class="card-subtitle">${canFilm ? "Восстановить повреждённую катушку" : "Нужен ключ из часов Маркуса · день 4"}</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">${filmStatus}</p>
         </button>
 
         <!-- Дела -->
         <button id="btn-cases" class="card office-card text-left w-full">
           <span class="office-card-icon" aria-hidden="true">§</span><span class="office-card-number">06</span>
-          <p class="card-title">АКТИВНЫЕ ДЕЛА</p>
+          <p class="card-title">ДЕЛА</p>
           <p class="card-subtitle">Активные и завершённые расследования</p>
-          <p class="hidden md:block text-gray-600 text-xs mt-3">Активных: 1</p>
+          <p class="hidden md:block text-gray-600 text-xs mt-3">Активных: ${caseSummary.activeCount} · Завершённых: ${caseSummary.completedCount}</p>
         </button>
 
       </div>
@@ -136,7 +141,7 @@ export function render(container) {
         </div>
         ${campaignStatus.day < 5 && !campaignStatus.complete ? campaignMissing : ""}
         ${campaignStatus.finaleReady ? '<p class="text-gray-400 text-sm mt-2">Последняя встреча ждёт вас на старом причале.</p>' : ""}
-        ${campaignStatus.complete ? '<p class="text-gray-400 text-sm mt-2">Сохранённый финал: ' + GameState.campaign.ending + '</p>' : ""}
+        ${campaignStatus.complete ? '<p class="text-gray-400 text-sm mt-2">Сохранённый финал: ' + (caseSummary.endingLabel || 'не определён') + '</p>' : ""}
         ${campaignStatus.day < 5 && !campaignStatus.complete ? '<button id="btn-advance-day" class="btn-noir w-full py-3 mt-3" ' + (campaignStatus.canAdvance ? "" : "disabled") + '>ЗАВЕРШИТЬ ДЕНЬ ' + campaignStatus.day + ' →</button>' : ""}
         ${campaignStatus.finaleReady ? '<button id="btn-go-finale" class="btn-noir w-full py-3 mt-3">ОТПРАВИТЬСЯ В ПОРТ →</button>' : ""}
       </section>
@@ -168,16 +173,19 @@ export function render(container) {
 
   // Радиоприёмная — отдельная сенсорная мини-игра
   document.getElementById('btn-radio').addEventListener('click', function () {
+    if (!canRadio) return;
     Events.emit('navigate', { scene: 'radio-tuning' });
   });
 
   // Архивная киноплёнка — отдельная сенсорная мини-игра
   document.getElementById('btn-film').addEventListener('click', function () {
+    if (!canFilm) return;
     Events.emit('navigate', { scene: 'film-restoration' });
   });
 
   // Мастерская — отдельная игровая мини-сцена
   document.getElementById('btn-repair').addEventListener('click', function () {
+    if (!canRepair) return;
     Events.emit('navigate', { scene: 'mechanical-repair' });
   });
 

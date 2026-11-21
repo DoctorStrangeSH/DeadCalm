@@ -3,28 +3,52 @@ import assert from 'node:assert/strict';
 import { GameState } from '../src/js/core/state.js';
 import { Storage } from '../src/js/core/storage.js';
 
-test('five-day campaign advances sequentially and opens only reached day flags', () => {
+test('five-day campaign advances sequentially only after each daily evidence gate', () => {
   const originalCampaign = GameState.campaign;
   const originalFlags = GameState.flags;
+  const originalCurrentCase = GameState.currentCase;
   const originalSave = Storage.save;
   const writes = [];
   try {
     GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
     GameState.flags = {};
+    GameState.currentCase = { ...originalCurrentCase, clues: [] };
     Storage.save = (key, value) => writes.push({ key, value: structuredClone(value) });
+    const addClues = ids => {
+      for (const id of ids) {
+        if (!GameState.hasClue(id)) GameState.currentCase.clues.push({
+          id,
+          quality: id === 'restored_film_frame' ? 100 : undefined
+        });
+      }
+    };
 
     assert.equal(GameState.hasFlag('day_2'), false);
     assert.equal(GameState.setCampaignDay(3), false, 'campaign cannot skip a day');
+    assert.equal(GameState.setCampaignDay(2), false, 'direct day changes cannot bypass missing evidence');
+    assert.equal(GameState.advanceCampaignDay(), false, 'day one cannot advance without its evidence');
+
+    addClues(['autopsy_report_01', 'court_switchboard_log', 'judge_appointment_card', 'old_case_details']);
     assert.equal(GameState.advanceCampaignDay(), true);
     assert.equal(GameState.campaign.day, 2);
     assert.equal(GameState.hasFlag('day_2'), true);
     assert.equal(GameState.hasFlag('day_3'), false);
+
+    addClues(['marta_source_envelope', 'matthews_letter']);
     assert.equal(GameState.advanceCampaignDay(), true);
+    assert.equal(GameState.campaign.day, 3);
+
+    addClues(['port_cargo_ledger']);
     assert.equal(GameState.advanceCampaignDay(), true);
+    assert.equal(GameState.campaign.day, 4);
+
+    addClues(['anna_markus_items', 'belladonna_invoice', 'port_radio_fragment']);
     assert.equal(GameState.advanceCampaignDay(), true);
     assert.equal(GameState.campaign.day, 5);
     assert.equal(GameState.hasFlag('day_5'), true);
+
     assert.equal(GameState.completeCampaign('unknown'), false);
+    addClues(['markus_statement', 'restored_film_frame']);
     assert.equal(GameState.completeCampaign('open_case'), true);
     assert.equal(GameState.campaign.completed, true);
     assert.equal(GameState.campaign.ending, 'open_case');
@@ -34,6 +58,7 @@ test('five-day campaign advances sequentially and opens only reached day flags',
   } finally {
     GameState.campaign = originalCampaign;
     GameState.flags = originalFlags;
+    GameState.currentCase = originalCurrentCase;
     Storage.save = originalSave;
   }
 });
@@ -69,6 +94,47 @@ test('campaign state restores day and synchronizes legacy location flags', () =>
     assert.equal(GameState.hasFlag('existing_choice'), true);
   } finally {
     Storage.load = originalLoad;
+    Object.assign(GameState, original);
+  }
+});
+
+
+test('finale completion enforces ending-specific evidence at the state boundary', () => {
+  const original = {
+    campaign: GameState.campaign,
+    currentCase: GameState.currentCase
+  };
+  const originalSave = Storage.save;
+  try {
+    Storage.save = () => {};
+    const baseEvidence = [
+      'autopsy_report_01',
+      'judge_appointment_card',
+      'belladonna_invoice',
+      'matthews_letter',
+      'port_cargo_ledger',
+      'markus_statement'
+    ];
+    const setFinaleState = clues => {
+      GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+      GameState.currentCase = { ...original.currentCase, clues };
+    };
+
+    setFinaleState([]);
+    assert.equal(GameState.completeCampaign('price_of_silence'), false, 'no evidence must not unlock a finale');
+    assert.equal(GameState.completeCampaign('open_case'), false, 'no evidence must not unlock a public accusation');
+
+    setFinaleState([...baseEvidence, { id: 'port_radio_fragment' }].map(item => typeof item === 'string' ? { id: item } : item));
+    assert.equal(GameState.completeCampaign('open_case'), false, 'radio evidence alone cannot support a public accusation');
+    assert.equal(GameState.completeCampaign('price_of_silence'), true, 'radio evidence plus the complete case file supports the compromise');
+
+    setFinaleState([...baseEvidence.map(id => ({ id })), { id: 'restored_film_frame', quality: 70 }]);
+    assert.equal(GameState.completeCampaign('open_case'), false, 'a partial frame cannot support a public accusation');
+
+    setFinaleState([...baseEvidence.map(id => ({ id })), { id: 'restored_film_frame', quality: 100 }]);
+    assert.equal(GameState.completeCampaign('open_case'), true, 'a fully identified frame plus the complete case file supports the public accusation');
+  } finally {
+    Storage.save = originalSave;
     Object.assign(GameState, original);
   }
 });

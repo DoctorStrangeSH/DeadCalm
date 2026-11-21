@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   adjustFilmTransport,
   advanceFilm,
+  canAdvanceFilm,
   createFilmRestorationSession,
   getFilmRestorationSummary,
   restoreFilmFrame,
@@ -102,4 +103,31 @@ test('completed reels reject further restoration and transport changes', () => {
   assert.equal(restoreFilmFrame(session, 'clean', 28), false);
   assert.equal(advanceFilm(session), null);
   assert.equal(adjustFilmTransport(session, { tension: 50 }), null);
+});
+
+
+test('the final restored frame unlocks projection instead of leaving the action disabled', () => {
+  const session = createFilmRestorationSession();
+  assert.equal(canAdvanceFilm(session), false);
+  assert.equal(restoreFilmFrame(session, 'clean', 28), true);
+  assert.equal(canAdvanceFilm(session), true);
+  assert.equal(advanceFilm(session).advanced, true);
+  assert.equal(restoreFilmFrame(session, 'polish', 14), true);
+  assert.equal(advanceFilm(session).advanced, true);
+  assert.equal(restoreFilmFrame(session, 'splice', 0.2), true);
+  assert.equal(canAdvanceFilm(session), true, 'last restored frame must allow the final advance');
+  assert.equal(advanceFilm(session).phase, 'projection');
+  assert.equal(canAdvanceFilm(session), true, 'projection action must remain enabled');
+  assert.equal(testFilmProjection(session).outcome, 'success');
+  assert.equal(canAdvanceFilm(session), false, 'completed reel must not advance again');
+});
+
+test('unsafe transport blocks both frame advance and final projection', () => {
+  const session = createFilmRestorationSession();
+  restoreAllCleanly(session);
+  session.phase = 'projection';
+  session.tension = 90;
+  assert.equal(canAdvanceFilm(session), false);
+  session.tension = 48;
+  assert.equal(canAdvanceFilm(session), true);
 });

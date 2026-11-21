@@ -847,545 +847,6 @@ body {
 }
 
 /* ============================================================
-   МИНИ-ИГРЫ
-   ============================================================ */
-
-.minigame-modal {
-  max-width: 500px;
-}
-
-.minigame-content {
-  padding: 1.5rem;
-}
-
-.minigame-header {
-  margin-bottom: 1.5rem;
-  text-align: center;
-}
-
-.minigame-title {
-  color: #c5a572;
-  font-size: 1.1rem;
-  letter-spacing: 0.1em;
-  margin-bottom: 0.5rem;
-}
-
-.minigame-subtitle {
-  color: #666;
-  font-size: 0.75rem;
-}
-
-.minigame-footer {
-  margin-top: 1rem;
-  text-align: center;
-}
-
-.minigame-hint {
-  color: #888;
-  font-size: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-
-.minigame-attempts {
-  color: #f87171;
-  font-size: 0.7rem;
-  margin-top: 0.5rem;
-}
-
-/* Взлом замка */
-.lockpick-body {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1.5rem;
-  margin: 1.5rem 0;
-}
-
-.lockpick-lock {
-  position: relative;
-}
-
-.lock-body {
-  width: 60px;
-  height: 70px;
-  background: #333;
-  border-radius: 8px;
-  position: relative;
-  transition: all 0.3s;
-}
-
-.lock-body.unlocked {
-  background: #4ade80;
-}
-
-.lock-body.shake {
-  animation: shake 0.5s ease-in-out;
-}
-
-@keyframes shake {
-  0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-8px); }
-  50% { transform: translateX(8px); }
-  75% { transform: translateX(-4px); }
-}
-
-.lock-shackle {
-  width: 40px;
-  height: 30px;
-  border: 4px solid #555;
-  border-bottom: none;
-  border-radius: 20px 20px 0 0;
-  position: absolute;
-  top: -25px;
-  left: 10px;
-  transition: all 0.3s;
-}
-
-.lock-body.unlocked .lock-shackle {
-  top: -35px;
-}
-
-.lock-keyhole {
-  width: 8px;
-  height: 12px;
-  background: #111;
-  border-radius: 50%;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.lockpick-pins {
-  display: flex;
-  gap: 0.75rem;
-}
-
-.lockpick-pin {
-  width: 40px;
-  height: 40px;
-  background: #1a1a1a;
-  border: 2px solid #444;
-  color: #888;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: bold;
-  transition: all 0.2s;
-  user-select: none;
-}
-
-.lockpick-pin:hover {
-  border-color: #c5a572;
-  color: #c5a572;
-}
-
-.lockpick-pin:active {
-  transform: scale(0.95);
-}
-
-.pin-correct {
-  background: #1a2a1a;
-  border-color: #4ade80 !important;
-  color: #4ade80 !important;
-}
-
-.lockpick-progress {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.progress-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #222;
-  transition: all 0.3s;
-}
-
-.progress-dot.filled {
-  background: #c5a572;
-}
-
-/* Расшифровка */
-.cipher-body {
-  margin: 1.5rem 0;
-}
-
-.cipher-label {
-  color: #666;
-  font-size: 0.65rem;
-  letter-spacing: 0.1em;
-  margin-bottom: 0.5rem;
-}
-
-.cipher-text {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-  margin-bottom: 1rem;
-  padding: 0.75rem;
-  background: #0a0a0a;
-  border: 1px solid #1a1a1a;
-  min-height: 40px;
-}
-
-.cipher-char {
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #111;
-  border: 1px solid #333;
-  color: #aaa;
-  font-size: 0.8rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  font-family: 'Courier New', monospace;
-}
-
-.cipher-char:hover {
-  border-color: #c5a572;
-}
-
-.cipher-char.decoded {
-  background: #1a2a1a;
-  border-color: #4ade80;
-  color: #4ade80;
-  cursor: default;
-}
-
-.cipher-mapping {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  justify-content: center;
-}
-
-.cipher-symbol-display {
-  font-size: 1.5rem;
-  color: #c5a572;
-  font-family: 'Courier New', monospace;
-  min-width: 30px;
-  text-align: center;
-}
-
-.cipher-arrow {
-  color: #555;
-  font-size: 1.2rem;
-}
-
-.cipher-input-field {
-  width: 50px;
-  height: 40px;
-  background: #0a0a0a;
-  border: 1px solid #333;
-  color: #c5a572;
-  text-align: center;
-  font-size: 1.2rem;
-  font-family: 'Georgia', serif;
-  text-transform: uppercase;
-}
-
-.cipher-input-field:focus {
-  outline: none;
-  border-color: #c5a572;
-}
-
-/* Отпечатки */
-.fingerprint-body {
-  margin: 1.5rem 0;
-}
-
-.fingerprint-surface {
-  position: relative;
-  width: 100%;
-  height: 200px;
-  background: #1a1a0a;
-  border: 1px solid #333;
-  cursor: crosshair;
-  overflow: hidden;
-  touch-action: none;
-}
-
-.fingerprint-print {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 100px;
-  height: 130px;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 130"><ellipse cx="50" cy="65" rx="30" ry="40" fill="none" stroke="%23333" stroke-width="1"/><ellipse cx="50" cy="65" rx="20" ry="28" fill="none" stroke="%23333" stroke-width="0.8"/><ellipse cx="50" cy="65" rx="10" ry="15" fill="none" stroke="%23333" stroke-width="0.6"/></svg>') no-repeat center;
-  opacity: 0.5;
-}
-
-.fingerprint-brush {
-  position: absolute;
-  font-size: 1.5rem;
-  pointer-events: none;
-  transform: translate(-50%, -50%);
-  transition: none;
-}
-
-.fingerprint-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-}
-
-.fingerprint-quality {
-  margin-top: 1rem;
-}
-
-.quality-bar {
-  width: 100%;
-  height: 8px;
-  background: #111;
-  border: 1px solid #222;
-  margin: 0.5rem 0;
-}
-
-.quality-fill {
-  height: 100%;
-  background: #4ade80;
-  transition: all 0.3s;
-}
-
-.quality-text {
-  color: #888;
-  font-size: 0.75rem;
-  text-align: center;
-}
-
-/* ============================================================
-   QTE (Quick Time Events)
-   ============================================================ */
-
-.qte-content {
-  text-align: center;
-}
-
-.qte-body {
-  margin: 1rem 0;
-}
-
-.qte-progress-bar {
-  width: 100%;
-  height: 6px;
-  background: #111;
-  border: 1px solid #222;
-  margin-bottom: 1.5rem;
-}
-
-.qte-progress-fill {
-  height: 100%;
-  background: #4ade80;
-  transition: width 0.05s linear, background 0.3s;
-}
-
-.qte-action-area {
-  width: 150px;
-  height: 150px;
-  margin: 0 auto 1.5rem;
-  border: 3px solid #444;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-  background: #0a0a0a;
-}
-
-.qte-action-area.qte-success-flash {
-  border-color: #4ade80;
-  box-shadow: 0 0 30px rgba(74, 222, 128, 0.5);
-}
-
-.qte-action-area.qte-fail-flash {
-  border-color: #f87171;
-  box-shadow: 0 0 30px rgba(248, 113, 113, 0.5);
-}
-
-.qte-action-display {
-  text-align: center;
-}
-
-.qte-action-icon {
-  font-size: 2.5rem;
-  display: block;
-}
-
-.qte-action-text {
-  color: #888;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-}
-
-.qte-result-success {
-  color: #4ade80;
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-.qte-result-fail {
-  color: #f87171;
-  font-size: 1.2rem;
-  font-weight: bold;
-}
-
-.qte-score {
-  margin-bottom: 1rem;
-  font-size: 1rem;
-}
-
-.qte-success { color: #4ade80; }
-.qte-fail { color: #f87171; }
-.qte-divider { color: #555; margin: 0 0.5rem; }
-
-.qte-controls {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.qte-controls-row {
-  display: flex;
-  gap: 0.5rem;
-}
-
-.qte-btn {
-  width: 55px;
-  height: 55px;
-  background: #1a1a1a;
-  border: 2px solid #333;
-  color: #888;
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: all 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.qte-btn:active {
-  transform: scale(0.9);
-}
-
-.qte-btn-active {
-  border-color: #c5a572 !important;
-  background: #1a1a0a !important;
-  box-shadow: 0 0 20px rgba(197, 165, 114, 0.3);
-}
-
-/* ============================================================
-   ПОГОНЯ
-   ============================================================ */
-
-.chase-content {
-  padding: 1rem;
-}
-
-.chase-body {
-  margin: 1rem 0;
-}
-
-.chase-road {
-  position: relative;
-  width: 100%;
-  height: 250px;
-  background: linear-gradient(180deg, #111 0%, #0a0a0a 50%, #111 100%);
-  border: 1px solid #222;
-  overflow: hidden;
-}
-
-.chase-lane-marks {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  justify-content: space-around;
-  padding: 0 33%;
-  opacity: 0.3;
-}
-
-.chase-lane-mark {
-  width: 1px;
-  height: 100%;
-  background: repeating-linear-gradient(
-    180deg,
-    #444 0px,
-    #444 10px,
-    transparent 10px,
-    transparent 20px
-  );
-}
-
-.chase-player {
-  position: absolute;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 2rem;
-  transition: left 0.15s ease;
-  z-index: 2;
-  filter: drop-shadow(0 0 5px rgba(197, 165, 114, 0.5));
-}
-
-.chase-target {
-  position: absolute;
-  top: 30px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 1.5rem;
-  opacity: 0.4;
-  transition: opacity 0.5s;
-}
-
-.chase-obstacle {
-  position: absolute;
-  font-size: 1.5rem;
-  transition: top 0.05s linear;
-  z-index: 1;
-}
-
-.obstacle-hit {
-  animation: obstacleCrash 0.5s ease-out forwards;
-}
-
-@keyframes obstacleCrash {
-  0% { transform: scale(1); opacity: 1; }
-  50% { transform: scale(1.5); opacity: 0.5; }
-  100% { transform: scale(2); opacity: 0; }
-}
-
-.chase-controls {
-  display: flex;
-  justify-content: center;
-  gap: 2rem;
-  margin: 1rem 0;
-}
-
-.chase-btn {
-  width: 60px;
-  height: 60px;
-  background: #1a1a1a;
-  border: 2px solid #333;
-  color: #888;
-  font-size: 1.5rem;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.chase-btn:active {
-  background: #222;
-  border-color: #c5a572;
-}
-
-/* ============================================================
    ТАЙМЛАЙН
    ============================================================ */
 
@@ -1882,3 +1343,89 @@ body {
 @media(max-width:820px){.film-workspace{grid-template-columns:1fr}.film-machine-column{max-width:650px;width:100%;margin:auto}.film-console{max-width:650px;width:100%;margin:auto}}
 @media(max-width:520px){.film-scene{padding:1rem}.film-header{flex-direction:column}.film-index{align-self:flex-start}.film-reel-stage{grid-template-columns:56px minmax(130px,1fr) 56px;padding:1rem 0}.film-machine{padding:.8rem}.film-footer{flex-direction:column}.film-actions-row{flex-direction:column}.film-result-stats{flex-direction:column}}
 @media(prefers-reduced-motion:reduce){.film-action,.film-secondary,.film-exit{transition:none}}
+
+
+/* Mini-game accessibility and touch targets — shared 1.0 baseline. */
+.repair-actions button,
+.repair-footer button,
+.radio-finish,
+.radio-footer button,
+.radio-back,
+.film-action,
+.film-secondary,
+.film-exit,
+.minigame-locked-scene button {
+  min-height: 44px;
+}
+.repair-actions button:focus-visible,
+.repair-footer button:focus-visible,
+.radio-finish:focus-visible,
+.radio-footer button:focus-visible,
+.radio-back:focus-visible,
+.radio-range:focus-visible,
+.film-action:focus-visible,
+.film-secondary:focus-visible,
+.film-exit:focus-visible,
+.film-range:focus-visible,
+.minigame-locked-scene button:focus-visible {
+  outline: 2px solid #f1d7a4;
+  outline-offset: 4px;
+}
+.radio-range,
+.film-range {
+  min-height: 36px;
+  padding-block: 8px;
+  touch-action: pan-y;
+}
+.radio-range::-webkit-slider-thumb,
+.film-range::-webkit-slider-thumb {
+  width: 22px;
+  height: 22px;
+}
+.radio-range::-moz-range-thumb,
+.film-range::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+}
+.radio-quality-track,
+.film-progress-track {
+  overflow: hidden;
+  border-radius: 2px;
+}
+.radio-quality-track span,
+.film-progress-track i {
+  min-width: 0;
+}
+.minigame-locked-scene {
+  min-height: 70vh;
+  display: grid;
+  place-items: center;
+  padding: clamp(1rem, 4vw, 3rem);
+  background: radial-gradient(ellipse at 50% 35%, #203234 0%, #101b1e 55%, #080e10 100%);
+}
+.minigame-locked-scene > .card {
+  width: min(100%, 620px);
+  border: 1px solid #64746b;
+  background: linear-gradient(145deg, #243638, #101b1e);
+  box-shadow: 0 24px 60px #0009;
+  padding: clamp(1.5rem, 5vw, 3rem);
+}
+.minigame-locked-scene h1 {
+  color: #e0cda6;
+  font: .75rem 'Courier New', monospace;
+  letter-spacing: .16em;
+}
+.minigame-locked-scene h2 {
+  color: #e2ded1;
+  font: 1.35rem Georgia, serif;
+}
+.minigame-locked-scene p:not(.office-kicker) {
+  color: #b8c5bd;
+  font: 1rem/1.7 Georgia, serif;
+}
+@media (prefers-reduced-motion: reduce) {
+  .radio-quality-track span,
+  .film-progress-track i {
+    transition: none !important;
+  }
+}
