@@ -518,3 +518,12 @@
 - Добавлен tests/investigation-connection-recovery.test.mjs (2 сценария).
 - Commits: aed0be8e, 7d7c2002.
 - CI актуального HEAD пока не подтверждён.
+
+
+### Notebook provenance and evidence integrity — 2026-11-21
+- Исправлено смешение источника и места обнаружения в архиве улик: карточки и детали используют source как происхождение, location показывается отдельно.
+- Экспорт дневника включает source и timestamp, безопасно обрабатывает старые частичные записи.
+- Подтверждено тестом, что удаление заметки не затрагивает currentCase.clues.
+- Добавлен tests/notebook-evidence-integrity.test.mjs (3 сценария).
+- Commits: 0ef44016, f376999c, 87e1df95.
+- CI актуального HEAD пока не подтверждён.
