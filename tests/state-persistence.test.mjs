@@ -106,3 +106,38 @@ test('GameState.init keeps a clean initial state when no save exists', () => {
     Object.assign(GameState, original);
   }
 });
+
+
+test('GameState.init clamps invalid saved settings and falls back to supported text speed', () => {
+  const originalLoad = Storage.load;
+  const originalSettings = GameState.settings;
+  const original = {
+    player: GameState.player,
+    currentCase: GameState.currentCase,
+    campaign: GameState.campaign,
+    flags: GameState.flags,
+    relationships: GameState.relationships,
+    npcMemory: GameState.npcMemory,
+    socialGraph: GameState.socialGraph,
+    knowledgeLedger: GameState.knowledgeLedger,
+    npcDailyLife: GameState.npcDailyLife,
+    miniGameProgress: GameState.miniGameProgress,
+    notebook: GameState.notebook
+  };
+
+  try {
+    Storage.load = () => ({
+      settings: { musicVolume: 4, sfxVolume: -2, textSpeed: 'warp-speed' }
+    });
+    GameState.init();
+    assert.deepEqual(GameState.settings, {
+      musicVolume: 1,
+      sfxVolume: 0,
+      textSpeed: 'normal'
+    });
+  } finally {
+    Storage.load = originalLoad;
+    Object.assign(GameState, original);
+    GameState.settings = originalSettings;
+  }
+});
