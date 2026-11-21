@@ -2,8 +2,14 @@ import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { recordCase001MiniGameEvidence } from '../systems/case-001-evidence.js';
 import { createRepairSession, inspectMechanism, releasePressure, alignComponent, testMechanism, getRepairSummary } from '../systems/mechanical-repair.js';
+import { canAccessCase001MiniGame } from '../systems/minigame-access.js';
+import { renderMiniGameLockScreen } from '../components/minigame-lock-screen.js';
 
 export function render(container) {
+  if (!canAccessCase001MiniGame('mechanical-repair', GameState)) {
+    renderMiniGameLockScreen(container, 'МАСТЕРСКАЯ МАРКУСА', 'Анна должна передать вам вещи Маркуса. Вернитесь к ремонту на четвёртый день, когда часы окажутся у вас.');
+    return;
+  }
   const session = createRepairSession({ id: 'blackford_watch_repair' });
   const paint = (message = 'Осмотрите механизм и прислушайтесь к пружине.') => {
     const phaseCopy = {
