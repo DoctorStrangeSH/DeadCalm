@@ -288,3 +288,6 @@
 - Найдена критическая UI-ошибка в Film Restoration: после обработки последнего кадра `frameIndex` указывает за конец массива, а кнопка запуска проектора продолжала проверять `frames[frameIndex].restored`; поэтому финальная проекция оставалась disabled.
 - Вынесено единое правило `canAdvanceFilm(session)`: оно разрешает финальную проекцию в фазе `projection`, но продолжает блокировать опасную протяжку и завершённую катушку.
 - Сцена использует один и тот же predicate при первичном рендере и при обновлении натяжения/скорости. Добавлены regression tests для последнего кадра, запуска проекции, завершённой катушки и опасного натяжения.
+
+- Film Restoration final-projection blocker fixed and verified: CI run `44896892950` passed **311/311 tests, 0 failures** on code head `9faf63ec2b1e54463c7691acd033157a3d78e953`.
+- Preview for that code head: READY, `https://dead-calm-2guobdop3-sherlock-ds.vercel.app` (`dpl_69oAvMuqS6gqQvjkuz9uHy2JFCFK`, SSO protected). Production unchanged. Manual gameplay/browser QA remains open.
