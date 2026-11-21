@@ -50,11 +50,14 @@ test('Audio volume setters clamp values and ignore non-finite input', () => {
   const original = {
     musicGain: Audio._musicGain,
     sfxGain: Audio._sfxGain,
+    context: Audio._ctx,
     musicVolume: Audio._musicVolume,
     sfxVolume: Audio._sfxVolume
   };
-  Audio._musicGain = { gain: { value: 0.5 } };
-  Audio._sfxGain = { gain: { value: 0.5 } };
+  Audio._ctx = { currentTime: 1 };
+  const parameter = value => ({ value, setTargetAtTime(next) { this.value = next; } });
+  Audio._musicGain = { gain: parameter(0.5) };
+  Audio._sfxGain = { gain: parameter(0.5) };
 
   try {
     Audio.setMusicVolume(4);
@@ -68,6 +71,7 @@ test('Audio volume setters clamp values and ignore non-finite input', () => {
   } finally {
     Audio._musicGain = original.musicGain;
     Audio._sfxGain = original.sfxGain;
+    Audio._ctx = original.context;
     Audio._musicVolume = original.musicVolume;
     Audio._sfxVolume = original.sfxVolume;
   }
