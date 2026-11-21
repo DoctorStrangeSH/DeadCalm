@@ -172,6 +172,9 @@ export var GameState = {
     if (!['open_case', 'price_of_silence'].includes(ending)) return false;
     const evidence = assessFinalEvidence(this);
     if (ending === 'open_case' ? !evidence.fullDisclosureReady : !evidence.ready) return false;
+    // The compromise ending is only valid after the sealed written confession
+    // is recorded as a case exhibit; UI-only creation is not a state boundary.
+    if (ending === 'price_of_silence' && !this.hasClue('sebastian_sealed_confession')) return false;
     this.campaign.completed = true;
     this.campaign.ending = ending;
     this.save();
