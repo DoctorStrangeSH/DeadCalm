@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { canAccessCase001MiniGame } from '../src/js/systems/minigame-access.js';
 
 function state(day, clues = []) {
@@ -34,4 +35,24 @@ test('unknown activities and malformed states fail closed', () => {
   assert.equal(canAccessCase001MiniGame('unregistered-game', state(5)), false);
   assert.equal(canAccessCase001MiniGame('radio-tuning', null), false);
   assert.equal(canAccessCase001MiniGame('radio-tuning', { campaign: { day: 4 } }), false);
+});
+
+test('office cards and direct scene routes enforce the same story gates', () => {
+  const office = readFileSync(new URL('../src/js/scenes/office.js', import.meta.url), 'utf8');
+  assert.match(office, /canAccessCase001MiniGame\('radio-tuning', GameState\)/);
+  assert.match(office, /canAccessCase001MiniGame\('mechanical-repair', GameState\)/);
+  assert.match(office, /canAccessCase001MiniGame\('film-restoration', GameState\)/);
+  assert.match(office, /if \(!canRadio\) return/);
+  assert.match(office, /if \(!canRepair\) return/);
+  assert.match(office, /if \(!canFilm\) return/);
+
+  for (const [file, type] of [
+    ['radio-tuning.js', 'radio-tuning'],
+    ['mechanical-repair.js', 'mechanical-repair'],
+    ['film-restoration.js', 'film-restoration']
+  ]) {
+    const scene = readFileSync(new URL('../src/js/scenes/' + file, import.meta.url), 'utf8');
+    assert.match(scene, new RegExp("canAccessCase001MiniGame\\('" + type + "', GameState\\)"));
+    assert.match(scene, /renderMiniGameLockScreen/);
+  }
 });
