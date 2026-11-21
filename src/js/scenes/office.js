@@ -234,20 +234,25 @@ export function render(container) {
     Events.emit('navigate', { scene: 'timeline' });
   });
 
-  // Дела (заглушка)
+  // Дела — показываем фактическое состояние кампании, а не статическую заглушку.
   document.getElementById('btn-cases').addEventListener('click', function () {
     var overlay = document.createElement('div');
+    var currentCaseStatus = GameState.campaign?.completed ? 'завершено' : 'активно';
+    var endingSummary = caseSummary.completed && caseSummary.endingLabel
+      ? '<p class="text-gold text-xs mt-2">ИТОГ: ' + caseSummary.endingLabel + '</p>'
+      : '';
     overlay.className = 'dialog-overlay';
     overlay.innerHTML = `
-      <div class="dialog-modal">
+      <div class="dialog-modal" role="dialog" aria-modal="true" aria-labelledby="cases-dialog-title">
         <div class="dialog-content">
-          <p class="dialog-type-label">АКТИВНЫЕ ДЕЛА</p>
+          <p class="dialog-type-label" id="cases-dialog-title">ДЕЛА</p>
           <div class="card p-4 mb-3">
             <p class="card-title">🔪 УБИЙСТВО СУДЬИ ГАРРИСОНА</p>
-            <p class="card-subtitle">Дело №001 — активно</p>
+            <p class="card-subtitle">Дело №001 — ${currentCaseStatus}</p>
             <p class="text-gray-500 text-xs mt-2">Судья найден мёртвым в зале суда. Несовпадение времени, звонок из комнаты секретарей и старое дело Каллиопы.</p>
+            ${endingSummary}
           </div>
-          <p class="text-gray-600 text-xs mb-4">Завершённых дел: 0</p>
+          <p class="text-gray-600 text-xs mb-4">Активных дел: ${caseSummary.activeCount} · Завершённых дел: ${caseSummary.completedCount}</p>
           <button class="dialog-btn primary-btn close-cases">ЗАКРЫТЬ</button>
         </div>
       </div>
