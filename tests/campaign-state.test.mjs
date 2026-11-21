@@ -138,3 +138,51 @@ test('finale completion enforces ending-specific evidence at the state boundary'
     Object.assign(GameState, original);
   }
 });
+
+
+test('both finale choices persist through save import and cannot be switched afterwards', () => {
+  const keys = [
+    'player', 'currentCase', 'campaign', 'flags', 'relationships', 'npcMemory',
+    'socialGraph', 'knowledgeLedger', 'npcDailyLife', 'miniGameProgress',
+    'notebook', 'settings', 'saveBlocked'
+  ];
+  const original = Object.fromEntries(keys.map(key => [key, GameState[key]]));
+  const originalSave = Storage.save;
+  const base = [
+    'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
+    'matthews_letter', 'port_cargo_ledger', 'markus_statement'
+  ];
+
+  try {
+    Storage.save = () => true;
+    for (const scenario of [
+      { ending: 'price_of_silence', extra: [{ id: 'port_radio_fragment' }] },
+      { ending: 'open_case', extra: [{ id: 'restored_film_frame', quality: 100 }] }
+    ]) {
+      GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+      GameState.flags = {};
+      GameState.currentCase = {
+        id: 'case_001',
+        clues: [...base.map(id => ({ id })), ...scenario.extra],
+        suspects: [], timeline: [], hypotheses: []
+      };
+
+      assert.equal(GameState.completeCampaign(scenario.ending), true);
+      const saved = GameState.export();
+      assert.equal(saved.campaign.completed, true);
+      assert.equal(saved.campaign.ending, scenario.ending);
+
+      // Import the exact exported payload as if the game had been reopened.
+      GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
+      assert.equal(GameState.importSave(saved), true);
+      assert.equal(GameState.campaign.completed, true);
+      assert.equal(GameState.campaign.ending, scenario.ending);
+      assert.equal(GameState.completeCampaign(scenario.ending === 'open_case' ? 'price_of_silence' : 'open_case'), false,
+        'a completed campaign cannot silently switch its ending');
+      assert.equal(GameState.campaign.ending, scenario.ending);
+    }
+  } finally {
+    Storage.save = originalSave;
+    Object.assign(GameState, original);
+  }
+});
