@@ -313,3 +313,10 @@
 - Проверен сценарий partial radio 78 → сохранение → clear radio 96 → повторная загрузка. После восстановления сохранения одна улика содержит обновлённое описание и качество; история попыток и лучший результат сохранены.
 - Проверка выполняется через фактические `GameState.recordMiniGameResult`, `recordCase001MiniGameEvidence`, `GameState.save` и `GameState.init` с тестовым хранилищем.
 - GitHub Actions run `44898592744`: **318/318 PASS**, 0 failures, HEAD `e49f72cf9bb50b3a5b2d6428080316b73f391399`.
+
+
+### Full investigation persistence audit — 2026-11-21
+- Найден и исправлен дефект `GameState.export()`: поле `currentCase` экспортировалось выборочно и теряло гипотезы/историю и дополнительные поля дела. Теперь используется глубокая копия всего `currentCase`.
+- Добавлен round-trip тест через реальные методы GameState: clue + hypothesis revision history, campaign day/flags, trust, NPC memory, social ties/events, knowledge provenance/state history, NPC schedule/occurrence, notebook и settings.
+- Проверена независимость экспортированной вложенной истории гипотез от оригинального состояния.
+- GitHub Actions run `44899315228`: **319/319 PASS**, 0 failures, HEAD `7e76d17650502200544ce5274240ea09a41ab7d0`.
