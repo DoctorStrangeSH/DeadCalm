@@ -1,7 +1,7 @@
 import { Router } from './router.js';
 import { GameState } from './state.js';
 import { Events } from './events.js';
-import { Audio } from './audio.js';
+import { Audio, getMiniGameResultCue } from './audio.js';
 import { DialogueEngine } from '../systems/dialogue.js';
 import { Investigation } from '../systems/investigation.js';
 
@@ -103,7 +103,10 @@ async function init() {
     if (event.target.matches('input[type="range"]')) Audio.playSfx('ui-adjust');
   }, true);
   Events.on('clue:added', () => Audio.playSfx('clue-found'));
-  Events.on('minigame:completed', () => Audio.playSfx('success'));
+  Events.on('minigame:completed', function(data = {}) {
+    const cue = getMiniGameResultCue(data.outcome);
+    if (cue) Audio.playSfx(cue);
+  });
   Events.on('minigame:failed', () => Audio.playSfx('failure'));
   Events.on('dialogue:opened', () => Audio.playSfx('dialogue-open'));
   Events.on('dialogue:closed', () => Audio.playSfx('dialogue-close'));
