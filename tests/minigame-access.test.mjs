@@ -34,7 +34,9 @@ test('film restoration requires the key recovered by successfully repairing Mark
 test('unknown activities and malformed states fail closed', () => {
   assert.equal(canAccessCase001MiniGame('unregistered-game', state(5)), false);
   assert.equal(canAccessCase001MiniGame('radio-tuning', null), false);
-  assert.equal(canAccessCase001MiniGame('radio-tuning', { campaign: { day: 4 } }), false);
+  assert.equal(canAccessCase001MiniGame('radio-tuning', { campaign: { day: 'unknown' } }), false);
+  assert.equal(canAccessCase001MiniGame('mechanical-repair', { campaign: { day: 4 } }), false);
+  assert.equal(canAccessCase001MiniGame('film-restoration', { campaign: { day: 4 } }), false);
 });
 
 test('office cards and direct scene routes enforce the same story gates', () => {
