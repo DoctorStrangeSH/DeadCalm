@@ -320,3 +320,10 @@
 - Добавлен round-trip тест через реальные методы GameState: clue + hypothesis revision history, campaign day/flags, trust, NPC memory, social ties/events, knowledge provenance/state history, NPC schedule/occurrence, notebook и settings.
 - Проверена независимость экспортированной вложенной истории гипотез от оригинального состояния.
 - GitHub Actions run `44899315228`: **319/319 PASS**, 0 failures, HEAD `7e76d17650502200544ce5274240ea09a41ab7d0`.
+
+
+### Save recovery hardening — 2026-11-21
+- `Storage.save()` now stages serialized data under `__pending`, backs up the previous valid primary under `__backup`, and only then commits the new primary. Returns a boolean for success/failure.
+- `Storage.load()` recovers from valid backup or pending JSON if primary is missing/corrupt; a valid primary always wins, so a failed newer write cannot silently replace a known-good save.
+- `exists`, `remove`, and `clearAll` now include auxiliary records. Added five storage regression tests: backup rotation, corrupt-primary fallback, pending recovery, cleanup scope, and simulated quota failure.
+- GitHub Actions run `44899585246`: **324/324 PASS**, 0 failures, HEAD `97190d685d8b7eda59b90b4fa17cc74126b94e8f`.
