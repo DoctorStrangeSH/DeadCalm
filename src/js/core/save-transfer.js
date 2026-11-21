@@ -39,6 +39,45 @@ export async function createSaveFile(payload, exportedAt = new Date().toISOStrin
   };
 }
 
+function isRecord(value) {
+  return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+function validatePayload(data) {
+  if (!isRecord(data.player) || typeof data.player.name !== 'string' ||
+      !isRecord(data.currentCase) || typeof data.currentCase.id !== 'string' ||
+      !Array.isArray(data.currentCase.clues) ||
+      !Array.isArray(data.currentCase.suspects) ||
+      !Array.isArray(data.currentCase.timeline) ||
+      !Array.isArray(data.currentCase.hypotheses) ||
+      !isRecord(data.campaign) || !Number.isInteger(data.campaign.day) ||
+      !isRecord(data.flags) || !isRecord(data.relationships) ||
+      !isRecord(data.npcMemory) || !isRecord(data.socialGraph) ||
+      !Array.isArray(data.socialGraph.ties) || !Array.isArray(data.socialGraph.events) ||
+      !isRecord(data.knowledgeLedger) || !Array.isArray(data.knowledgeLedger.entries) ||
+      !isRecord(data.npcDailyLife) || !Array.isArray(data.npcDailyLife.schedules) ||
+      !Array.isArray(data.npcDailyLife.occurrences) ||
+      !isRecord(data.miniGameProgress) || !Array.isArray(data.notebook) ||
+      !isRecord(data.settings)) {
+    return { valid: false, reason: 'invalid-payload-shape' };
+  }
+
+  const { musicVolume, sfxVolume, textSpeed } = data.settings;
+  if (typeof musicVolume !== 'number' || !Number.isFinite(musicVolume) ||
+      typeof sfxVolume !== 'number' || !Number.isFinite(sfxVolume) ||
+      !['slow', 'normal', 'fast', 'instant'].includes(textSpeed)) {
+    return { valid: false, reason: 'invalid-settings' };
+  }
+
+  if (data.campaign.day < 1 ||
+      typeof data.campaign.completed !== 'boolean' ||
+      !(data.campaign.ending === null || typeof data.campaign.ending === 'string')) {
+    return { valid: false, reason: 'invalid-campaign' };
+  }
+
+  return { valid: true };
+}
+
 export async function parseSaveFile(input) {
   let file;
   try {
@@ -64,6 +103,9 @@ export async function parseSaveFile(input) {
   if (migration.status !== 'ok') {
     return migration;
   }
+
+  const shape = validatePayload(migration.data);
+  if (!shape.valid) return { status: 'invalid', reason: shape.reason };
 
   const actualChecksum = await sha256(canonicalJson(file.payload));
   if (actualChecksum !== file.checksum.toLowerCase()) {
