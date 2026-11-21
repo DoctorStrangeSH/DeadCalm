@@ -271,7 +271,7 @@ export function render(container) {
         return;
       }
 
-      const confirmed = confirm('Импортировать расследование? Текущий прогресс будет заменён, а его резервная копия останется доступна для восстановления.');
+      const confirmed = confirm('Импортировать расследование? Текущий прогресс будет заменён. Предыдущее сохранение будет сохранено в резервной копии.');
       if (!confirmed) return;
 
       if (!GameState.importSave(parsed.data)) {
