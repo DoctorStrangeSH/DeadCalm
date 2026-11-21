@@ -126,3 +126,64 @@ test('legacy knowledge history drops malformed transitions but retains valid pro
   assert.equal(normalized.entries[0].stateHistory[0].from, 'unverified');
   assert.equal(normalized.entries[0].stateHistory[0].to, 'corroborated');
 });
+
+
+test('knowledge attributed to another NPC requires a traceable source reference', () => {
+  const ledger = createEmptyKnowledgeLedger();
+  assert.equal(recordNpcKnowledge(ledger, {
+    id: 'untraceable-transfer',
+    npcId: 'npc_marta',
+    claimRef: 'claim_anna_refusal',
+    sourceType: 'interview',
+    provenance: 'Marta was told by Anna.',
+    sourceNpcId: 'npc_anna'
+  }), null);
+  const valid = recordNpcKnowledge(ledger, {
+    id: 'traceable-transfer',
+    npcId: 'npc_marta',
+    claimRef: 'claim_anna_refusal',
+    sourceType: 'interview',
+    provenance: 'Marta was told by Anna during a recorded interview.',
+    sourceNpcId: 'npc_anna',
+    sourceRefs: ['interview-marta-anna-01']
+  });
+  assert.ok(valid);
+  assert.equal(valid.sourceNpcId, 'npc_anna');
+  assert.deepEqual(valid.sourceRefs, ['interview-marta-anna-01']);
+});
+
+test('legacy knowledge rejects self-sourced and untraceable cross-NPC entries', () => {
+  const normalized = normalizeKnowledgeLedger({ entries: [
+    {
+      id: 'self-source',
+      npcId: 'npc_a',
+      claimRef: 'claim_1',
+      sourceType: 'direct_observation',
+      state: 'unverified',
+      provenance: 'Self-sourced legacy claim.',
+      sourceNpcId: 'npc_a',
+      sourceRefs: ['record-1']
+    },
+    {
+      id: 'untraceable-transfer',
+      npcId: 'npc_b',
+      claimRef: 'claim_2',
+      sourceType: 'interview',
+      state: 'unverified',
+      provenance: 'Someone said it.',
+      sourceNpcId: 'npc_a',
+      sourceRefs: []
+    },
+    {
+      id: 'valid-transfer',
+      npcId: 'npc_b',
+      claimRef: 'claim_3',
+      sourceType: 'interview',
+      state: 'unverified',
+      provenance: 'An attributed interview.',
+      sourceNpcId: 'npc_a',
+      sourceRefs: ['interview-3']
+    }
+  ] });
+  assert.deepEqual(normalized.entries.map(entry => entry.id), ['valid-transfer']);
+});
