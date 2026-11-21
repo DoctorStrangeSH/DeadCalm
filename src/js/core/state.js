@@ -473,12 +473,36 @@ export var GameState = {
     const data = migration.data;
     const campaign = normalizeCampaignState(data.campaign, data.flags);
     const flags = { ...(data.flags || {}) };
+    const currentCase = data.currentCase
+      ? { ...data.currentCase }
+      : { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] };
+
+    // A save-file checksum detects accidental corruption; it is not proof that
+    // a hypothesis was independently verified by the game. Never import a
+    // player-editable "confirmed" label as an established finding.
+    currentCase.hypotheses = (Array.isArray(currentCase.hypotheses) ? currentCase.hypotheses : [])
+      .map(hypothesis => {
+        if (!hypothesis || hypothesis.status !== 'confirmed') return hypothesis;
+        const clueIds = Array.isArray(hypothesis.clueIds) ? [...hypothesis.clueIds] : [];
+        const history = Array.isArray(hypothesis.history) ? [...hypothesis.history] : [];
+        history.push({
+          at: new Date().toISOString(),
+          type: 'revised',
+          status: 'probable',
+          clueIds,
+          reasoning: typeof hypothesis.reasoning === 'string' ? hypothesis.reasoning : '',
+          title: typeof hypothesis.title === 'string' ? hypothesis.title : ''
+        });
+        return { ...hypothesis, status: 'probable', history, importReviewRequired: true };
+      });
+
     for (let day = 2; day <= 5; day++) {
       if (campaign.day >= day) flags['day_' + day] = true;
       else delete flags['day_' + day];
     }
     const savePayload = {
       ...data,
+      currentCase,
       campaign,
       flags,
       schemaVersion: CURRENT_SAVE_VERSION
@@ -489,7 +513,7 @@ export var GameState = {
 
     this.saveBlocked = false;
     this.player = data.player || { name: 'Джон Риверс', reputation: 50 };
-    this.currentCase = data.currentCase || { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] };
+    this.currentCase = currentCase;
     this.flags = flags;
     this.campaign = campaign;
     this.relationships = data.relationships || {};
