@@ -282,3 +282,9 @@
 - Latest Vercel Preview: `dpl_9ccETTgGJvbFe6Y3j4fjRxaPSJvY`, READY, `https://dead-calm-jlr8c4e6g-sherlock-ds.vercel.app`; SSO protection enabled. Production не менялся.
 
 - Final confirmed Preview after the cache-test correction: `dpl_DA2i4sUJaerMU211yyw8azUhX3H6`, READY, commit `c3c494dafe72d451d253dde870090f41b7d7f913`, URL `https://dead-calm-dp0e8v78j-sherlock-ds.vercel.app` (SSO protected). No production promotion.
+
+
+### Mini-game final projection blocker — 2026-11-21
+- Найдена критическая UI-ошибка в Film Restoration: после обработки последнего кадра `frameIndex` указывает за конец массива, а кнопка запуска проектора продолжала проверять `frames[frameIndex].restored`; поэтому финальная проекция оставалась disabled.
+- Вынесено единое правило `canAdvanceFilm(session)`: оно разрешает финальную проекцию в фазе `projection`, но продолжает блокировать опасную протяжку и завершённую катушку.
+- Сцена использует один и тот же predicate при первичном рендере и при обновлении натяжения/скорости. Добавлены regression tests для последнего кадра, запуска проекции, завершённой катушки и опасного натяжения.
