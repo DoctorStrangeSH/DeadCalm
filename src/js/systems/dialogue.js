@@ -207,8 +207,8 @@ export var DialogueEngine = {
     if (!npcData) return null;
 
     var topic = npcData.topics?.[topicId];
-    if (!topic) {
-      console.warn('[Dialogue] Тема не найдена: ' + topicId);
+    if (!topic || !this._unlockedTopics.includes(topicId)) {
+      console.warn('[Dialogue] Тема не найдена или ещё не открыта: ' + topicId);
       return null;
     }
 
@@ -235,11 +235,11 @@ export var DialogueEngine = {
     var npcData = this._dialogues?.[this._currentNPC];
     if (!npcData) return null;
 
-    // Ищем ответ
+    // Ищем ответ только в темах, которые действительно открыты игроку.
     var foundResponse = null;
-    for (var topicId in npcData.topics) {
-      var topic = npcData.topics[topicId];
-      if (topic.responses) {
+    for (var topicId of this._unlockedTopics) {
+      var topic = npcData.topics?.[topicId];
+      if (topic?.responses) {
         var response = topic.responses.find(function(r) { return r.id === questionId; });
         if (response) {
           foundResponse = response;
@@ -249,12 +249,12 @@ export var DialogueEngine = {
     }
 
     if (!foundResponse || !this._isResponseAvailable(foundResponse)) {
-      console.warn('[Dialogue] Ответ не найден для вопроса: ' + questionId);
+      console.warn('[Dialogue] Ответ не найден или недоступен: ' + questionId);
       return null;
     }
 
     // Критический вопрос остаётся доступным, пока игрок не подтвердит один
-    // из вариантов. Это позволяет восстановить сам выбор после закрытия игры.
+    // из вариантов. Обычные вопросы после первого ответа повторно не исполняются.
     const pendingCriticalNode = foundResponse.triggers_critical
       ? npcData[foundResponse.triggers_critical]
       : null;
@@ -264,6 +264,11 @@ export var DialogueEngine = {
     const opensUnresolvedChoice = !!(pendingCriticalNode &&
       Array.isArray(pendingCriticalNode.choices) &&
       !NPCMemory.hasFlag(this._currentNPC, criticalFlag));
+
+    if (this._askedQuestions.includes(questionId) && !opensUnresolvedChoice) {
+      console.warn('[Dialogue] Вопрос уже был задан: ' + questionId);
+      return null;
+    }
 
     if (!opensUnresolvedChoice) {
       this._askedQuestions.push(questionId);
