@@ -106,7 +106,7 @@ test('every authored critical NPC choice survives export/import and remains one-
       DialogueEngine.reset();
       DialogueEngine.startDialogue(scenario.npcId);
       const topic = DialogueEngine.selectTopic(scenario.topicId);
-      assert.equal(topic?.questions?.some(question => question.id === scenario.questionId), false,
+      assert.ok(!topic?.questions || !topic.questions.some(question => question.id === scenario.questionId),
         scenario.npcId + '/' + scenario.choice.id + ' must not re-offer the resolved choice after import');
     }
   } finally {
