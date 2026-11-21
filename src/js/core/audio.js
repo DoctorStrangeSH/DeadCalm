@@ -37,6 +37,7 @@ export const Audio = {
   _musicStep: 0,
   _ambientSource: null,
   _ambientFilter: null,
+  _ambientHighPass: null,
   _ambientLfo: null,
   _ambientType: null,
   _ambientBuffer: null,
@@ -142,7 +143,8 @@ export const Audio = {
       try {
         voice.gain.gain.cancelScheduledValues(now);
         voice.gain.gain.setTargetAtTime(0.0001, now, 0.22);
-        voice.oscillator.stop(now + 0.9);
+        voice.oscillator.onended = () => { voice.oscillator.disconnect(); voice.gain.disconnect(); };
+      voice.oscillator.stop(now + 0.9);
       } catch {}
     }
     this._musicVoices = [];
@@ -221,14 +223,18 @@ export const Audio = {
     };
     const profile = profiles[type] || profiles.interior;
     const source = this._ctx.createBufferSource();
+    const highPass = this._ctx.createBiquadFilter();
     const filter = this._ctx.createBiquadFilter();
     const gain = this._ctx.createGain();
     const lfo = this._ctx.createOscillator();
     const lfoGain = this._ctx.createGain();
     source.buffer = this._createNoiseBuffer();
     source.loop = true;
-    filter.type = 'bandpass';
-    filter.frequency.setValueAtTime((profile.low + profile.high) / 2, this._ctx.currentTime);
+    highPass.type = 'highpass';
+    highPass.frequency.setValueAtTime(profile.low, this._ctx.currentTime);
+    highPass.Q.setValueAtTime(0.45, this._ctx.currentTime);
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(profile.high, this._ctx.currentTime);
     filter.Q.setValueAtTime(0.35, this._ctx.currentTime);
     gain.gain.setValueAtTime(0.0001, this._ctx.currentTime);
     gain.gain.setTargetAtTime(profile.level, this._ctx.currentTime + 0.1, 1.4);
@@ -237,13 +243,15 @@ export const Audio = {
     lfoGain.gain.setValueAtTime(profile.sway, this._ctx.currentTime);
     lfo.connect(lfoGain);
     lfoGain.connect(gain.gain);
-    source.connect(filter);
+    source.connect(highPass);
+    highPass.connect(filter);
     filter.connect(gain);
     gain.connect(this._ambientGain);
     source.start();
     lfo.start();
     this._ambientSource = source;
     this._ambientFilter = filter;
+    this._ambientHighPass = highPass;
     this._ambientLfo = lfo;
     this._ambientNodes = { gain, lfoGain };
   },
@@ -264,11 +272,12 @@ export const Audio = {
       }
       source.stop(now + 0.85);
       lfo?.stop(now + 0.85);
-      source.onended = () => source.disconnect();
-      lfo?.onended && (lfo.onended = () => lfo.disconnect());
+      source.onended = () => { source.disconnect(); this._ambientHighPass?.disconnect(); this._ambientFilter?.disconnect(); gain?.disconnect(); };
+      if (lfo) lfo.onended = () => { lfo.disconnect(); this._ambientNodes?.lfoGain?.disconnect(); };
     } catch {}
     this._ambientSource = null;
     this._ambientFilter = null;
+    this._ambientHighPass = null;
     this._ambientLfo = null;
     this._ambientNodes = null;
     this._ambientType = null;
@@ -305,9 +314,9 @@ export const Audio = {
 
   resume() {
     if (this._ctx && this._ctx.state === 'suspended') {
-      this._ctx.resume().then(() => {
+      return this._ctx.resume().then(() => {
         if (this._pendingScene) this.setScene(this._pendingScene);
-      }).catch(error => console.warn('[Audio] Не удалось возобновить звук:', error));
+      }).catch(error => { console.warn('[Audio] Не удалось возобновить звук:', error); });
     }
   }
 };
