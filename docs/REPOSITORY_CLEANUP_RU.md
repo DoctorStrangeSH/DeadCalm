@@ -351,3 +351,12 @@
 - Vercel Preview for latest UI HEAD is READY. Production unchanged.
 - Security scope: SHA-256 detects accidental corruption/content mismatch; without a trusted signing key it does not authenticate the sender or prevent a malicious party from recomputing the checksum. Do not describe it as a digital signature.
 - Remaining QA: manual download/import in a second browser profile, cancellation path, and reload verification.
+
+
+### Finale narrative consistency fix — 2026-11-21
+- Audit found the compromise ending falsely claimed Sebastian confessed to poisoning Harrison, while both authored Sebastian critical-choice outcomes explicitly deny/withhold any admission and no dialogue grants a confession.
+- Updated `src/js/scenes/port.js`: the compromise ending is now a closed agreement not to publish disputed Calliope materials before independent review, with a procedural opening of part of Blackwood corporate archives. It explicitly states Sebastian does not confess to poisoning Harrison.
+- Updated the finale briefing to describe independent evidence as a cumulative suspicion, not as Sebastian's corroborating words.
+- Added `tests/finale-narrative-integrity.test.mjs` to prevent unsupported confession and keep both ending choices wired to the evidence-gated GameState boundary.
+- GitHub Actions run `44901287238`: **345/345 PASS**, 0 failures, HEAD `18da2b1a2a07426ddae2780f4bc2bba1fa64a2f1`.
+- Manual playthrough of both endings remains open QA; do not mark the narrative acceptance as fully player-tested.
