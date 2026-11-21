@@ -3,7 +3,7 @@
 **Дата:** 2026-11-20  
 **Базовая ветка:** `main`  
 **Рабочая ветка:** `chore/pre-release-repository-hygiene`  
-**Статус:** безопасная уборка и статические проверки выполнены; GitHub Actions CI успешно прошёл (298/298 тестов); ручной браузерный/PWA QA остаётся открытым.
+**Статус:** безопасная уборка и статические проверки выполнены; GitHub Actions CI успешно прошёл (305/305 тестов на run `44894671507`); ручной браузерный/gameplay/PWA QA остаётся открытым.
 
 Этот документ фиксирует уборку репозитория как отдельную техническую задачу. Он не меняет игровой scope и не заменяет `docs/MASTER_GAME_SPEC_RU.md`.
 
@@ -182,8 +182,8 @@
 - В дереве проекта найдено 33 визуальных файлов: 7 фоновых WebP, 24 портрета (6 персонажей × 4 состояния) и 2 SVG-иконки PWA.
 - Крупнейший ресурс: 415862 байт (406.1 KiB); файлов с одинаковым Git blob SHA: 0.
 - Фоновые ресурсы используются сценами, картой города или общей арт-дирекцией; 24 портретных состояния перечислены в src/js/components/dialog-box.js; PWA-иконки указаны в manifest и Service Worker.
-- В репозитории нет отдельных аудиофайлов. src/js/core/audio.js пока содержит заглушки для SFX/ambient; это не проблема уборки ассетов, а незакрытая часть требования аудио 1.0 и должна оставаться открытой задачей этапа Art/UI/Audio Lock.
-- В главном меню кнопка настроек всё ещё показывает текст-заглушку; спецификация требует рабочие регуляторы музыки/эффектов и скорость текста. Это функциональный пункт 1.0, не повод расширять scope.
+- В репозитории нет отдельных аудиофайлов. `Audio` mixer теперь принимает и сохраняет уровни музыки/SFX, но `playSfx()` и `startAmbient()` пока заглушки; источники музыки, атмосферы и эффектов не реализованы. Это остаётся открытой задачей аудио 1.0.
+- Главное меню теперь содержит доступную панель настроек: громкость музыки/SFX, скорость текста, Escape/focus trap, сохранение и нормализация настроек. Настройка скорости применяется к печати диалогов. Проверено CI; визуальный браузерный QA панели ещё открыт.
 
 
 ### Проверка файлового дерева — 2026-11-21
@@ -202,7 +202,7 @@
 - [x] Зафиксировать целевой хостинг: Vercel, статическая публикация из корня origin. Это соответствует текущим абсолютным путям `/...` и не требует GitHub Pages project-subpath адаптации.
 - [x] Добавить `vercel.json`: entrypoint, manifest и Service Worker получают no-cache; Service Worker явно разрешён для корня origin.
 - [x] Добавить `tests/vercel-deployment.test.mjs` для cache headers, Service-Worker-Allowed и отсутствия выдуманного build/runtime dependency.
-- [x] Создать Vercel project `dead-calm` в команде `SherlockDS` и подключить `DoctorStrangeSH/DeadCalm` без создания deployment; production branch — `main`.
+- [x] Создать Vercel project `dead-calm` в команде `SherlockDS` и подключить `DoctorStrangeSH/DeadCalm`; feature branch получает Preview deployment.
 - [ ] Подтвердить фактический preview URL и проверить в браузере загрузку ресурсов, сохранения и PWA. Production не публиковать до RC.
 - Ручная проверка загрузки Tailwind при отключённой сети и install/update/offline Service Worker остаётся частью браузерного QA.
 
@@ -213,7 +213,7 @@
 - Добавлен `tests/vercel-deployment.test.mjs`: проверяет Vercel cache rules, Service Worker scope и отсутствие runtime/build dependency.
 - Vercel project `dead-calm` создан в team `SherlockDS` (Hobby), GitHub-репозиторий подключён. Project ID: `prj_0Zz8xgWCU80YWg8JGhoN6Nns47nx`; production branch — `main`.
 - При первом push сразу после создания Git-проекта Vercel создал bootstrap deployment `dpl_Ab5U8Hbp3KFrMXihL4cMKqEG43L4` с `target: production` и стандартным alias `dead-calm.vercel.app`; Git metadata указывает feature branch. Интеграция при создании сообщила production branch `main`.
-- Следующий push в ту же feature branch создал корректный preview deployment `dpl_8u8ZCKEjP5QSYTkVH5GbxHVLGfhG` (`target: null` в API; preview в deployment card) с отдельным branch alias. Значит последующие feature pushes маршрутизируются в Preview.
+- Последующие push в ту же feature branch создали корректные preview deployments (`target: null` в API; Preview в deployment card) с отдельным branch alias. Последний подтверждённый Preview указан ниже.
 - В качестве защиты включён SSO для **всех** deployment targets (`deploymentType: all`), включая bootstrap production alias и preview. Анонимный публичный доступ закрыт; пользовательские домены не подключались.
 - Попытка включить Vercel Deployment Policies отклонена тарифом Hobby (`pro_plan_required`); автоматическая Git production deployment policy не настраивалась. Production branch reported as `main`; перед релизом проверить её в Vercel Project Settings.
 - Preview build READY подтверждает сборку и публикацию файлов, но не заменяет ручной браузерный smoke test.
@@ -229,8 +229,19 @@
 
 ### Latest Vercel preview verification — 2026-11-21
 - Latest feature-branch deployment: `dpl_8u8ZCKEjP5QSYTkVH5GbxHVLGfhG`, state READY, preview target, commit `9cf66a86888d9c6792815caace4ddd56b7f86194`.
-- Preview URL: `https://dead-calm-3587vqq6i-sherlock-ds.vercel.app`; branch alias: `https://dead-calm-git-chore-pre-release-repository-hygiene-sherlock-ds.vercel.app`.
+- Последний Preview на момент этого аудита: `dpl_876z4rFcXyvb74ELz9pGMekZijoy`, READY, commit `d816a4e03ff5386e8ed959e437a913e6ec4d8bde`; URL `https://dead-calm-6rh9mq1tn-sherlock-ds.vercel.app`; branch alias `https://dead-calm-git-chore-pre-release-repository-hygiene-sherlock-ds.vercel.app`.
 - Bootstrap production deployment remains SSO-protected; project SSO mode is `all`. No custom domain or public release was configured.
 - Vercel Hobby does not support Deployment Policies; do not claim a Git-production policy gate exists. Verify production branch `main` in the dashboard before a release.
 - GitHub Actions run `44894131637`: **301/301 tests passed**, 0 failures. This run includes `tests/vercel-deployment.test.mjs`.
 - Browser QA is still outstanding; deployment READY is not a gameplay acceptance result.
+
+
+### Settings completion slice — 2026-11-21
+- Удалена заглушка `alert()` из кнопки настроек главного меню; добавлена панель в стиле Blackford Noir с доступными range/select controls, `aria`-диалогом, Escape, возвратом фокуса и ограничением Tab-фокуса.
+- `GameState` нормализует сохранённые настройки: громкость ограничена 0..1, неподдерживаемая скорость текста возвращается к `normal`.
+- `Audio.init(settings)` применяет сохранённые уровни к mixer gain nodes; setters ограничивают значения и игнорируют нечисловые.
+- Скорость диалогового typewriter теперь учитывает `slow` (42 ms), `normal` (25 ms), `fast` (12 ms), `instant` (0 ms); `prefers-reduced-motion` по-прежнему показывает реплику сразу.
+- Service Worker cache version повышен до `dead-calm-visual-v105`; тесты ожидают новую версию.
+- Добавлены проверки `tests/audio-settings.test.mjs`, нормализации сохранённых настроек и интеграции панели в `tests/visual-integrity.test.mjs`.
+- GitHub Actions run `44894671507`: **305/305 tests passed**, 0 failures. Vercel preview `dpl_876z4rFcXyvb74ELz9pGMekZijoy` READY на commit `d816a4e`; более новый deployment создаётся автоматически при последующих push.
+- Ограничение: реальное воспроизведение музыки/SFX/ambient не завершено — `playSfx()`/`startAmbient()` остаются заглушками, аудиоисточников в репозитории нет. Не помечать весь аудио-этап как готовый.
