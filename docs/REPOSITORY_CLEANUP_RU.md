@@ -493,3 +493,12 @@
 - Добавлен tests/campaign-main-menu-summary.test.mjs.
 - Commits: ed32e3bf, a2c20b8f.
 - CI для актуального HEAD ещё не подтверждён.
+
+
+### Staged save recovery order — 2026-11-21
+- Исправлен приоритет восстановления: последняя валидная staged-запись больше не теряется за более старой backup-копией.
+- Успешное восстановление продвигает staged в primary и сохраняет предыдущую primary в backup; при ошибке записи данные staged всё равно отдаются в память без уничтожения исходных записей.
+- Невалидная staged-запись не мешает восстановлению primary/backup.
+- Добавлен tests/storage-staged-recovery.test.mjs (4 сценария).
+- Commits: 666114c0, 6760397f.
+- CI актуального HEAD пока не подтверждён.
