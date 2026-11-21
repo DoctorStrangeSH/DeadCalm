@@ -233,6 +233,10 @@ export class InvestigationBoard {
           <small>Это возможные направления проверки, а не подтверждение гипотезы. Материалы не добавляются автоматически.</small>
           <button type="button" class="reader-theories-option" data-review-hypothesis="${this._escapeHtml(item.id)}">ПЕРЕСМОТРЕТЬ ВЕРСИЮ ↗</button>
         </aside>` : ''}
+        ${item.importReviewRequired ? `<aside class="hypothesis-audit" role="status" aria-label="Импортированная версия требует проверки">
+          <strong>ИМПОРТИРОВАННЫЙ СТАТУС НЕ ПОДТВЕРЖДЁН</strong>
+          <p>Файл сохранения не доказывает независимую проверку. Версия переведена в статус «Вероятна». Проверьте материалы и сохраните пересмотр, чтобы снять это уведомление.</p>
+        </aside>` : ''}
         <aside class="hypothesis-audit" aria-label="Проверка опорных улик">
           <strong>АНАЛИЗ ДОКАЗАТЕЛЬСТВ</strong>
           <p>${audit.attached === 0 ? 'Пока нет опорных улик: версия требует проверки.'
