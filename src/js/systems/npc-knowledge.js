@@ -40,7 +40,11 @@ function isValidEntry(entry) {
     typeof entry.claimRef === 'string' && !!entry.claimRef.trim() &&
     SOURCE_TYPES.has(entry.sourceType) && KNOWLEDGE_STATES.has(entry.state) &&
     typeof entry.provenance === 'string' && !!entry.provenance.trim() &&
-    (entry.sourceNpcId == null || (typeof entry.sourceNpcId === 'string' && !!entry.sourceNpcId.trim()));
+    (entry.sourceNpcId == null || (
+      typeof entry.sourceNpcId === 'string' && !!entry.sourceNpcId.trim() &&
+      entry.sourceNpcId !== entry.npcId && Array.isArray(entry.sourceRefs) &&
+      entry.sourceRefs.some(ref => typeof ref === 'string' && !!ref.trim())
+    ));
 }
 
 export function normalizeKnowledgeLedger(value) {
@@ -74,7 +78,8 @@ export function recordNpcKnowledge(ledger, input) {
       !SOURCE_TYPES.has(sourceType) || !KNOWLEDGE_STATES.has(state) ||
       typeof provenance !== 'string' || !provenance.trim() ||
       (sourceNpcId !== null && (typeof sourceNpcId !== 'string' || !sourceNpcId.trim())) ||
-      sourceNpcId === npcId) return null;
+      sourceNpcId === npcId ||
+      (sourceNpcId !== null && !cleanRefs(input.sourceRefs).length)) return null;
 
   const id = typeof input.id === 'string' && input.id.trim()
     ? input.id.trim()
