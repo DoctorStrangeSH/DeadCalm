@@ -2,6 +2,8 @@ import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { recordCase001MiniGameEvidence } from '../systems/case-001-evidence.js';
 import { adjustFilmTransport, advanceFilm, createFilmRestorationSession, getFilmRestorationSummary, restoreFilmFrame, testFilmProjection } from '../systems/film-restoration.js';
+import { canAccessCase001MiniGame } from '../systems/minigame-access.js';
+import { renderMiniGameLockScreen } from '../components/minigame-lock-screen.js';
 
 const DEFECTS = {
   dust: { title:'ПЫЛЬ НА ЭМУЛЬСИИ', text:'Удалите частицы мягкими короткими движениями. Слишком сильное давление повредит поверхность.', action:'clean', min:0, max:60, step:1, value:28, unit:'ДАВЛЕНИЕ', button:'ОЧИСТИТЬ КАДР', success:'Пыль снята. Эмульсия осталась целой.', failure:'Слишком сильное давление оставило след на эмульсии.' },
@@ -10,6 +12,10 @@ const DEFECTS = {
 };
 
 export function render(container) {
+  if (!canAccessCase001MiniGame('film-restoration', GameState)) {
+    renderMiniGameLockScreen(container, 'АРХИВНАЯ КИНОПЛЁНКА', 'Сначала получите вещи Маркуса от Анны, затем восстановите ключ из карманных часов в мастерской. Он откроет доступ к спрятанной катушке.');
+    return;
+  }
   const session = createFilmRestorationSession({ id:'blackford_archive_reel_01' });
   let completed = false;
 
