@@ -2,6 +2,10 @@ import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { isLocationUnlocked } from '../systems/location-access.js';
 
+// A city-map scene can be opened repeatedly inside the same persistent container.
+// Keep one delegated click listener per container to avoid stale Map instances.
+const containerClickHandlers = new WeakMap();
+
 /** Интерактивный атлас Блэкфорда. Открытость локаций задаётся locations.json. */
 export class Map {
   constructor(container, locations) {
@@ -41,10 +45,15 @@ export class Map {
         <p class="text-gray-500 text-xs text-center">Выберите локацию на карте или в списке</p>
       </div>
     `;
-    this.container.addEventListener('click', event => {
+    const previousHandler = containerClickHandlers.get(this.container);
+    if (previousHandler) this.container.removeEventListener('click', previousHandler);
+
+    const handler = event => {
       const button = event.target.closest('[data-location]');
       if (button && this.container.contains(button)) this._selectLocation(button.dataset.location);
-    });
+    };
+    containerClickHandlers.set(this.container, handler);
+    this.container.addEventListener('click', handler);
   }
 
   _renderLocation(loc) {
