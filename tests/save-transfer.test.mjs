@@ -86,3 +86,21 @@ test('legacy payload is migrated during import and retains unknown fields', asyn
   assert.equal(parsed.data.schemaVersion, CURRENT_SAVE_VERSION);
   assert.equal(parsed.data.currentCase.legacyNote, 'retain me');
 });
+
+
+test('structurally invalid payload is rejected even when its checksum is valid', async () => {
+  const file = await createSaveFile(sampleSave());
+  file.payload.currentCase.clues = 'not-an-array';
+  const { createHash } = await import('node:crypto');
+  const canonical = value => {
+    if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
+    if (value && typeof value === 'object') return '{' + Object.keys(value).sort().map(k => JSON.stringify(k) + ':' + canonical(value[k])).join(',') + '}';
+    return JSON.stringify(value);
+  };
+  file.checksum = createHash('sha256').update(canonical(file.payload)).digest('hex');
+
+  const parsed = await parseSaveFile(file);
+  assert.equal(parsed.status, 'invalid');
+  assert.equal(parsed.reason, 'invalid-payload-shape');
+  assert.equal('data' in parsed, false);
+});
