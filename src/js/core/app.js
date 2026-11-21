@@ -78,6 +78,7 @@ async function init() {
   // Смена сцены и соответствующая музыка/атмосфера.
   Events.on('scene:changed', function(data) {
     Audio.setScene(data.scene);
+    if (GameState.campaign?.completed) Audio.playMusic('finale');
     console.log('[Scene] Переход: ' + data.scene);
   });
 
