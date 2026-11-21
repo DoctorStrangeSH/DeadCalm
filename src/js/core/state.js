@@ -171,7 +171,7 @@ export var GameState = {
     if (this.campaign.completed || this.campaign.day !== 5) return false;
     if (!['open_case', 'price_of_silence'].includes(ending)) return false;
     const evidence = assessFinalEvidence(this);
-    if (ending === 'open_case' ? !evidence.publicReady : !evidence.ready) return false;
+    if (ending === 'open_case' ? !evidence.fullDisclosureReady : !evidence.ready) return false;
     this.campaign.completed = true;
     this.campaign.ending = ending;
     this.save();
