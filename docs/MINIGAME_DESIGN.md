@@ -157,9 +157,11 @@ Do not claim a mini-game is playable until it is integrated into the actual game
 - [x] Неразборчивый радиосигнал не выдаёт улику; порог соответствует классу сигнала.
 - [ ] Ручной браузерный прогон всех трёх сцен на desktop.
 - [ ] Ручной прогон узкого мобильного viewport и touch-управления.
-- [ ] Проверка фокуса/клавиатуры, reduced motion и читаемости статусов.
+- [x] Реализированы видимый клавиатурный фокус, reduced-motion правила, озвучивание статусов/прогресса и touch targets от 44 px.
+- [ ] Ручная проверка клавиатуры, экранного диктора, reduced motion и touch-жестов в браузере.
 - [ ] Решение по финальному визуалу и звуку: завершить в рамках 1.0 либо явно исключить конкретные необязательные элементы без расширения scope.
 
 
+- **Accessibility baseline:** видимый `:focus-visible` для интерактивных элементов, 44 px для кнопок, 22 px для ползунков, вертикальная прокрутка не блокируется жестом на range controls; статусы эфира объявляются через `aria-live`, шкалы эфира и реставрации размечены как `progressbar`. CSS учитывает `prefers-reduced-motion`.
 - **Offline integration:** `minigame-access.js` и `minigame-lock-screen.js` включены в Service Worker precache; cache key обновлён до `dead-calm-visual-v104`. `tests/service-worker-assets.test.mjs` проверяет оба пути.
-- Последний CI после обновления precache: run `44873829358`, **298/298, 0 failures**.
+- Последний CI после обновления precache: run `44874881467`, **299/299, 0 failures**.
