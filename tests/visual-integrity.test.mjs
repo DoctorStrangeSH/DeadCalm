@@ -56,7 +56,7 @@ test('PWA cache includes visual styles, map data and the new image assets', () =
   for (const scene of ['church.js', 'blackwood-mansion.js', 'holt-house.js', 'port.js']) {
     assert.ok(sw.includes(`/src/js/scenes/${scene}`), `PWA cache missing ${scene}`);
   }
-  assert.ok(sw.includes('dead-calm-visual-v104'), 'new story scenes require a new cache version');
+  assert.ok(sw.includes('dead-calm-visual-v105'), 'new story scenes require a new cache version');
   assert.ok(sw.includes("self.addEventListener('activate'"), 'old PWA caches should be cleared');
 });
 
@@ -181,4 +181,25 @@ test('mini-games expose keyboard focus, touch-sized controls and announced progr
   assert.match(radio, /setAttribute\('aria-valuenow'/);
   assert.match(film, /role="progressbar"/);
   assert.match(repair, /aria-live="polite"/);
+});
+
+
+test('main-menu settings are accessible, persistent and wired to dialogue pacing', () => {
+  const menu = read('src/js/scenes/main-menu.js');
+  const state = read('src/js/core/state.js');
+  const audio = read('src/js/core/audio.js');
+  const dialog = read('src/js/components/dialog-box.js');
+  const css = read('src/css/art-direction.css');
+  assert.ok(menu.includes('role="dialog" aria-modal="true"'), 'settings must be a modal dialog');
+  assert.ok(menu.includes('id="settings-music"') && menu.includes('id="settings-sfx"'), 'both volume controls must exist');
+  assert.ok(menu.includes('id="settings-text-speed"'), 'text speed control must exist');
+  assert.ok(menu.includes("event.key === 'Escape'"), 'settings must close with Escape');
+  assert.ok(menu.includes('settingsDialog.querySelectorAll'), 'settings must keep keyboard focus inside the modal');
+  assert.ok(menu.includes('GameState.save()'), 'settings changes must persist');
+  assert.ok(state.includes('function normalizeSettings(settings)'), 'saved settings must be normalized');
+  assert.ok(audio.includes('this._musicGain.gain.value = this._musicVolume'), 'music mixer must apply its saved level');
+  assert.ok(audio.includes('this._sfxGain.gain.value = this._sfxVolume'), 'SFX mixer must apply its saved level');
+  assert.ok(dialog.includes('textDelays') && dialog.includes('GameState.settings?.textSpeed'), 'dialogue typewriter must use the selected text speed');
+  assert.ok(css.includes('.settings-panel') && css.includes('.settings-control :focus-visible'), 'settings must use the project style and visible keyboard focus');
+  assert.ok(!menu.includes('alert(message)'), 'settings placeholder alert must be removed');
 });
