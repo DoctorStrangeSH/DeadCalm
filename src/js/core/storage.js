@@ -72,6 +72,18 @@ export var Storage = {
     }
   },
 
+  hasAnyRecord(key) {
+    var storageKey = this.PREFIX + key;
+    try {
+      return localStorage.getItem(storageKey) !== null ||
+        localStorage.getItem(storageKey + this.BACKUP_SUFFIX) !== null ||
+        localStorage.getItem(storageKey + this.PENDING_SUFFIX) !== null;
+    } catch (error) {
+      console.error('[Storage] Ошибка проверки записей сохранения "' + key + '":', error);
+      return true;
+    }
+  },
+
   exists(key) {
     var storageKey = this.PREFIX + key;
     try {
