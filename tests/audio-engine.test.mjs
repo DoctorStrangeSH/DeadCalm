@@ -24,7 +24,7 @@ class FakeBufferSource extends FakeNode {
   stop(time) { this.stoppedAt = time; }
 }
 class FakeAudioContext {
-  constructor() { this.state = 'running'; this.currentTime = 10; this.sampleRate = 8000; this.destination = {}; this.oscillators = []; this.sources = []; }
+  constructor() { this.state = 'running'; this.currentTime = 0; this.sampleRate = 8000; this.destination = {}; this.oscillators = []; this.sources = []; }
   createGain() { return new FakeNode(); }
   createOscillator() { const node = new FakeOscillator(); this.oscillators.push(node); return node; }
   createBiquadFilter() { const node = new FakeNode(); node.type = 'lowpass'; return node; }
