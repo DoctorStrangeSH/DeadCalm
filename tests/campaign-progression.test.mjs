@@ -136,7 +136,11 @@ test('final evidence dossier explains both findings and limits without overstati
   assert.match(autopsy.limit, /не устанавливает, кто приобрёл яд/);
   assert.match(poison.limit, /Получатель препарата/);
   assert.match(timeline.limit, /не устанавливают личность убийцы/);
-  assert.equal(dossier.length, 8);
+  assert.equal(dossier.length, 9);
+  const charge = dossier.find(item => item.title === 'Основание для официального обвинения');
+  assert.match(charge.finding, /даёт основания предъявить официальное обвинение/);
+  assert.match(charge.limit, /не судебный приговор/);
+  assert.match(charge.limit, /не установлены/);
 });
 
 test('partial film is described as unidentified and does not become proof of identity', () => {
