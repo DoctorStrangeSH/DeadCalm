@@ -212,5 +212,15 @@
 - Добавлен `vercel.json` с no-cache для `/`, `/index.html`, `/manifest.json`, `/sw.js`, а также `Service-Worker-Allowed: /` для SW.
 - Добавлен `tests/vercel-deployment.test.mjs`: проверяет Vercel cache rules, Service Worker scope и отсутствие runtime/build dependency.
 - Vercel project `dead-calm` создан в team `SherlockDS` (Hobby), GitHub-репозиторий подключён. Project ID: `prj_0Zz8xgWCU80YWg8JGhoN6Nns47nx`; production branch — `main`.
-- Проект создан в режиме link-only: deployment не создавался, production не менялся, домены пока не назначены. Preview deployments защищены SSO (`all_except_custom_domains`).
-- Следующий push в feature branch создаст preview deployment; production deploy возможен только из `main`. Preview URL, доступность и браузерный QA остаются открытыми.
+- Проект создан в режиме link-only, но последующий push документационного коммита в feature branch автоматически создал deployment `dpl_Ab5U8Hbp3KFrMXihL4cMKqEG43L4` со статусом READY. Vercel API пометил его `target: production` и назначил стандартные алиасы `dead-calm.vercel.app` и branch alias, хотя Git ref в metadata — `chore/pre-release-repository-hygiene`; причина расхождения требует проверки в настройках Git production branch.
+- В качестве немедленной защиты включён SSO для **всех** deployment targets (`deploymentType: all`); публичный анонимный доступ не должен быть доступен. Пользовательские домены не подключались.
+- Попытка включить Vercel Deployment Policies отклонена тарифом Hobby (`pro_plan_required`); поэтому нельзя заявлять, что Git production deploys технически заблокированы политикой. Не делать новых push-коммитов в эту ветку до проверки production branch в Vercel UI; не назначать пользовательский домен и не продвигать релиз.
+- Доступ к deployment и его фактический браузерный smoke test остаются открытыми; текущий статус READY подтверждает только сборку/публикацию файлов.
+
+
+### Vercel deployment protection follow-up — 2026-11-21
+- GitHub Actions run `44894131637` completed successfully; regression suite including the new Vercel config tests passed.
+- Vercel deployment `dpl_Ab5U8Hbp3KFrMXihL4cMKqEG43L4` is READY from commit `78ac6723a82e45ca30387088de7f481e9ebbfd50` (feature branch). Vercel API reports `target: production` and attached default aliases; this is an unexpected target/branch mismatch and must be resolved before further automatic deployments.
+- SSO protection was changed from `all_except_custom_domains` to `all`, covering default aliases and any future custom domain until deliberately changed.
+- Deployment Policies are unavailable on current Hobby plan (`403 pro_plan_required`). This limitation is explicit; do not claim Git production deployment prevention is configured.
+- No production release was intentionally promoted, no custom domain was added, and no manual browser QA has been completed.
