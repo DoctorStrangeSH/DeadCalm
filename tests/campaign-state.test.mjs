@@ -126,7 +126,9 @@ test('finale completion enforces ending-specific evidence at the state boundary'
 
     setFinaleState([...baseEvidence, { id: 'port_radio_fragment' }].map(item => typeof item === 'string' ? { id: item } : item));
     assert.equal(GameState.completeCampaign('open_case'), false, 'radio evidence alone cannot support a public accusation');
-    assert.equal(GameState.completeCampaign('price_of_silence'), true, 'radio evidence plus the complete case file supports the compromise');
+    assert.equal(GameState.completeCampaign('price_of_silence'), false, 'the compromise ending must not bypass the sealed confession exhibit');
+    GameState.currentCase.clues.push({ id: 'sebastian_sealed_confession' });
+    assert.equal(GameState.completeCampaign('price_of_silence'), true, 'radio evidence, the complete case file and sealed confession support the compromise');
 
     setFinaleState([...baseEvidence.map(id => ({ id })), { id: 'restored_film_frame', quality: 70 }]);
     assert.equal(GameState.completeCampaign('open_case'), false, 'a partial frame cannot support a public accusation');
@@ -156,7 +158,7 @@ test('both finale choices persist through save import and cannot be switched aft
   try {
     Storage.save = () => true;
     for (const scenario of [
-      { ending: 'price_of_silence', extra: [{ id: 'port_radio_fragment' }] },
+      { ending: 'price_of_silence', extra: [{ id: 'port_radio_fragment' }, { id: 'sebastian_sealed_confession' }] },
       { ending: 'open_case', extra: [{ id: 'restored_film_frame', quality: 100 }] }
     ]) {
       GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
