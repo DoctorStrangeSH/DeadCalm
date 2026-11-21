@@ -192,3 +192,17 @@ test('court register interview requires prior evidence and trust, but formal req
     DialogueEngine._askedQuestions = previousAsked;
   }
 });
+
+
+test('one clue repeated twice cannot manufacture a contradiction requiring two independent facts', () => {
+  const duplicateRule = [{ id: 'fake_conflict', clueIds: ['a', 'a'], summary: 'Невозможное противоречие' }];
+  assert.deepEqual(findContradictions({ clueIds: ['a'] }, [{ id: 'a' }], duplicateRule), []);
+  assert.deepEqual(findContradictions({ clueIds: ['a', 'a'] }, [{ id: 'a' }, { id: 'a' }], duplicateRule), []);
+});
+
+test('malformed case and clue collections fail closed instead of throwing', () => {
+  assert.deepEqual(findContradictions(null, discovered, rules), []);
+  assert.deepEqual(findContradictions({ clueIds: ['a', 'b'] }, null, rules), []);
+  assert.deepEqual(findContradictions({ clueIds: ['a', 'b'] }, [{ id: null }, null], rules), []);
+  assert.deepEqual(findContradictions({ clueIds: ['a', 'b'] }, discovered, null), []);
+});
