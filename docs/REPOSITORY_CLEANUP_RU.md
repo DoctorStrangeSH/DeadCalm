@@ -262,3 +262,6 @@
 - AudioContext разблокируется только первым pointer/keyboard жестом; при уходе вкладки suspend, при возвращении resume и восстановление сцены. В финале включается отдельная музыкальная тема.
 - Исправлен уровень ambient bus: он должен быть unity gain, а уровень каждого профиля задаётся его локальным envelope. Убрана неиспользуемая зависимость Events из audio core.
 - CI: запуск `44896211670` ожидает выполнения на исходном коммите теста; проверить свежий head и исправить все падения перед отметкой. Последний подтверждённый Preview до этой корректировки: READY, commit `76fac8c`.
+
+- Follow-up lifecycle hardening: old ambience callbacks capture their own filter/gain nodes before a scene switch, so delayed `onended` cleanup cannot disconnect the newly started location ambience. Sustained music filters are also disconnected after fade-out.
+- Mini-game-specific clicks use a distinct short mechanical cue; sliders retain a rate-limited adjustment tick.
