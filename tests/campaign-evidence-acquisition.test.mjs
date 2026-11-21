@@ -135,6 +135,10 @@ test('the two independent day-four evidence routes are actually wired to their m
   assert.equal(buildCase001MiniGameEvidence('film-restoration', { quality: 70 }).id, 'restored_film_frame');
   assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'unreadable', quality: 67 }), null,
     'an unreadable signal must never become a story clue');
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'unreadable', quality: 68 }), null,
+    'the outcome classification must agree with the evidence quality gate');
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 67 }), null,
+    'a fragmented label cannot bypass the minimum signal quality');
   assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 68 }).id, 'port_radio_fragment',
     'a fragmentary but intelligible signal may become a qualified clue');
   assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 92 }).id, 'port_radio_fragment');
