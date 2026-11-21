@@ -131,8 +131,10 @@ test('the two independent day-four evidence routes are actually wired to their m
 
   assert.match(filmScene, /recordCase001MiniGameEvidence\(GameState, 'film-restoration'/);
   assert.match(radioScene, /recordCase001MiniGameEvidence\(GameState, 'radio-tuning'/);
-  assert.equal(buildCase001MiniGameEvidence('film-restoration', { quality: 69 }), null);
-  assert.equal(buildCase001MiniGameEvidence('film-restoration', { quality: 70 }).id, 'restored_film_frame');
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'partial', quality: 69 }), null);
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'partial', quality: 70 }).id, 'restored_film_frame');
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'success', quality: 95 }).id, 'restored_film_frame');
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'success', quality: 94 }), null);
   assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'unreadable', quality: 67 }), null,
     'an unreadable signal must never become a story clue');
   assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'unreadable', quality: 68 }), null,
@@ -142,7 +144,7 @@ test('the two independent day-four evidence routes are actually wired to their m
   assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 68 }).id, 'port_radio_fragment',
     'a fragmentary but intelligible signal may become a qualified clue');
   assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 92 }).id, 'port_radio_fragment');
-  assert.match(evidence, /if \(type === 'film-restoration' && !\(Number\(result\.quality\) >= 70\)\) return null/);
-  assert.match(evidence, /Number\(result\.quality\) >= 68/);
-  assert.match(evidence, /includes\(result\.outcome\)/);
+  assert.match(evidence, /result\.outcome === 'success' && reportedQuality < 95/);
+  assert.match(evidence, /result\.outcome === 'fragmented'/);
+  assert.match(evidence, /Number\.isFinite\(reportedQuality\)/);
 });
