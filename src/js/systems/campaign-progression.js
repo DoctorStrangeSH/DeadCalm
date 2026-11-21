@@ -80,7 +80,16 @@ export function assessFinalEvidence(gameState) {
   const hasIndependentRecord = gameState.hasClue('restored_film_frame') || gameState.hasClue('port_radio_fragment');
   if (!hasIndependentRecord) missing.push('Независимый фрагмент плёнки или радиозаписи');
   const filmQuality = Number(gameState.getClue?.('restored_film_frame')?.quality || 0);
-  return { ready: missing.length === 0, publicReady: missing.length === 0 && filmQuality >= 95, missing, filmQuality };
+  const fullDisclosureReady = missing.length === 0 && filmQuality >= 95;
+  return {
+    ready: missing.length === 0,
+    fullDisclosureReady,
+    // Backward-compatible alias. This gate controls full public disclosure of the case file,
+    // not proof that Sebastian personally administered the poison.
+    publicReady: fullDisclosureReady,
+    missing,
+    filmQuality
+  };
 }
 
 
