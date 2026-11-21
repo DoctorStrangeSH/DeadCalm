@@ -190,7 +190,7 @@ export const Audio = {
       gain.connect(this._musicGain);
       oscillator.start(start);
       oscillator.stop(start + 2.7);
-      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); filter.disconnect(); };
+      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
     }, 3400);
   },
 
