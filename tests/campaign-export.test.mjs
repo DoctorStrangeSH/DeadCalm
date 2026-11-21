@@ -101,3 +101,96 @@ test('GameState.init restores both saved finale outcomes after reload', () => {
     Object.assign(GameState, original);
   }
 });
+
+
+test('GameState export includes schema version and detached copies of every campaign subsystem', () => {
+  const original = preserveState();
+  try {
+    GameState.currentCase = {
+      id: 'case_001',
+      clues: [{ id: 'clue_export' }],
+      suspects: [{ id: 'suspect_export' }],
+      timeline: [{ id: 'timeline_export' }],
+      hypotheses: [{ id: 'hypothesis_export', history: [{ status: 'possible' }] }]
+    };
+    GameState.flags = { day_4: true };
+    GameState.relationships = { anna_holt: { trust: 64 } };
+    GameState.notebook = [{ id: 'note_export', text: 'Evidence note' }];
+
+    const exported = GameState.export();
+    assert.equal(exported.schemaVersion, 1);
+    assert.deepEqual(exported.currentCase, GameState.currentCase);
+    assert.deepEqual(exported.flags, GameState.flags);
+    assert.deepEqual(exported.relationships, GameState.relationships);
+    exported.currentCase.hypotheses[0].history[0].status = 'changed';
+    exported.flags.day_4 = false;
+    exported.relationships.anna_holt.trust = 0;
+    assert.equal(GameState.currentCase.hypotheses[0].history[0].status, 'possible');
+    assert.equal(GameState.flags.day_4, true);
+    assert.equal(GameState.relationships.anna_holt.trust, 64);
+  } finally {
+    Object.assign(GameState, original);
+  }
+});
+
+test('GameState import commits to storage before changing the live campaign', () => {
+  const original = preserveState();
+  const originalSave = Storage.save;
+  const incoming = {
+    schemaVersion: 1,
+    player: { name: 'Imported Detective', reputation: 88 },
+    currentCase: { id: 'case_001', clues: [{ id: 'imported_clue' }], suspects: [], timeline: [], hypotheses: [] },
+    campaign: { caseId: 'case_001', day: 4, completed: false, ending: null },
+    flags: { imported_flag: true },
+    relationships: { anna_holt: { trust: 72 } },
+    npcMemory: {},
+    socialGraph: { ties: [], events: [] },
+    knowledgeLedger: { entries: [] },
+    npcDailyLife: { schedules: [], occurrences: [] },
+    miniGameProgress: {},
+    notebook: [{ id: 'imported_note', text: 'Imported note' }],
+    settings: { musicVolume: 0.3, sfxVolume: 0.5, textSpeed: 'fast' }
+  };
+  let stored = null;
+
+  try {
+    Storage.save = (key, value) => {
+      assert.equal(key, 'gameState');
+      stored = structuredClone(value);
+      return true;
+    };
+    assert.equal(GameState.importSave(incoming), true);
+    assert.deepEqual(stored, incoming);
+    assert.equal(GameState.player.name, 'Imported Detective');
+    assert.equal(GameState.campaign.day, 4);
+    assert.equal(GameState.currentCase.clues[0].id, 'imported_clue');
+    assert.equal(GameState.flags.imported_flag, true);
+    assert.equal(GameState.notebook[0].id, 'imported_note');
+  } finally {
+    Storage.save = originalSave;
+    Object.assign(GameState, original);
+  }
+});
+
+test('failed import storage write leaves the current in-memory campaign untouched', () => {
+  const original = preserveState();
+  const originalSave = Storage.save;
+  const before = GameState.export();
+  try {
+    Storage.save = () => false;
+    const incoming = {
+      schemaVersion: 1,
+      player: { name: 'Do not apply', reputation: 1 },
+      currentCase: { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] },
+      campaign: { caseId: 'case_001', day: 1, completed: false, ending: null },
+      flags: {}, relationships: {}, npcMemory: {}, socialGraph: { ties: [], events: [] },
+      knowledgeLedger: { entries: [] }, npcDailyLife: { schedules: [], occurrences: [] },
+      miniGameProgress: {}, notebook: [], settings: { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' }
+    };
+    assert.equal(GameState.importSave(incoming), false);
+    assert.deepEqual(GameState.export(), before);
+  } finally {
+    Storage.save = originalSave;
+    Object.assign(GameState, original);
+  }
+});
