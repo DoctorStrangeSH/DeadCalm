@@ -111,3 +111,26 @@ test('revision comparison reports evidence, status and reasoning changes', () =>
   assert.equal(compareHypothesisRevisions(first.history), null);
   assert.equal(compareHypothesisRevisions([null, {}]), null);
 });
+
+
+test('a player cannot manually promote an unconfirmed hypothesis to confirmed', () => {
+  const draft = createHypothesis({ id: 'h', title: 'Версия', reasoning: 'Проверяемое предположение', clueIds: ['autopsy'] }, evidence, '2026-11-21');
+  assert.throws(
+    () => reviseHypothesis(draft, { status: 'confirmed' }, evidence, '2026-11-21T01:00:00Z'),
+    /Нельзя подтвердить версию вручную/
+  );
+  assert.equal(draft.status, 'unchecked');
+  assert.equal(draft.history.length, 1);
+});
+
+test('legacy confirmed hypotheses remain readable and can be downgraded, not re-certified', () => {
+  const legacy = createHypothesis({ id: 'legacy', title: 'Старая версия', reasoning: 'Старое сохранение' }, evidence, '2026-01-01');
+  const imported = { ...legacy, status: 'confirmed', history: [...legacy.history, {
+    at: '2026-01-02', type: 'revised', status: 'confirmed', clueIds: [], reasoning: legacy.reasoning, title: legacy.title
+  }] };
+  assert.throws(() => reviseHypothesis({ ...legacy, status: 'unchecked' }, { status: 'confirmed' }, evidence),
+    /Нельзя подтвердить версию вручную/);
+  const downgraded = reviseHypothesis(imported, { status: 'probable' }, evidence, '2026-01-03');
+  assert.equal(downgraded.status, 'probable');
+  assert.equal(downgraded.history.at(-1).status, 'probable');
+});
