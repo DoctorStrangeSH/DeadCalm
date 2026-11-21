@@ -374,3 +374,11 @@
 - Two initial test-only assumptions were corrected against actual authored data/closed-topic behavior: the source contains 14 (not 15) branches; a closed topic may return no `questions` array, which is also a valid no-reoffer result.
 - Final CI run `44902111642`: **347/347 tests passed**, 0 failures, HEAD `a034a68fea7ae517b751d797df536db1120983b9`.
 - Manual browser playthrough remains open; automated persistence coverage is not described as manual acceptance.
+
+
+### Cross-character knowledge and relationship persistence audit — 2026-11-21
+- Added `tests/npc-cross-character-persistence.test.mjs` covering an explicitly authored family tie (Anna is Markus's adoptive daughter, grounded in `characters.json`) and an explicitly attributed interview knowledge record for Marta sourced from Anna.
+- Verified save/export/import preserves tie status and evidence refs, knowledge recipient/source IDs, source type, corroborated state and state history. Verified the knowledge record is not automatically copied to the source NPC or unrelated NPCs.
+- Test fixture was corrected to avoid inventing an unsupported sibling relation or an unrecorded NPC-to-NPC event; no new story content or production relationship was seeded.
+- Latest code CI run `44902367935`: **348/348 passed**, 0 failures on HEAD `1498512d96b24b1d37930e3021bea14e10eb5839`.
+- Important scope boundary: social graph and knowledge ledger are persistence/data APIs, not a completed cross-NPC consequence system. Producers/consumers that propagate authored knowledge or change other NPCs' dialogue based on the player's choices remain open; do not infer these from proximity or rumor.
