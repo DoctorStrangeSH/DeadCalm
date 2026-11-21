@@ -160,7 +160,10 @@ test('GameState import commits to storage before changing the live campaign', ()
       return true;
     };
     assert.equal(GameState.importSave(incoming), true);
-    assert.deepEqual(stored, incoming);
+    assert.deepEqual(stored, {
+      ...incoming,
+      flags: { imported_flag: true, day_2: true, day_3: true, day_4: true }
+    });
     assert.equal(GameState.player.name, 'Imported Detective');
     assert.equal(GameState.campaign.day, 4);
     assert.equal(GameState.currentCase.clues[0].id, 'imported_clue');
