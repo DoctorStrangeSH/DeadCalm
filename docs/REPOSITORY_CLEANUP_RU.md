@@ -202,7 +202,7 @@
 - [x] Зафиксировать целевой хостинг: Vercel, статическая публикация из корня origin. Это соответствует текущим абсолютным путям `/...` и не требует GitHub Pages project-subpath адаптации.
 - [x] Добавить `vercel.json`: entrypoint, manifest и Service Worker получают no-cache; Service Worker явно разрешён для корня origin.
 - [x] Добавить `tests/vercel-deployment.test.mjs` для cache headers, Service-Worker-Allowed и отсутствия выдуманного build/runtime dependency.
-- [ ] Создать/подключить Vercel project без публикации production и подтвердить Git-интеграцию; проверить preview deployment только после согласования branch/commit.
+- [x] Создать Vercel project `dead-calm` в команде `SherlockDS` и подключить `DoctorStrangeSH/DeadCalm` без создания deployment; production branch — `main`.
 - [ ] Подтвердить фактический preview URL и проверить в браузере загрузку ресурсов, сохранения и PWA. Production не публиковать до RC.
 - Ручная проверка загрузки Tailwind при отключённой сети и install/update/offline Service Worker остаётся частью браузерного QA.
 
@@ -211,5 +211,6 @@
 - Выбран Vercel как целевой хостинг: приложение является статическим ES-module сайтом без runtime npm dependencies и build step; root-origin размещение совместимо с текущими путями и Service Worker scope.
 - Добавлен `vercel.json` с no-cache для `/`, `/index.html`, `/manifest.json`, `/sw.js`, а также `Service-Worker-Allowed: /` для SW.
 - Добавлен `tests/vercel-deployment.test.mjs`: проверяет Vercel cache rules, Service Worker scope и отсутствие runtime/build dependency.
-- Vercel account context: team `SherlockDS` (Hobby); репозиторий DeadCalm пока не числится среди linked projects. Никакой deployment не создан и production не менялся.
-- Следующий gate: связать репозиторий с Vercel без production deployment, затем открыть preview только для тестирования утверждённого commit.
+- Vercel project `dead-calm` создан в team `SherlockDS` (Hobby), GitHub-репозиторий подключён. Project ID: `prj_0Zz8xgWCU80YWg8JGhoN6Nns47nx`; production branch — `main`.
+- Проект создан в режиме link-only: deployment не создавался, production не менялся, домены пока не назначены. Preview deployments защищены SSO (`all_except_custom_domains`).
+- Следующий push в feature branch создаст preview deployment; production deploy возможен только из `main`. Preview URL, доступность и браузерный QA остаются открытыми.
