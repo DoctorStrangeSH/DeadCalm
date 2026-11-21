@@ -487,3 +487,15 @@ Autosave — по завершении значимых сцен и при бе�
 - [x] Added regression tests for duplicate clue IDs, duplicated discovered records, malformed input collections, and null clue records.
 - GitHub Actions run `44902590231`: **350/350 PASS**, 0 failures, HEAD `9f277c1e4238a6cd1e6f25f40f8a17ee6c5c8c3a`.
 - [ ] Further investigation audit remains: ensure player-facing hypothesis status `confirmed` cannot be assigned without sufficient independent evidence; inspect actual UI and persistence call path before changing the rule.
+
+
+### Защита статуса подтверждения гипотезы — 2026-11-21
+
+- [x] Проверен путь интерфейс → `GameState.reviseHypothesis()` → `reviseHypothesis()` → история версии → сохранение.
+- [x] Найдена возможность вручную назначить `confirmed` через выпадающий список; защита только на UI недостаточна.
+- [x] Добавлен запрет на перевод любой неподтверждённой гипотезы в `confirmed` на уровне доменной функции `reviseHypothesis()`. Обход через прямой вызов GameState закрыт.
+- [x] В интерфейсе статус `confirmed` исключён из доступных новых оценок. Старые сохранения со статусом `confirmed` остаются читаемыми, помечаются «Подтверждена (ранее сохранено)» и не могут быть повторно назначены после понижения статуса.
+- [x] Добавлены тесты: ручное повышение отклоняется без изменения истории; legacy confirmed можно прочитать и понизить; после понижения повторное ручное подтверждение запрещено.
+- [ ] Автоматический переход в `confirmed` пока не реализован: до утверждения формальных правил независимости/достаточности доказательств система не должна сама объявлять версию доказанной.
+- [ ] Финальное обвинение должно проверять доказательную базу отдельно и не полагаться только на текстовый статус гипотезы.
+- CI run `44902916208` для HEAD `3d580207090aa12b7eb9487661e08ad6ea8e4254`: ожидает завершения.
