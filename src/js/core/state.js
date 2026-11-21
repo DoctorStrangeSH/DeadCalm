@@ -417,12 +417,7 @@ export var GameState = {
     return {
       player: Object.assign({}, this.player),
       campaign: Object.assign({}, this.campaign),
-      currentCase: {
-        id: this.currentCase.id,
-        clues: this.currentCase.clues.slice(),
-        suspects: this.currentCase.suspects.slice(),
-        timeline: this.currentCase.timeline.slice()
-      },
+      currentCase: JSON.parse(JSON.stringify(this.currentCase)),
       flags: Object.assign({}, this.flags),
       relationships: Object.assign({}, this.relationships),
       npcMemory: JSON.parse(JSON.stringify(this.npcMemory)),
