@@ -118,3 +118,15 @@ export function getFilmRestorationSummary(session) {
     outcome: session.outcome
   };
 }
+
+/**
+ * Whether the transport control can advance the reel or start its final projection.
+ * Projection is a valid next action after the final frame has been restored.
+ */
+export function canAdvanceFilm(session) {
+  if (!session || !Array.isArray(session.frames)) return false;
+  const safe = session.tension >= 35 && session.tension <= 62 && session.speed <= 2;
+  if (session.phase === 'projection') return safe;
+  if (session.phase !== 'transport') return false;
+  return Boolean(session.frames[session.frameIndex]?.restored) && safe;
+}
