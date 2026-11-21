@@ -141,8 +141,8 @@ export const Audio = {
       try {
         voice.gain.gain.cancelScheduledValues(now);
         voice.gain.gain.setTargetAtTime(0.0001, now, 0.22);
-        voice.oscillator.onended = () => { voice.oscillator.disconnect(); voice.gain.disconnect(); };
-      voice.oscillator.stop(now + 0.9);
+          voice.oscillator.onended = () => { voice.oscillator.disconnect(); voice.gain.disconnect(); voice.filter?.disconnect(); };
+        voice.oscillator.stop(now + 0.9);
       } catch {}
     }
     this._musicVoices = [];
@@ -173,7 +173,7 @@ export const Audio = {
       filter.connect(gain);
       gain.connect(this._musicGain);
       oscillator.start(now);
-      this._musicVoices.push({ oscillator, gain });
+      this._musicVoices.push({ oscillator, gain, filter });
     }
     this._musicTimer = setInterval(() => {
       if (!this._ctx || this._ctx.state !== 'running' || this._musicTheme !== theme) return;
@@ -190,7 +190,7 @@ export const Audio = {
       gain.connect(this._musicGain);
       oscillator.start(start);
       oscillator.stop(start + 2.7);
-      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); };
+      oscillator.onended = () => { oscillator.disconnect(); gain.disconnect(); filter.disconnect(); };
     }, 3400);
   },
 
@@ -261,6 +261,9 @@ export const Audio = {
     }
     const source = this._ambientSource;
     const lfo = this._ambientLfo;
+    const highPass = this._ambientHighPass;
+    const filter = this._ambientFilter;
+    const nodes = this._ambientNodes;
     const now = this._ctx?.currentTime || 0;
     try {
       const gain = this._ambientNodes?.gain;
@@ -270,8 +273,8 @@ export const Audio = {
       }
       source.stop(now + 0.85);
       lfo?.stop(now + 0.85);
-      source.onended = () => { source.disconnect(); this._ambientHighPass?.disconnect(); this._ambientFilter?.disconnect(); gain?.disconnect(); };
-      if (lfo) lfo.onended = () => { lfo.disconnect(); this._ambientNodes?.lfoGain?.disconnect(); };
+      source.onended = () => { source.disconnect(); highPass?.disconnect(); filter?.disconnect(); gain?.disconnect(); };
+      if (lfo) lfo.onended = () => { lfo.disconnect(); nodes?.lfoGain?.disconnect(); };
     } catch {}
     this._ambientSource = null;
     this._ambientFilter = null;
