@@ -1,5 +1,15 @@
 const clamp = (value, min = 0, max = 1) => Math.max(min, Math.min(max, value));
 
+/**
+ * Maps a completed mini-game outcome to an honest result cue.
+ * Partial information is neutral: it is neither a clean win nor a total failure.
+ */
+export function getMiniGameResultCue(outcome) {
+  if (outcome === 'success' || outcome === 'clear') return 'success';
+  if (outcome === 'failure' || outcome === 'damaged' || outcome === 'unreadable') return 'failure';
+  return null;
+}
+
 const MUSIC_THEMES = Object.freeze({
   menu: { notes: [55, 82.41, 110, 164.81], melody: [220, 196, 164.81, 146.83, 164.81, 196, 246.94, 220], filter: 680 },
   investigation: { notes: [49, 73.42, 98, 146.83], melody: [196, 174.61, 146.83, 130.81, 146.83, 174.61, 220, 196], filter: 540 },
