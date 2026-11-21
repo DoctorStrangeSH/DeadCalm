@@ -232,3 +232,6 @@ Scene entry: `src/js/scenes/film-restoration.js`; logic: `src/js/systems/film-re
 - [ ] Проверка фокуса/клавиатуры, reduced motion и читаемости статусов.
 - [ ] Решение по финальному визуалу и звуку: завершить в рамках 1.0 либо явно исключить конкретные необязательные элементы без расширения scope.
 
+
+- **Offline integration:** `minigame-access.js` и `minigame-lock-screen.js` включены в Service Worker precache; cache key обновлён до `dead-calm-visual-v104`. `tests/service-worker-assets.test.mjs` проверяет оба пути.
+- Последний CI после обновления precache: run `44873829358`, **298/298, 0 failures**.
