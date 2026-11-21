@@ -446,7 +446,7 @@ export var GameState = {
   },
 
   hasSave() {
-    return Storage.exists('gameState');
+    return Storage.hasAnyRecord('gameState');
   },
 
   export() {
