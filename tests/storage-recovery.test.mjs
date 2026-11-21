@@ -91,3 +91,18 @@ test('failed primary write leaves the previous valid save readable and staged pa
     globalThis.localStorage = previous;
   }
 });
+
+
+test('hasAnyRecord detects corrupt records even when no valid copy can be parsed', () => {
+  const previous = globalThis.localStorage;
+  globalThis.localStorage = createMemoryStorage();
+  try {
+    localStorage.setItem('deadCalm_gameState', '{broken');
+    localStorage.setItem('deadCalm_gameState__backup', '{also broken');
+    assert.equal(Storage.load('gameState'), null);
+    assert.equal(Storage.exists('gameState'), false);
+    assert.equal(Storage.hasAnyRecord('gameState'), true);
+  } finally {
+    globalThis.localStorage = previous;
+  }
+});
