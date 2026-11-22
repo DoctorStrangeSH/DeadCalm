@@ -155,9 +155,21 @@ export var GameState = {
     if (this.campaign.completed || day < this.campaign.day || day > this.campaign.day + 1) return false;
     if (day > this.campaign.day && !assessCampaignDay(this).canAdvance) return false;
     const previousDay = this.campaign.day;
+    const previousFlags = { ...this.flags };
     this.campaign.day = day;
     this._syncCampaignFlags();
-    this.save();
+    let saved;
+    try {
+      saved = this.save();
+    } catch (error) {
+      console.error('[State] Не удалось сохранить переход дня кампании:', error);
+      saved = false;
+    }
+    if (saved === false) {
+      this.campaign.day = previousDay;
+      this.flags = previousFlags;
+      return false;
+    }
     Events.emit('campaign:day_changed', { previousDay, day });
     return true;
   },
@@ -204,10 +216,11 @@ export var GameState = {
   },
 
   addClue(clue) {
+    if (!clue || typeof clue.id !== 'string' || !clue.id) return false;
     if (this.currentCase.clues.find(function(c) { return c.id === clue.id; })) {
-      return;
+      return false;
     }
-    this.currentCase.clues.push({
+    const record = {
       id: clue.id,
       name: clue.name,
       category: clue.category,
@@ -217,9 +230,21 @@ export var GameState = {
       day: clue.day,
       connections_to: Array.isArray(clue.connections_to) ? [...clue.connections_to] : [],
       foundAt: new Date().toISOString()
-    });
-    Events.emit('clue:added', clue);
-    this.save();
+    };
+    this.currentCase.clues.push(record);
+    let saved;
+    try {
+      saved = this.save();
+    } catch (error) {
+      console.error('[State] Не удалось сохранить найденную улику:', error);
+      saved = false;
+    }
+    if (saved === false) {
+      this.currentCase.clues.pop();
+      return false;
+    }
+    Events.emit('clue:added', record);
+    return true;
   },
 
   addHypothesis(input) {
