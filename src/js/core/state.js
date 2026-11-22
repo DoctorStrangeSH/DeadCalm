@@ -175,9 +175,21 @@ export var GameState = {
     // The compromise ending is only valid after the sealed written confession
     // is recorded as a case exhibit; UI-only creation is not a state boundary.
     if (ending === 'price_of_silence' && !this.hasClue('sebastian_sealed_confession')) return false;
+    const previousCompleted = this.campaign.completed;
+    const previousEnding = this.campaign.ending;
     this.campaign.completed = true;
     this.campaign.ending = ending;
-    this.save();
+    let saved = false;
+    try {
+      saved = this.save() === true;
+    } catch (error) {
+      console.error('[State] Не удалось сохранить завершение кампании:', error);
+    }
+    if (!saved) {
+      this.campaign.completed = previousCompleted;
+      this.campaign.ending = previousEnding;
+      return false;
+    }
     Events.emit('campaign:completed', { caseId: this.campaign.caseId, ending });
     return true;
   },
