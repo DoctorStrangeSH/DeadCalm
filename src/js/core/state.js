@@ -167,7 +167,8 @@ export var GameState = {
     }
     if (saved === false) {
       this.campaign.day = previousDay;
-      this.flags = previousFlags;
+      for (const key of Object.keys(this.flags)) delete this.flags[key];
+      Object.assign(this.flags, previousFlags);
       return false;
     }
     Events.emit('campaign:day_changed', { previousDay, day });
@@ -243,7 +244,7 @@ export var GameState = {
       this.currentCase.clues.pop();
       return false;
     }
-    Events.emit('clue:added', record);
+    Events.emit('clue:added', clue);
     return true;
   },
 
