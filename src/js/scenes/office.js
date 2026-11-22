@@ -164,7 +164,22 @@ export function render(container) {
 
   document.getElementById('btn-advance-day')?.addEventListener('click', function () {
     const result = advanceCampaignWhenReady(GameState);
-    if (result.advanced) Events.emit('navigate', { scene: 'office' });
+    if (result.advanced) {
+      Events.emit('navigate', { scene: 'office' });
+      return;
+    }
+    if (result.status?.canAdvance) {
+      const section = document.querySelector('.campaign-progress');
+      if (section && !section.querySelector('[data-campaign-save-error]')) {
+        const message = document.createElement('p');
+        message.dataset.campaignSaveError = 'true';
+        message.className = 'text-red-300 text-sm mt-3';
+        message.setAttribute('role', 'alert');
+        message.setAttribute('aria-live', 'assertive');
+        message.textContent = 'Не удалось сохранить переход на следующий день. Прогресс не изменён — проверьте хранилище браузера и повторите попытку.';
+        section.append(message);
+      }
+    }
   });
 
   document.getElementById('btn-go-finale')?.addEventListener('click', function () {
