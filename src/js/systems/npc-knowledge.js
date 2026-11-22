@@ -81,7 +81,8 @@ export function normalizeKnowledgeLedger(value) {
       ...entry,
       sourceRefs: cleanRefs(entry.sourceRefs),
       stateHistory: normalizeStateHistory(entry.stateHistory),
-      ...(Array.isArray(entry.rumorTrail) ? { rumorTrail: normalizeRumorTrail(entry.rumorTrail) } : {})
+      ...(Array.isArray(entry.rumorTrail) ? { rumorTrail: normalizeRumorTrail(entry.rumorTrail) } : {}),
+      ...(Array.isArray(entry.challengeHistory) ? { challengeHistory: normalizeChallengeHistory(entry.challengeHistory) } : {})
     }))
   };
 }
