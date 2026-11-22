@@ -230,3 +230,80 @@ test('failed finale save rolls back completion and emits no completion event', (
     Object.assign(GameState, original);
   }
 });
+
+
+test('failed day-transition save rolls back the day and emits no transition event', () => {
+  const original = { campaign: GameState.campaign, flags: GameState.flags };
+  const originalSave = Storage.save;
+  const events = [];
+  const unsubscribe = Events.on('campaign:day_changed', payload => events.push(payload));
+
+  try {
+    GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
+    GameState.flags = { keep_me: true };
+    GameState.currentCase = {
+      ...GameState.currentCase,
+      clues: [
+        'autopsy_report_01', 'court_switchboard_log',
+        'judge_appointment_card', 'old_case_details'
+      ].map(id => ({ id }))
+    };
+
+    Storage.save = () => false;
+    assert.equal(GameState.advanceCampaignDay(), false);
+    assert.equal(GameState.campaign.day, 1);
+    assert.deepEqual(GameState.flags, { keep_me: true });
+    assert.equal(events.length, 0);
+
+    Storage.save = () => true;
+    assert.equal(GameState.advanceCampaignDay(), true);
+    assert.equal(GameState.campaign.day, 2);
+    assert.equal(GameState.hasFlag('day_2'), true);
+    assert.deepEqual(events, [{ previousDay: 1, day: 2 }]);
+  } finally {
+    unsubscribe();
+    Storage.save = originalSave;
+    GameState.campaign = original.campaign;
+    GameState.flags = original.flags;
+  }
+});
+
+test('failed clue save rolls back the exhibit and emits no clue event', () => {
+  const originalCase = GameState.currentCase;
+  const originalSave = Storage.save;
+  const events = [];
+  const unsubscribe = Events.on('clue:added', clue => events.push(clue));
+
+  try {
+    GameState.currentCase = {
+      ...originalCase,
+      clues: []
+    };
+    const clue = {
+      id: 'test_transactional_clue',
+      name: 'Тестовая улика',
+      category: 'document',
+      description: 'Проверка надёжного сохранения',
+      location: 'office',
+      day: 1,
+      connections_to: []
+    };
+
+    Storage.save = () => false;
+    assert.equal(GameState.addClue(clue), false);
+    assert.equal(GameState.hasClue(clue.id), false);
+    assert.equal(events.length, 0);
+
+    Storage.save = () => true;
+    assert.equal(GameState.addClue(clue), true);
+    assert.equal(GameState.hasClue(clue.id), true);
+    assert.equal(events.length, 1);
+    assert.equal(events[0].id, clue.id);
+    assert.equal(GameState.addClue(clue), false, 'duplicate exhibits must not emit another event');
+    assert.equal(events.length, 1);
+  } finally {
+    unsubscribe();
+    Storage.save = originalSave;
+    GameState.currentCase = originalCase;
+  }
+});
