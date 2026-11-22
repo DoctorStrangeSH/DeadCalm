@@ -207,6 +207,7 @@ export var DialogueEngine = {
 
   _isResponseAvailable(response) {
     if (response.requires_question && !this._askedQuestions.includes(response.requires_question)) return false;
+    if (response.requires_flag && !NPCMemory.hasFlag(this._currentNPC, response.requires_flag)) return false;
     if (response.requires_clue && !GameState.hasClue(response.requires_clue)) return false;
     if (response.min_trust != null && NPCMemory.getTrust(this._currentNPC) < response.min_trust) return false;
     return hasDiscoveredContradiction(response.requires_contradiction,
@@ -314,7 +315,10 @@ export var DialogueEngine = {
     }
 
     if (shouldRememberQuestion && !clueSaveFailed &&
-        !NPCMemory.markQuestionAsked(this._currentNPC, questionId)) {
+        !NPCMemory.markQuestionAsked(this._currentNPC, questionId, {
+          memorySet: foundResponse.memory_set || null,
+          memoryClear: foundResponse.memory_clear || null
+        })) {
       return this._formatAnswer(foundResponse, {
         addedNote,
         addedClue,
