@@ -402,6 +402,44 @@ export var DialogueEngine = {
     return null;
   },
 
+  /**
+   * Present discovered evidence against this NPC's recorded account.
+   * The authored reaction is presentation only; evidence never writes a confession
+   * or changes trust unless a separate authored choice explicitly does so.
+   */
+  presentEvidence({ entryId, clueIds, reason, reactionText } = {}) {
+    if (!this._currentNPC || typeof reactionText !== 'string' || !reactionText.trim()) return null;
+    const entry = GameState.getNpcKnowledge(this._currentNPC)
+      .find(item => item.id === entryId);
+    if (!entry) return null;
+
+    const challenged = GameState.challengeNpcKnowledge({
+      entryId,
+      npcId: this._currentNPC,
+      clueIds,
+      reason
+    });
+    if (!challenged) {
+      return {
+        type: 'evidence_challenge',
+        speaker: this.getCharacter(this._currentNPC)?.name || this._currentNPC,
+        text: 'Не удалось зафиксировать предъявление доказательств. Сохранение не изменено — попробуйте ещё раз.',
+        saveError: true
+      };
+    }
+
+    return {
+      type: 'evidence_challenge',
+      speaker: this.getCharacter(this._currentNPC)?.name || this._currentNPC,
+      text: reactionText.trim(),
+      beliefState: challenged.state,
+      challengedEntryId: challenged.id,
+      evidenceIds: [...challenged.challengeHistory.at(-1).clueIds],
+      trust: NPCMemory.getTrust(this._currentNPC),
+      isEnd: true
+    };
+  },
+
   backToTopics() {
     var npcData = this._dialogues?.[this._currentNPC];
     if (!npcData) return null;
