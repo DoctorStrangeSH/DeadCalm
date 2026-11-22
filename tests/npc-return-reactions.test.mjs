@@ -120,3 +120,95 @@ test('all non-terminal critical NPC choices produce one authored return reaction
     });
   }
 });
+
+
+test('a returning NPC reaction is not shown or consumed when its save fails', () => {
+  const previousState = {
+    player: GameState.player,
+    currentCase: GameState.currentCase,
+    campaign: GameState.campaign,
+    flags: GameState.flags,
+    relationships: GameState.relationships,
+    npcMemory: GameState.npcMemory,
+    socialGraph: GameState.socialGraph,
+    knowledgeLedger: GameState.knowledgeLedger,
+    npcDailyLife: GameState.npcDailyLife,
+    miniGameProgress: GameState.miniGameProgress,
+    notebook: GameState.notebook,
+    settings: GameState.settings,
+    saveBlocked: GameState.saveBlocked
+  };
+  const previousSave = Storage.save;
+  const previousDialogue = {
+    dialogues: DialogueEngine._dialogues,
+    characters: DialogueEngine._characters,
+    clues: DialogueEngine._clues,
+    rules: DialogueEngine._contradictionRules,
+    initialized: DialogueEngine._initialized,
+    currentNPC: DialogueEngine._currentNPC,
+    currentNode: DialogueEngine._currentNode,
+    asked: DialogueEngine._askedQuestions,
+    unlocked: DialogueEngine._unlockedTopics
+  };
+
+  try {
+    GameState.saveBlocked = false;
+    GameState.player = { name: 'Джон Риверс', reputation: 50 };
+    GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] };
+    GameState.campaign = { caseId: 'case_001', day: 2, completed: false, ending: null };
+    GameState.flags = {};
+    GameState.relationships = { npc_anna_holt: { trust: 60, met: true } };
+    GameState.npcMemory = {
+      npc_anna_holt: {
+        met: true,
+        flags: { anna_boundary_respected: true },
+        conversationCount: 1,
+        questionCount: 1,
+        unlockedTopics: [],
+        askedQuestions: [],
+        criticalChoiceMade: true,
+        interviewHistory: []
+      }
+    };
+    GameState.socialGraph = { ties: [], events: [] };
+    GameState.knowledgeLedger = { entries: [] };
+    GameState.npcDailyLife = { schedules: [], occurrences: [] };
+    GameState.miniGameProgress = {};
+    GameState.notebook = [];
+    GameState.settings = { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
+
+    DialogueEngine._dialogues = dialogues;
+    DialogueEngine._characters = characters;
+    DialogueEngine._clues = clues;
+    DialogueEngine._contradictionRules = contradictions;
+    DialogueEngine._initialized = true;
+    DialogueEngine.reset();
+
+    Storage.save = () => false;
+    const failed = DialogueEngine.startDialogue('npc_anna_holt');
+    assert.equal(failed?.type, 'simple');
+    assert.equal(failed.saveError, true);
+    assert.equal(failed.isReturnReaction, undefined);
+    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'anna_boundary_return_seen'), false);
+
+    Storage.save = () => true;
+    const retry = DialogueEngine.startDialogue('npc_anna_holt');
+    assert.equal(retry?.type, 'simple');
+    assert.equal(retry.isReturnReaction, true);
+    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'anna_boundary_return_seen'), true);
+  } finally {
+    Storage.save = previousSave;
+    Object.assign(GameState, previousState);
+    Object.assign(DialogueEngine, {
+      _dialogues: previousDialogue.dialogues,
+      _characters: previousDialogue.characters,
+      _clues: previousDialogue.clues,
+      _contradictionRules: previousDialogue.rules,
+      _initialized: previousDialogue.initialized,
+      _currentNPC: previousDialogue.currentNPC,
+      _currentNode: previousDialogue.currentNode,
+      _askedQuestions: previousDialogue.asked,
+      _unlockedTopics: previousDialogue.unlocked
+    });
+  }
+});
