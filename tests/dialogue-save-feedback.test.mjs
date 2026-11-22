@@ -16,5 +16,5 @@ test('dialogue displays an accessible warning when a clue could not be saved', (
 test('simple dialogue nodes announce failed first-meeting persistence accessibly', () => {
   assert.match(dialogBox, /if \(node\.saveError\)/);
   assert.match(dialogBox, /Не удалось сохранить разговор/);
-  assert.match(dialogBox, /Неподтверждённое действие не засчитано/);
+  assert.match(dialogBox, /неподтверждённое действие не засчитано/i);
 });
