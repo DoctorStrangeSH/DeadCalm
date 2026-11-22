@@ -17,7 +17,7 @@ test('compromise ending records Sebastian’s sealed confession without publishi
 });
 
 test('finale distinguishes Sebastian’s admission of delivery from an admission of murder', () => {
-  assert.match(portScene, /в совокупности дают основания предъявить официальное обвинение/);
+  assert.match(portScene, /даёт основания предъявить официальное обвинение/);
   assert.match(portScene, /Сам Себастьян не признаёт убийство/);
   assert.match(dialogues.npc_sebastian_blackwood.topics.about_judge.responses.find(item => item.id === 'sebastian_delivery_statement').answer, /передал Гаррисону запечатанный флакон/);
   assert.doesNotMatch(portScene, /его слова совпадают в нескольких точках/);
