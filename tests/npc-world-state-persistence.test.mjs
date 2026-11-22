@@ -33,12 +33,25 @@ test('NPC world-state wrappers roll back every mutation when storage rejects a s
   try {
     GameState.saveBlocked = false;
     GameState.socialGraph = { ties: [], events: [] };
-    GameState.knowledgeLedger = { entries: [] };
-    GameState.npcDailyLife = { schedules: [], occurrences: [] };
+    GameState.knowledgeLedger = { entries: [{
+      id: 'existing-knowledge', npcId: 'npc_a', claimRef: 'claim_existing',
+      sourceType: 'document', state: 'unverified', provenance: 'A signed report.',
+      sourceNpcId: null, sourceRefs: [], stateHistory: [], recordedAt: '2026-11-22T00:00:00Z'
+    }] };
+    GameState.npcDailyLife = {
+      schedules: [{
+        id: 'existing-schedule', npcId: 'npc_a', activity: 'work',
+        startMinute: 600, endMinute: 900, days: [1],
+        locationId: 'station', basis: 'An authored work schedule.', sourceRefs: []
+      }],
+      occurrences: []
+    };
     const tiesRef = GameState.socialGraph.ties;
     const socialEventsRef = GameState.socialGraph.events;
     const knowledgeRef = GameState.knowledgeLedger.entries;
+    const knowledgeBefore = structuredClone(knowledgeRef);
     const schedulesRef = GameState.npcDailyLife.schedules;
+    const schedulesBefore = structuredClone(schedulesRef);
     const occurrencesRef = GameState.npcDailyLife.occurrences;
     Storage.save = () => false;
 
@@ -54,14 +67,14 @@ test('NPC world-state wrappers roll back every mutation when storage rejects a s
       npcId: 'npc_a', claimRef: 'claim_1', sourceType: 'interview',
       provenance: 'A recorded witness interview.'
     }), null);
-    assert.equal(GameState.updateNpcKnowledgeState('missing', 'disputed', 'A conflicting report.'), null);
+    assert.equal(GameState.updateNpcKnowledgeState('existing-knowledge', 'disputed', 'A conflicting report.'), null);
     assert.equal(GameState.setNpcSchedule({
       id: 'schedule_a', npcId: 'npc_a', activity: 'work',
       startMinute: 600, endMinute: 900, days: [1],
       locationId: 'station', basis: 'An authored work schedule.'
     }), null);
     assert.equal(GameState.recordNpcOccurrence({
-      id: 'occurrence_a', npcId: 'npc_a', scheduleId: 'schedule_a',
+      id: 'occurrence_a', npcId: 'npc_a', scheduleId: 'existing-schedule',
       day: 1, minute: 700, locationId: 'station',
       description: 'A witnessed meeting.', basis: 'A signed visitor log.'
     }), null);
@@ -72,8 +85,9 @@ test('NPC world-state wrappers roll back every mutation when storage rejects a s
     assert.equal(GameState.npcDailyLife.schedules, schedulesRef);
     assert.equal(GameState.npcDailyLife.occurrences, occurrencesRef);
     assert.deepEqual(GameState.socialGraph, { ties: [], events: [] });
-    assert.deepEqual(GameState.knowledgeLedger, { entries: [] });
-    assert.deepEqual(GameState.npcDailyLife, { schedules: [], occurrences: [] });
+    assert.deepEqual(GameState.knowledgeLedger.entries, knowledgeBefore);
+    assert.deepEqual(GameState.npcDailyLife.schedules, schedulesBefore);
+    assert.deepEqual(GameState.npcDailyLife.occurrences, []);
     assert.deepEqual(emitted, []);
   } finally {
     unsubscribe.forEach(off => off());
