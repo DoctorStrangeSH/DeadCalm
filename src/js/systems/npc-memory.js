@@ -90,6 +90,19 @@ export var NPCMemory = {
     }).saved;
   },
 
+  commitFirstMeeting(npcId, topicIds = []) {
+    if (!Array.isArray(topicIds)) return false;
+    return persistMemoryMutation(npcId, memory => {
+      memory.met = true;
+      memory.conversationCount++;
+      topicIds.forEach(topicId => {
+        if (memory.unlockedTopics.indexOf(topicId) === -1) {
+          memory.unlockedTopics.push(topicId);
+        }
+      });
+    }).saved;
+  },
+
   recordInterview(npcId, details) {
     let event = null;
     const outcome = persistMemoryMutation(npcId, memory => {
