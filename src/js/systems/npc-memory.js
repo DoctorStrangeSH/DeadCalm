@@ -227,13 +227,20 @@ export var NPCMemory = {
     return this.getMemory(npcId).unlockedTopics || [];
   },
 
-  markQuestionAsked(npcId, questionId) {
+  markQuestionAsked(npcId, questionId, consequences = {}) {
     if (typeof questionId !== 'string' || !questionId) return false;
-    return persistMemoryMutation(npcId, memory => {
+    const outcome = persistMemoryMutation(npcId, memory => {
       if (memory.askedQuestions.indexOf(questionId) === -1) {
         memory.askedQuestions.push(questionId);
       }
-    }).saved;
+      if (consequences.memorySet) memory.flags[consequences.memorySet] = true;
+      if (consequences.memoryClear) delete memory.flags[consequences.memoryClear];
+    });
+    if (!outcome.saved) return false;
+    if (consequences.memorySet) {
+      Events.emit('npc:flag_set', { npcId, flag: consequences.memorySet });
+    }
+    return true;
   },
 
   getAskedQuestions(npcId) {
