@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { GameState } from '../src/js/core/state.js';
 import { Storage } from '../src/js/core/storage.js';
 import { Events } from '../src/js/core/events.js';
+import { DialogueEngine } from '../src/js/systems/dialogue.js';
 import { challengeNpcKnowledge, getNpcKnowledge, normalizeKnowledgeLedger } from '../src/js/systems/npc-knowledge.js';
 
 function ledgerFixture() {
@@ -152,5 +153,51 @@ test('GameState evidence challenge rolls back on save failure and emits only aft
     GameState.knowledgeLedger = previousLedger;
     GameState.currentCase.clues = previousClues;
     GameState.saveBlocked = previousBlocked;
+  }
+});
+
+
+test('dialogue presents an authored reaction only for the current NPC and preserves their trust', () => {
+  const previousLedger = GameState.knowledgeLedger;
+  const previousSave = Storage.save;
+  const previousBlocked = GameState.saveBlocked;
+  const previousClues = GameState.currentCase.clues;
+  const previousNPC = DialogueEngine._currentNPC;
+  const previousCharacters = DialogueEngine._characters;
+
+  try {
+    GameState.saveBlocked = false;
+    GameState.knowledgeLedger = ledgerFixture();
+    GameState.currentCase.clues = evidence;
+    Storage.save = () => true;
+    DialogueEngine._currentNPC = 'npc_ray_morgan';
+    DialogueEngine._characters = { npc_ray_morgan: { name: 'Рэй Морган' } };
+
+    const result = DialogueEngine.presentEvidence({
+      entryId: 'belief-ray-caller',
+      clueIds: ['court_switchboard_log'],
+      reason: 'В выписке не указано имя звонившего.',
+      reactionText: 'Я не могу утверждать, что это был служащий. В журнале действительно нет имени.'
+    });
+    assert.equal(result.type, 'evidence_challenge');
+    assert.equal(result.speaker, 'Рэй Морган');
+    assert.equal(result.text, 'Я не могу утверждать, что это был служащий. В журнале действительно нет имени.');
+    assert.equal(result.beliefState, 'disputed');
+    assert.equal(result.trust, 50);
+
+    DialogueEngine._currentNPC = 'npc_anna_holt';
+    assert.equal(DialogueEngine.presentEvidence({
+      entryId: 'belief-ray-caller',
+      clueIds: ['court_switchboard_log'],
+      reason: 'This is not Anna’s account.',
+      reactionText: '...'
+    }), null);
+  } finally {
+    GameState.knowledgeLedger = previousLedger;
+    GameState.currentCase.clues = previousClues;
+    GameState.saveBlocked = previousBlocked;
+    Storage.save = previousSave;
+    DialogueEngine._currentNPC = previousNPC;
+    DialogueEngine._characters = previousCharacters;
   }
 });
