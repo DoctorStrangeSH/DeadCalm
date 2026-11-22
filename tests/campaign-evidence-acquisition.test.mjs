@@ -188,3 +188,76 @@ test('radio-first day-four route can still reach the film evidence required for 
   assert.equal(assessFinalEvidence(game).fullDisclosureReady, true,
     'the player can still earn the high-quality film and complete the open-case route');
 });
+
+
+test('failed dialogue clue persistence leaves the question retryable and reports no false discovery', () => {
+  const previous = {
+    relationships: GameState.relationships,
+    npcMemory: GameState.npcMemory,
+    currentCase: GameState.currentCase,
+    notebook: GameState.notebook,
+    save: GameState.save,
+    addClue: GameState.addClue,
+    dialogues: DialogueEngine._dialogues,
+    characters: DialogueEngine._characters,
+    clueCatalog: DialogueEngine._clues,
+    rules: DialogueEngine._contradictionRules,
+    initialized: DialogueEngine._initialized,
+    currentNPC: DialogueEngine._currentNPC,
+    asked: DialogueEngine._askedQuestions,
+    unlocked: DialogueEngine._unlockedTopics
+  };
+
+  try {
+    GameState.save = () => true;
+    GameState.relationships = {};
+    GameState.npcMemory = {};
+    GameState.notebook = [];
+    GameState.currentCase = {
+      ...previous.currentCase,
+      clues: [],
+      hypotheses: []
+    };
+    DialogueEngine._dialogues = dialogues;
+    DialogueEngine._characters = characters;
+    DialogueEngine._clues = clues;
+    DialogueEngine._contradictionRules = contradictions;
+    DialogueEngine._initialized = true;
+
+    DialogueEngine.startDialogue('npc_lydia_winter');
+    DialogueEngine.backToTopics();
+    const topic = DialogueEngine.selectTopic('about_autopsy');
+    assert.ok(topic.questions.some(item => item.id === 'cause_of_death'));
+
+    GameState.addClue = () => false;
+    const failed = DialogueEngine.askQuestion('cause_of_death');
+    assert.equal(failed.type, 'answer');
+    assert.equal(failed.saveError, true);
+    assert.equal(failed.addedClue, null);
+    assert.equal(GameState.hasClue('autopsy_report_01'), false);
+    assert.equal(DialogueEngine._askedQuestions.includes('cause_of_death'), false);
+    assert.equal(NPCMemory.getAskedQuestions('npc_lydia_winter').includes('cause_of_death'), false);
+
+    GameState.addClue = previous.addClue;
+    const retry = DialogueEngine.askQuestion('cause_of_death');
+    assert.equal(retry.saveError, false);
+    assert.equal(retry.addedClue.id, 'autopsy_report_01');
+    assert.equal(GameState.hasClue('autopsy_report_01'), true);
+    assert.equal(NPCMemory.getAskedQuestions('npc_lydia_winter').includes('cause_of_death'), true);
+  } finally {
+    GameState.relationships = previous.relationships;
+    GameState.npcMemory = previous.npcMemory;
+    GameState.currentCase = previous.currentCase;
+    GameState.notebook = previous.notebook;
+    GameState.save = previous.save;
+    GameState.addClue = previous.addClue;
+    DialogueEngine._dialogues = previous.dialogues;
+    DialogueEngine._characters = previous.characters;
+    DialogueEngine._clues = previous.clueCatalog;
+    DialogueEngine._contradictionRules = previous.rules;
+    DialogueEngine._initialized = previous.initialized;
+    DialogueEngine._currentNPC = previous.currentNPC;
+    DialogueEngine._askedQuestions = previous.asked;
+    DialogueEngine._unlockedTopics = previous.unlocked;
+  }
+});
