@@ -115,3 +115,33 @@ test('an unresolved critical choice remains replayable until the player explicit
     restore(previous);
   }
 });
+
+
+test('Sebastian only confirms the vial transfer after both the appointment and pharmacy record are found', () => {
+  const previous = preserve();
+  try {
+    setup();
+    assert.equal(DialogueEngine.startDialogue('npc_sebastian_blackwood')?.type, 'first_meeting');
+    assert.equal(DialogueEngine.startDialogue('npc_sebastian_blackwood')?.type, 'topic_selection');
+
+    let topic = DialogueEngine.selectTopic('about_judge');
+    assert.ok(topic.questions.some(item => item.id === 'sebastian_judge'));
+    assert.equal(topic.questions.some(item => item.id === 'sebastian_delivery_statement'), false);
+
+    GameState.currentCase.clues.push({ id: 'belladonna_invoice' });
+    topic = DialogueEngine.selectTopic('about_judge');
+    assert.equal(topic.questions.some(item => item.id === 'sebastian_delivery_statement'), false,
+      'the pharmacy record alone must not unlock the confrontation');
+
+    GameState.currentCase.clues.push({ id: 'judge_appointment_card' });
+    topic = DialogueEngine.selectTopic('about_judge');
+    assert.ok(topic.questions.some(item => item.id === 'sebastian_delivery_statement'),
+      'both independent prerequisites must unlock the follow-up');
+    const answer = DialogueEngine.askQuestion('sebastian_delivery_statement');
+    assert.equal(answer?.addedClue?.id, 'sebastian_delivery_statement');
+    assert.equal(GameState.hasClue('sebastian_delivery_statement'), true);
+    assert.match(answer.text, /запечатанный флакон/);
+  } finally {
+    restore(previous);
+  }
+});
