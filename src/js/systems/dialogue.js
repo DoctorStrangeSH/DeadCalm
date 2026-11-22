@@ -284,9 +284,15 @@ export var DialogueEngine = {
     const shouldRememberQuestion = !opensUnresolvedChoice;
     console.log('[Dialogue] Задан вопрос: ' + questionId);
 
-    // Добавляем заметку (только для важных)
+    // Добавляем заметку (только для важных); не отмечаем вопрос использованным,
+    // если заметку не удалось сохранить.
+    const noteAlreadyExists = !!(foundResponse.adds_note &&
+      GameState.notebook?.some(item => item.title === foundResponse.adds_note.title));
     var addedNote = foundResponse.adds_note && this._addToNotebook(foundResponse.adds_note)
       ? foundResponse.adds_note : null;
+    if (foundResponse.adds_note && !addedNote && !noteAlreadyExists) {
+      return this._formatAnswer(foundResponse, { saveError: true });
+    }
 
     // Улика считается полученной только после успешной записи сохранения.
     var addedClue = null;
@@ -412,20 +418,27 @@ export var DialogueEngine = {
 
   _addToNotebook(note) {
     if (!GameState.notebook) GameState.notebook = [];
-    var exists = GameState.notebook.some(function(n) {
-      return n.title === note.title;
-    });
-    if (!exists) {
-      GameState.notebook.push({
-        title: note.title,
-        text: note.text,
-        category: note.category || 'общее',
-        timestamp: new Date().toISOString()
-      });
-      GameState.save();
-      return true;
+    const exists = GameState.notebook.some(item => item.title === note.title);
+    if (exists) return false;
+
+    const record = {
+      title: note.title,
+      text: note.text,
+      category: note.category || 'общее',
+      timestamp: new Date().toISOString()
+    };
+    GameState.notebook.push(record);
+    let saved = false;
+    try {
+      saved = GameState.save();
+    } catch (error) {
+      console.error('[Dialogue] Не удалось сохранить запись в блокноте:', error);
     }
-    return false;
+    if (saved === false) {
+      GameState.notebook.pop();
+      return false;
+    }
+    return true;
   },
 
   // === ФОРМАТИРОВАНИЕ ===
