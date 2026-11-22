@@ -160,6 +160,7 @@ test('radio-first day-four route can still reach the film evidence required for 
     ['matthews_letter', { id: 'matthews_letter' }],
     ['port_cargo_ledger', { id: 'port_cargo_ledger' }],
     ['markus_statement', { id: 'markus_statement' }],
+    ['sebastian_delivery_statement', { id: 'sebastian_delivery_statement' }],
     ['anna_markus_items', { id: 'anna_markus_items' }],
     ['port_radio_fragment', { id: 'port_radio_fragment', quality: 82 }]
   ]);
