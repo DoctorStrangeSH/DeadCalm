@@ -33,6 +33,21 @@ function renderEnding(container, ending) {
   });
 }
 
+function showFinaleSaveError(container) {
+  const result = container.querySelector('#story-location-result');
+  if (!result) return;
+  let message = result.querySelector('[data-finale-save-error]');
+  if (!message) {
+    message = document.createElement('p');
+    message.dataset.finaleSaveError = 'true';
+    message.className = 'text-red-300 text-sm mt-3';
+    message.setAttribute('role', 'alert');
+    message.setAttribute('aria-live', 'assertive');
+    result.append(message);
+  }
+  message.textContent = 'Не удалось сохранить завершение расследования. Ваш выбор не потерян: проверьте доступность хранилища браузера и повторите попытку.';
+}
+
 function renderEndingChoices(container) {
   const evidenceStatus = assessFinalEvidence(GameState);
   const fullDisclosureReady = evidenceStatus.fullDisclosureReady;
@@ -69,6 +84,7 @@ function renderEndingChoices(container) {
   `;
   result.querySelector('#btn-ending-open')?.addEventListener('click', () => {
     if (GameState.completeCampaign('open_case')) renderEnding(container, 'open_case');
+    else showFinaleSaveError(container);
   });
   result.querySelector('#btn-ending-silence')?.addEventListener('click', () => {
     if (!GameState.hasClue('sebastian_sealed_confession')) {
@@ -84,6 +100,7 @@ function renderEndingChoices(container) {
       });
     }
     if (GameState.completeCampaign('price_of_silence')) renderEnding(container, 'price_of_silence');
+    else showFinaleSaveError(container);
   });
 }
 
