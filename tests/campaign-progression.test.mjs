@@ -148,7 +148,7 @@ test('final evidence dossier explains both findings and limits without overstati
   assert.match(transfer.finding, /Себастьян подтверждает/);
   assert.match(transfer.limit, /не доказывает, что Гаррисон выпил/);
   const charge = dossier.find(item => item.title === 'Основание для официального обвинения');
-  assert.match(charge.finding, /даёт основания предъявить официальное обвинение/);
+  assert.match(charge.finding, /дают основания предъявить официальное обвинение/);
   assert.match(charge.limit, /не судебный приговор/);
   assert.match(charge.limit, /не установлены/);
 });
