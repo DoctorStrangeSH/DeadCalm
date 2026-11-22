@@ -114,7 +114,8 @@ test('finale completion enforces ending-specific evidence at the state boundary'
       'belladonna_invoice',
       'matthews_letter',
       'port_cargo_ledger',
-      'markus_statement'
+      'markus_statement',
+      'sebastian_delivery_statement'
     ];
     const setFinaleState = clues => {
       GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
@@ -124,6 +125,9 @@ test('finale completion enforces ending-specific evidence at the state boundary'
     setFinaleState([]);
     assert.equal(GameState.completeCampaign('price_of_silence'), false, 'no evidence must not unlock a finale');
     assert.equal(GameState.completeCampaign('open_case'), false, 'no evidence must not unlock a public accusation');
+
+    setFinaleState([...baseEvidence.filter(id => id !== 'sebastian_delivery_statement').map(id => ({ id })), { id: 'port_radio_fragment' }, { id: 'sebastian_sealed_confession' }]);
+    assert.equal(GameState.completeCampaign('price_of_silence'), false, 'the compromise ending must require Sebastian’s evidence-gated delivery statement');
 
     setFinaleState([...baseEvidence, { id: 'port_radio_fragment' }].map(item => typeof item === 'string' ? { id: item } : item));
     assert.equal(GameState.completeCampaign('open_case'), false, 'radio evidence alone cannot support a public accusation');
