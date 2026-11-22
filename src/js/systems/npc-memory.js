@@ -65,6 +65,66 @@ export var NPCMemory = {
     return getWitnessInterviewContext(this.getMemory(npcId));
   },
 
+  commitCriticalChoice(npcId, input = {}) {
+    if (!npcId || !input.choiceFlag) return null;
+    const hadMemory = Object.prototype.hasOwnProperty.call(GameState.npcMemory || {}, npcId);
+    const memory = this.getMemory(npcId);
+    const previousMemory = JSON.parse(JSON.stringify(memory));
+    const hadRelationship = Object.prototype.hasOwnProperty.call(GameState.relationships || {}, npcId);
+    const previousRelationship = hadRelationship
+      ? JSON.parse(JSON.stringify(GameState.relationships[npcId]))
+      : null;
+    const relationship = GameState.relationships[npcId] || { trust: 50, met: false };
+    const trustBefore = relationship.trust;
+    const trustDelta = Number.isFinite(input.trustDelta) ? input.trustDelta : 0;
+
+    if (input.questionId && !memory.askedQuestions.includes(input.questionId)) {
+      memory.askedQuestions.push(input.questionId);
+    }
+    memory.flags[input.choiceFlag] = true;
+    if (input.memorySet) memory.flags[input.memorySet] = true;
+    if (input.resultFlag) memory.flags[input.resultFlag] = true;
+    if (input.memoryClear) delete memory.flags[input.memoryClear];
+
+    relationship.trust = Math.max(0, Math.min(100, relationship.trust + trustDelta));
+    relationship.met = true;
+    GameState.relationships[npcId] = relationship;
+
+    let saved = false;
+    try {
+      saved = GameState.save();
+    } catch (error) {
+      console.error('[NPCMemory] Не удалось сохранить решающий выбор:', error);
+    }
+    if (saved === false) {
+      for (const key of Object.keys(memory)) delete memory[key];
+      Object.assign(memory, previousMemory);
+      if (!hadMemory) delete GameState.npcMemory[npcId];
+      if (hadRelationship) {
+        const current = GameState.relationships[npcId] || {};
+        for (const key of Object.keys(current)) delete current[key];
+        Object.assign(current, previousRelationship);
+        GameState.relationships[npcId] = current;
+      } else {
+        delete GameState.relationships[npcId];
+      }
+      return null;
+    }
+
+    Events.emit('npc:flag_set', { npcId, flag: input.choiceFlag });
+    if (input.memorySet) Events.emit('npc:flag_set', { npcId, flag: input.memorySet });
+    if (input.resultFlag) Events.emit('npc:flag_set', { npcId, flag: input.resultFlag });
+    if (trustDelta !== 0) {
+      Events.emit('relationship:changed', {
+        npcId,
+        trust: relationship.trust,
+        delta: relationship.trust - trustBefore,
+        oldTrust: trustBefore
+      });
+    }
+    return { trustBefore, trustAfter: relationship.trust };
+  },
+
   changeTrust(npcId, delta) {
     GameState.updateRelationship(npcId, delta);
   },
