@@ -95,3 +95,17 @@ test('Markus testimony is a deliberate day-five discovery at the port, not an au
   assert.match(portScene, /renderEndingChoices\(container\)/);
   assert.match(portScene, /Маркус выходит из тени складского навеса/);
 });
+
+
+test('Sebastian delivery testimony is reachable only after the appointment and pharmacy records exist', () => {
+  const clue = clues.sebastian_delivery_statement;
+  const response = dialogues.npc_sebastian_blackwood.topics.about_judge.responses.find(
+    item => item.id === 'sebastian_delivery_statement'
+  );
+  assert.ok(clue, 'the delivery statement must be a first-class case clue');
+  assert.equal(clue.location, 'blackwood_mansion');
+  assert.equal(clue.day, 4);
+  assert.deepEqual(response.requires_clues, ['belladonna_invoice', 'judge_appointment_card']);
+  assert.equal(response.gives_clue, clue.id);
+  assert.equal(isLocationUnlocked(locations.blackwood_mansion, stateAtDay(4)), true);
+});
