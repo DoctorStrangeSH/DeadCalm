@@ -56,7 +56,7 @@ test('PWA cache includes visual styles, map data and the new image assets', () =
   for (const scene of ['church.js', 'blackwood-mansion.js', 'holt-house.js', 'port.js']) {
     assert.ok(sw.includes(`/src/js/scenes/${scene}`), `PWA cache missing ${scene}`);
   }
-  assert.ok(sw.includes('dead-calm-visual-v106'), 'new story scenes require a new cache version');
+  assert.ok(sw.includes('dead-calm-visual-v107'), 'new story scenes require a new cache version');
   assert.ok(sw.includes("self.addEventListener('activate'"), 'old PWA caches should be cleared');
 });
 
