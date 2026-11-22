@@ -5,6 +5,25 @@ import { Storage } from '../src/js/core/storage.js';
 import { Events } from '../src/js/core/events.js';
 import { transferNpcKnowledge } from '../src/js/systems/npc-knowledge.js';
 
+function setupMeeting() {
+  GameState.socialGraph = {
+    ties: [],
+    events: [{
+      id: 'social-event-ray-anna-meeting',
+      fromNpcId: 'npc_ray_morgan',
+      toNpcId: 'npc_anna_holt',
+      description: 'Ray and Anna spoke in the archive.'
+    }]
+  };
+  GameState.npcDailyLife = {
+    schedules: [],
+    occurrences: [
+      { id: 'occurrence-ray-archive', npcId: 'npc_ray_morgan', day: 2, minute: 610, locationId: 'archive' },
+      { id: 'occurrence-anna-archive', npcId: 'npc_anna_holt', day: 2, minute: 618, locationId: 'archive' }
+    ]
+  };
+}
+
 function setupLedger() {
   return {
     entries: [{
@@ -80,6 +99,8 @@ test('NPC knowledge relay rejects self-transfer, missing provenance and unsuppor
 
 test('GameState persists a knowledge relay atomically and emits only after success', () => {
   const previousLedger = GameState.knowledgeLedger;
+  const previousSocialGraph = GameState.socialGraph;
+  const previousDailyLife = GameState.npcDailyLife;
   const previousSave = Storage.save;
   const previousBlocked = GameState.saveBlocked;
   const emitted = [];
@@ -91,10 +112,18 @@ test('GameState persists a knowledge relay atomically and emits only after succe
   try {
     GameState.saveBlocked = false;
     GameState.knowledgeLedger = setupLedger();
+    setupMeeting();
     const entriesRef = GameState.knowledgeLedger.entries;
     const snapshot = structuredClone(entriesRef);
     Storage.save = () => false;
 
+    assert.equal(GameState.transferNpcKnowledge({
+      fromNpcId: 'npc_ray_morgan',
+      toNpcId: 'npc_marta_hayes',
+      sourceKnowledgeId: 'knowledge-ray-calls',
+      sourceType: 'rumor',
+      provenance: 'Ray told Marta.'
+    }), null, 'knowledge cannot spread to an NPC without a witnessed meeting');
     assert.equal(GameState.transferNpcKnowledge({
       fromNpcId: 'npc_ray_morgan',
       toNpcId: 'npc_anna_holt',
@@ -120,6 +149,8 @@ test('GameState persists a knowledge relay atomically and emits only after succe
     off.forEach(unsubscribe => unsubscribe());
     Storage.save = previousSave;
     GameState.knowledgeLedger = previousLedger;
+    GameState.socialGraph = previousSocialGraph;
+    GameState.npcDailyLife = previousDailyLife;
     GameState.saveBlocked = previousBlocked;
   }
 });
