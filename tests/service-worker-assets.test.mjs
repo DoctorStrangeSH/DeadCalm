@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { access } from 'node:fs/promises';
-import { resolve } from 'node:path';
+import { resolve, dirname, relative, sep, extname } from 'node:path';
 
 const root = process.cwd();
 
@@ -70,5 +70,42 @@ test('story-gated mini-game modules are included in the offline precache', async
   const assets = JSON.parse(match[1]);
   assert.ok(assets.includes('/src/js/components/minigame-lock-screen.js'));
   assert.ok(assets.includes('/src/js/systems/minigame-access.js'));
-  assert.match(source, /dead-calm-visual-v106/);
+  assert.match(source, /dead-calm-visual-v107/);
+});
+
+
+test('every local JavaScript module reachable from the application entrypoint is precached', async () => {
+  const worker = readFileSync(resolve(root, 'sw.js'), 'utf8');
+  const match = worker.match(/const ASSETS = ([\\s\\S]*?);/);
+  assert.ok(match, 'ASSETS array must be declared as a literal JSON array');
+  const assets = new Set(JSON.parse(match[1]));
+  const visited = new Set();
+  const pending = [resolve(root, 'src/js/core/app.js')];
+  const importPattern = /(?:^\\s*import\\s+(?:[^'"]*?\\s+from\\s+)?|^\\s*export\\s+[^'"]*?\\s+from\\s+|^\\s*import\\s*\\(\\s*)['"]([^'"]+)['"]/gm;
+
+  while (pending.length) {
+    const file = pending.pop();
+    if (visited.has(file)) continue;
+    visited.add(file);
+    assert.ok(file.startsWith(resolve(root, 'src/js')), 'application import must stay inside src/js');
+    assert.ok(assets.has('/' + relative(root, file).split(sep).join('/')),
+      'reachable application module is missing from Service Worker precache: ' + relative(root, file).split(sep).join('/'));
+
+    const source = readFileSync(file, 'utf8');
+    for (const item of source.matchAll(importPattern)) {
+      const specifier = item[1];
+      if (!specifier.startsWith('.')) continue;
+      const target = resolve(dirname(file), specifier);
+      const candidates = extname(target) ? [target] : [target, target + '.js', target + '.json'];
+      const resolved = candidates.find(candidate => {
+        try { readFileSync(candidate); return true; } catch { return false; }
+      });
+      assert.ok(resolved, 'unresolved application import in ' + relative(root, file) + ': ' + specifier);
+      if (resolved.endsWith('.js')) pending.push(resolved);
+      else if (resolved.endsWith('.json')) {
+        assert.ok(assets.has('/' + relative(root, resolved).split(sep).join('/')),
+          'reachable application data is missing from Service Worker precache: ' + relative(root, resolved));
+      }
+    }
+  }
 });
