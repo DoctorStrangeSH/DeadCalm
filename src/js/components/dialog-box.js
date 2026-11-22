@@ -343,6 +343,14 @@ export class DialogBox {
     // ОТВЕТ
     if (node.type === 'answer') {
       this._renderDiscoveryCards(node, choicesEl);
+      if (node.saveError) {
+        const warning = document.createElement('p');
+        warning.className = 'dialog-save-warning text-red-300 text-sm';
+        warning.setAttribute('role', 'alert');
+        warning.setAttribute('aria-live', 'assertive');
+        warning.textContent = 'Не удалось сохранить улику. Вопрос останется доступен — проверьте хранилище браузера и повторите попытку.';
+        choicesEl.appendChild(warning);
+      }
       var continueBtn = document.createElement('button');
       continueBtn.className = 'dialog-btn primary-btn';
       continueBtn.textContent = 'ПРОДОЛЖИТЬ';
