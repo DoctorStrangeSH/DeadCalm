@@ -17,7 +17,8 @@ function cloneEntry(entry) {
     sourceRefs: [...(entry.sourceRefs || [])],
     stateHistory: Array.isArray(entry.stateHistory)
       ? entry.stateHistory.map(item => ({ ...item }))
-      : []
+      : [],
+    ...(Array.isArray(entry.rumorTrail) ? { rumorTrail: normalizeRumorTrail(entry.rumorTrail) } : {})
   };
 }
 
@@ -222,11 +223,7 @@ export function updateNpcKnowledgeState(ledger, entryId, state, reason) {
 
 export function getNpcKnowledge(ledger, npcId) {
   if (!ledger || !Array.isArray(ledger.entries) || typeof npcId !== 'string') return [];
-  return ledger.entries.filter(entry => entry.npcId === npcId).map(entry => ({
-    ...entry,
-    sourceRefs: [...entry.sourceRefs],
-    stateHistory: Array.isArray(entry.stateHistory) ? entry.stateHistory.map(item => ({ ...item })) : []
-  }));
+  return ledger.entries.filter(entry => entry.npcId === npcId).map(cloneEntry);
 }
 
 export function getNpcKnowledgeContext(ledger, npcId) {
