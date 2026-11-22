@@ -209,6 +209,7 @@ export var DialogueEngine = {
     if (response.requires_question && !this._askedQuestions.includes(response.requires_question)) return false;
     if (response.requires_flag && !NPCMemory.hasFlag(this._currentNPC, response.requires_flag)) return false;
     if (response.requires_clue && !GameState.hasClue(response.requires_clue)) return false;
+    if (Array.isArray(response.requires_clues) && !response.requires_clues.every(clueId => GameState.hasClue(clueId))) return false;
     if (response.min_trust != null && NPCMemory.getTrust(this._currentNPC) < response.min_trust) return false;
     return hasDiscoveredContradiction(response.requires_contradiction,
       GameState.currentCase.hypotheses, GameState.currentCase.clues, this._contradictionRules);
