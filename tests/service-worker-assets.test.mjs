@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
 import { access } from 'node:fs/promises';
 import { resolve, dirname, relative, sep, extname } from 'node:path';
 
