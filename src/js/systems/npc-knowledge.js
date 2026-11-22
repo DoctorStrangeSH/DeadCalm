@@ -61,7 +61,8 @@ export function normalizeKnowledgeLedger(value) {
     }).map(entry => ({
       ...entry,
       sourceRefs: cleanRefs(entry.sourceRefs),
-      stateHistory: normalizeStateHistory(entry.stateHistory)
+      stateHistory: normalizeStateHistory(entry.stateHistory),
+      ...(Array.isArray(entry.rumorTrail) ? { rumorTrail: normalizeRumorTrail(entry.rumorTrail) } : {})
     }))
   };
 }
@@ -129,6 +130,77 @@ export function transferNpcKnowledge(ledger, input) {
     sourceNpcId: fromNpcId,
     sourceRefs: [source.id, ...cleanRefs(input.meetingRefs)]
   });
+}
+
+function normalizeRumorTrail(trail) {
+  if (!Array.isArray(trail)) return [];
+  return trail.filter(hop => hop && typeof hop.fromNpcId === 'string' && hop.fromNpcId.trim() &&
+    typeof hop.toNpcId === 'string' && hop.toNpcId.trim() && hop.fromNpcId !== hop.toNpcId &&
+    typeof hop.sourceKnowledgeId === 'string' && hop.sourceKnowledgeId.trim() &&
+    Array.isArray(hop.distortions) &&
+    hop.distortions.every(item => item && typeof item.detail === 'string' && item.detail.trim() &&
+      ['string', 'number', 'boolean'].includes(typeof item.from) &&
+      ['string', 'number', 'boolean'].includes(typeof item.to) &&
+      typeof item.intentional === 'boolean' && typeof item.reason === 'string' && item.reason.trim())
+  ).map(hop => ({
+    fromNpcId: hop.fromNpcId,
+    toNpcId: hop.toNpcId,
+    sourceKnowledgeId: hop.sourceKnowledgeId,
+    distortions: hop.distortions.map(item => ({
+      detail: item.detail, from: item.from, to: item.to,
+      intentional: item.intentional, reason: item.reason.trim()
+    })),
+    transmittedAt: typeof hop.transmittedAt === 'string' ? hop.transmittedAt : null
+  }));
+}
+
+/**
+ * Relay a rumor while preserving its lineage and explicitly authored changes.
+ * No detail changes unless the caller records exactly what changed and why.
+ */
+export function transferNpcRumor(ledger, input) {
+  if (!ledger || !Array.isArray(ledger.entries) || !input || typeof input !== 'object') return null;
+  const { fromNpcId, toNpcId, sourceKnowledgeId, provenance } = input;
+  if (typeof fromNpcId !== 'string' || !fromNpcId.trim() ||
+      typeof toNpcId !== 'string' || !toNpcId.trim() || fromNpcId === toNpcId ||
+      typeof sourceKnowledgeId !== 'string' || !sourceKnowledgeId.trim() ||
+      typeof provenance !== 'string' || !provenance.trim()) return null;
+
+  const source = ledger.entries.find(entry => entry.id === sourceKnowledgeId && entry.npcId === fromNpcId);
+  if (!source || !source.claimRef) return null;
+  const distortions = Array.isArray(input.distortions) ? input.distortions : [];
+  if (distortions.some(item => !item || typeof item.detail !== 'string' || !item.detail.trim() ||
+      !['string', 'number', 'boolean'].includes(typeof item.from) ||
+      !['string', 'number', 'boolean'].includes(typeof item.to) ||
+      item.from === item.to || typeof item.intentional !== 'boolean' ||
+      typeof item.reason !== 'string' || !item.reason.trim())) return null;
+
+  const id = 'rumor-' + source.id + '-' + toNpcId;
+  if (ledger.entries.some(entry => entry.id === id)) return null;
+  const priorTrail = normalizeRumorTrail(source.rumorTrail);
+  const hop = {
+    fromNpcId, toNpcId, sourceKnowledgeId,
+    distortions: distortions.map(item => ({
+      detail: item.detail.trim(), from: item.from, to: item.to,
+      intentional: item.intentional, reason: item.reason.trim()
+    })),
+    transmittedAt: typeof input.transmittedAt === 'string' ? input.transmittedAt : new Date().toISOString()
+  };
+  const entry = recordNpcKnowledge(ledger, {
+    id,
+    npcId: toNpcId,
+    claimRef: source.claimRef,
+    sourceType: 'rumor',
+    state: 'unverified',
+    provenance: provenance.trim(),
+    sourceNpcId: fromNpcId,
+    sourceRefs: [source.id, ...cleanRefs(input.meetingRefs)],
+    recordedAt: hop.transmittedAt
+  });
+  if (!entry) return null;
+  const stored = ledger.entries.find(item => item.id === id);
+  stored.rumorTrail = [...priorTrail, hop];
+  return { ...entry, rumorTrail: normalizeRumorTrail(stored.rumorTrail) };
 }
 
 export function updateNpcKnowledgeState(ledger, entryId, state, reason) {
