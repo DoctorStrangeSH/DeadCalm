@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { GameState } from '../src/js/core/state.js';
 import { Storage } from '../src/js/core/storage.js';
 import { Events } from '../src/js/core/events.js';
-import { normalizeKnowledgeLedger, transferNpcRumor } from '../src/js/systems/npc-knowledge.js';
+import { getNpcKnowledge, normalizeKnowledgeLedger, transferNpcRumor } from '../src/js/systems/npc-knowledge.js';
 
 function sourceLedger() {
   return { entries: [{
@@ -71,6 +71,10 @@ test('rumor transmission preserves its chain and records intentional and acciden
   assert.ok(second);
   assert.equal(second.state, 'unverified');
   assert.equal(second.rumorTrail.length, 2);
+  const readCopy = getNpcKnowledge(ledger, 'npc_marta_hayes')[0];
+  readCopy.rumorTrail[0].distortions[0].to = 'corrupted by caller';
+  assert.equal(ledger.entries.find(item => item.id === second.id).rumorTrail[0].distortions[0].to,
+    'a court clerk', 'reading rumor history must not expose mutable save data');
   assert.deepEqual(second.rumorTrail.map(hop => [hop.fromNpcId, hop.toNpcId]), [
     ['npc_ray_morgan', 'npc_anna_holt'],
     ['npc_anna_holt', 'npc_marta_hayes']
