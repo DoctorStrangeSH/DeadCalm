@@ -270,25 +270,41 @@ export var DialogueEngine = {
       return null;
     }
 
-    if (!opensUnresolvedChoice) {
-      this._askedQuestions.push(questionId);
-      NPCMemory.markQuestionAsked(this._currentNPC, questionId);
-    }
+    const shouldRememberQuestion = !opensUnresolvedChoice;
+    if (shouldRememberQuestion) this._askedQuestions.push(questionId);
     console.log('[Dialogue] Задан вопрос: ' + questionId);
 
     // Добавляем заметку (только для важных)
     var addedNote = foundResponse.adds_note && this._addToNotebook(foundResponse.adds_note)
       ? foundResponse.adds_note : null;
 
-    // Выдаём улику
+    // Улика считается полученной только после успешной записи сохранения.
     var addedClue = null;
+    var clueSaveFailed = false;
     if (foundResponse.gives_clue) {
       var clue = this._clues?.[foundResponse.gives_clue];
       if (clue && !GameState.hasClue(clue.id)) {
-        GameState.addClue(clue);
-        addedClue = clue;
-        console.log('[Dialogue] Выдана улика: ' + clue.name);
+        if (GameState.addClue(clue) === false) {
+          clueSaveFailed = true;
+          if (shouldRememberQuestion) {
+            this._askedQuestions = this._askedQuestions.filter(id => id !== questionId);
+          }
+        } else {
+          addedClue = clue;
+          console.log('[Dialogue] Выдана улика: ' + clue.name);
+        }
       }
+    }
+
+    if (shouldRememberQuestion && !clueSaveFailed) {
+      NPCMemory.markQuestionAsked(this._currentNPC, questionId);
+    }
+    if (clueSaveFailed) {
+      return this._formatAnswer(foundResponse, {
+        addedNote: null,
+        addedClue: null,
+        saveError: true
+      });
     }
 
     // Проверяем критический выбор
@@ -457,6 +473,7 @@ export var DialogueEngine = {
       trust,
       addedNote: context.addedNote || null,
       addedClue: context.addedClue || null,
+      saveError: Boolean(context.saveError),
       canContinue: true
     };
   },
