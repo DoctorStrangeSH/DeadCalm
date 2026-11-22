@@ -11,3 +11,10 @@ test('dialogue displays an accessible warning when a clue could not be saved', (
   assert.match(dialogBox, /setAttribute\('aria-live', 'assertive'\)/);
   assert.match(dialogBox, /Вопрос останется доступен/);
 });
+
+
+test('simple dialogue nodes announce failed first-meeting persistence accessibly', () => {
+  assert.match(dialogBox, /if \(node\.saveError\)/);
+  assert.match(dialogBox, /Не удалось сохранить разговор/);
+  assert.match(dialogBox, /Неподтверждённое действие не засчитано/);
+});
