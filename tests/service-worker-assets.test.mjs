@@ -76,12 +76,12 @@ test('story-gated mini-game modules are included in the offline precache', async
 
 test('every local JavaScript module reachable from the application entrypoint is precached', async () => {
   const worker = readFileSync(resolve(root, 'sw.js'), 'utf8');
-  const match = worker.match(/const ASSETS = ([\\s\\S]*?);/);
+  const match = worker.match(/const ASSETS = ([\s\S]*?);/);
   assert.ok(match, 'ASSETS array must be declared as a literal JSON array');
   const assets = new Set(JSON.parse(match[1]));
   const visited = new Set();
   const pending = [resolve(root, 'src/js/core/app.js')];
-  const importPattern = /(?:^\\s*import\\s+(?:[^'"]*?\\s+from\\s+)?|^\\s*export\\s+[^'"]*?\\s+from\\s+|^\\s*import\\s*\\(\\s*)['"]([^'"]+)['"]/gm;
+  const importPattern = /(?:^\s*import\s+(?:[^'"]*?\s+from\s+)?|^\s*export\s+[^'"]*?\s+from\s+|^\s*import\s*\(\s*)['"]([^'"]+)['"]/gm;
 
   while (pending.length) {
     const file = pending.pop();
