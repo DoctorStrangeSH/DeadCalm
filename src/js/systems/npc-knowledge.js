@@ -18,8 +18,26 @@ function cloneEntry(entry) {
     stateHistory: Array.isArray(entry.stateHistory)
       ? entry.stateHistory.map(item => ({ ...item }))
       : [],
-    ...(Array.isArray(entry.rumorTrail) ? { rumorTrail: normalizeRumorTrail(entry.rumorTrail) } : {})
+    ...(Array.isArray(entry.rumorTrail) ? { rumorTrail: normalizeRumorTrail(entry.rumorTrail) } : {}),
+    ...(Array.isArray(entry.challengeHistory) ? { challengeHistory: normalizeChallengeHistory(entry.challengeHistory) } : {})
   };
+}
+
+function normalizeChallengeHistory(history) {
+  if (!Array.isArray(history)) return [];
+  return history.filter(item => item && typeof item.id === 'string' && item.id.trim() &&
+    Array.isArray(item.clueIds) && item.clueIds.length > 0 &&
+    item.clueIds.every(id => typeof id === 'string' && id.trim()) &&
+    typeof item.reason === 'string' && item.reason.trim() &&
+    KNOWLEDGE_STATES.has(item.stateBefore) &&
+    typeof item.changedAt === 'string'
+  ).map(item => ({
+    id: item.id,
+    clueIds: cleanRefs(item.clueIds),
+    reason: item.reason.trim(),
+    stateBefore: item.stateBefore,
+    changedAt: item.changedAt
+  }));
 }
 
 function normalizeStateHistory(history) {
@@ -218,6 +236,53 @@ export function updateNpcKnowledgeState(ledger, entryId, state, reason) {
     reason: reason.trim(),
     changedAt: new Date().toISOString()
   });
+  return cloneEntry(entry);
+}
+
+/**
+ * Record that an NPC has been confronted with discovered evidence.
+ * A challenge can make a belief disputed, but never establishes the claim as false
+ * or forces the NPC to accept the investigator's interpretation.
+ */
+export function challengeNpcKnowledge(ledger, input, availableClues = []) {
+  if (!ledger || !Array.isArray(ledger.entries) || !input || typeof input !== 'object' ||
+      !Array.isArray(availableClues)) return null;
+  const { entryId, npcId, clueIds, reason } = input;
+  if (typeof entryId !== 'string' || !entryId.trim() ||
+      typeof npcId !== 'string' || !npcId.trim() ||
+      !Array.isArray(clueIds) || clueIds.length === 0 ||
+      typeof reason !== 'string' || !reason.trim()) return null;
+
+  const entry = ledger.entries.find(item => item.id === entryId && item.npcId === npcId);
+  if (!entry || !KNOWLEDGE_STATES.has(entry.state)) return null;
+  const available = new Set(availableClues.filter(clue => clue && typeof clue.id === 'string').map(clue => clue.id));
+  const evidenceIds = cleanRefs(clueIds);
+  if (evidenceIds.length !== clueIds.length || !evidenceIds.length ||
+      !evidenceIds.every(id => available.has(id))) return null;
+
+  const history = normalizeChallengeHistory(entry.challengeHistory);
+  const challengeId = 'challenge-' + entry.id + '-' + [...evidenceIds].sort().join('-');
+  if (history.some(item => item.id === challengeId)) return null;
+
+  const challenge = {
+    id: challengeId,
+    clueIds: evidenceIds,
+    reason: reason.trim(),
+    stateBefore: entry.state,
+    changedAt: new Date().toISOString()
+  };
+  entry.challengeHistory = [...history, challenge];
+  if (entry.state !== 'disputed') {
+    const previousState = entry.state;
+    entry.state = 'disputed';
+    entry.stateHistory = normalizeStateHistory(entry.stateHistory);
+    entry.stateHistory.push({
+      from: previousState,
+      to: 'disputed',
+      reason: 'Игрок предъявил доказательства: ' + reason.trim(),
+      changedAt: challenge.changedAt
+    });
+  }
   return cloneEntry(entry);
 }
 
