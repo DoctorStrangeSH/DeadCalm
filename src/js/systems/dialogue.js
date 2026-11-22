@@ -333,26 +333,24 @@ export var DialogueEngine = {
         var choice = node.choices.find(function(c) { return c.id === choiceId; });
         if (choice) {
           console.log('[Dialogue] Критический выбор: ' + choiceId);
-          // Commit the one-time choice only after an explicit player decision.
-          const questionId = node.trigger_question;
-          if (questionId) {
-            if (!this._askedQuestions.includes(questionId)) this._askedQuestions.push(questionId);
-            NPCMemory.markQuestionAsked(this._currentNPC, questionId);
+          // Commit the decision, trust change and authored memory consequences together.
+          const nextNode = npcData[choice.next_dialogue];
+          const decision = NPCMemory.commitCriticalChoice(this._currentNPC, {
+            questionId: node.trigger_question,
+            choiceFlag: 'critical_' + key,
+            trustDelta: choice.effects?.trust || 0,
+            memorySet: choice.memory_set || null,
+            memoryClear: choice.memory_clear || null,
+            resultFlag: nextNode?.memory_set || null
+          });
+          if (!decision) {
+            return this._formatCriticalChoice(node, { saveError: true });
           }
-          NPCMemory.setFlag(this._currentNPC, 'critical_' + key);
-          var trustBefore = NPCMemory.getTrust(this._currentNPC);
+          if (node.trigger_question && !this._askedQuestions.includes(node.trigger_question)) {
+            this._askedQuestions.push(node.trigger_question);
+          }
+          const trustBefore = decision.trustBefore;
 
-          if (choice.effects?.trust) {
-            NPCMemory.changeTrust(this._currentNPC, choice.effects.trust);
-          }
-          if (choice.memory_set) {
-            NPCMemory.setFlag(this._currentNPC, choice.memory_set);
-          }
-          if (choice.memory_clear) {
-            NPCMemory.clearFlag(this._currentNPC, choice.memory_clear);
-          }
-
-          var nextNode = npcData[choice.next_dialogue];
           if (nextNode) {
             var addedNote = nextNode.adds_note && this._addToNotebook(nextNode.adds_note)
               ? nextNode.adds_note : null;
@@ -363,9 +361,6 @@ export var DialogueEngine = {
                 GameState.addClue(clue);
                 addedClue = clue;
               }
-            }
-            if (nextNode.memory_set) {
-              NPCMemory.setFlag(this._currentNPC, nextNode.memory_set);
             }
             return this._formatCriticalResult(nextNode, {
               type: 'critical_result',
@@ -488,6 +483,7 @@ export var DialogueEngine = {
       speakerRole: character?.role || '',
       trust: NPCMemory.getTrust(this._currentNPC),
       reaction: resolveDialogueReaction({ type: 'critical_choice' }),
+      saveError: Boolean(context.saveError),
       addedNote: context.addedNote || null,
       addedClue: context.addedClue || null,
       choices: node.choices.map(function(c) {
