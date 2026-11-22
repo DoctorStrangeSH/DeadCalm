@@ -230,6 +230,14 @@ export class DialogBox {
     // КРИТИЧЕСКИЙ ВЫБОР
     if (node.type === 'critical_choice') {
       choicesEl.innerHTML = '<p class="critical-warning">Этот выбор изменит отношение персонажа к вам навсегда</p>';
+      if (node.saveError) {
+        const warning = document.createElement('p');
+        warning.className = 'dialog-save-warning text-red-300 text-sm';
+        warning.setAttribute('role', 'alert');
+        warning.setAttribute('aria-live', 'assertive');
+        warning.textContent = 'Не удалось сохранить ваш выбор. Последствия не применены — выберите вариант ещё раз.';
+        choicesEl.appendChild(warning);
+      }
       this._renderDiscoveryCards(node, choicesEl);
 
       if (node.choices) {
