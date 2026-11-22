@@ -624,3 +624,18 @@
 - Added state-import, revision-history and player-facing UI regression tests.
 - GitHub Actions run 44922019068: **397/397 passed, 0 failures** on HEAD `90470aee`.
 - Independent-evidence criteria for a future automatic `confirmed` state remain intentionally open.
+
+
+### Финальная проверка защиты концовки и CI — 2026-11-22
+
+- На уровне `GameState.completeCampaign()` концовка «Цена молчания» требует сохранённую улику `sebastian_sealed_confession`; проверка не ограничивается наличием кнопки в сцене.
+- Сценарий `tests/campaign-state.test.mjs` проверяет отказ без признания и успешное завершение после добавления признания. Тест экспорта `tests/campaign-export.test.mjs` использует валидный fixture с этой уликой.
+- Сцена порта создаёт запечатанное признание только после явного выбора игроком «ЗАКЛЮЧИТЬ СДЕЛКУ»; описание улики сохраняет требование независимой проверки.
+- Исправлен старый тестовый fixture, который пытался завершить компромиссную концовку без обязательного признания. Условия игры не ослаблялись.
+- GitHub Actions run `44990040538`: **397/397 тестов, 0 failures**, HEAD `8d93ae06b69210558ceadbb8a348513a36883065`.
+- PR #3 остаётся открытым; `main` не изменён этим PR. CI подтверждает автоматические регрессии, но не заменяет ручное прохождение.
+- [ ] Ручное прохождение New Game → оба финала в браузере.
+- [ ] Проверка Continue / Export / Import / перезапуск страницы на реальном браузере.
+- [ ] Desktop/mobile, установка PWA, обновление Service Worker и offline fallback.
+- [ ] Прослушивание музыки и эффектов на desktop/mobile.
+- [ ] Сканирование содержимого репозитория на секреты и персональные данные.
