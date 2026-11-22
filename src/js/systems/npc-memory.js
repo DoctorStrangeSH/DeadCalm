@@ -97,8 +97,32 @@ export var NPCMemory = {
       console.error('[NPCMemory] Не удалось сохранить решающий выбор:', error);
     }
     if (saved === false) {
-      for (const key of Object.keys(memory)) delete memory[key];
+      const flagsRef = memory.flags;
+      const askedRef = memory.askedQuestions;
+      const unlockedRef = memory.unlockedTopics;
+      const interviewsRef = memory.interviewHistory;
+      for (const key of Object.keys(memory)) {
+        if (!['flags', 'askedQuestions', 'unlockedTopics', 'interviewHistory'].includes(key)) {
+          delete memory[key];
+        }
+      }
       Object.assign(memory, previousMemory);
+      for (const [target, snapshot] of [
+        [flagsRef, previousMemory.flags],
+        [askedRef, previousMemory.askedQuestions],
+        [unlockedRef, previousMemory.unlockedTopics],
+        [interviewsRef, previousMemory.interviewHistory]
+      ]) {
+        if (Array.isArray(target) && Array.isArray(snapshot)) target.splice(0, target.length, ...snapshot);
+        else if (target && snapshot && typeof target === 'object' && typeof snapshot === 'object') {
+          for (const key of Object.keys(target)) delete target[key];
+          Object.assign(target, snapshot);
+        }
+      }
+      memory.flags = flagsRef;
+      memory.askedQuestions = askedRef;
+      memory.unlockedTopics = unlockedRef;
+      memory.interviewHistory = interviewsRef;
       if (!hadMemory) delete GameState.npcMemory[npcId];
       if (hadRelationship) {
         const current = GameState.relationships[npcId] || {};
