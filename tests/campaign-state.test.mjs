@@ -241,6 +241,7 @@ test('failed day-transition save rolls back the day and emits no transition even
   try {
     GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
     GameState.flags = { keep_me: true };
+    const flagsReference = GameState.flags;
     GameState.currentCase = {
       ...GameState.currentCase,
       clues: [
@@ -253,6 +254,7 @@ test('failed day-transition save rolls back the day and emits no transition even
     assert.equal(GameState.advanceCampaignDay(), false);
     assert.equal(GameState.campaign.day, 1);
     assert.deepEqual(GameState.flags, { keep_me: true });
+    assert.equal(GameState.flags, flagsReference, 'rollback must preserve the shared flags object');
     assert.equal(events.length, 0);
 
     Storage.save = () => true;
