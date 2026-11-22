@@ -150,7 +150,7 @@ test('final evidence dossier explains both findings and limits without overstati
   const charge = dossier.find(item => item.title === 'Основание для официального обвинения');
   assert.match(charge.finding, /дают основания предъявить официальное обвинение/);
   assert.match(charge.limit, /не судебный приговор/);
-  assert.match(charge.limit, /не установлены/);
+  assert.match(charge.limit, /должны быть независимо проверены/);
 });
 
 test('partial film is described as unidentified and does not become proof of identity', () => {
