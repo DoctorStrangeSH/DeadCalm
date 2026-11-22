@@ -97,6 +97,40 @@ export function recordNpcKnowledge(ledger, input) {
   return cloneEntry(entry);
 }
 
+/**
+ * Relay an attributed claim from one NPC to another.
+ * The recipient always receives an unverified account; transmission never proves truth.
+ */
+export function transferNpcKnowledge(ledger, input) {
+  if (!ledger || !Array.isArray(ledger.entries) || !input || typeof input !== 'object') return null;
+  const { fromNpcId, toNpcId, sourceKnowledgeId, provenance } = input;
+  const sourceType = input.sourceType || 'rumor';
+  if (typeof fromNpcId !== 'string' || !fromNpcId.trim() ||
+      typeof toNpcId !== 'string' || !toNpcId.trim() || fromNpcId === toNpcId ||
+      typeof sourceKnowledgeId !== 'string' || !sourceKnowledgeId.trim() ||
+      !['interview', 'rumor'].includes(sourceType) ||
+      typeof provenance !== 'string' || !provenance.trim()) return null;
+
+  const source = ledger.entries.find(entry =>
+    entry.id === sourceKnowledgeId && entry.npcId === fromNpcId
+  );
+  if (!source || !source.claimRef) return null;
+
+  const id = 'relay-' + source.id + '-' + toNpcId;
+  if (ledger.entries.some(entry => entry.id === id)) return null;
+
+  return recordNpcKnowledge(ledger, {
+    id,
+    npcId: toNpcId,
+    claimRef: source.claimRef,
+    sourceType,
+    state: 'unverified',
+    provenance: provenance.trim(),
+    sourceNpcId: fromNpcId,
+    sourceRefs: [source.id]
+  });
+}
+
 export function updateNpcKnowledgeState(ledger, entryId, state, reason) {
   if (!ledger || !Array.isArray(ledger.entries) || !KNOWLEDGE_STATES.has(state) ||
       typeof reason !== 'string' || !reason.trim()) return null;
