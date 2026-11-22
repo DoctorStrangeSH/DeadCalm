@@ -52,7 +52,7 @@ test('day five is finale-ready and cannot advance to a nonexistent sixth day', (
   assert.equal(game.campaign.day, 5);
 });
 
-test('final disclosure dossier requires the authored case materials and a clear film restoration', () => {
+test('final disclosure dossier requires the authored case materials, Sebastian delivery statement and a clear film restoration', () => {
   const found = new Map([
     ['autopsy_report_01', {}],
     ['judge_appointment_card', {}],
@@ -60,6 +60,7 @@ test('final disclosure dossier requires the authored case materials and a clear 
     ['matthews_letter', {}],
     ['port_cargo_ledger', {}],
     ['markus_statement', {}],
+    ['sebastian_delivery_statement', {}],
     ['port_radio_fragment', {}],
     ['restored_film_frame', { quality: 70 }]
   ]);
@@ -76,6 +77,11 @@ test('final disclosure dossier requires the authored case materials and a clear 
   assert.equal(result.ready, true);
   assert.equal(result.fullDisclosureReady, true);
   assert.equal(result.publicReady, result.fullDisclosureReady, 'legacy alias must remain consistent');
+  found.delete('sebastian_delivery_statement');
+  result = assessFinalEvidence(game);
+  assert.equal(result.ready, false);
+  assert.ok(result.missing.includes('Показание Себастьяна о передаче флакона'));
+  found.set('sebastian_delivery_statement', {});
   found.delete('markus_statement');
   result = assessFinalEvidence(game);
   assert.equal(result.ready, false);
@@ -117,7 +123,8 @@ test('final evidence dossier explains both findings and limits without overstati
   const found = new Map([
     ['restored_film_frame', { quality: 100 }],
     ['port_radio_fragment', { quality: 82 }],
-    ['court_switchboard_log', {}]
+    ['court_switchboard_log', {}],
+    ['sebastian_delivery_statement', {}]
   ]);
   const game = {
     hasClue: id => found.has(id),
@@ -136,7 +143,10 @@ test('final evidence dossier explains both findings and limits without overstati
   assert.match(autopsy.limit, /не устанавливает, кто приобрёл яд/);
   assert.match(poison.limit, /Получатель препарата/);
   assert.match(timeline.limit, /не устанавливают личность убийцы/);
-  assert.equal(dossier.length, 9);
+  assert.equal(dossier.length, 10);
+  const transfer = dossier.find(item => item.title === 'Передача флакона');
+  assert.match(transfer.finding, /Себастьян подтверждает/);
+  assert.match(transfer.limit, /не доказывает, что Гаррисон выпил/);
   const charge = dossier.find(item => item.title === 'Основание для официального обвинения');
   assert.match(charge.finding, /даёт основания предъявить официальное обвинение/);
   assert.match(charge.limit, /не судебный приговор/);
