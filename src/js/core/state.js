@@ -370,7 +370,16 @@ export var GameState = {
         ? Math.max(0, Math.min(100, initialTrust))
         : 50;
       this.relationships[npcId] = { trust, met: false };
-      this.save();
+      let saved = false;
+      try {
+        saved = this.save();
+      } catch (error) {
+        console.error('[State] Не удалось сохранить начальные отношения NPC:', error);
+      }
+      if (saved === false) {
+        delete this.relationships[npcId];
+        return null;
+      }
     }
     return this.relationships[npcId];
   },
