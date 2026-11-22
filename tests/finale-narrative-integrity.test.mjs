@@ -16,9 +16,10 @@ test('compromise ending records Sebastian’s sealed confession without publishi
   assert.match(portScene, /GameState\.completeCampaign\('price_of_silence'\)/);
 });
 
-test('finale evidence briefing does not claim Sebastian corroborated the case in dialogue', () => {
-  assert.match(portScene, /в совокупности дают основания для официального обвинения/);
+test('finale distinguishes Sebastian’s admission of delivery from an admission of murder', () => {
+  assert.match(portScene, /в совокупности дают основания предъявить официальное обвинение/);
   assert.match(portScene, /Сам Себастьян не признаёт убийство/);
+  assert.match(dialogues.npc_sebastian_blackwood.topics.about_judge.responses.find(item => item.id === 'sebastian_delivery_statement').answer, /передал Гаррисону запечатанный флакон/);
   assert.doesNotMatch(portScene, /его слова совпадают в нескольких точках/);
 });
 
@@ -45,4 +46,11 @@ test('full public disclosure gate is not described as proof that Sebastian admin
   assert.match(portScene, /Это ещё не судебный приговор/);
   assert.doesNotMatch(portScene, /Для публичного обвинения нужен/);
   assert.match(portScene, /ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ/);
+});
+
+
+test('finale directs the player back to Sebastian when the delivery statement is missing', () => {
+  assert.match(portScene, /Показание Себастьяна о передаче флакона/);
+  assert.match(portScene, /btn-return-sebastian/);
+  assert.match(portScene, /scene: 'blackwood-mansion'/);
 });
