@@ -105,3 +105,33 @@ test('ordinary dialogue question remains retryable if its memory cannot be saved
     restore(previous);
   }
 });
+
+
+test('an ordinary dialogue note is not announced or locked when notebook persistence fails', () => {
+  const previous = snapshot();
+  try {
+    prepare();
+    Storage.save = () => true;
+    DialogueEngine.startDialogue('npc_lydia_winter');
+    DialogueEngine.startDialogue('npc_lydia_winter');
+    const topic = DialogueEngine.selectTopic('about_autopsy');
+    assert.ok(topic.questions.some(question => question.id === 'unusual_marks'));
+
+    Storage.save = () => false;
+    const failed = DialogueEngine.askQuestion('unusual_marks');
+    assert.equal(failed?.type, 'answer');
+    assert.equal(failed.saveError, true);
+    assert.equal(failed.addedNote, null);
+    assert.equal(GameState.notebook.some(note => note.title === 'Знак на теле судьи'), false);
+    assert.equal(NPCMemory.getAskedQuestions('npc_lydia_winter').includes('unusual_marks'), false);
+
+    Storage.save = () => true;
+    const retry = DialogueEngine.askQuestion('unusual_marks');
+    assert.equal(retry?.saveError, false);
+    assert.equal(retry.addedNote.title, 'Знак на теле судьи');
+    assert.equal(GameState.notebook.some(note => note.title === 'Знак на теле судьи'), true);
+    assert.equal(NPCMemory.getAskedQuestions('npc_lydia_winter').includes('unusual_marks'), true);
+  } finally {
+    restore(previous);
+  }
+});
