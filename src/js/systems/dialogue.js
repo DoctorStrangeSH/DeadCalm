@@ -78,7 +78,13 @@ export var DialogueEngine = {
     }
 
     var character = this.getCharacter(npcId);
-    GameState.ensureRelationship(npcId, character?.initial_trust ?? 50);
+    if (!GameState.ensureRelationship(npcId, character?.initial_trust ?? 50)) {
+      return {
+        type: 'simple',
+        text: 'Не удалось сохранить начало разговора. Ваш прогресс не изменён — проверьте хранилище браузера и попробуйте ещё раз.',
+        saveError: true
+      };
+    }
 
     console.log('[Dialogue] === Начало диалога с ' + npcId + ' ===');
     console.log('[Dialogue] Встречались ранее: ' + NPCMemory.hasMet(npcId));
@@ -105,11 +111,16 @@ export var DialogueEngine = {
       NPCMemory.markMet(npcId);
 
       var firstNode = npcData.first_meeting;
-      if (firstNode && firstNode.unlocks_topics) {
-        this._unlockedTopics = firstNode.unlocks_topics.slice();
-        NPCMemory.unlockTopics(npcId, firstNode.unlocks_topics);
-        console.log('[Dialogue] Разблокированы темы: ' + this._unlockedTopics.join(', '));
+      const initialTopics = Array.isArray(firstNode?.unlocks_topics) ? firstNode.unlocks_topics : [];
+      if (!NPCMemory.commitFirstMeeting(npcId, initialTopics)) {
+        return {
+          type: 'simple',
+          text: 'Не удалось сохранить первую встречу. Персонаж не отметил разговор как состоявшийся — попробуйте начать его ещё раз.',
+          saveError: true
+        };
       }
+      this._unlockedTopics = NPCMemory.getUnlockedTopics(npcId);
+      console.log('[Dialogue] Разблокированы темы: ' + this._unlockedTopics.join(', '));
       return this._formatFirstMeeting(firstNode, npcId);
     }
 
@@ -271,7 +282,6 @@ export var DialogueEngine = {
     }
 
     const shouldRememberQuestion = !opensUnresolvedChoice;
-    if (shouldRememberQuestion) this._askedQuestions.push(questionId);
     console.log('[Dialogue] Задан вопрос: ' + questionId);
 
     // Добавляем заметку (только для важных)
@@ -297,8 +307,13 @@ export var DialogueEngine = {
       }
     }
 
-    if (shouldRememberQuestion && !clueSaveFailed) {
-      NPCMemory.markQuestionAsked(this._currentNPC, questionId);
+    if (shouldRememberQuestion && !clueSaveFailed &&
+        !NPCMemory.markQuestionAsked(this._currentNPC, questionId)) {
+      return this._formatAnswer(foundResponse, {
+        addedNote,
+        addedClue,
+        saveError: true
+      });
     }
     if (clueSaveFailed) {
       return this._formatAnswer(foundResponse, {
