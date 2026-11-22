@@ -287,7 +287,8 @@ export var DialogueEngine = {
         if (GameState.addClue(clue) === false) {
           clueSaveFailed = true;
           if (shouldRememberQuestion) {
-            this._askedQuestions = this._askedQuestions.filter(id => id !== questionId);
+            const askedIndex = this._askedQuestions.lastIndexOf(questionId);
+            if (askedIndex !== -1) this._askedQuestions.splice(askedIndex, 1);
           }
         } else {
           addedClue = clue;
