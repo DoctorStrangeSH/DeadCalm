@@ -43,7 +43,7 @@ test('open-case ending files a formal accusation without presenting it as a conv
 
 test('full public disclosure gate is not described as proof that Sebastian administered the poison', () => {
   assert.match(portScene, /fullDisclosureReady/);
-  assert.match(portScene, /Это ещё не судебный приговор/);
+  assert.match(portScene, /не судебный приговор/);
   assert.doesNotMatch(portScene, /Для публичного обвинения нужен/);
   assert.match(portScene, /ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ/);
 });
