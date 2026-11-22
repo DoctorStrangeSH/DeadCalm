@@ -40,6 +40,10 @@ test('NPC dialogue response IDs are unique and every dependency resolves', () =>
         allResponses.push(response);
         if (response.gives_clue) assert.ok(clues[response.gives_clue], response.id + ' gives missing clue ' + response.gives_clue);
         if (response.requires_clue) assert.ok(clues[response.requires_clue], response.id + ' requires missing clue ' + response.requires_clue);
+        if (response.requires_clues) {
+          assert.ok(Array.isArray(response.requires_clues), response.id + ' requires_clues must be an array');
+          for (const clueId of response.requires_clues) assert.ok(clues[clueId], response.id + ' requires missing clue ' + clueId);
+        }
         if (response.requires_contradiction) {
           assert.ok(contradictionIds.has(response.requires_contradiction), response.id + ' requires missing contradiction');
         }
