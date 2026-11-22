@@ -57,7 +57,8 @@ test('completing either finale persists the exact ending in the save payload', (
       ...GameState.currentCase,
       clues: [
         'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
-        'matthews_letter', 'port_cargo_ledger', 'markus_statement', 'port_radio_fragment'
+        'matthews_letter', 'port_cargo_ledger', 'markus_statement', 'port_radio_fragment',
+        'sebastian_sealed_confession'
       ].map(id => ({ id }))
     };
     Storage.save = (key, value) => writes.push({ key, value: structuredClone(value) });
