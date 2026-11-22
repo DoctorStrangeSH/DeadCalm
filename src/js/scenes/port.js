@@ -54,12 +54,17 @@ function renderEndingChoices(container) {
   const evidenceDossier = buildFinalEvidenceDossier(GameState);
   const result = container.querySelector('#story-location-result');
   if (!evidenceStatus.ready) {
+    const needsSebastianStatement = evidenceStatus.missing.includes('Показание Себастьяна о передаче флакона');
     result.innerHTML = `
       <div class="card p-4">
         <p class="text-gold text-sm">ПОКА НЕДОСТАТОЧНО ДОКАЗАТЕЛЬСТВ</p>
-        <p class="text-gray-400 text-sm mt-2">Не хватает независимых источников:</p><ul class="text-gray-500 text-xs mt-2">${evidenceStatus.missing.map(item => '<li>— ' + item + '</li>').join('')}</ul><p class="text-gray-500 text-xs mt-2">Признание Маркуса не заменит эти источники.</p>
+        <p class="text-gray-400 text-sm mt-2">Не хватает обязательных материалов:</p><ul class="text-gray-500 text-xs mt-2">${evidenceStatus.missing.map(item => '<li>— ' + item + '</li>').join('')}</ul><p class="text-gray-500 text-xs mt-2">Признание Маркуса не заменит независимые источники.</p>
+        ${needsSebastianStatement ? '<button id="btn-return-sebastian" class="btn-noir w-full py-3 mt-4">ВЕРНУТЬСЯ К СЕБАСТЬЯНУ В ОСОБНЯК →</button>' : ''}
       </div>
     `;
+    result.querySelector('#btn-return-sebastian')?.addEventListener('click', () => {
+      Events.emit('navigate', { scene: 'blackwood-mansion' });
+    });
     return;
   }
 
