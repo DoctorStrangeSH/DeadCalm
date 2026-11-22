@@ -14,7 +14,7 @@ test('five-day campaign advances sequentially only after each daily evidence gat
     GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
     GameState.flags = {};
     GameState.currentCase = { ...originalCurrentCase, clues: [] };
-    Storage.save = (key, value) => writes.push({ key, value: structuredClone(value) });
+    Storage.save = (key, value) => { writes.push({ key, value: structuredClone(value) }); return true; };
     const addClues = ids => {
       for (const id of ids) {
         if (!GameState.hasClue(id)) GameState.currentCase.clues.push({
