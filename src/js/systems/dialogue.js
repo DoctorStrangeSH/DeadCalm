@@ -532,7 +532,13 @@ export var DialogueEngine = {
         if (!NPCMemory.hasFlag(this._currentNPC, reaction.required_flag) ||
             NPCMemory.hasFlag(this._currentNPC, reaction.consumed_flag)) continue;
 
-        NPCMemory.setFlag(this._currentNPC, reaction.consumed_flag);
+        if (!NPCMemory.setFlag(this._currentNPC, reaction.consumed_flag)) {
+          return {
+            type: 'simple',
+            text: 'Не удалось сохранить реакцию персонажа. Последствие прошлого разговора не отмечено как показанное — попробуйте встретиться ещё раз.',
+            saveError: true
+          };
+        }
         const character = this.getCharacter(this._currentNPC);
         return {
           type: 'simple',
