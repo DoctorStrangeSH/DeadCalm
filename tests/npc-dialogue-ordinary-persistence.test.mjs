@@ -135,3 +135,54 @@ test('an ordinary dialogue note is not announced or locked when notebook persist
     restore(previous);
   }
 });
+
+
+test('Ray’s promised call-log follow-up stays locked until the promise is saved', () => {
+  const previous = snapshot();
+  try {
+    prepare();
+    GameState.npcMemory = {
+      npc_ray_morgan: {
+        met: true,
+        flags: {},
+        conversationCount: 1,
+        questionCount: 0,
+        unlockedTopics: ['about_case'],
+        askedQuestions: [],
+        criticalChoiceMade: false,
+        interviewHistory: []
+      }
+    };
+    GameState.relationships = { npc_ray_morgan: { trust: 50, met: true } };
+    DialogueEngine._currentNPC = 'npc_ray_morgan';
+    DialogueEngine._askedQuestions = NPCMemory.getAskedQuestions('npc_ray_morgan');
+
+    const rayResponses = dialogues.npc_ray_morgan.topics.about_case.responses;
+    const promiseQuestion = rayResponses.find(item => item.id === 'confront_report_timing');
+    const followUp = rayResponses.find(item => item.id === 'inspect_incoming_calls');
+    assert.equal(promiseQuestion.memory_set, 'ray_promised_check_calls');
+    assert.equal(followUp.requires_flag, 'ray_promised_check_calls');
+
+    assert.equal(DialogueEngine._isResponseAvailable(followUp), false);
+    Storage.save = () => false;
+    assert.equal(NPCMemory.markQuestionAsked('npc_ray_morgan', promiseQuestion.id, {
+      memorySet: promiseQuestion.memory_set
+    }), false);
+    assert.equal(NPCMemory.hasFlag('npc_ray_morgan', 'ray_promised_check_calls'), false);
+    assert.equal(DialogueEngine._isResponseAvailable(followUp), false);
+
+    Storage.save = () => true;
+    assert.equal(NPCMemory.markQuestionAsked('npc_ray_morgan', promiseQuestion.id, {
+      memorySet: promiseQuestion.memory_set
+    }), true);
+    assert.equal(NPCMemory.hasFlag('npc_ray_morgan', 'ray_promised_check_calls'), true);
+    assert.equal(DialogueEngine._isResponseAvailable(followUp), true);
+
+    const exported = GameState.export();
+    GameState.npcMemory = {};
+    assert.equal(GameState.importSave(exported), true);
+    assert.equal(NPCMemory.hasFlag('npc_ray_morgan', 'ray_promised_check_calls'), true);
+  } finally {
+    restore(previous);
+  }
+});
