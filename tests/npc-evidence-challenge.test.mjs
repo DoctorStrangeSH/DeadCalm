@@ -55,9 +55,14 @@ test('evidence challenge disputes only the addressed NPC belief and keeps the ex
   assert.equal(challengeNpcKnowledge(ledger, {
     entryId: 'belief-ray-caller',
     npcId: 'npc_ray_morgan',
-    clueIds: ['court_switchboard_log', 'court_extension_directory'],
-    reason: 'The same evidence was presented again.'
-  }, evidence), null, 'the same evidence set cannot be recorded twice');
+    clueIds: ['court_extension_directory', 'court_switchboard_log'],
+    reason: 'The same evidence was presented in a different order.'
+  }, evidence), null, 'the same evidence set cannot be recorded twice regardless of order');
+  const restored = normalizeKnowledgeLedger(ledger);
+  assert.equal(restored.entries[0].challengeHistory.length, 1);
+  assert.deepEqual(restored.entries[0].challengeHistory[0].clueIds, [
+    'court_switchboard_log', 'court_extension_directory'
+  ]);
 });
 
 test('evidence challenge rejects another NPC, undiscovered clues and empty reasons', () => {
