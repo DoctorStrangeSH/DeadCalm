@@ -373,6 +373,14 @@ export class DialogBox {
 
     // ПРОСТОЙ УЗЕЛ
     if (node.type === 'simple') {
+      if (node.saveError) {
+        const warning = document.createElement('p');
+        warning.className = 'dialog-save-warning text-red-300 text-sm';
+        warning.setAttribute('role', 'alert');
+        warning.setAttribute('aria-live', 'assertive');
+        warning.textContent = 'Не удалось сохранить разговор. Закройте это окно и повторите попытку — неподтверждённое действие не засчитано.';
+        choicesEl.appendChild(warning);
+      }
       var simpleBtn = document.createElement('button');
       simpleBtn.className = 'dialog-btn primary-btn';
       simpleBtn.textContent = 'ЗАКОНЧИТЬ';
