@@ -189,13 +189,13 @@ test('a returning NPC reaction is not shown or consumed when its save fails', ()
     assert.equal(failed?.type, 'simple');
     assert.equal(failed.saveError, true);
     assert.equal(failed.isReturnReaction, undefined);
-    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'anna_boundary_return_seen'), false);
+    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'return_seen_anna_return_respected'), false);
 
     Storage.save = () => true;
     const retry = DialogueEngine.startDialogue('npc_anna_holt');
     assert.equal(retry?.type, 'simple');
     assert.equal(retry.isReturnReaction, true);
-    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'anna_boundary_return_seen'), true);
+    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'return_seen_anna_return_respected'), true);
   } finally {
     Storage.save = previousSave;
     Object.assign(GameState, previousState);
