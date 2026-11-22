@@ -61,7 +61,7 @@ test('completing either finale persists the exact ending in the save payload', (
         'sebastian_sealed_confession'
       ].map(id => ({ id }))
     };
-    Storage.save = (key, value) => writes.push({ key, value: structuredClone(value) });
+    Storage.save = (key, value) => { writes.push({ key, value: structuredClone(value) }); return true; };
 
     assert.equal(GameState.completeCampaign('price_of_silence'), true);
     assert.equal(GameState.campaign.completed, true);
