@@ -127,7 +127,7 @@ export function transferNpcKnowledge(ledger, input) {
     state: 'unverified',
     provenance: provenance.trim(),
     sourceNpcId: fromNpcId,
-    sourceRefs: [source.id]
+    sourceRefs: [source.id, ...cleanRefs(input.meetingRefs)]
   });
 }
 
