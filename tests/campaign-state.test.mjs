@@ -49,7 +49,7 @@ test('five-day campaign advances sequentially only after each daily evidence gat
     assert.equal(GameState.hasFlag('day_5'), true);
 
     assert.equal(GameState.completeCampaign('unknown'), false);
-    addClues(['markus_statement', 'restored_film_frame']);
+    addClues(['markus_statement', 'sebastian_delivery_statement', 'restored_film_frame']);
     assert.equal(GameState.completeCampaign('open_case'), true);
     assert.equal(GameState.campaign.completed, true);
     assert.equal(GameState.campaign.ending, 'open_case');
@@ -153,7 +153,7 @@ test('both finale choices persist through save import and cannot be switched aft
   const originalSave = Storage.save;
   const base = [
     'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
-    'matthews_letter', 'port_cargo_ledger', 'markus_statement'
+    'matthews_letter', 'port_cargo_ledger', 'markus_statement', 'sebastian_delivery_statement'
   ];
 
   try {
@@ -208,7 +208,7 @@ test('failed finale save rolls back completion and emits no completion event', (
       ...GameState.currentCase,
       clues: [
         'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
-        'matthews_letter', 'port_cargo_ledger', 'markus_statement',
+        'matthews_letter', 'port_cargo_ledger', 'markus_statement', 'sebastian_delivery_statement',
         'port_radio_fragment', 'sebastian_sealed_confession'
       ].map(id => ({ id }))
     };
