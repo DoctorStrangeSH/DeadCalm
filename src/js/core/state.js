@@ -2,7 +2,7 @@ import { Events } from './events.js';
 import { Storage } from './storage.js';
 import { createHypothesis, reviseHypothesis } from '../systems/hypotheses.js';
 import { createEmptySocialGraph, normalizeSocialGraph, upsertSocialTie, appendSocialEvent, getSocialTies, getSocialContext } from '../systems/npc-social-graph.js';
-import { createEmptyKnowledgeLedger, normalizeKnowledgeLedger, recordNpcKnowledge, transferNpcKnowledge, updateNpcKnowledgeState, getNpcKnowledge, getNpcKnowledgeContext } from '../systems/npc-knowledge.js';
+import { createEmptyKnowledgeLedger, normalizeKnowledgeLedger, recordNpcKnowledge, transferNpcKnowledge, transferNpcRumor, updateNpcKnowledgeState, getNpcKnowledge, getNpcKnowledgeContext } from '../systems/npc-knowledge.js';
 import { createEmptyDailyLife, normalizeDailyLife, upsertNpcSchedule, getNpcScheduleAt, recordNpcOccurrence, getNpcOccurrences } from '../systems/npc-daily-life.js';
 import { createEmptyMiniGameProgress, normalizeMiniGameProgress, recordMiniGameResult } from '../systems/minigame-progress.js';
 import { assessCampaignDay, assessFinalEvidence } from '../systems/campaign-progression.js';
@@ -90,6 +90,26 @@ function persistNpcCollectionMutation(state, property, mutate) {
   console.warn('[State] NPC-изменение отменено: сохранение не подтверждено.');
   return null;
 }
+function findNpcMeetingRefs(socialGraph, dailyLife, sourceNpcId, recipientNpcId) {
+  const socialEvent = socialGraph?.events?.find(event =>
+    (event.fromNpcId === sourceNpcId && event.toNpcId === recipientNpcId) ||
+    (event.fromNpcId === recipientNpcId && event.toNpcId === sourceNpcId)
+  );
+  if (!socialEvent) return null;
+  const sourceOccurrences = (dailyLife?.occurrences || []).filter(item => item.npcId === sourceNpcId);
+  const recipientOccurrences = (dailyLife?.occurrences || []).filter(item => item.npcId === recipientNpcId);
+  const sharedWindow = sourceOccurrences.flatMap(source => recipientOccurrences
+    .filter(recipient => recipient.day === source.day &&
+      recipient.locationId === source.locationId &&
+      Math.abs(recipient.minute - source.minute) <= 15)
+    .map(recipient => ({ source, recipient })))
+    .sort((a, b) => Math.abs(a.source.minute - a.recipient.minute) -
+      Math.abs(b.source.minute - b.recipient.minute))[0];
+  return sharedWindow
+    ? [socialEvent.id, sharedWindow.source.id, sharedWindow.recipient.id]
+    : null;
+}
+
 export var GameState = {
   player: {
     name: 'Джон Риверс',
@@ -371,32 +391,24 @@ export var GameState = {
 
   transferNpcKnowledge(input) {
     if (!input || typeof input.fromNpcId !== 'string' || typeof input.toNpcId !== 'string') return null;
-    const sourceNpcId = input.fromNpcId;
-    const recipientNpcId = input.toNpcId;
-    const socialEvent = this.socialGraph?.events?.find(event =>
-      (event.fromNpcId === sourceNpcId && event.toNpcId === recipientNpcId) ||
-      (event.fromNpcId === recipientNpcId && event.toNpcId === sourceNpcId)
-    );
-    if (!socialEvent) return null;
-
-    const sourceOccurrences = (this.npcDailyLife?.occurrences || [])
-      .filter(item => item.npcId === sourceNpcId);
-    const recipientOccurrences = (this.npcDailyLife?.occurrences || [])
-      .filter(item => item.npcId === recipientNpcId);
-    const sharedWindow = sourceOccurrences.flatMap(source => recipientOccurrences
-      .filter(recipient => recipient.day === source.day &&
-        recipient.locationId === source.locationId &&
-        Math.abs(recipient.minute - source.minute) <= 15)
-      .map(recipient => ({ source, recipient })))
-      .sort((a, b) => Math.abs(a.source.minute - a.recipient.minute) -
-        Math.abs(b.source.minute - b.recipient.minute))[0];
-    if (!sharedWindow) return null;
-
-    const meetingRefs = [socialEvent.id, sharedWindow.source.id, sharedWindow.recipient.id];
+    const meetingRefs = findNpcMeetingRefs(this.socialGraph, this.npcDailyLife, input.fromNpcId, input.toNpcId);
+    if (!meetingRefs) return null;
     const entry = persistNpcCollectionMutation(this, 'knowledgeLedger', ledger =>
       transferNpcKnowledge(ledger, { ...input, meetingRefs }));
     if (!entry) return null;
     Events.emit('npc:knowledge_transferred', entry);
+    Events.emit('npc:knowledge_recorded', entry);
+    return entry;
+  },
+
+  transferNpcRumor(input) {
+    if (!input || typeof input.fromNpcId !== 'string' || typeof input.toNpcId !== 'string') return null;
+    const meetingRefs = findNpcMeetingRefs(this.socialGraph, this.npcDailyLife, input.fromNpcId, input.toNpcId);
+    if (!meetingRefs) return null;
+    const entry = persistNpcCollectionMutation(this, 'knowledgeLedger', ledger =>
+      transferNpcRumor(ledger, { ...input, meetingRefs }));
+    if (!entry) return null;
+    Events.emit('npc:rumor_transferred', entry);
     Events.emit('npc:knowledge_recorded', entry);
     return entry;
   },
