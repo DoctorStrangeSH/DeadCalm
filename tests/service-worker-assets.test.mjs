@@ -109,4 +109,22 @@ test('every local JavaScript module reachable from the application entrypoint is
       }
     }
   }
+
+  // Router scenes are loaded through a template-string dynamic import, so they
+  // cannot be discovered by the literal import graph above. Derive the route
+  // list from the actual map and location-return component instead.
+  const router = readFileSync(resolve(root, 'src/js/core/router.js'), 'utf8');
+  assert.match(router, /import\(\`\.\.\/scenes\/\$\{sceneName\}\.js\`\)/);
+  const mapSource = readFileSync(resolve(root, 'src/js/components/map.js'), 'utf8');
+  const sceneMap = mapSource.match(/const scenes = \{([\s\S]*?)\n    \};/);
+  assert.ok(sceneMap, 'city map must declare its scene routing table');
+  const routedScenes = [...sceneMap[1].matchAll(/:\s*['"]([^'"]+)['"]/g)].map(item => item[1]);
+  const locationSource = readFileSync(resolve(root, 'src/js/components/story-location.js'), 'utf8');
+  for (const item of locationSource.matchAll(/scene:\s*['"]([^'"]+)['"]/g)) routedScenes.push(item[1]);
+  for (const scene of new Set(routedScenes)) {
+    const path = resolve(root, 'src/js/scenes', scene + '.js');
+    assert.ok(existsSync(path), 'router destination has no scene module: ' + scene);
+    const asset = '/' + relative(root, path).split(sep).join('/');
+    assert.ok(assets.has(asset), 'dynamically routed scene is missing from Service Worker precache: ' + asset);
+  }
 });
