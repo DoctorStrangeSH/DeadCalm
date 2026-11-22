@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { GameState } from '../src/js/core/state.js';
+import { Events } from '../src/js/core/events.js';
 import { Storage } from '../src/js/core/storage.js';
 
 test('five-day campaign advances sequentially only after each daily evidence gate', () => {
@@ -106,7 +107,7 @@ test('finale completion enforces ending-specific evidence at the state boundary'
   };
   const originalSave = Storage.save;
   try {
-    Storage.save = () => {};
+    Storage.save = () => true;
     const baseEvidence = [
       'autopsy_report_01',
       'judge_appointment_card',
@@ -184,6 +185,47 @@ test('both finale choices persist through save import and cannot be switched aft
       assert.equal(GameState.campaign.ending, scenario.ending);
     }
   } finally {
+    Storage.save = originalSave;
+    Object.assign(GameState, original);
+  }
+});
+
+
+test('failed finale save rolls back completion and emits no completion event', () => {
+  const original = {
+    campaign: GameState.campaign,
+    currentCase: GameState.currentCase,
+    saveBlocked: GameState.saveBlocked
+  };
+  const originalSave = Storage.save;
+  const events = [];
+  const unsubscribe = Events.on('campaign:completed', payload => events.push(payload));
+
+  try {
+    GameState.saveBlocked = false;
+    GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+    GameState.currentCase = {
+      ...GameState.currentCase,
+      clues: [
+        'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
+        'matthews_letter', 'port_cargo_ledger', 'markus_statement',
+        'port_radio_fragment', 'sebastian_sealed_confession'
+      ].map(id => ({ id }))
+    };
+
+    Storage.save = () => false;
+    assert.equal(GameState.completeCampaign('price_of_silence'), false);
+    assert.equal(GameState.campaign.completed, false);
+    assert.equal(GameState.campaign.ending, null);
+    assert.equal(events.length, 0, 'a failed save must not publish campaign completion');
+
+    Storage.save = () => true;
+    assert.equal(GameState.completeCampaign('price_of_silence'), true, 'the player can retry after storage recovers');
+    assert.equal(GameState.campaign.completed, true);
+    assert.equal(GameState.campaign.ending, 'price_of_silence');
+    assert.deepEqual(events, [{ caseId: 'case_001', ending: 'price_of_silence' }]);
+  } finally {
+    unsubscribe();
     Storage.save = originalSave;
     Object.assign(GameState, original);
   }
