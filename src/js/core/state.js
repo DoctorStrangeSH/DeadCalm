@@ -40,6 +40,56 @@ function normalizeCampaignState(savedCampaign, flags = {}) {
     : null;
   return { caseId: 'case_001', day, completed: Boolean(savedCampaign?.completed && ending), ending };
 }
+
+/** Persist a mutation of an NPC world-state collection atomically. */
+function persistNpcCollectionMutation(state, property, mutate) {
+  const collection = state[property];
+  if (!collection || typeof collection !== 'object' || Array.isArray(collection)) return null;
+
+  let snapshot;
+  try {
+    snapshot = JSON.parse(JSON.stringify(collection));
+  } catch (error) {
+    console.error('[State] Не удалось подготовить откат NPC-данных:', error);
+    return null;
+  }
+  const arrayRefs = Object.fromEntries(
+    Object.entries(collection).filter(([, value]) => Array.isArray(value))
+  );
+
+  let result;
+  try {
+    result = mutate(collection);
+  } catch (error) {
+    console.error('[State] Ошибка изменения NPC-данных:', error);
+    return null;
+  }
+  if (!result) return null;
+
+  let saved = false;
+  try {
+    saved = state.save();
+  } catch (error) {
+    console.error('[State] Не удалось сохранить NPC-данные:', error);
+  }
+  if (saved !== false) return result;
+
+  for (const key of Object.keys(collection)) {
+    if (!Object.hasOwn(snapshot, key)) delete collection[key];
+  }
+  for (const [key, value] of Object.entries(snapshot)) {
+    if (Array.isArray(arrayRefs[key]) && Array.isArray(value)) {
+      arrayRefs[key].splice(0, arrayRefs[key].length, ...value);
+      collection[key] = arrayRefs[key];
+    } else if (value && typeof value === 'object') {
+      collection[key] = JSON.parse(JSON.stringify(value));
+    } else {
+      collection[key] = value;
+    }
+  }
+  console.warn('[State] NPC-изменение отменено: сохранение не подтверждено.');
+  return null;
+}
 export var GameState = {
   player: {
     name: 'Джон Риверс',
@@ -295,17 +345,15 @@ export var GameState = {
   },
 
   recordSocialTie(input) {
-    const tie = upsertSocialTie(this.socialGraph, input);
+    const tie = persistNpcCollectionMutation(this, 'socialGraph', graph => upsertSocialTie(graph, input));
     if (!tie) return null;
-    this.save();
     Events.emit('social:tie_updated', tie);
     return tie;
   },
 
   recordSocialEvent(input) {
-    const event = appendSocialEvent(this.socialGraph, input);
+    const event = persistNpcCollectionMutation(this, 'socialGraph', graph => appendSocialEvent(graph, input));
     if (!event) return null;
-    this.save();
     Events.emit('social:event_recorded', event);
     return event;
   },
@@ -315,17 +363,16 @@ export var GameState = {
   getSocialContext(npcId) { return getSocialContext(this.socialGraph, npcId); },
 
   recordNpcKnowledge(input) {
-    const entry = recordNpcKnowledge(this.knowledgeLedger, input);
+    const entry = persistNpcCollectionMutation(this, 'knowledgeLedger', ledger => recordNpcKnowledge(ledger, input));
     if (!entry) return null;
-    this.save();
     Events.emit('npc:knowledge_recorded', entry);
     return entry;
   },
 
   updateNpcKnowledgeState(entryId, state, reason) {
-    const entry = updateNpcKnowledgeState(this.knowledgeLedger, entryId, state, reason);
+    const entry = persistNpcCollectionMutation(this, 'knowledgeLedger', ledger =>
+      updateNpcKnowledgeState(ledger, entryId, state, reason));
     if (!entry) return null;
-    this.save();
     Events.emit('npc:knowledge_updated', entry);
     return entry;
   },
@@ -335,9 +382,8 @@ export var GameState = {
   getNpcKnowledgeContext(npcId) { return getNpcKnowledgeContext(this.knowledgeLedger, npcId); },
 
   setNpcSchedule(input) {
-    const schedule = upsertNpcSchedule(this.npcDailyLife, input);
+    const schedule = persistNpcCollectionMutation(this, 'npcDailyLife', life => upsertNpcSchedule(life, input));
     if (!schedule) return null;
-    this.save();
     Events.emit('npc:schedule_updated', schedule);
     return schedule;
   },
@@ -347,9 +393,8 @@ export var GameState = {
   },
 
   recordNpcOccurrence(input) {
-    const occurrence = recordNpcOccurrence(this.npcDailyLife, input);
+    const occurrence = persistNpcCollectionMutation(this, 'npcDailyLife', life => recordNpcOccurrence(life, input));
     if (!occurrence) return null;
-    this.save();
     Events.emit('npc:occurrence_recorded', occurrence);
     return occurrence;
   },
