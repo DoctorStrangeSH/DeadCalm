@@ -173,13 +173,22 @@ test('GameState rumor transfer requires a witnessed meeting and persists atomica
     assert.equal(second.rumorTrail.length, 2);
 
     setupMeeting('npc_ray_morgan', 'npc_marta_hayes', 'ray-marta');
-    assert.equal(GameState.transferNpcRumor({
+    const directBranch = GameState.transferNpcRumor({
       fromNpcId: 'npc_ray_morgan',
       toNpcId: 'npc_marta_hayes',
       sourceKnowledgeId: 'knowledge-ray-report',
       provenance: 'Ray bypassed the chain and told Marta.',
       distortions: []
-    }), null, 'a direct repeat from the same source cannot create a second branch');
+    });
+    assert.ok(directBranch, 'a witnessed direct conversation may create a separate branch');
+    assert.equal(directBranch.rumorTrail.length, 1);
+    assert.equal(directBranch.sourceNpcId, 'npc_ray_morgan');
+    assert.equal(GameState.transferNpcRumor({
+      fromNpcId: 'npc_ray_morgan',
+      toNpcId: 'npc_marta_hayes',
+      sourceKnowledgeId: 'knowledge-ray-report',
+      provenance: 'Ray repeats the same account.'
+    }), null, 'the same source-to-recipient branch cannot be duplicated');
   } finally {
     off.forEach(unsubscribe => unsubscribe());
     Storage.save = previousSave;
