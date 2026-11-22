@@ -2,7 +2,7 @@ import { Events } from './events.js';
 import { Storage } from './storage.js';
 import { createHypothesis, reviseHypothesis } from '../systems/hypotheses.js';
 import { createEmptySocialGraph, normalizeSocialGraph, upsertSocialTie, appendSocialEvent, getSocialTies, getSocialContext } from '../systems/npc-social-graph.js';
-import { createEmptyKnowledgeLedger, normalizeKnowledgeLedger, recordNpcKnowledge, updateNpcKnowledgeState, getNpcKnowledge, getNpcKnowledgeContext } from '../systems/npc-knowledge.js';
+import { createEmptyKnowledgeLedger, normalizeKnowledgeLedger, recordNpcKnowledge, transferNpcKnowledge, updateNpcKnowledgeState, getNpcKnowledge, getNpcKnowledgeContext } from '../systems/npc-knowledge.js';
 import { createEmptyDailyLife, normalizeDailyLife, upsertNpcSchedule, getNpcScheduleAt, recordNpcOccurrence, getNpcOccurrences } from '../systems/npc-daily-life.js';
 import { createEmptyMiniGameProgress, normalizeMiniGameProgress, recordMiniGameResult } from '../systems/minigame-progress.js';
 import { assessCampaignDay, assessFinalEvidence } from '../systems/campaign-progression.js';
@@ -365,6 +365,15 @@ export var GameState = {
   recordNpcKnowledge(input) {
     const entry = persistNpcCollectionMutation(this, 'knowledgeLedger', ledger => recordNpcKnowledge(ledger, input));
     if (!entry) return null;
+    Events.emit('npc:knowledge_recorded', entry);
+    return entry;
+  },
+
+  transferNpcKnowledge(input) {
+    const entry = persistNpcCollectionMutation(this, 'knowledgeLedger', ledger =>
+      transferNpcKnowledge(ledger, input));
+    if (!entry) return null;
+    Events.emit('npc:knowledge_transferred', entry);
     Events.emit('npc:knowledge_recorded', entry);
     return entry;
   },
