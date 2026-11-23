@@ -74,15 +74,26 @@ export function recordCase001MiniGameEvidence(gameState, type, result) {
   const existing = gameState.getClue?.(clue.id);
   if (existing) {
     if ((existing.quality || 0) >= clue.quality) return false;
+
+    const previousQuality = existing.quality;
+    const previousDescription = existing.description;
     existing.quality = clue.quality;
     existing.description = clue.description;
-    gameState.save?.();
+
+    let saved = false;
+    try {
+      saved = gameState.save?.() !== false;
+    } catch (error) {
+      console.error('[Case001Evidence] Не удалось сохранить улучшенное доказательство:', error);
+    }
+    if (!saved) {
+      if (previousQuality === undefined) delete existing.quality;
+      else existing.quality = previousQuality;
+      existing.description = previousDescription;
+      return false;
+    }
     return true;
   }
 
-  gameState.addClue(clue);
-  const stored = gameState.getClue?.(clue.id);
-  if (stored) stored.quality = clue.quality;
-  gameState.save?.();
-  return true;
+  return Boolean(gameState.addClue(clue));
 }
