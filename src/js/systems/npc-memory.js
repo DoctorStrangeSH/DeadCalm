@@ -192,9 +192,11 @@ export var NPCMemory = {
       return null;
     }
 
-    Events.emit('npc:flag_set', { npcId, flag: input.choiceFlag });
-    if (input.memorySet) Events.emit('npc:flag_set', { npcId, flag: input.memorySet });
-    if (input.resultFlag) Events.emit('npc:flag_set', { npcId, flag: input.resultFlag });
+    const committedFlags = [...new Set([input.choiceFlag, input.memorySet, input.resultFlag]
+      .filter(flag => typeof flag === 'string' && flag.trim()))];
+    for (const flag of committedFlags) {
+      Events.emit('npc:flag_set', { npcId, flag });
+    }
     if (trustDelta !== 0) {
       Events.emit('relationship:changed', {
         npcId,
