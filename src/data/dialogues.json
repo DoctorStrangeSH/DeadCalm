@@ -830,6 +830,58 @@
       "type": "narrative",
       "text": "Улыбка Себастьяна становится холоднее: «Вы вправе задавать вопросы, детектив. Но не путайте жёсткий тон с доказательством. На этом пока остановимся». Он не признаёт и не подтверждает обстоятельства убийства.",
       "end": true
+    },
+    "sebastian_process_return": {
+      "type": "narrative",
+      "text": "«Вы вернулись с документами. Я отвечу на вопросы, которые относятся к ним. Не более».",
+      "end": true
+    },
+    "sebastian_accused_return": {
+      "type": "narrative",
+      "text": "«Я помню ваше обвинение, детектив. Если у вас появились доказательства, предъявите их. Если нет — разговор окончен».",
+      "end": true
+    },
+    "sebastian_version_return": {
+      "type": "narrative",
+      "text": "«Вы обещали сверить мои слова с записями. Надеюсь, вы действительно это сделали».",
+      "end": true
+    },
+    "return_dialogues": [
+      {
+        "requires_flag": "sebastian_respects_process",
+        "node": "sebastian_process_return",
+        "seen_flag": "sebastian_process_seen"
+      },
+      {
+        "requires_flag": "sebastian_accused",
+        "node": "sebastian_accused_return",
+        "seen_flag": "sebastian_accused_seen"
+      },
+      {
+        "requires_flag": "sebastian_version_requested",
+        "node": "sebastian_version_return",
+        "seen_flag": "sebastian_version_seen"
+      },
+      {
+        "requires_flag": "case_001_open_case",
+        "node": "case_001_open_case_result",
+        "seen_flag": "case_001_open_case_seen"
+      },
+      {
+        "requires_flag": "case_001_price_of_silence",
+        "node": "case_001_price_silence_result",
+        "seen_flag": "case_001_price_silence_seen"
+      }
+    ],
+    "case_001_open_case_result": {
+      "type": "narrative",
+      "text": "«Значит, вы всё-таки передали материалы. Я ожидал, что вы выберете осторожность, детектив. Теперь каждый документ будет изучен публично — и моё имя останется в деле. Но не путайте обвинение с приговором: последнее слово ещё за судом».",
+      "end": true
+    },
+    "case_001_price_silence_result": {
+      "type": "narrative",
+      "text": "«Вы сдержали договорённость. Часть материалов останется закрытой, а свидетели не окажутся под чужим давлением. Не называйте это оправданием, детектив. Мы оба знаем, что некоторые вопросы так и остались без ответа».",
+      "end": true
     }
   },
   "npc_anna_holt": {
