@@ -146,6 +146,5 @@ export function dismissCampaignDaySummary(gameState, day) {
   if (!Number.isInteger(day) || day < 1 || day > 4) return false;
   const flag = 'campaign_day_summary_pending_' + day;
   if (!gameState.hasFlag?.(flag)) return false;
-  gameState.clearFlag(flag);
-  return true;
+  return gameState.clearFlag(flag) !== false;
 }
