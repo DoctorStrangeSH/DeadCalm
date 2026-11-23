@@ -2,6 +2,7 @@ import { renderStoryLocation } from '../components/story-location.js';
 import { GameState } from '../core/state.js';
 import { Events } from '../core/events.js';
 import { assessFinalEvidence, buildFinalEvidenceDossier } from '../systems/campaign-progression.js';
+import { canAccessCase001MiniGame } from '../systems/minigame-access.js';
 
 export function addPortClue(clue, button, successLabel) {
   const added = GameState.addClue(clue);
@@ -98,11 +99,19 @@ function renderEndingChoices(container) {
       <p class="text-gray-500 text-xs mt-3">Совокупность источников обосновывает официальное обвинение, но не заменяет судебную проверку. Ни одна отдельная улика не называет убийцу.</p>
       <div class="grid gap-2 mt-4">
         ${fullDisclosureReady ? "" : '<p class="text-gray-500 text-xs">Для полного публичного раскрытия материалов старого дела нужен чётко восстановленный кадр. Он не доказывает, что Гаррисон выпил переданный флакон или что Себастьян действовал с умыслом; эти обстоятельства проверяются отдельно.</p>'}
+        ${!fullDisclosureReady && canAccessCase001MiniGame('film-restoration', GameState)
+          ? '<button id="btn-retry-finale-film" class="btn-noir py-3">ПОВТОРИТЬ РЕСТАВРАЦИЮ ПЛЁНКИ →</button>'
+          : ''}
         <button id="btn-ending-open" class="btn-noir py-3" ${fullDisclosureReady ? "" : "disabled"}>ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ</button>
         <button id="btn-ending-silence" class="btn-noir py-3">ЗАКЛЮЧИТЬ СДЕЛКУ</button>
       </div>
     </div>
   `;
+  result.querySelector('#btn-retry-finale-film')?.addEventListener('click', () => {
+    if (canAccessCase001MiniGame('film-restoration', GameState)) {
+      Events.emit('navigate', { scene: 'film-restoration' });
+    }
+  });
   result.querySelector('#btn-ending-open')?.addEventListener('click', () => {
     if (GameState.completeCampaign('open_case')) renderEnding(container, 'open_case');
     else showFinaleSaveError(container);
