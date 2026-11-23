@@ -22,7 +22,7 @@ const dialogueKeys = [
   '_currentNPC', '_currentNode', '_unlockedTopics', '_askedQuestions'
 ];
 
-function withFirstMeeting(saveResult, run) {
+function withFirstMeeting(npcId, saveResult, run) {
   const previousState = Object.fromEntries(stateKeys.map(key => [key, GameState[key]]));
   const previousDialogue = Object.fromEntries(dialogueKeys.map(key => [key, DialogueEngine[key]]));
   let saveCalls = 0;
@@ -33,7 +33,7 @@ function withFirstMeeting(saveResult, run) {
     GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] };
     GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
     GameState.flags = {};
-    GameState.relationships = { npc_anna_holt: { trust: characters.npc_anna_holt.initial_trust, met: false } };
+    GameState.relationships = { [npcId]: { trust: characters[npcId].initial_trust, met: false } };
     GameState.npcMemory = {};
     GameState.socialGraph = { ties: [], events: [] };
     GameState.knowledgeLedger = { entries: [] };
@@ -59,28 +59,32 @@ function withFirstMeeting(saveResult, run) {
   }
 }
 
-test('first NPC meeting commits met state, one conversation and initial topics in one save', () => {
-  withFirstMeeting(true, getSaveCalls => {
-    const result = DialogueEngine.startDialogue('npc_anna_holt');
-    const memory = NPCMemory.getMemory('npc_anna_holt');
+test('all six first NPC meetings commit met state, one conversation and initial topics in one save', () => {
+  for (const npcId of Object.keys(dialogues)) {
+    withFirstMeeting(npcId, true, getSaveCalls => {
+      const result = DialogueEngine.startDialogue(npcId);
+      const memory = NPCMemory.getMemory(npcId);
 
-    assert.equal(result?.type, 'first_meeting');
-    assert.equal(memory.met, true);
-    assert.equal(memory.conversationCount, 1, 'one first meeting must count exactly once');
-    assert.deepEqual(memory.unlockedTopics, dialogues.npc_anna_holt.first_meeting.unlocks_topics);
-    assert.equal(getSaveCalls(), 1, 'first meeting must be one atomic save, not separate markMet and topic saves');
-  });
+      assert.equal(result?.type, 'first_meeting', npcId);
+      assert.equal(memory.met, true, npcId);
+      assert.equal(memory.conversationCount, 1, npcId + ' first meeting must count exactly once');
+      assert.deepEqual(memory.unlockedTopics, dialogues[npcId].first_meeting.unlocks_topics, npcId);
+      assert.equal(getSaveCalls(), 1, npcId + ' first meeting must be one atomic save');
+    });
+  }
 });
 
-test('failed first-meeting save leaves no partial meeting or unlocked topics', () => {
-  withFirstMeeting(false, getSaveCalls => {
-    const result = DialogueEngine.startDialogue('npc_anna_holt');
+test('failed first-meeting save leaves no partial meeting or unlocked topics for every NPC', () => {
+  for (const npcId of Object.keys(dialogues)) {
+    withFirstMeeting(npcId, false, getSaveCalls => {
+      const result = DialogueEngine.startDialogue(npcId);
 
-    assert.equal(result?.saveError, true);
-    const memory = NPCMemory.getMemory('npc_anna_holt');
-    assert.equal(memory.met, false);
-    assert.equal(memory.conversationCount, 0);
-    assert.deepEqual(memory.unlockedTopics, []);
-    assert.equal(getSaveCalls(), 1, 'failed first meeting must not perform a second partial save');
-  });
+      assert.equal(result?.saveError, true, npcId);
+      const memory = NPCMemory.getMemory(npcId);
+      assert.equal(memory.met, false, npcId);
+      assert.equal(memory.conversationCount, 0, npcId);
+      assert.deepEqual(memory.unlockedTopics, [], npcId);
+      assert.equal(getSaveCalls(), 1, npcId + ' failed meeting must not perform a second partial save');
+    });
+  }
 });
