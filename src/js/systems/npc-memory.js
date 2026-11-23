@@ -90,13 +90,15 @@ export var NPCMemory = {
     }).saved;
   },
 
-  recordConversation(npcId) {
+  recordConversation(npcId, consumedFlag = null) {
     if (typeof npcId !== 'string' || !npcId.trim()) return false;
+    if (consumedFlag !== null && (typeof consumedFlag !== 'string' || !consumedFlag.trim())) return false;
     return persistMemoryMutation(npcId, memory => {
       memory.met = true;
       memory.conversationCount = (Number.isInteger(memory.conversationCount) && memory.conversationCount >= 0
         ? memory.conversationCount
         : 0) + 1;
+      if (consumedFlag) memory.flags[consumedFlag] = true;
     }).saved;
   },
 
