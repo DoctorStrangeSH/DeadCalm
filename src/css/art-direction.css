@@ -551,3 +551,7 @@ body { background:#071015; color:#d3d5cc; }
 .settings-done:hover { border-color:#e1c38f; background:#3b4b43; }
 @media(max-width:520px) { .settings-overlay { padding:10px; } .settings-panel { max-height:92vh; padding:18px; } .settings-footer { align-items:flex-start; flex-direction:column; } .settings-done { width:100%; } }
 @media(prefers-reduced-motion:reduce) { .settings-overlay,.settings-panel { animation:none !important; transition:none !important; } }
+
+.cinematic-dialog .dialog-social-discovery { border-left-color:#8ca99b; background:linear-gradient(110deg,#293a35,#202b2b); }
+.cinematic-dialog .dialog-social-discovery .dialog-discovery-stamp { color:#a8c7b5; }
+.cinematic-dialog .dialog-discovery-description { margin:0; color:#b9c5ba; font:12px/1.5 Georgia,serif; }
