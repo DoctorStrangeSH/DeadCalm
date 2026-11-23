@@ -2,6 +2,7 @@ import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { isLocationUnlocked } from '../systems/location-access.js';
 import { getNpcPresenceAtLocation } from '../systems/npc-presence.js';
+import { DialogBox } from './dialog-box.js';
 
 // A city-map scene can be opened repeatedly inside the same persistent container.
 // Keep one delegated click listener per container to avoid stale Map instances.
@@ -94,12 +95,23 @@ export class Map {
         const presence = getNpcPresenceAtLocation(character, loc, GameState);
         const name = character?.name || 'Персонаж';
         const label = presence.available ? 'МОЖНО ВСТРЕТИТЬ' : presence.status === 'not_yet_introduced' ? 'ПОЯВИТСЯ ПОЗЖЕ' : 'НЕТ ПОДТВЕРЖДЁННОГО ПОЯВЛЕНИЯ';
+        const talkAction = presence.available
+          ? '<button type="button" id="btn-talk-npc" class="btn-noir text-xs py-2 mt-3 w-full">ПОГОВОРИТЬ ↗</button>'
+          : '';
         return '<div class="mt-3 border-l-2 border-gray-700 pl-3"><p class="text-gray-300 text-xs">' +
-          name + ' · ' + label + '</p><p class="text-gray-500 text-xs mt-1">' + presence.reason + '</p></div>';
+          name + ' · ' + label + '</p><p class="text-gray-500 text-xs mt-1">' + presence.reason +
+          '</p>' + talkAction + '</div>';
       })() : ''}
       <button id="btn-go-location" class="btn-noir text-xs py-2 mt-4 w-full">ОТПРАВИТЬСЯ →</button>
     </div></div>`;
     info.querySelector('#btn-go-location').addEventListener('click', () => this._goToLocation(loc));
+    info.querySelector('#btn-talk-npc')?.addEventListener('click', async () => {
+      const character = this.characters[loc.npc];
+      const presence = getNpcPresenceAtLocation(character, loc, GameState);
+      if (!presence.available) return;
+      const dialog = new DialogBox();
+      await dialog.show(loc.npc);
+    });
   }
 
   _highlightLocation(locId) {
