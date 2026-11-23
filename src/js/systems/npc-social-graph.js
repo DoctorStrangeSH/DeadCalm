@@ -37,9 +37,14 @@ export function upsertSocialTie(graph, input) {
       typeof toNpcId !== 'string' || !toNpcId.trim() || fromNpcId === toNpcId ||
       !RELATION_TYPES.has(type) || !RELATION_STATUSES.has(status) ||
       typeof basis !== 'string' || !basis.trim()) return null;
-  const id = typeof input.id === 'string' && input.id.trim()
-    ? input.id.trim() : [fromNpcId, toNpcId, type].join('::');
-  const index = graph.ties.findIndex(tie => tie.id === id);
+  const suppliedId = typeof input.id === 'string' && input.id.trim() ? input.id.trim() : null;
+  const index = graph.ties.findIndex(tie => suppliedId
+    ? tie.id === suppliedId
+    : tie.type === type && (
+      (tie.fromNpcId === fromNpcId && tie.toNpcId === toNpcId) ||
+      (tie.fromNpcId === toNpcId && tie.toNpcId === fromNpcId)
+    ));
+  const id = suppliedId || (index >= 0 ? graph.ties[index].id : [fromNpcId, toNpcId, type].join('::'));
   const tie = { id, fromNpcId, toNpcId, type, status, basis: basis.trim(),
     sourceRefs: cleanRefs(input.sourceRefs),
     updatedAt: typeof input.updatedAt === 'string' ? input.updatedAt : new Date().toISOString() };
