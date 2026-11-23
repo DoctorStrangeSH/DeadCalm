@@ -301,9 +301,22 @@ export var GameState = {
   },
 
   clearFlag(flagName) {
+    if (!Object.prototype.hasOwnProperty.call(this.flags || {}, flagName)) return true;
+    const previous = this.flags[flagName];
     delete this.flags[flagName];
+    let saved = false;
+    try {
+      saved = this.save() !== false;
+    } catch (error) {
+      console.error('[State] Не удалось сохранить удаление флага:', error);
+      saved = false;
+    }
+    if (!saved) {
+      this.flags[flagName] = previous;
+      return false;
+    }
     Events.emit('flag:cleared', { flag: flagName });
-    this.save();
+    return true;
   },
 
   addClue(clue) {
