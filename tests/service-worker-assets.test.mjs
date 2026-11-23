@@ -71,7 +71,7 @@ test('story-gated mini-game modules are included in the offline precache', async
   const assets = JSON.parse(match[1]);
   assert.ok(assets.includes('/src/js/components/minigame-lock-screen.js'));
   assert.ok(assets.includes('/src/js/systems/minigame-access.js'));
-  assert.match(source, /dead-calm-visual-v107/);
+  assert.match(source, /dead-calm-visual-v108/);
 });
 
 
