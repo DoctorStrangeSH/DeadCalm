@@ -101,10 +101,31 @@ export var Investigation = {
   },
 
   /**
+   * Восстановить связи из сохранённых флагов и доступных игроку улик.
+   * Имена/описания ещё не найденных материалов при этом не раскрываются.
+   */
+  _restoreConnections() {
+    const clues = Array.isArray(GameState.currentCase?.clues) ? GameState.currentCase.clues : [];
+    if (!Array.isArray(this._connections)) this._connections = [];
+    const known = new Set(this._connections.map(connection => connection.id));
+
+    for (let i = 0; i < clues.length; i++) {
+      for (let j = i + 1; j < clues.length; j++) {
+        const connection = this.checkConnection(clues[i].id, clues[j].id);
+        if (!connection || !GameState.hasFlag('connection_' + connection.id) || known.has(connection.id)) continue;
+        this._connections.push(connection);
+        known.add(connection.id);
+      }
+    }
+    return this._connections;
+  },
+
+  /**
    * Сохранить найденную связь
    */
   saveConnection(connection) {
-    // Проверяем, нет ли уже такой связи
+    if (!connection || !connection.id) return false;
+    this._restoreConnections();
     var exists = this._connections.some(function(c) {
       return c.id === connection.id;
     });
@@ -112,14 +133,16 @@ export var Investigation = {
       this._connections.push(connection);
       GameState.setFlag('connection_' + connection.id);
       console.log('[Investigation] Связь установлена: ' + connection.id);
+      return true;
     }
+    return false;
   },
 
   /**
    * Получить все найденные связи
    */
   getConnections() {
-    return this._connections;
+    return this._restoreConnections();
   },
 
   /**
@@ -127,7 +150,7 @@ export var Investigation = {
    */
   getProgress() {
     var totalClues = GameState.currentCase.clues.length;
-    var totalConnections = this._connections.length;
+    var totalConnections = this._restoreConnections().length;
     return {
       clues: totalClues,
       connections: totalConnections,

@@ -1,8 +1,7 @@
 import { renderStoryLocation } from '../components/story-location.js';
 import { GameState } from '../core/state.js';
 import { Events } from '../core/events.js';
-import { assessFinalEvidence } from '../systems/campaign-progression.js';
-import { getCampaignDaySummary } from '../systems/campaign-day-summary.js';
+import { assessFinalEvidence, buildFinalEvidenceDossier } from '../systems/campaign-progression.js';
 
 const markusStatement = {
   id: 'markus_statement',
@@ -17,28 +16,15 @@ const markusStatement = {
 
 function renderEnding(container, ending) {
   const openCase = ending === 'open_case';
-  const summary = getCampaignDaySummary(5, GameState, ending);
-  const summaryMarkup = summary ? `
-    <div class="card p-4 mt-4">
-      <p class="office-kicker">ЧТО ОСТАЛОСЬ ПОСЛЕ РАССЛЕДОВАНИЯ</p>
-      <h4 class="text-gold text-sm tracking-widest mt-2">${summary.title}</h4>
-      <p class="text-gray-300 text-xs tracking-widest mt-3">УСТАНОВЛЕНО</p>
-      <ul class="campaign-missing">${summary.established.map(item => '<li>— ' + item + '</li>').join('')}</ul>
-      <p class="text-gray-300 text-xs tracking-widest mt-3">ОПРОВЕРГНУТО</p>
-      <ul class="campaign-missing">${summary.refuted.map(item => '<li>— ' + item + '</li>').join('')}</ul>
-      <p class="text-gray-300 text-xs tracking-widest mt-3">ПОКА НЕИЗВЕСТНО</p>
-      <ul class="campaign-missing">${summary.unknown.map(item => '<li>— ' + item + '</li>').join('')}</ul>
-    </div>` : '';
   container.querySelector('#story-location-result').innerHTML = `
     <section class="card p-5" role="status" aria-live="polite">
       <p class="office-kicker">ДЕЛО № 001 · ФИНАЛ</p>
       <h3 class="text-gold text-lg tracking-widest mt-2">${openCase ? 'ОТКРЫТОЕ ДЕЛО' : 'ЦЕНА МОЛЧАНИЯ'}</h3>
       <p class="text-gray-300 text-sm leading-relaxed mt-3">${openCase
-        ? 'Вы передаёте материалы для официальной проверки. Документы связывают офис Блэквуда с покупкой белладонны, подтверждают встречу с Гаррисоном и помещают Себастьяна рядом с Каллиопой в ночь её гибели. Это серьёзная совокупность оснований для расследования, но не судебный приговор. Маркус признаётся только в подмене записи и сокрытии плёнки; убийство Гаррисона он на себя не берёт.'
-        : 'Себастьян признаёт встречу с Гаррисоном и подтверждает, что его офис оплатил белладонну, но отказывается назвать получателя препарата и объяснить, как тот оказался у судьи. Он требует оставить часть материалов дела Каллиопы закрытой. Вы принимаете компромисс ради защиты части свидетелей, понимая, что не устанавливаете всю цепочку. Маркус избегает публичного разоблачения, а доверие тех, кто вам поверил, зависит от того, сдержите ли вы обещание.'
+        ? 'Вы публикуете проверенную цепочку и передаёте материалы властям. Совокупность медицинского заключения, назначенной встречи, закупки белладонны на счёт офиса Блэквуда, показания Себастьяна о передаче запечатанного флакона и независимых материалов о старом преступлении даёт основания для официального обвинения Себастьяна. Это процессуальное обвинение, а не судебный приговор: показание о передаче не доказывает, что Гаррисон выпил содержимое или что Себастьян действовал с умыслом; дело должно пройти независимую проверку в суде. Фальсификация Маркуса раскрыта; он отвечает за своё молчание. Анна получает правду о сокрытии, а Лидия — основания добиваться пересмотра дела Габриэля.'
+        : 'Вы принимаете закрытое соглашение. В запечатанном приложении к нему Себастьян письменно признаёт, что встретился с Гаррисоном в вечер убийства и сам передал ему белладонну, зная о смертельном действии вещества. Это прямое признание фиксируется для следствия, но не публикуется и не заменяет независимую проверку обстоятельств. Взамен Джон откладывает публичное раскрытие материалов дела Каллиопы и защищает часть свидетелей от немедленной огласки. Себастьян открывает часть корпоративного архива по установленной процедуре. Маркус не получает иммунитета: его признание о фальсификации остаётся в материалах дела.'
       }</p>
-      <p class="text-gray-500 text-xs mt-4">Сохранённый исход: ${openCase ? 'open_case' : 'price_of_silence'}</p>
-      ${summaryMarkup}
+      <p class="text-gray-500 text-xs mt-4">Сохранённый исход: ${openCase ? 'Открытое дело' : 'Цена молчания'}</p>
       <button id="btn-finale-menu" class="btn-noir w-full py-3 mt-4">В КАБИНЕТ</button>
     </section>
   `;
@@ -47,36 +33,79 @@ function renderEnding(container, ending) {
   });
 }
 
+function showFinaleSaveError(container) {
+  const result = container.querySelector('#story-location-result');
+  if (!result) return;
+  let message = result.querySelector('[data-finale-save-error]');
+  if (!message) {
+    message = document.createElement('p');
+    message.dataset.finaleSaveError = 'true';
+    message.className = 'text-red-300 text-sm mt-3';
+    message.setAttribute('role', 'alert');
+    message.setAttribute('aria-live', 'assertive');
+    result.append(message);
+  }
+  message.textContent = 'Не удалось сохранить завершение расследования. Ваш выбор не потерян: проверьте доступность хранилища браузера и повторите попытку.';
+}
+
 function renderEndingChoices(container) {
   const evidenceStatus = assessFinalEvidence(GameState);
-  const publishReady = evidenceStatus.publicReady;
+  const fullDisclosureReady = evidenceStatus.fullDisclosureReady;
+  const evidenceDossier = buildFinalEvidenceDossier(GameState);
   const result = container.querySelector('#story-location-result');
   if (!evidenceStatus.ready) {
+    const needsSebastianStatement = evidenceStatus.missing.includes('Показание Себастьяна о передаче флакона');
     result.innerHTML = `
       <div class="card p-4">
         <p class="text-gold text-sm">ПОКА НЕДОСТАТОЧНО ДОКАЗАТЕЛЬСТВ</p>
-        <p class="text-gray-400 text-sm mt-2">Не хватает независимых источников:</p><ul class="text-gray-500 text-xs mt-2">${evidenceStatus.missing.map(item => '<li>— ' + item + '</li>').join('')}</ul><p class="text-gray-500 text-xs mt-2">Признание Маркуса не заменит эти источники.</p>
+        <p class="text-gray-400 text-sm mt-2">Не хватает обязательных материалов:</p><ul class="text-gray-500 text-xs mt-2">${evidenceStatus.missing.map(item => '<li>— ' + item + '</li>').join('')}</ul><p class="text-gray-500 text-xs mt-2">Признание Маркуса не заменит независимые источники.</p>
+        ${needsSebastianStatement ? '<button id="btn-return-sebastian" class="btn-noir w-full py-3 mt-4">ВЕРНУТЬСЯ К СЕБАСТЬЯНУ В ОСОБНЯК →</button>' : ''}
       </div>
     `;
+    result.querySelector('#btn-return-sebastian')?.addEventListener('click', () => {
+      Events.emit('navigate', { scene: 'blackwood-mansion' });
+    });
     return;
   }
 
   result.innerHTML = `
     <div class="card p-4">
       <p class="text-gold text-sm">ДОКАЗАТЕЛЬСТВА СВЕРЕНЫ</p>
-      <p class="text-gray-400 text-sm mt-2">Себастьян выходит из тени склада и выслушивает предъявленные материалы. Он не признаёт ни покупку препарата лично, ни передачу яда, ни участие в смерти Гаррисона. Карточка встречи и аптечная книга — независимые записи, а не его признание. «Вы можете собрать документы в одну историю, детектив. Но пока вы не знаете, кто получил препарат и кто передал его судье». Затем он предлагает сделку.</p>
-            <div class="grid gap-2 mt-4">
-        ${publishReady ? "" : '<p class="text-gray-500 text-xs">Для публичного обвинения нужен чётко восстановленный кадр и проверенная связь Блэквуда с ядом. Компромиссный исход остаётся доступен.</p>'}
-        <button id="btn-ending-open" class="btn-noir py-3" ${publishReady ? "" : "disabled"}>ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ</button>
+      <p class="text-gray-400 text-sm mt-2">Себастьян выходит из тени склада. Медицинское заключение, карточка встречи, аптечная запись и его собственное показание о передаче Гаррисону запечатанного флакона из заказа на белладонну связывают его с передачей препарата. Это даёт основания предъявить официальное обвинение, но ещё не судебный приговор: показание не доказывает, что Гаррисон выпил содержимое или что Себастьян действовал с умыслом. Сам Себастьян не признаёт убийство. Перед выбором проверьте выводы и пределы каждого источника.</p>
+      <ol class="grid gap-3 mt-4">
+        ${evidenceDossier.map(item => `<li class="border-l-2 border-gray-700 pl-3">
+          <p class="text-gray-200 text-sm font-semibold">${item.title}</p>
+          <p class="text-gray-400 text-xs mt-1">${item.finding}</p>
+          <p class="text-gray-500 text-xs mt-1">Предел доказательства: ${item.limit}</p>
+        </li>`).join('')}
+      </ol>
+      <p class="text-gray-500 text-xs mt-3">Совокупность источников обосновывает официальное обвинение, но не заменяет судебную проверку. Ни одна отдельная улика не называет убийцу.</p>
+      <div class="grid gap-2 mt-4">
+        ${fullDisclosureReady ? "" : '<p class="text-gray-500 text-xs">Для полного публичного раскрытия материалов старого дела нужен чётко восстановленный кадр. Он не доказывает, что Гаррисон выпил переданный флакон или что Себастьян действовал с умыслом; эти обстоятельства проверяются отдельно.</p>'}
+        <button id="btn-ending-open" class="btn-noir py-3" ${fullDisclosureReady ? "" : "disabled"}>ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ</button>
         <button id="btn-ending-silence" class="btn-noir py-3">ЗАКЛЮЧИТЬ СДЕЛКУ</button>
       </div>
     </div>
   `;
   result.querySelector('#btn-ending-open')?.addEventListener('click', () => {
     if (GameState.completeCampaign('open_case')) renderEnding(container, 'open_case');
+    else showFinaleSaveError(container);
   });
   result.querySelector('#btn-ending-silence')?.addEventListener('click', () => {
+    if (!GameState.hasClue('sebastian_sealed_confession')) {
+      GameState.addClue({
+        id: 'sebastian_sealed_confession',
+        name: 'Запечатанное признание Себастьяна',
+        category: 'testimony',
+        description: 'В приложении к закрытому соглашению Себастьян письменно признаёт, что встретился с Гаррисоном в вечер убийства и сам передал ему белладонну, зная о смертельном действии вещества. Признание запечатано и передано следствию; его происхождение и обстоятельства получения должны быть проверены независимо.',
+        location: 'port',
+        day: 5,
+        source: 'Подписанное заявление Себастьяна Блэквуда',
+        connections_to: ['autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice']
+      });
+    }
     if (GameState.completeCampaign('price_of_silence')) renderEnding(container, 'price_of_silence');
+    else showFinaleSaveError(container);
   });
 }
 
@@ -92,7 +121,6 @@ export function render(container) {
     }
   });
 
-  // A completed campaign must restore its saved ending instead of exposing dead choice buttons.
   if (GameState.campaign.completed && GameState.campaign.ending) {
     renderEnding(container, GameState.campaign.ending);
     return;
@@ -103,14 +131,37 @@ export function render(container) {
   });
 
   const actions = container.querySelector('.story-location-actions');
-  if (!GameState.hasClue('port_cargo_ledger_archive')) {
+  if (!GameState.hasClue('port_cargo_ledger')) {
     const ledger = document.createElement('button');
     ledger.id = 'btn-port-ledger';
     ledger.className = 'card text-left w-full';
     ledger.innerHTML = '<p class="card-title">ПРОВЕРИТЬ ГРУЗОВУЮ КНИГУ</p><p class="card-subtitle">Сверить портовые записи с архивом дела Каллиопы.</p>';
     ledger.addEventListener('click', () => {
-      if (GameState.hasClue('port_cargo_ledger_archive')) return;
+      if (GameState.hasClue('port_cargo_ledger')) return;
       GameState.addClue({
+        id: 'port_cargo_ledger',
+        name: 'Книга портовых грузов 1967 года',
+        category: 'document',
+        description: 'В копии грузовой книги есть исправления и записи о грузах компании Блэквуда в ночь гибели Каллиопы. Документ связывает его бизнес с местом и временем; страницы требуют независимой сверки.',
+        location: 'port',
+        day: 4,
+        source: 'Архив порта',
+        connections_to: ['old_case_details', 'restored_film_frame']
+      });
+      ledger.disabled = true;
+      ledger.querySelector('.card-title').textContent = 'ГРУЗОВАЯ КНИГА ДОБАВЛЕНА';
+    });
+    actions.appendChild(ledger);
+  }
+
+  if (GameState.hasClue('port_cargo_ledger') && !GameState.hasClue('port_cargo_ledger_archive')) {
+    const archive = document.createElement('button');
+    archive.id = 'btn-port-archive-ledger';
+    archive.className = 'card text-left w-full';
+    archive.innerHTML = '<p class="card-title">СВЕРИТЬ С АРХИВНЫМ ЭКЗЕМПЛЯРОМ</p><p class="card-subtitle">Проверить копию Себастьяна по независимому архиву портового управления.</p>';
+    archive.addEventListener('click', () => {
+      if (GameState.hasClue('port_cargo_ledger_archive')) return;
+      const added = GameState.addClue({
         id: 'port_cargo_ledger_archive',
         name: 'Архивный экземпляр грузовой книги 1967 года',
         category: 'document',
@@ -120,10 +171,12 @@ export function render(container) {
         source: 'Архив портового управления',
         connections_to: ['port_cargo_ledger', 'old_case_details', 'belladonna_invoice']
       });
-      ledger.disabled = true;
-      ledger.querySelector('.card-title').textContent = 'ГРУЗОВАЯ КНИГА ДОБАВЛЕНА';
+      if (added) {
+        archive.disabled = true;
+        archive.querySelector('.card-title').textContent = 'АРХИВНАЯ СВЕРКА ДОБАВЛЕНА';
+      }
     });
-    actions.appendChild(ledger);
+    actions.appendChild(archive);
   }
 
   if (!GameState.hasClue('belladonna_invoice')) {
@@ -156,11 +209,25 @@ export function render(container) {
     actions.appendChild(meet);
     meet.addEventListener('click', () => {
       if (!GameState.hasClue('markus_statement')) GameState.addClue(markusStatement);
+      const encounterId = 'event-markus-sebastian-final-confrontation';
+      const encounterRecorded = GameState.socialGraph?.events?.some(event => event.id === encounterId) ||
+        Boolean(GameState.recordSocialEvent({
+          id: encounterId,
+          fromNpcId: 'npc_markus_holt',
+          toNpcId: 'npc_sebastian_blackwood',
+          description: 'Джон лично наблюдал финальную встречу Маркуса и Себастьяна на причале № 4: Маркус признал фальсификацию старого дела, Себастьян потребовал отдать ему материалы, и попытался выхватить коробку с оригиналами.',
+          timeLabel: 'День 5 · Причал № 4',
+          sourceType: 'direct_observation',
+          certainty: 'corroborated',
+          sourceRefs: ['scene:port:day5:final_confrontation']
+        }));
       container.querySelector('#story-location-result').innerHTML = `
         <div class="card p-4">
           <p class="text-gold text-sm">МАРКУС ХОЛТ · ПРИЧАЛ № 4</p>
           <p class="text-gray-300 text-sm leading-relaxed mt-2">Маркус выходит из тени складского навеса. «Я изменил время в протоколе. Я спрятал плёнку. Я говорил себе, что спасаю невиновного, но на самом деле спасал себя. Себастьян был рядом с Каллиопой в ночь её смерти — это я видел на плёнке. А кто убил Гаррисона, я не видел. Я могу рассказать о его страхе и о том, что он собирался раскрыть, но мои догадки не заменят ваших доказательств».</p>
-          <p class="text-gray-500 text-xs mt-3">Его признание касается его собственных действий. Версию об убийстве необходимо сверить с независимыми материалами.</p>
+          <p class="text-gray-300 text-sm leading-relaxed mt-3">Из-за складского навеса появляется Себастьян. «Вы должны были оставить прошлое в покое, Маркус». Тот не отступает: «Я уже однажды промолчал. Больше не буду». Себастьян требует отдать ему материалы и резко тянется к коробке с оригиналами. Джон оказывается свидетелем их открытого столкновения; попытка уничтожить доказательства не превращается автоматически в признание убийства Гаррисона.</p>
+          <p class="text-gray-500 text-xs mt-3">Признание Маркуса касается его собственных действий. Встреча подтверждает конфликт между ним и Себастьяном, но не заменяет независимые доказательства по делу Гаррисона.</p>
+          ${encounterRecorded ? '' : '<p class="text-red-300 text-xs mt-3" role="alert">Не удалось сохранить запись о встрече. Событие показано, но не внесено в социальный граф. Повторно откройте сцену после проверки сохранения.</p>'}
         </div>
       `;
       renderEndingChoices(container);

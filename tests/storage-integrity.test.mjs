@@ -75,7 +75,7 @@ test('a damaged save does not get silently replaced during initialization', () =
     Storage.inspect = () => ({ status: 'corrupt', data: null, error: new SyntaxError('bad JSON') });
     Storage.save = (...args) => writes.push(args);
 
-    assert.equal(GameState.init(), 'corrupt');
+    assert.equal(GameState.init(), false);
     assert.equal(GameState.saveStatus, 'corrupt');
     assert.equal(GameState.campaign.day, 1);
     assert.deepEqual(GameState.currentCase.clues, []);

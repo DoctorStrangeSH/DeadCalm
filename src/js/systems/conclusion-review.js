@@ -1,18 +1,44 @@
-import { READER_AUDIT_DOCUMENTS } from './investigation-quality.js';
+import { READER_AUDIT_DOCUMENTS, assessReaderInvestigation } from './investigation-quality.js';
 
-// A supervisor checks the sufficiency of the reasoning, never identifies a culprit.
-export function reviewReaderConclusion(conclusion, previousReviews = [], reviewedAt = new Date().toISOString()) {
-  if (!conclusion || conclusion.status !== 'Промежуточное заключение') return null;
+// A supervisor validates the submitted snapshot against the actual discovered case.
+// A forged ID in an imported/edited conclusion must never count as evidence.
+export function reviewReaderConclusion(
+  conclusion,
+  previousReviews = [],
+  reviewedAt = new Date().toISOString(),
+  currentCase = null,
+  rules = []
+) {
+  if (!conclusion || conclusion.status !== 'Промежуточное заключение' ||
+      !currentCase || !Array.isArray(rules)) return null;
   const past = Array.isArray(previousReviews) ? previousReviews : [];
   if (past.some(item => item.conclusionVersion === conclusion.version)) return null;
-  const documents = new Set(conclusion.documentIds || []);
-  const contradictions = new Set(conclusion.contradictionIds || []);
+
+  const audit = assessReaderInvestigation(currentCase, rules, {});
+  if (!audit) return null;
+
+  const submittedDocuments = Array.isArray(conclusion.documentIds) ? conclusion.documentIds : [];
+  const submittedContradictions = Array.isArray(conclusion.contradictionIds) ? conclusion.contradictionIds : [];
+  const actualDocuments = new Set(audit.found);
+  const actualContradictions = new Set(audit.verifiedContradictions.map(item => item.id));
+
+  const forgedDocuments = submittedDocuments.filter(id =>
+    !READER_AUDIT_DOCUMENTS.includes(id) || !actualDocuments.has(id));
+  const forgedContradictions = submittedContradictions.filter(id => !actualContradictions.has(id));
+  const validDocuments = new Set(submittedDocuments.filter(id =>
+    READER_AUDIT_DOCUMENTS.includes(id) && actualDocuments.has(id)));
+  const validContradictions = new Set(submittedContradictions.filter(id => actualContradictions.has(id)));
+
   const comments = [];
-  const missing = READER_AUDIT_DOCUMENTS.filter(id => !documents.has(id));
+  const missing = READER_AUDIT_DOCUMENTS.filter(id => !validDocuments.has(id));
   if (missing.length) comments.push(`Не завершена проверка ${missing.length} архивных материалов.`);
-  if (!contradictions.size) comments.push('Ни одно расхождение ещё не подтверждено сопоставлением улик в гипотезе.');
+  if (!validContradictions.size) comments.push('Ни одно расхождение ещё не подтверждено сопоставлением улик в гипотезе.');
+  if (forgedDocuments.length) comments.push('В заключении есть ссылки на документы, которые не обнаружены или не входят в перечень проверки.');
+  if (forgedContradictions.length) comments.push('В заключении есть противоречия, не подтверждённые текущими уликами и гипотезами.');
   comments.push('Нельзя приписывать действия конкретному человеку без доказательства личности.');
-  const ready = !missing.length && contradictions.size > 0;
+
+  const ready = !missing.length && validContradictions.size > 0 &&
+    !forgedDocuments.length && !forgedContradictions.length;
   return {
     conclusionVersion: conclusion.version,
     reviewedAt,

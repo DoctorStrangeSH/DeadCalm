@@ -18,15 +18,14 @@ const DAY_REQUIREMENTS = {
   3: {
     label: 'Проверка версии Блэквуда',
     all: [
-      ['port_cargo_ledger', 'Копия портовой книги от Блэквуда']
+      ['port_cargo_ledger', 'Портовая книга грузов']
     ]
   },
   4: {
     label: 'Подготовка финального предъявления',
     all: [
       ['anna_markus_items', 'Вещи Маркуса от Анны'],
-      ['belladonna_invoice', 'Счёт за экстракт белладонны'],
-      ['port_cargo_ledger_archive', 'Независимый архивный экземпляр грузовой книги']
+      ['belladonna_invoice', 'Счёт за экстракт белладонны']
     ],
     any: [
       ['restored_film_frame', 'Восстановленный кадр плёнки'],
@@ -76,12 +75,117 @@ export function assessFinalEvidence(gameState) {
     ['judge_appointment_card', 'Карточка встречи с Гаррисоном'],
     ['belladonna_invoice', 'Счёт за белладонну'],
     ['matthews_letter', 'Письмо Мэтьюса'],
-    ['port_cargo_ledger', 'Копия портовой книги от Блэквуда'],
-    ['port_cargo_ledger_archive', 'Независимый архивный экземпляр портовой книги']
+    ['port_cargo_ledger', 'Портовая книга грузов'],
+    ['port_cargo_ledger_archive', 'Независимый архивный экземпляр портовой книги'],
+    ['markus_statement', 'Признание Маркуса Холта'],
+    ['sebastian_delivery_statement', 'Показание Себастьяна о передаче флакона']
   ];
   const missing = required.filter(([id]) => !gameState.hasClue(id)).map(([, label]) => label);
   const hasIndependentRecord = gameState.hasClue('restored_film_frame') || gameState.hasClue('port_radio_fragment');
   if (!hasIndependentRecord) missing.push('Независимый фрагмент плёнки или радиозаписи');
   const filmQuality = Number(gameState.getClue?.('restored_film_frame')?.quality || 0);
-  return { ready: missing.length === 0, publicReady: missing.length === 0 && filmQuality >= 95, missing, filmQuality };
+  const fullDisclosureReady = missing.length === 0 && filmQuality >= 95;
+  return {
+    ready: missing.length === 0,
+    fullDisclosureReady,
+    // Backward-compatible alias. This gate controls full public disclosure of the case file,
+    // not proof that Sebastian personally administered the poison.
+    publicReady: fullDisclosureReady,
+    missing,
+    filmQuality
+  };
+}
+
+
+export function buildFinalEvidenceDossier(gameState) {
+  const dossier = [
+    {
+      title: 'Причина смерти',
+      finding: 'Заключение Лидии устанавливает отравление Гаррисона экстрактом белладонны.',
+      limit: 'Экспертиза не устанавливает, кто приобрёл яд и кто дал его судье.'
+    },
+    {
+      title: 'Встреча с Гаррисоном',
+      finding: 'Карточка фиксирует назначенную встречу судьи с Себастьяном в день смерти.',
+      limit: 'План встречи сам по себе не подтверждает, что Блэквуд пришёл.'
+    },
+    {
+      title: 'Источник белладонны',
+      finding: 'Аптечная запись связывает покупку экстракта за день до смерти с офисом Блэквуда.',
+      limit: 'Получатель препарата и путь от покупки до судьи документально не установлены.'
+    },
+    {
+      title: 'Связь со старым делом',
+      finding: 'Портовая книга связывает компанию Блэквуда с грузами в ночь гибели Каллиопы.',
+      limit: 'Это копия, представленная Себастьяном; сама по себе она не доказывает убийство.'
+    },
+    {
+      title: 'Ответственность Маркуса',
+      finding: 'Маркус признаёт, что изменил время в протоколе 1967 года и спрятал оригинальную плёнку.',
+      limit: 'Он признаёт сокрытие, но не утверждает, что видел убийство Гаррисона.'
+    }
+  ];
+
+  if (gameState.hasClue('sebastian_delivery_statement')) {
+    dossier.push({
+      title: 'Передача флакона',
+      finding: 'Себастьян подтверждает, что пришёл на назначенную встречу и передал Гаррисону запечатанный флакон из аптечного заказа; на упаковке, по его словам, значилась белладонна.',
+      limit: 'Это показание заинтересованного лица. Оно не доказывает, что Гаррисон выпил содержимое, кто открыл флакон или что передача была совершена с намерением убить; обстоятельства требуют независимой проверки.'
+    });
+  }
+
+  if (gameState.hasClue('court_switchboard_log')) {
+    dossier.push({
+      title: 'Расхождение во времени',
+      finding: 'Первичный рапорт ссылался на звонок из суда, но журнал не называет абонента; вскрытие не подтверждает версию о мгновенной смерти.',
+      limit: 'Неизвестный звонящий и ошибка в рапорте не устанавливают личность убийцы.'
+    });
+  }
+
+  const film = gameState.getClue?.('restored_film_frame');
+  if (film) {
+    const quality = Number(film.quality || 0);
+    dossier.push({
+      title: 'Восстановленная плёнка',
+      finding: quality >= 95
+        ? 'На кадре различимы Себастьян и Каллиопа у старого причала незадолго до её смерти.'
+        : 'На частичном кадре различимы две фигуры и автомобиль у старого причала.',
+      limit: quality >= 95
+        ? 'Кадр подтверждает присутствие, но не показывает момент убийства и не относится к вечеру смерти Гаррисона.'
+        : 'Личности на частичном кадре пока нельзя считать установленными.'
+    });
+  }
+
+  if (gameState.hasClue('port_radio_fragment')) {
+    dossier.push({
+      title: 'Радиофрагмент',
+      finding: 'Запись подтверждает движение машины и временное окно у причала.',
+      limit: 'Голос не идентифицирован; запись не называет водителя или говорившего.'
+    });
+  }
+
+  dossier.push({
+    title: 'Основание для официального обвинения',
+    finding: 'Медицинское заключение устанавливает отравление; карточка фиксирует встречу; аптечная запись связывает заказ белладонны с офисом Блэквуда; сам Себастьян подтверждает, что передал Гаррисону запечатанный флакон из этого заказа. Материалы старого дела раскрывают мотив и проверяют его прежнее алиби. В совокупности источники дают основания предъявить официальное обвинение.',
+    limit: 'Это не судебный приговор. Показание о передаче исходит от самого обвиняемого; оно не доказывает, что Гаррисон выпил содержимое или что Себастьян знал о намерении убить. Происхождение и обстоятельства передачи должны быть независимо проверены.'
+  });
+
+  return dossier;
+}
+
+export function getCampaignCaseSummary(gameState) {
+  const completed = Boolean(gameState?.campaign?.completed);
+  const ending = gameState?.campaign?.ending;
+  const endingLabel = ending === 'open_case'
+    ? 'ОТКРЫТОЕ ДЕЛО'
+    : ending === 'price_of_silence'
+      ? 'ЦЕНА МОЛЧАНИЯ'
+      : null;
+
+  return {
+    completed,
+    activeCount: completed ? 0 : 1,
+    completedCount: completed ? 1 : 0,
+    endingLabel: completed ? endingLabel : null
+  };
 }

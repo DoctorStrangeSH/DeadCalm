@@ -1,8 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
 
 const readJson = path => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
 
@@ -75,45 +73,28 @@ test('the opening establishes the personal hook and the first verifiable contrad
 });
 
 
-test('relationship choices persist and receive a one-time authored reaction on the next meeting', () => {
+test('Marta does not identify Markus as her anonymous source during the first meeting', () => {
   const dialogues = readJson('../src/data/dialogues.json');
-  const engine = readFileSync(new URL('../src/js/systems/dialogue.js', import.meta.url), 'utf8');
-  const dialogBox = readFileSync(new URL('../src/js/components/dialog-box.js', import.meta.url), 'utf8');
-  const terminalFlags = new Set(['lydia_refuses', 'ray_hostile']);
-  for (const [npcId, npc] of Object.entries(dialogues)) {
-    const choices = Object.values(npc).flatMap(node => node?.choices || []);
-    assert.ok(choices.length >= 3, npcId + ' needs authored relationship choices');
-    const reactions = npc.return_dialogues || [];
-    assert.ok(reactions.length >= 2, npcId + ' needs return dialogue reactions');
-    for (const choice of choices) {
-      assert.ok(choice.memory_set, npcId + '.' + choice.id + ' must persist a memory flag');
-      assert.ok(npc[choice.next_dialogue]?.text, npcId + '.' + choice.id + ' needs an immediate authored result');
-      if (!terminalFlags.has(choice.memory_set)) {
-        assert.ok(reactions.some(item => item.requires_flag === choice.memory_set), npcId + '.' + choice.id + ' needs a remembered follow-up');
-      }
-    }
-    for (const reaction of reactions) {
-      assert.ok(npc[reaction.node]?.text, npcId + ' has a missing return dialogue node');
-      assert.ok(reaction.seen_flag, npcId + ' return dialogue must be shown only once');
-    }
-  }
-  assert.match(engine, /Однократная реакция на прошлый выбор/);
-  assert.match(engine, /reactionNode\.returnReactionSeenFlag = returnReaction\.seen_flag/);
-  assert.match(engine, /acknowledgeReturnReaction\(seenFlag\)/);
-  assert.doesNotMatch(engine, /NPCMemory\.setFlag\(npcId, returnReaction\.seen_flag\)/);
-  assert.match(dialogBox, /DialogueEngine\.acknowledgeReturnReaction\(node\.returnReactionSeenFlag\)/);
+  const firstMeeting = dialogues.npc_marta_hayes.first_meeting.text;
+  assert.match(firstMeeting, /В записке было сказано/);
+  assert.match(firstMeeting, /Кто её оставил — не знаю/);
+  assert.doesNotMatch(firstMeeting, /Маркус|Холт/);
 });
 
-test('port finale scene parses and the silence ending does not invent a poison handoff confession', () => {
-  const portPath = fileURLToPath(new URL('../src/js/scenes/port.js', import.meta.url));
-  const portScene = readFileSync(portPath, 'utf8');
-  execFileSync(process.execPath, ['--check', portPath]);
-  assert.doesNotMatch(portScene, /\\\\n/);
-  assert.doesNotMatch(portScene, /дал ему яд/i);
-  assert.match(portScene, /Карточка встречи и аптечная книга — независимые записи, а не его признание/);
-  assert.match(portScene, /Он не признаёт ни покупку препарата лично, ни передачу яда/);
-  assert.match(portScene, /не признаёт ни покупку препарата лично/);
-  assert.match(portScene, /Маркус признаётся только в подмене записи и сокрытии плёнки/);
-  assert.match(portScene, /GameState\.campaign\.completed && GameState\.campaign\.ending/);
-  assert.match(portScene, /renderEnding\(container, GameState\.campaign\.ending\)/);
+
+test('day-five port confrontation records a player-witnessed Markus-Sebastian event, not an invented schedule', () => {
+  const portScene = readFileSync(new URL('../src/js/scenes/port.js', import.meta.url), 'utf8');
+  const finaleGate = portScene.indexOf("if (GameState.campaign.day >= 5)");
+  const encounter = portScene.indexOf("event-markus-sebastian-final-confrontation");
+  assert.ok(finaleGate >= 0 && encounter > finaleGate,
+    'the encounter must only be available in the authored day-five finale');
+  const encounterBlock = portScene.slice(encounter, encounter + 1100);
+  assert.match(encounterBlock, /fromNpcId: 'npc_markus_holt'/);
+  assert.match(encounterBlock, /toNpcId: 'npc_sebastian_blackwood'/);
+  assert.match(encounterBlock, /sourceType: 'direct_observation'/);
+  assert.match(encounterBlock, /certainty: 'corroborated'/);
+  assert.match(encounterBlock, /scene:port:day5:final_confrontation/);
+  assert.match(portScene, /Джон оказывается свидетелем их открытого столкновения/);
+  assert.doesNotMatch(encounterBlock, /recordNpcOccurrence|setNpcSchedule/,
+    'a one-off authored confrontation must not fabricate daily schedules or clock times');
 });

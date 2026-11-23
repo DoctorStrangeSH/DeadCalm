@@ -14,6 +14,9 @@ export function createHypothesis({ id, title, reasoning, clueIds = [] }, availab
 export function reviseHypothesis(hypothesis, change, availableClues, now = new Date().toISOString()) {
   const status = change.status ?? hypothesis.status;
   if (!STATUSES.has(status)) throw new Error('Неизвестный статус гипотезы');
+  if (status === 'confirmed' && hypothesis.status !== 'confirmed') {
+    throw new Error('Нельзя подтвердить версию вручную: для этого требуется отдельная проверка доказательств.');
+  }
   const allowed = new Set(availableClues.map(clue => clue.id));
   const clueIds = [...new Set(change.clueIds ?? hypothesis.clueIds)].filter(id => allowed.has(id));
   const reasoning = String(change.reasoning ?? hypothesis.reasoning).trim().slice(0, 2000);
@@ -22,7 +25,10 @@ export function reviseHypothesis(hypothesis, change, availableClues, now = new D
   if (!title) throw new Error('Название не может быть пустым');
   if (status === hypothesis.status && title === hypothesis.title && reasoning === hypothesis.reasoning &&
       JSON.stringify(clueIds) === JSON.stringify(hypothesis.clueIds || [])) return hypothesis;
-  const next = { ...hypothesis, title, status, clueIds, reasoning, updatedAt: now };
+  if (hypothesis.status === 'confirmed' && status === 'confirmed') {
+    throw new Error('Сначала измените статус подтверждённой версии: её обоснование и улики нельзя менять без повторной проверки.');
+  }
+  const next = { ...hypothesis, title, status, clueIds, reasoning, updatedAt: now, importReviewRequired: false };
   next.history = [...(hypothesis.history || []), { at: now, type: 'revised', status,
     clueIds: [...clueIds], reasoning, title }];
   return next;

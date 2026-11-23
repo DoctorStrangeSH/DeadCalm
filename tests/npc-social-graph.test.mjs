@@ -57,3 +57,63 @@ test('legacy and malformed save records are safely filtered during migration', (
   assert.deepEqual(normalized.ties[0].sourceRefs, []);
   assert.deepEqual(normalized.events[0].sourceRefs, []);
 });
+
+test('the same undirected relationship cannot be duplicated by reversing its endpoints', () => {
+  const graph = createEmptySocialGraph();
+  const first = upsertSocialTie(graph, {
+    fromNpcId: 'npc_a', toNpcId: 'npc_b', type: 'family',
+    status: 'active', basis: 'They identify each other as siblings.'
+  });
+  const reversed = upsertSocialTie(graph, {
+    fromNpcId: 'npc_b', toNpcId: 'npc_a', type: 'family',
+    status: 'strained', basis: 'A later account records distance between them.'
+  });
+  assert.equal(graph.ties.length, 1);
+  assert.equal(reversed.id, first.id);
+  assert.equal(graph.ties[0].fromNpcId, 'npc_b');
+  assert.equal(graph.ties[0].toNpcId, 'npc_a');
+  assert.equal(graph.ties[0].status, 'strained');
+});
+
+
+test('attributed event testimony preserves source, story time and uncertainty across save normalization', () => {
+  const graph = createEmptySocialGraph();
+  const event = appendSocialEvent(graph, {
+    id: 'event-sebastian-harrison',
+    fromNpcId: 'npc_sebastian_blackwood',
+    toNpcId: 'npc_harold_harrison',
+    description: 'Sebastian says he met Harrison and delivered a sealed vial.',
+    reportedByNpcId: 'npc_sebastian_blackwood',
+    timeLabel: 'Evening of Judge Harrison’s death',
+    sourceType: 'interview',
+    certainty: 'unverified',
+    sourceRefs: ['dialogue:npc_sebastian_blackwood:sebastian_delivery_statement']
+  });
+  assert.ok(event);
+  const restored = normalizeSocialGraph(JSON.parse(JSON.stringify(graph)));
+  assert.deepEqual(restored.events[0], event);
+  assert.equal(restored.events[0].certainty, 'unverified');
+  assert.equal(restored.events[0].reportedByNpcId, 'npc_sebastian_blackwood');
+  assert.equal(getSocialContext(restored, 'npc_harold_harrison').events.length, 1);
+});
+
+test('event testimony rejects a reporter who is not one of the participants', () => {
+  const graph = createEmptySocialGraph();
+  assert.equal(appendSocialEvent(graph, {
+    id: 'invalid-reporter',
+    fromNpcId: 'npc_a',
+    toNpcId: 'npc_b',
+    description: 'A meeting was reported.',
+    reportedByNpcId: 'npc_unrelated',
+    sourceType: 'interview',
+    certainty: 'unverified'
+  }), null);
+  assert.equal(appendSocialEvent(graph, {
+    id: 'invalid-certainty',
+    fromNpcId: 'npc_a',
+    toNpcId: 'npc_b',
+    description: 'A meeting was reported.',
+    certainty: 'certain'
+  }), null);
+  assert.equal(graph.events.length, 0);
+});

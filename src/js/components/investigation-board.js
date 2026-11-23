@@ -26,6 +26,21 @@ export class InvestigationBoard {
     this.focusedHypothesisId = null;
     var clues = GameState.currentCase.clues;
     const archiveDigest = getOldCaseBoardDigest(clues, GameState.flags);
+    const socialTies = Array.isArray(GameState.socialGraph?.ties) ? GameState.socialGraph.ties : [];
+    const socialEvents = Array.isArray(GameState.socialGraph?.events) ? GameState.socialGraph.events : [];
+    const socialNames = {
+      npc_lydia_winter: 'Доктор Лидия Винтер',
+      npc_anna_holt: 'Анна Холт',
+      npc_gabriel: 'Габриэль',
+      npc_markus_holt: 'Маркус Холт',
+      npc_sebastian_blackwood: 'Себастьян Блэквуд',
+      npc_harold_harrison: 'Гарольд Гаррисон'
+    };
+    const socialTypeLabels = {
+      family: 'СЕМЬЯ', colleague: 'КОЛЛЕГИ', friend: 'ДРУЗЬЯ', rival: 'СОПЕРНИКИ',
+      debt: 'ДОЛГ', protective: 'ЗАЩИТА', romantic: 'ЛИЧНЫЕ ОТНОШЕНИЯ',
+      unknown: 'СВЯЗЬ НЕ УСТАНОВЛЕНА'
+    };
     this.connections = Investigation.getConnections();
     var self = this;
 
@@ -98,6 +113,35 @@ export class InvestigationBoard {
           ${archiveDigest.observations.map(note => `<p class="hypothesis-evidence">✓ ${self._escapeHtml(note)}</p>`).join('')}
           <small>${self._escapeHtml(archiveDigest.warning)}</small>
         </section>` : ''}
+        <section class="board-hypotheses board-social-graph" aria-label="Подтверждённые связи персонажей">
+          <h3>ЛЮДИ И ИХ СВЯЗИ</h3>
+          <p>Здесь отображаются только отношения, подтверждённые словами персонажей или найденными материалами. Слухи и догадки не становятся фактами.</p>
+          ${socialTies.length ? socialTies.map(tie =>
+            '<article class="social-tie-entry"><div class="social-tie-heading"><strong>' +
+            self._escapeHtml(socialNames[tie.fromNpcId] || tie.fromNpcId) + ' — ' +
+            self._escapeHtml(socialNames[tie.toNpcId] || tie.toNpcId) +
+            '</strong><span>' + self._escapeHtml(socialTypeLabels[tie.type] || 'СВЯЗЬ') +
+            '</span></div><p>' + self._escapeHtml(tie.basis) + '</p></article>'
+          ).join('') : '<p class="social-graph-empty">Подтверждённых связей пока нет. Они будут добавляться по мере того, как вы узнаёте людей и проверяете их слова.</p>'}
+        </section>
+        <section class="board-hypotheses board-social-events" aria-label="Свидетельства о встречах персонажей">
+          <h3>СВИДЕТЕЛЬСТВА О ВСТРЕЧАХ</h3>
+          <p>Записи основаны на рассказах участников. Пока нет независимого подтверждения, это свидетельства, а не установленные факты.</p>
+          ${socialEvents.length ? socialEvents.map(event =>
+            '<article class="social-event-entry"><div class="social-tie-heading"><strong>' +
+            self._escapeHtml(socialNames[event.fromNpcId] || event.fromNpcId) + ' — ' +
+            self._escapeHtml(socialNames[event.toNpcId] || event.toNpcId) +
+            '</strong><span>' + (event.certainty === 'corroborated' ? 'ПОДТВЕРЖДЕНО' :
+              event.certainty === 'disputed' ? 'ОСПАРИВАЕТСЯ' : 'НЕ ПРОВЕРЕНО') +
+            '</span></div><p class="social-event-time">' +
+            self._escapeHtml(event.timeLabel || 'Время не установлено') +
+            '</p><p>' + self._escapeHtml(event.description) + '</p><p class="social-event-source">Источник: ' +
+            self._escapeHtml(event.reportedByNpcId
+              ? (socialNames[event.reportedByNpcId] || event.reportedByNpcId)
+              : event.sourceType === 'direct_observation' ? 'личное наблюдение Джона Риверса' : 'не указан') +
+            '</p></article>'
+          ).join('') : '<p class="social-graph-empty">Свидетельства о встречах пока не получены.</p>'}
+        </section>
         <section class="board-hypotheses" aria-label="Архив гипотез">
           <h3>АРХИВ ГИПОТЕЗ</h3>
           <p>Запишите свою версию событий. Гипотеза — предположение детектива, а не установленный факт.</p>
@@ -233,6 +277,10 @@ export class InvestigationBoard {
           <small>Это возможные направления проверки, а не подтверждение гипотезы. Материалы не добавляются автоматически.</small>
           <button type="button" class="reader-theories-option" data-review-hypothesis="${this._escapeHtml(item.id)}">ПЕРЕСМОТРЕТЬ ВЕРСИЮ ↗</button>
         </aside>` : ''}
+        ${item.importReviewRequired ? `<aside class="hypothesis-audit" role="status" aria-label="Импортированная версия требует проверки">
+          <strong>ИМПОРТИРОВАННЫЙ СТАТУС НЕ ПОДТВЕРЖДЁН</strong>
+          <p>Файл сохранения не доказывает независимую проверку. Версия переведена в статус «Вероятна». Проверьте материалы и сохраните пересмотр, чтобы снять это уведомление.</p>
+        </aside>` : ''}
         <aside class="hypothesis-audit" aria-label="Проверка опорных улик">
           <strong>АНАЛИЗ ДОКАЗАТЕЛЬСТВ</strong>
           <p>${audit.attached === 0 ? 'Пока нет опорных улик: версия требует проверки.'
@@ -252,7 +300,7 @@ export class InvestigationBoard {
         </aside>` : ''}
         <label>ОЦЕНКА ДЕТЕКТИВА
           <select data-hypothesis-id="${this._escapeHtml(item.id)}" aria-label="Статус гипотезы ${this._escapeHtml(item.title)}">
-            ${Object.entries(HYPOTHESIS_STATUS_LABELS).map(([value, label]) => `<option value="${value}" ${item.status === value ? 'selected' : ''}>${label}</option>`).join('')}
+            ${Object.entries(HYPOTHESIS_STATUS_LABELS).filter(([value]) => value !== 'confirmed' || item.status === 'confirmed').map(([value, label]) => `<option value="${value}" ${item.status === value ? 'selected' : ''} ${value === 'confirmed' ? 'disabled' : ''}>${value === 'confirmed' ? 'Подтверждена (ранее сохранено)' : label}</option>`).join('')}
           </select>
         </label>
         <details class="hypothesis-edit"><summary>ИЗМЕНИТЬ ВЕРСИЮ</summary>

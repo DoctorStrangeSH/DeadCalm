@@ -506,15 +506,15 @@ export function render(container, data) {
     const journalHeading = document.createElement('h4');
     journalHeading.textContent = 'ЖУРНАЛ СЛЕДСТВЕННЫХ ПОРУЧЕНИЙ';
     gapJournal.appendChild(journalHeading);
-    const assignments = buildInvestigationAssignmentJournal(gaps, gapStatuses);
-    if (!assignments.length) {
+    const investigationAssignments = buildInvestigationAssignmentJournal(gaps, gapStatuses);
+    if (!investigationAssignments.length) {
       const emptyJournal = document.createElement('p');
       emptyJournal.textContent = 'Нет проверок, взятых в работу или отложенных. Назначьте действие в списке пробелов выше.';
       gapJournal.appendChild(emptyJournal);
     } else {
       const journalList = document.createElement('ul');
       journalList.className = 'investigation-assignment-list';
-      for (const assignment of assignments) {
+      for (const assignment of investigationAssignments) {
         const entry = document.createElement('li');
         const title = document.createElement('strong');
         title.textContent = assignment.title;
@@ -633,7 +633,7 @@ export function render(container, data) {
     const history = GameState.flags.court_reader_conclusions;
     const latest = Array.isArray(history) ? history.at(-1) : null;
     const reviews = Array.isArray(GameState.flags.court_reader_conclusion_reviews) ? GameState.flags.court_reader_conclusion_reviews : [];
-    const result = reviewReaderConclusion(latest, reviews);
+    const result = reviewReaderConclusion(latest, reviews, undefined, GameState.currentCase, qualityRules);
     if (!result) return;
     GameState.setFlag('court_reader_conclusion_reviews', [...reviews, result]);
     refreshReaderQuality();

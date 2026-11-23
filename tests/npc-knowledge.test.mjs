@@ -75,3 +75,115 @@ test('malformed legacy records are filtered and duplicate ids are collapsed', ()
   assert.equal(normalized.entries[0].npcId, 'npc_a');
   assert.deepEqual(normalized.entries[0].sourceRefs, []);
 });
+
+
+test('returned knowledge snapshots cannot mutate the saved state-transition history', () => {
+  const ledger = createEmptyKnowledgeLedger();
+  const created = recordNpcKnowledge(ledger, {
+    id: 'isolated-history',
+    npcId: 'npc_a',
+    claimRef: 'claim_17',
+    sourceType: 'document',
+    provenance: 'A signed register entry.'
+  });
+  assert.deepEqual(created.stateHistory, []);
+
+  const updated = updateNpcKnowledgeState(
+    ledger, 'isolated-history', 'corroborated', 'A second independent register confirms the entry.'
+  );
+  assert.equal(updated.stateHistory.length, 1);
+  updated.stateHistory[0].reason = 'tampered through returned snapshot';
+  updated.stateHistory.push({ from: 'corroborated', to: 'disputed', reason: 'forged' });
+  assert.equal(ledger.entries[0].stateHistory.length, 1);
+  assert.equal(ledger.entries[0].stateHistory[0].reason,
+    'A second independent register confirms the entry.');
+
+  const queried = getNpcKnowledge(ledger, 'npc_a');
+  queried[0].stateHistory[0].reason = 'tampered through query';
+  assert.equal(ledger.entries[0].stateHistory[0].reason,
+    'A second independent register confirms the entry.');
+});
+
+test('legacy knowledge history drops malformed transitions but retains valid provenance', () => {
+  const normalized = normalizeKnowledgeLedger({ entries: [{
+    id: 'legacy-history',
+    npcId: 'npc_a',
+    claimRef: 'claim_18',
+    sourceType: 'interview',
+    state: 'disputed',
+    provenance: 'A witness gave a conflicting account.',
+    sourceRefs: ['statement-18'],
+    stateHistory: [
+      { from: 'unverified', to: 'corroborated', reason: 'Second source found.', changedAt: '2026-11-20T10:00:00Z' },
+      { from: 'corroborated', to: 'unknown', reason: 'Invalid state.' },
+      { from: 'disputed', to: 'disputed', reason: 'No transition.' },
+      { from: 'disputed', to: 'unverified', reason: '   ' }
+    ]
+  }] });
+  assert.equal(normalized.entries.length, 1);
+  assert.equal(normalized.entries[0].state, 'disputed');
+  assert.equal(normalized.entries[0].stateHistory.length, 1);
+  assert.equal(normalized.entries[0].stateHistory[0].from, 'unverified');
+  assert.equal(normalized.entries[0].stateHistory[0].to, 'corroborated');
+});
+
+
+test('knowledge attributed to another NPC requires a traceable source reference', () => {
+  const ledger = createEmptyKnowledgeLedger();
+  assert.equal(recordNpcKnowledge(ledger, {
+    id: 'untraceable-transfer',
+    npcId: 'npc_marta',
+    claimRef: 'claim_anna_refusal',
+    sourceType: 'interview',
+    provenance: 'Marta was told by Anna.',
+    sourceNpcId: 'npc_anna'
+  }), null);
+  const valid = recordNpcKnowledge(ledger, {
+    id: 'traceable-transfer',
+    npcId: 'npc_marta',
+    claimRef: 'claim_anna_refusal',
+    sourceType: 'interview',
+    provenance: 'Marta was told by Anna during a recorded interview.',
+    sourceNpcId: 'npc_anna',
+    sourceRefs: ['interview-marta-anna-01']
+  });
+  assert.ok(valid);
+  assert.equal(valid.sourceNpcId, 'npc_anna');
+  assert.deepEqual(valid.sourceRefs, ['interview-marta-anna-01']);
+});
+
+test('legacy knowledge rejects self-sourced and untraceable cross-NPC entries', () => {
+  const normalized = normalizeKnowledgeLedger({ entries: [
+    {
+      id: 'self-source',
+      npcId: 'npc_a',
+      claimRef: 'claim_1',
+      sourceType: 'direct_observation',
+      state: 'unverified',
+      provenance: 'Self-sourced legacy claim.',
+      sourceNpcId: 'npc_a',
+      sourceRefs: ['record-1']
+    },
+    {
+      id: 'untraceable-transfer',
+      npcId: 'npc_b',
+      claimRef: 'claim_2',
+      sourceType: 'interview',
+      state: 'unverified',
+      provenance: 'Someone said it.',
+      sourceNpcId: 'npc_a',
+      sourceRefs: []
+    },
+    {
+      id: 'valid-transfer',
+      npcId: 'npc_b',
+      claimRef: 'claim_3',
+      sourceType: 'interview',
+      state: 'unverified',
+      provenance: 'An attributed interview.',
+      sourceNpcId: 'npc_a',
+      sourceRefs: ['interview-3']
+    }
+  ] });
+  assert.deepEqual(normalized.entries.map(entry => entry.id), ['valid-transfer']);
+});

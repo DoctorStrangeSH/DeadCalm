@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { GameState } from '../src/js/core/state.js';
+import { Events } from '../src/js/core/events.js';
 import { Storage } from '../src/js/core/storage.js';
 
-test('five-day campaign advances sequentially and opens only reached day flags', () => {
+test('five-day campaign advances sequentially only after each daily evidence gate', () => {
   const originalCampaign = GameState.campaign;
   const originalFlags = GameState.flags;
   const originalCurrentCase = GameState.currentCase;
@@ -12,29 +13,45 @@ test('five-day campaign advances sequentially and opens only reached day flags',
   try {
     GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
     GameState.flags = {};
-    GameState.currentCase = { id: 'case_001', clues: [
-      'autopsy_report_01', 'court_switchboard_log', 'judge_appointment_card', 'old_case_details',
-      'marta_source_envelope', 'matthews_letter', 'port_cargo_ledger', 'anna_markus_items',
-      'belladonna_invoice', 'port_cargo_ledger_archive', 'port_radio_fragment'
-    ].map(id => ({ id })).concat([{ id: 'restored_film_frame', quality: 100 }]) };
-    Storage.save = (key, value) => writes.push({ key, value: structuredClone(value) });
+    GameState.currentCase = { ...originalCurrentCase, clues: [] };
+    Storage.save = (key, value) => { writes.push({ key, value: structuredClone(value) }); return true; };
+    const addClues = ids => {
+      for (const id of ids) {
+        if (!GameState.hasClue(id)) GameState.currentCase.clues.push({
+          id,
+          quality: id === 'restored_film_frame' ? 100 : undefined
+        });
+      }
+    };
 
     assert.equal(GameState.hasFlag('day_2'), false);
     assert.equal(GameState.setCampaignDay(3), false, 'campaign cannot skip a day');
+    assert.equal(GameState.setCampaignDay(2), false, 'direct day changes cannot bypass missing evidence');
+    assert.equal(GameState.advanceCampaignDay(), false, 'day one cannot advance without its evidence');
+
+    addClues(['autopsy_report_01', 'court_switchboard_log', 'judge_appointment_card', 'old_case_details']);
     assert.equal(GameState.advanceCampaignDay(), true);
     assert.equal(GameState.campaign.day, 2);
     assert.equal(GameState.hasFlag('day_2'), true);
     assert.equal(GameState.hasFlag('day_3'), false);
+
+    addClues(['marta_source_envelope', 'matthews_letter']);
     assert.equal(GameState.advanceCampaignDay(), true);
+    assert.equal(GameState.campaign.day, 3);
+
+    addClues(['port_cargo_ledger']);
     assert.equal(GameState.advanceCampaignDay(), true);
+    assert.equal(GameState.campaign.day, 4);
+
+    addClues(['anna_markus_items', 'belladonna_invoice', 'port_radio_fragment', 'port_cargo_ledger_archive']);
     assert.equal(GameState.advanceCampaignDay(), true);
     assert.equal(GameState.campaign.day, 5);
     assert.equal(GameState.hasFlag('day_5'), true);
+
     assert.equal(GameState.completeCampaign('unknown'), false);
+    addClues(['markus_statement', 'sebastian_delivery_statement', 'restored_film_frame']);
     assert.equal(GameState.completeCampaign('open_case'), true);
     assert.equal(GameState.campaign.completed, true);
-    assert.equal(GameState.campaign.ending, 'open_case');
-    assert.equal(GameState.completeCampaign('price_of_silence'), false, 'a completed ending cannot be overwritten');
     assert.equal(GameState.campaign.ending, 'open_case');
     assert.equal(GameState.advanceCampaignDay(), false);
     assert.ok(writes.length >= 5);
@@ -48,7 +65,7 @@ test('five-day campaign advances sequentially and opens only reached day flags',
 });
 
 test('campaign state restores day and synchronizes legacy location flags', () => {
-  const originalInspect = Storage.inspect;
+  const originalLoad = Storage.load;
   const original = {
     player: GameState.player,
     currentCase: GameState.currentCase,
@@ -61,8 +78,7 @@ test('campaign state restores day and synchronizes legacy location flags', () =>
     npcDailyLife: GameState.npcDailyLife,
     miniGameProgress: GameState.miniGameProgress,
     notebook: GameState.notebook,
-    settings: GameState.settings,
-    saveStatus: GameState.saveStatus
+    settings: GameState.settings
   };
   const saved = {
     campaign: { caseId: 'case_001', day: 3, completed: false, ending: null },
@@ -70,7 +86,7 @@ test('campaign state restores day and synchronizes legacy location flags', () =>
     currentCase: { id: 'case_001', clues: [], suspects: [], timeline: [] }
   };
   try {
-    Storage.inspect = key => key === 'gameState' ? { status: 'valid', data: structuredClone(saved) } : { status: 'missing', data: null };
+    Storage.load = key => key === 'gameState' ? structuredClone(saved) : null;
     GameState.init();
     assert.equal(GameState.campaign.day, 3);
     assert.equal(GameState.hasFlag('day_2'), true);
@@ -78,171 +94,223 @@ test('campaign state restores day and synchronizes legacy location flags', () =>
     assert.equal(GameState.hasFlag('day_4'), false);
     assert.equal(GameState.hasFlag('existing_choice'), true);
   } finally {
-    Storage.inspect = originalInspect;
+    Storage.load = originalLoad;
     Object.assign(GameState, original);
   }
 });
 
-test('a completed ending survives save loading and cannot be replaced by another outcome', () => {
-  const originalInspect = Storage.inspect;
+
+test('finale completion enforces ending-specific evidence at the state boundary', () => {
   const original = {
-    player: GameState.player,
-    currentCase: GameState.currentCase,
     campaign: GameState.campaign,
-    flags: GameState.flags,
-    relationships: GameState.relationships,
-    npcMemory: GameState.npcMemory,
-    socialGraph: GameState.socialGraph,
-    knowledgeLedger: GameState.knowledgeLedger,
-    npcDailyLife: GameState.npcDailyLife,
-    miniGameProgress: GameState.miniGameProgress,
-    notebook: GameState.notebook,
-    settings: GameState.settings,
-    saveStatus: GameState.saveStatus
+    currentCase: GameState.currentCase
   };
-  const saved = {
-    campaign: { caseId: 'case_001', day: 5, completed: true, ending: 'price_of_silence' },
-    flags: {},
-    currentCase: { id: 'case_001', clues: [], suspects: [], timeline: [] }
-  };
+  const originalSave = Storage.save;
   try {
-    Storage.inspect = key => key === 'gameState' ? { status: 'valid', data: structuredClone(saved) } : { status: 'missing', data: null };
-    GameState.init();
-    assert.equal(GameState.campaign.day, 5);
+    Storage.save = () => true;
+    const baseEvidence = [
+      'autopsy_report_01',
+      'judge_appointment_card',
+      'belladonna_invoice',
+      'matthews_letter',
+      'port_cargo_ledger',
+      'port_cargo_ledger_archive',
+      'markus_statement',
+      'sebastian_delivery_statement'
+    ];
+    const setFinaleState = clues => {
+      GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+      GameState.currentCase = { ...original.currentCase, clues };
+    };
+
+    setFinaleState([]);
+    assert.equal(GameState.completeCampaign('price_of_silence'), false, 'no evidence must not unlock a finale');
+    assert.equal(GameState.completeCampaign('open_case'), false, 'no evidence must not unlock a public accusation');
+
+    setFinaleState([...baseEvidence.filter(id => id !== 'sebastian_delivery_statement').map(id => ({ id })), { id: 'port_radio_fragment' }, { id: 'sebastian_sealed_confession' }]);
+    assert.equal(GameState.completeCampaign('price_of_silence'), false, 'the compromise ending must require Sebastian’s evidence-gated delivery statement');
+
+    setFinaleState([...baseEvidence, { id: 'port_radio_fragment' }].map(item => typeof item === 'string' ? { id: item } : item));
+    assert.equal(GameState.completeCampaign('open_case'), false, 'radio evidence alone cannot support a public accusation');
+    assert.equal(GameState.completeCampaign('price_of_silence'), false, 'the compromise ending must not bypass the sealed confession exhibit');
+    GameState.currentCase.clues.push({ id: 'sebastian_sealed_confession' });
+    assert.equal(GameState.completeCampaign('price_of_silence'), true, 'radio evidence, the complete case file and sealed confession support the compromise');
+
+    setFinaleState([...baseEvidence.map(id => ({ id })), { id: 'restored_film_frame', quality: 70 }]);
+    assert.equal(GameState.completeCampaign('open_case'), false, 'a partial frame cannot support a public accusation');
+
+    setFinaleState([...baseEvidence.map(id => ({ id })), { id: 'restored_film_frame', quality: 100 }]);
+    assert.equal(GameState.completeCampaign('open_case'), true, 'a fully identified frame plus the complete case file supports the public accusation');
+  } finally {
+    Storage.save = originalSave;
+    Object.assign(GameState, original);
+  }
+});
+
+
+test('both finale choices persist through save import and cannot be switched afterwards', () => {
+  const keys = [
+    'player', 'currentCase', 'campaign', 'flags', 'relationships', 'npcMemory',
+    'socialGraph', 'knowledgeLedger', 'npcDailyLife', 'miniGameProgress',
+    'notebook', 'settings', 'saveBlocked'
+  ];
+  const original = Object.fromEntries(keys.map(key => [key, GameState[key]]));
+  const originalSave = Storage.save;
+  const base = [
+    'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
+    'matthews_letter', 'port_cargo_ledger', 'port_cargo_ledger_archive', 'markus_statement', 'sebastian_delivery_statement'
+  ];
+
+  try {
+    Storage.save = () => true;
+    for (const scenario of [
+      { ending: 'price_of_silence', extra: [{ id: 'port_radio_fragment' }, { id: 'sebastian_sealed_confession' }] },
+      { ending: 'open_case', extra: [{ id: 'restored_film_frame', quality: 100 }] }
+    ]) {
+      GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+      GameState.flags = {};
+      GameState.currentCase = {
+        id: 'case_001',
+        clues: [...base.map(id => ({ id })), ...scenario.extra],
+        suspects: [], timeline: [], hypotheses: []
+      };
+
+      assert.equal(GameState.completeCampaign(scenario.ending), true);
+      const saved = GameState.export();
+      assert.equal(saved.campaign.completed, true);
+      assert.equal(saved.campaign.ending, scenario.ending);
+
+      // Import the exact exported payload as if the game had been reopened.
+      GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
+      assert.equal(GameState.importSave(saved), true);
+      assert.equal(GameState.campaign.completed, true);
+      assert.equal(GameState.campaign.ending, scenario.ending);
+      assert.equal(GameState.completeCampaign(scenario.ending === 'open_case' ? 'price_of_silence' : 'open_case'), false,
+        'a completed campaign cannot silently switch its ending');
+      assert.equal(GameState.campaign.ending, scenario.ending);
+    }
+  } finally {
+    Storage.save = originalSave;
+    Object.assign(GameState, original);
+  }
+});
+
+
+test('failed finale save rolls back completion and emits no completion event', () => {
+  const original = {
+    campaign: GameState.campaign,
+    currentCase: GameState.currentCase,
+    saveBlocked: GameState.saveBlocked
+  };
+  const originalSave = Storage.save;
+  const events = [];
+  const unsubscribe = Events.on('campaign:completed', payload => events.push(payload));
+
+  try {
+    GameState.saveBlocked = false;
+    GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+    GameState.currentCase = {
+      ...GameState.currentCase,
+      clues: [
+        'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
+        'matthews_letter', 'port_cargo_ledger', 'port_cargo_ledger_archive', 'markus_statement', 'sebastian_delivery_statement',
+        'port_radio_fragment', 'sebastian_sealed_confession'
+      ].map(id => ({ id }))
+    };
+
+    Storage.save = () => false;
+    assert.equal(GameState.completeCampaign('price_of_silence'), false);
+    assert.equal(GameState.campaign.completed, false);
+    assert.equal(GameState.campaign.ending, null);
+    assert.equal(events.length, 0, 'a failed save must not publish campaign completion');
+
+    Storage.save = () => true;
+    assert.equal(GameState.completeCampaign('price_of_silence'), true, 'the player can retry after storage recovers');
     assert.equal(GameState.campaign.completed, true);
     assert.equal(GameState.campaign.ending, 'price_of_silence');
-    assert.equal(GameState.completeCampaign('open_case'), false);
-    assert.equal(GameState.campaign.ending, 'price_of_silence');
+    assert.deepEqual(events, [{ caseId: 'case_001', ending: 'price_of_silence' }]);
   } finally {
-    Storage.inspect = originalInspect;
+    unsubscribe();
+    Storage.save = originalSave;
     Object.assign(GameState, original);
   }
 });
 
 
-test('final state transition cannot bypass evidence requirements', () => {
-  const originalCampaign = GameState.campaign;
-  const originalCurrentCase = GameState.currentCase;
+test('failed day-transition save rolls back the day and emits no transition event', () => {
+  const original = { campaign: GameState.campaign, flags: GameState.flags };
   const originalSave = Storage.save;
-  try {
-    GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
-    GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
-    Storage.save = () => true;
+  const events = [];
+  const unsubscribe = Events.on('campaign:day_changed', payload => events.push(payload));
 
-    assert.equal(GameState.completeCampaign('price_of_silence'), false,
-      'even the negotiated ending requires the mandatory evidence dossier');
-    assert.equal(GameState.completeCampaign('open_case'), false,
-      'the public accusation cannot be committed without evidence');
-    assert.equal(GameState.campaign.completed, false);
-    assert.equal(GameState.campaign.ending, null);
-
-    GameState.currentCase.clues = [
-      'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
-      'matthews_letter', 'port_cargo_ledger', 'port_cargo_ledger_archive',
-      'port_radio_fragment'
-    ].map(id => ({ id })).concat([{ id: 'restored_film_frame', quality: 70 }]);
-
-    assert.equal(GameState.completeCampaign('open_case'), false,
-      'a partial frame cannot authorize the public accusation');
-    assert.equal(GameState.completeCampaign('price_of_silence'), true,
-      'the negotiated ending remains available with the complete but partial dossier');
-    assert.equal(GameState.campaign.ending, 'price_of_silence');
-  } finally {
-    GameState.campaign = originalCampaign;
-    GameState.currentCase = originalCurrentCase;
-    Storage.save = originalSave;
-  }
-});
-
-
-test('final campaign outcome is remembered by Sebastian and restored in the saved state', () => {
-  const originalCampaign = GameState.campaign;
-  const originalCurrentCase = GameState.currentCase;
-  const originalNpcMemory = GameState.npcMemory;
-  const originalSave = Storage.save;
-  try {
-    GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
-    GameState.currentCase = { id: 'case_001', clues: [
-      'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
-      'matthews_letter', 'port_cargo_ledger', 'port_cargo_ledger_archive',
-      'port_radio_fragment'
-    ].map(id => ({ id })).concat([{ id: 'restored_film_frame', quality: 100 }]) };
-    GameState.npcMemory = {};
-    Storage.save = () => true;
-
-    assert.equal(GameState.completeCampaign('open_case'), true);
-    assert.equal(GameState.npcMemory.npc_sebastian_blackwood.flags.case_001_open_case, true);
-    assert.equal(GameState.npcMemory.npc_sebastian_blackwood.flags.case_001_price_of_silence, false);
-    assert.equal(GameState.completeCampaign('price_of_silence'), false);
-    assert.equal(GameState.npcMemory.npc_sebastian_blackwood.flags.case_001_open_case, true);
-  } finally {
-    GameState.campaign = originalCampaign;
-    GameState.currentCase = originalCurrentCase;
-    GameState.npcMemory = originalNpcMemory;
-    Storage.save = originalSave;
-  }
-});
-
-
-test('direct campaign state APIs cannot skip evidence gates', () => {
-  const originalCampaign = GameState.campaign;
-  const originalCurrentCase = GameState.currentCase;
-  const originalSave = Storage.save;
   try {
     GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
-    GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
-    Storage.save = () => true;
+    GameState.flags = { keep_me: true };
+    const flagsReference = GameState.flags;
+    GameState.currentCase = {
+      ...GameState.currentCase,
+      clues: [
+        'autopsy_report_01', 'court_switchboard_log',
+        'judge_appointment_card', 'old_case_details'
+      ].map(id => ({ id }))
+    };
 
-    assert.equal(GameState.setCampaignDay(2), false,
-      'setting the next day directly cannot bypass day-one evidence');
-    assert.equal(GameState.advanceCampaignDay(), false,
-      'the low-level advance method must enforce the same evidence gate as the office UI');
+    Storage.save = () => false;
+    assert.equal(GameState.advanceCampaignDay(), false);
     assert.equal(GameState.campaign.day, 1);
+    assert.deepEqual(GameState.flags, { keep_me: true });
+    assert.equal(GameState.flags, flagsReference, 'rollback must preserve the shared flags object');
+    assert.equal(events.length, 0);
 
-    GameState.currentCase.clues = [
-      'autopsy_report_01', 'court_switchboard_log', 'judge_appointment_card', 'old_case_details'
-    ].map(id => ({ id }));
+    Storage.save = () => true;
     assert.equal(GameState.advanceCampaignDay(), true);
     assert.equal(GameState.campaign.day, 2);
-
-    assert.equal(GameState.setCampaignDay(3), false,
-      'day two still requires both the journalist source and Matthews letter');
-    assert.equal(GameState.campaign.day, 2);
+    assert.equal(GameState.hasFlag('day_2'), true);
+    assert.deepEqual(events, [{ previousDay: 1, day: 2 }]);
   } finally {
-    GameState.campaign = originalCampaign;
-    GameState.currentCase = originalCurrentCase;
+    unsubscribe();
     Storage.save = originalSave;
+    GameState.campaign = original.campaign;
+    GameState.flags = original.flags;
   }
 });
 
-
-test('campaign ending is rolled back when persistent storage rejects the final save', () => {
-  const originalCampaign = GameState.campaign;
-  const originalCurrentCase = GameState.currentCase;
-  const originalNpcMemory = GameState.npcMemory;
+test('failed clue save rolls back the exhibit and emits no clue event', () => {
+  const originalCase = GameState.currentCase;
   const originalSave = Storage.save;
-  try {
-    GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
-    GameState.currentCase = { id: 'case_001', clues: [
-      'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
-      'matthews_letter', 'port_cargo_ledger', 'port_cargo_ledger_archive',
-      'port_radio_fragment'
-    ].map(id => ({ id })) };
-    GameState.npcMemory = { npc_sebastian_blackwood: { met: true, flags: { prior_topic: true }, conversationCount: 2 } };
-    const previousCampaign = GameState.campaign;
-    const previousMemory = GameState.npcMemory;
-    Storage.save = () => false;
+  const events = [];
+  const unsubscribe = Events.on('clue:added', clue => events.push(clue));
 
-    assert.equal(GameState.completeCampaign('price_of_silence'), false);
-    assert.equal(GameState.campaign, previousCampaign);
-    assert.equal(GameState.campaign.completed, false);
-    assert.equal(GameState.campaign.ending, null);
-    assert.equal(GameState.npcMemory, previousMemory);
-    assert.deepEqual(GameState.npcMemory.npc_sebastian_blackwood.flags, { prior_topic: true });
+  try {
+    GameState.currentCase = {
+      ...originalCase,
+      clues: []
+    };
+    const clue = {
+      id: 'test_transactional_clue',
+      name: 'Тестовая улика',
+      category: 'document',
+      description: 'Проверка надёжного сохранения',
+      location: 'office',
+      day: 1,
+      connections_to: []
+    };
+
+    Storage.save = () => false;
+    assert.equal(GameState.addClue(clue), false);
+    assert.equal(GameState.hasClue(clue.id), false);
+    assert.equal(events.length, 0);
+
+    Storage.save = () => true;
+    assert.equal(GameState.addClue(clue), true);
+    assert.equal(GameState.hasClue(clue.id), true);
+    assert.equal(events.length, 1);
+    assert.equal(events[0].id, clue.id);
+    assert.equal(GameState.addClue(clue), false, 'duplicate exhibits must not emit another event');
+    assert.equal(events.length, 1);
   } finally {
-    GameState.campaign = originalCampaign;
-    GameState.currentCase = originalCurrentCase;
-    GameState.npcMemory = originalNpcMemory;
+    unsubscribe();
     Storage.save = originalSave;
+    GameState.currentCase = originalCase;
   }
 });

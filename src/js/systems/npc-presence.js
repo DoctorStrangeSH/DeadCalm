@@ -1,8 +1,8 @@
 import { isLocationUnlocked } from './location-access.js';
 
 /**
- * Resolve an NPC's authored first-appearance availability at their canonical location.
- * This is a story gate, not a movement simulator or a recurring schedule.
+ * Resolves whether an authored NPC may appear at their canonical location.
+ * This is a story availability gate, not a simulation of movement or schedules.
  */
 export function getNpcPresenceAtLocation(character, location, state) {
   if (!character || !location || typeof character !== 'object' || typeof location !== 'object') {
@@ -10,11 +10,8 @@ export function getNpcPresenceAtLocation(character, location, state) {
   }
   if (typeof character.id !== 'string' || !character.id.trim() ||
       typeof location.id !== 'string' || !location.id.trim() ||
-      character.location !== location.id) {
+      character.location !== location.id || location.npc !== character.id) {
     return { status: 'not_here', available: false, reason: 'Персонаж не закреплён за этой локацией.' };
-  }
-  if (!isLocationUnlocked(location, state)) {
-    return { status: 'location_locked', available: false, reason: 'Локация пока закрыта по сюжету.' };
   }
   const match = typeof character.first_appearance === 'string'
     ? /^day_([1-5])$/.exec(character.first_appearance)
@@ -31,6 +28,9 @@ export function getNpcPresenceAtLocation(character, location, state) {
       firstDay,
       reason: `Персонаж появится не раньше ${firstDay}-го дня расследования.`
     };
+  }
+  if (!isLocationUnlocked(location, state)) {
+    return { status: 'location_locked', available: false, reason: 'Локация пока закрыта по сюжету.' };
   }
   return {
     status: 'available',

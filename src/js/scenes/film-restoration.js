@@ -1,7 +1,9 @@
 import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { recordCase001MiniGameEvidence } from '../systems/case-001-evidence.js';
-import { adjustFilmTransport, advanceFilm, createFilmRestorationSession, getFilmRestorationSummary, restoreFilmFrame, testFilmProjection } from '../systems/film-restoration.js';
+import { adjustFilmTransport, advanceFilm, canAdvanceFilm, createFilmRestorationSession, getFilmRestorationSummary, restoreFilmFrame, testFilmProjection } from '../systems/film-restoration.js';
+import { canAccessCase001MiniGame } from '../systems/minigame-access.js';
+import { renderMiniGameLockScreen } from '../components/minigame-lock-screen.js';
 
 const DEFECTS = {
   dust: { title:'ПЫЛЬ НА ЭМУЛЬСИИ', text:'Удалите частицы мягкими короткими движениями. Слишком сильное давление повредит поверхность.', action:'clean', min:0, max:60, step:1, value:28, unit:'ДАВЛЕНИЕ', button:'ОЧИСТИТЬ КАДР', success:'Пыль снята. Эмульсия осталась целой.', failure:'Слишком сильное давление оставило след на эмульсии.' },
@@ -10,6 +12,10 @@ const DEFECTS = {
 };
 
 export function render(container) {
+  if (!canAccessCase001MiniGame('film-restoration', GameState)) {
+    renderMiniGameLockScreen(container, 'АРХИВНАЯ КИНОПЛЁНКА', 'Сначала получите вещи Маркуса от Анны, затем восстановите ключ из карманных часов в мастерской. Он откроет доступ к спрятанной катушке.');
+    return;
+  }
   const session = createFilmRestorationSession({ id:'blackford_archive_reel_01' });
   let completed = false;
 
@@ -68,8 +74,8 @@ export function render(container) {
               <button class="film-action" id="film-restore" ${frame.restored?'disabled':''}>${frame.restored?'КАДР ВОССТАНОВЛЕН':defect.button}</button>
             ` : '<p class="film-defect-title">КАТУШКА ГОТОВА К ПРОСМОТРУ</p><p class="film-description">Все кадры обработаны. Запустите контрольную проекцию.</p>'}
             <div class="film-feedback" id="film-feedback" aria-live="polite">${message}</div>
-            <div class="film-progress"><span>СОСТОЯНИЕ КАТУШКИ</span><strong>${progress}%</strong></div><div class="film-progress-track"><i style="width:${progress}%"></i></div>
-            <div class="film-actions-row"><button class="film-secondary" id="film-advance" ${!frame?.restored || !safe?'disabled':''}>${session.phase==='projection'?'ЗАПУСТИТЬ ПРОЕКТОР':'СЛЕДУЮЩИЙ КАДР →'}</button><button class="film-exit" id="film-exit">ВЫХОД</button></div>
+            <div class="film-progress" id="film-progress-label"><span>СОСТОЯНИЕ КАТУШКИ</span><strong>${progress}%</strong></div><div class="film-progress-track" role="progressbar" aria-labelledby="film-progress-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}"><i style="width:${progress}%"></i></div>
+            <div class="film-actions-row"><button class="film-secondary" id="film-advance" ${canAdvanceFilm(session)?'':'disabled'}>${session.phase==='projection'?'ЗАПУСТИТЬ ПРОЕКТОР':'СЛЕДУЮЩИЙ КАДР →'}</button><button class="film-exit" id="film-exit">ВЫХОД</button></div>
           </div>
         </div>
         <footer class="film-footer"><span>КОНСЕРВАЦИОННАЯ · 01:14 · ДОЖДЬ ЗА ОКНОМ</span><span>АРХИВ BLACKFORD / 35 MM</span></footer>
@@ -84,7 +90,7 @@ export function render(container) {
       container.querySelector('#film-machine-state').textContent = ok ? 'STABLE' : 'CHECK TENSION';
       status.className = 'film-transport-status '+(ok?'safe':'warning');
       status.textContent = ok ? 'НАТЯЖЕНИЕ В ДОПУСТИМОМ ДИАПАЗОНЕ' : 'ВНИМАНИЕ: РИСК ПОВРЕЖДЕНИЯ ПЛЁНКИ';
-      container.querySelector('#film-advance').disabled = !session.frames[session.frameIndex]?.restored || !ok;
+      container.querySelector('#film-advance').disabled = !canAdvanceFilm(session);
     }
     tension.addEventListener('input', () => {
       adjustFilmTransport(session,{tension:Number(tension.value)});

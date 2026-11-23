@@ -13,3 +13,11 @@ test('new-evidence notice opens the existing revision form without saving it', (
   assert.match(board, /name="clue"[^\n]*checked/);
   assert.doesNotMatch(board.match(/addEventListener\('click', event => \{\s*const trigger = event\.target\.closest\('\[data-review-hypothesis\]'\);[\s\S]*?\n    \}\);/)?.[0] || '', /reviseHypothesis|setFlag|addClue|\.checked\s*=/);
 });
+
+
+test('imported confirmed labels are explicitly presented as unverified until the player reviews them', () => {
+  assert.ok(board.includes('importReviewRequired'));
+  assert.ok(board.includes('ИМПОРТИРОВАННЫЙ СТАТУС НЕ ПОДТВЕРЖДЁН'));
+  assert.ok(board.includes('Версия переведена в статус «Вероятна»'));
+  assert.ok(board.includes("value === 'confirmed' ? 'Подтверждена (ранее сохранено)'"));
+});

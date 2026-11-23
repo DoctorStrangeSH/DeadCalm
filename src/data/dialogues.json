@@ -94,7 +94,17 @@
             "question": "Как вы оказались в Блэкфорде?",
             "type": "narrative",
             "answer": "— Мой брат Габриэль был женихом Каллиопы. После её смерти его сделали удобным подозреваемым. Он пережил срыв и оказался в клинике. Он не убивал её. Я слишком долго молчала, потому что боялась, что ему снова не поверят.",
-            "triggers_critical": "critical_choice_trust"
+            "triggers_critical": "critical_choice_trust",
+            "discovers_social_tie": {
+              "fromNpcId": "npc_lydia_winter",
+              "toNpcId": "npc_gabriel",
+              "type": "family",
+              "status": "active",
+              "basis": "Лидия прямо сообщает, что Габриэль — её брат.",
+              "sourceRefs": [
+                "dialogue:npc_lydia_winter:her_background"
+              ]
+            }
           }
         ]
       }
@@ -133,6 +143,24 @@
           },
           "memory_set": "lydia_refuses",
           "next_dialogue": "lydia_shuts_down_forever"
+        }
+      ],
+      "return_reactions": [
+        {
+          "id": "lydia_return_promise",
+          "choice_id": "promise_protection",
+          "required_flag": "lydia_trusts_player",
+          "consumed_flag": "return_seen_lydia_return_promise",
+          "text": "Лидия встречает вас чуть мягче прежнего: «Я помню ваше обещание. Не прошу решать за меня, детектив. Просто не превращайте историю Габриэля в удобную версию дела».",
+          "memory_set": "lydia_protection_promise_acknowledged"
+        },
+        {
+          "id": "lydia_return_neutral",
+          "choice_id": "stay_neutral",
+          "required_flag": "lydia_cautious",
+          "consumed_flag": "return_seen_lydia_return_neutral",
+          "text": "Лидия кивает сдержанно: «Вы не стали давать обещаний, которых не можете выполнить. Я это ценю. Если появятся проверяемые факты о Габриэле, я выслушаю».",
+          "memory_set": "lydia_no_false_promise_acknowledged"
         }
       ]
     },
@@ -173,29 +201,7 @@
       "condition": "lydia_refuses",
       "text": "Лидия стоит к вам спиной: «Мне нечего вам сказать. Уходите.»",
       "end": true
-    },
-    "lydia_trust_return": {
-      "type": "narrative",
-      "text": "«Я помню ваше обещание. Габриэль не должен снова стать удобным виновным. Я помогу вам проверить старые материалы».",
-      "end": true
-    },
-    "lydia_cautious_return": {
-      "type": "narrative",
-      "text": "«Вы не дали обещаний — и это честнее ложной защиты. Я отвечу на медицинские вопросы, но остальное пока оставлю при себе».",
-      "end": true
-    },
-    "return_dialogues": [
-      {
-        "requires_flag": "lydia_trusts_player",
-        "node": "lydia_trust_return",
-        "seen_flag": "lydia_trust_seen"
-      },
-      {
-        "requires_flag": "lydia_cautious",
-        "node": "lydia_cautious_return",
-        "seen_flag": "lydia_cautious_seen"
-      }
-    ]
+    }
   },
   "npc_ray_morgan": {
     "first_meeting": {
@@ -262,7 +268,8 @@
               "title": "Источник ошибочного рапорта",
               "text": "Рэй обещал проверить журнал входящих сообщений, чтобы выяснить источник предварительного вывода о времени смерти. Пока нельзя исключать ошибку в рапорте.",
               "category": "расследование"
-            }
+            },
+            "memory_set": "ray_promised_check_calls"
           },
           {
             "id": "inspect_incoming_calls",
@@ -275,7 +282,9 @@
               "title": "Неустановленный звонок из суда",
               "text": "В журнале входящих отмечен звонок с внутреннего коммутатора здания суда. Имя абонента отсутствует. Нужно проверить оригинал регистрационной книги.",
               "category": "расследование"
-            }
+            },
+            "requires_flag": "ray_promised_check_calls",
+            "memory_set": "ray_check_calls_fulfilled"
           },
           {
             "id": "review_court_register_with_ray",
@@ -369,6 +378,24 @@
           "memory_set": "ray_hostile",
           "next_dialogue": "ray_betrayed"
         }
+      ],
+      "return_reactions": [
+        {
+          "id": "ray_return_cooperation",
+          "choice_id": "go_with_ray",
+          "required_flag": "ray_official_cooperation",
+          "consumed_flag": "return_seen_ray_return_cooperation",
+          "text": "Рэй кладёт на стол заверенные копии: «Как и договаривались, всё оформлено. Теперь у нас есть документы, которые не исчезнут при первой проверке».",
+          "memory_set": "ray_cooperation_acknowledged"
+        },
+        {
+          "id": "ray_return_caution",
+          "choice_id": "decline_raid",
+          "required_flag": "ray_records_first",
+          "consumed_flag": "return_seen_ray_return_caution",
+          "text": "Рэй показывает журнал регистрации: «Я поднял оригиналы, но оставил след каждого действия. После той истории иначе нельзя».",
+          "memory_set": "ray_procedural_caution_acknowledged"
+        }
       ]
     },
     "ray_raid_together": {
@@ -403,33 +430,23 @@
       "text": "Рэй не смотрит в вашу сторону: «Убирайся из моего участка. Здесь ты чужой.»",
       "end": true
     },
-    "ray_cooperation_return": {
+    "ray_calls_fulfilled_followup": {
       "type": "narrative",
-      "text": "«Я помню, что вы решили действовать вместе. Тогда следующий шаг — сверить записи, а не идти на поводу у догадок».",
-      "end": true
-    },
-    "ray_records_return": {
-      "type": "narrative",
-      "text": "«Вы настояли на документах прежде, чем идти на риск. Я тоже предпочитаю сначала сверить записи».",
-      "end": true
-    },
-    "return_dialogues": [
-      {
-        "requires_flag": "ray_official_cooperation",
-        "node": "ray_cooperation_return",
-        "seen_flag": "ray_cooperation_seen"
-      },
-      {
-        "requires_flag": "ray_records_first",
-        "node": "ray_records_return",
-        "seen_flag": "ray_records_seen"
-      }
-    ]
+      "return_reactions": [
+        {
+          "id": "ray_return_calls_fulfilled",
+          "required_flag": "ray_check_calls_fulfilled",
+          "consumed_flag": "return_seen_ray_calls_fulfilled",
+          "text": "Рэй достаёт копию журнала и кладёт её рядом с делом: «Я обещал проверить входящие — и проверил. Запись из внутреннего коммутатора суда есть, но имени абонента нет. Мы подтвердили источник звонка, а не того, кто звонил. Дальше нужна регистрационная книга».",
+          "memory_set": "ray_call_log_promise_acknowledged"
+        }
+      ]
+    }
   },
   "npc_marta_hayes": {
     "first_meeting": {
       "type": "narrative",
-      "text": "В «Ржавом якоре» Марта Хейз сидит спиной к стене. На столе — чашка остывшего кофе и конверт без обратного адреса. «Риверс? Маркус говорил, что вы умеете читать документы, а не только лица. Надеюсь, он не ошибся».",
+      "text": "В «Ржавом якоре» Марта Хейз сидит спиной к стене. На столе — чашка остывшего кофе и конверт без обратного адреса. «Риверс? В записке было сказано, что вы умеете читать документы, а не только лица. Кто её оставил — не знаю. И даже если бы знала, не стала бы раскрывать источник. Надеюсь, вы оправдаете рекомендацию».",
       "unlocks_topics": [
         "about_source",
         "about_old_case",
@@ -484,7 +501,7 @@
             "question": "Почему вы не опубликовали материалы?",
             "type": "narrative",
             "answer": "«Потому что копия без происхождения — подарок адвокату. Мне нужен оригинал или подтверждение из независимого источника. Иначе я подставлю не только себя, но и того, кто мне доверился».",
-            "triggers_critical": "critical_choice_source_trust"
+            "triggers_critical": "critical_choice_source"
           }
         ]
       }
@@ -494,89 +511,61 @@
       "text": "Марта складывает бумаги обратно в конверт: «Когда появится что-то проверяемое, возвращайтесь. Я не печатаю догадки под видом фактов».",
       "end": true
     },
-    "critical_choice_source_trust": {
+    "critical_choice_source": {
+      "type": "critical",
       "trigger_question": "marta_publication_risk",
-      "text": "Марта не отводит взгляда: «Мне нужно понять, что вы сделаете с человеком, который рискнул ради этих документов».",
+      "text": "Марта закрывает папку: «Мне важно понять, что вы сделаете с этими материалами. Если источник окажется под угрозой, я больше не смогу работать с вами».",
       "choices": [
         {
           "id": "marta_protect_source",
-          "text": "Сначала проверю документы. Имя источника останется закрытым, пока это необходимо.",
+          "text": "Сначала проверим документы и не раскроем источник.",
           "tone": "kind",
           "effects": {
-            "trust": 15
+            "trust": 10
           },
-          "memory_set": "marta_source_protected",
-          "next_dialogue": "marta_source_protected_result"
+          "memory_set": "marta_source_respected",
+          "next_dialogue": "marta_source_respected_result"
         },
         {
-          "id": "marta_publish_now",
-          "text": "Если материалы важны, публикация важнее обещаний.",
+          "id": "marta_demand_publish",
+          "text": "Публикуйте сейчас. Риск источника меня не остановит.",
           "tone": "aggressive",
           "effects": {
-            "trust": -18
+            "trust": -20
           },
-          "memory_set": "marta_source_exposed",
-          "next_dialogue": "marta_source_exposed_result"
+          "memory_set": "marta_source_pressured",
+          "next_dialogue": "marta_source_pressured_result"
+        }
+      ],
+      "return_reactions": [
+        {
+          "id": "marta_return_protected",
+          "choice_id": "marta_protect_source",
+          "required_flag": "marta_source_respected",
+          "consumed_flag": "return_seen_marta_return_protected",
+          "text": "Марта сама подходит к вам: «Я проверила копию. Источник не раскрыт, как мы и договорились. Теперь можно говорить о фактах, а не о том, кто их принёс».",
+          "memory_set": "marta_source_protection_confirmed"
         },
         {
-          "id": "marta_share_control",
-          "text": "Вы решите, что можно публиковать. Но факты мы проверим вместе.",
-          "tone": "logical",
-          "effects": {
-            "trust": 8
-          },
-          "memory_set": "marta_shared_control",
-          "next_dialogue": "marta_shared_control_result"
+          "id": "marta_return_pressured",
+          "choice_id": "marta_demand_publish",
+          "required_flag": "marta_source_pressured",
+          "consumed_flag": "return_seen_marta_return_pressured",
+          "text": "Марта держит папку закрытой: «Я помню, что вы требовали публикации. Новых материалов не будет, пока я не пойму, что источник в безопасности».",
+          "memory_set": "marta_source_pressure_remembered"
         }
       ]
     },
-    "marta_source_protected_result": {
+    "marta_source_respected_result": {
       "type": "narrative",
-      "text": "Марта убирает конверт обратно в папку. «Тогда я покажу вам копии. Но если источник окажется под угрозой, я остановлю публикацию».",
+      "text": "Марта чуть расслабляется: «Тогда договорились. Я помогу сверить копию с архивом, но личность источника останется за пределами публикации. Пока у нас нет оригинала, выводы должны быть осторожными».",
       "end": true
     },
-    "marta_source_exposed_result": {
+    "marta_source_pressured_result": {
       "type": "narrative",
-      "text": "Марта закрывает папку. «Вот поэтому журналисты не называют имён полиции. Вы получите только то, что уже лежит в открытом архиве».",
+      "text": "Марта резко закрывает папку: «Нет. Я не стану подвергать человека опасности ради громкого заголовка. Копию вы уже видели; новых материалов от меня не будет».",
       "end": true
-    },
-    "marta_shared_control_result": {
-      "type": "narrative",
-      "text": "Марта кивает. «Договорились. Я отвечаю за источник, вы — за проверку. Ни одной громкой версии без второго подтверждения».",
-      "end": true
-    },
-    "marta_source_protected_return": {
-      "type": "narrative",
-      "text": "«Я помню, что вы согласились не раскрывать имя источника. Пока я могу продолжать разговор, не подвергая его риску».",
-      "end": true
-    },
-    "marta_source_exposed_return": {
-      "type": "narrative",
-      "text": "«После нашего разговора я больше не передавала вам закрытые материалы. Я не могу рисковать чужой жизнью ради вашей скорости».",
-      "end": true
-    },
-    "marta_shared_control_return": {
-      "type": "narrative",
-      "text": "«Мы договорились не торопить публикацию. Пока нет независимого подтверждения, я не стану выдавать версию за факт».",
-      "end": true
-    },
-    "return_dialogues": [
-      {
-        "requires_flag": "marta_source_protected",
-        "node": "marta_source_protected_return",
-        "seen_flag": "marta_source_protected_seen"
-      },
-      {
-        "requires_flag": "marta_source_exposed",
-        "node": "marta_source_exposed_return",
-        "seen_flag": "marta_source_exposed_seen"
-      },
-      {
-        "requires_flag": "marta_shared_control",
-        "node": "marta_shared_control_return",
-        "seen_flag": "marta_shared_control_seen"
-      }
-    ]
+    }
   },
   "npc_father_thomas": {
     "first_meeting": {
@@ -629,7 +618,7 @@
             "question": "Почему вы молчали?",
             "type": "narrative",
             "answer": "«Я боялся, что письмо используют как доказательство того, чего в нём нет. Теперь понимаю: молчание тоже защищает ложь».",
-            "triggers_critical": "critical_choice_conscience"
+            "triggers_critical": "critical_choice_letter"
           }
         ]
       }
@@ -639,89 +628,61 @@
       "text": "Томас осторожно закрывает архив: «Я рассказал всё, что знаю сам. Остальное принадлежит тем, кто оставил эти записи».",
       "end": true
     },
-    "critical_choice_conscience": {
+    "critical_choice_letter": {
+      "type": "critical",
       "trigger_question": "thomas_fear",
-      "text": "Отец Томас сжимает обложку книги: «Я не прошу простить моё молчание. Я хочу знать, будете ли вы использовать это письмо честно».",
+      "text": "Отец Томас смотрит на письмо: «Я могу передать его следствию, но боюсь, что вы придадите словам Мэтьюса смысл, которого там нет. Как вы поступите с этим признанием?»",
       "choices": [
         {
-          "id": "thomas_verify_first",
-          "text": "Я не назову письмо доказательством убийства. Сначала проверю его происхождение.",
+          "id": "thomas_preserve_context",
+          "text": "Зафиксируем письмо целиком и отдельно отметим, чего оно не доказывает.",
           "tone": "kind",
           "effects": {
-            "trust": 15
+            "trust": 10
           },
-          "memory_set": "thomas_truth_respected",
-          "next_dialogue": "thomas_truth_respected_result"
+          "memory_set": "thomas_context_respected",
+          "next_dialogue": "thomas_context_result"
         },
         {
-          "id": "thomas_force_confession",
-          "text": "Вы скрывали важный документ. Сейчас расскажете всё, что знаете.",
+          "id": "thomas_threaten_publication",
+          "text": "Если вы не поможете, я назову вас соучастником сокрытия.",
           "tone": "aggressive",
           "effects": {
-            "trust": -12
+            "trust": -15
           },
           "memory_set": "thomas_pressured",
           "next_dialogue": "thomas_pressured_result"
+        }
+      ],
+      "return_reactions": [
+        {
+          "id": "thomas_return_respected",
+          "choice_id": "thomas_preserve_context",
+          "required_flag": "thomas_context_respected",
+          "consumed_flag": "return_seen_thomas_return_respected",
+          "text": "Отец Томас приготовил копию письма: «Я сохранил контекст и происхождение документа. Надеюсь, теперь мы сможем говорить о том, что он подтверждает, и о том, чего он не доказывает».",
+          "memory_set": "thomas_letter_context_preserved"
         },
         {
-          "id": "thomas_admit_limits",
-          "text": "Вы отвечаете за молчание, но не за чужие преступления. Давайте отделим одно от другого.",
-          "tone": "logical",
-          "effects": {
-            "trust": 8
-          },
-          "memory_set": "thomas_limits_acknowledged",
-          "next_dialogue": "thomas_limits_result"
+          "id": "thomas_return_pressured",
+          "choice_id": "thomas_threaten_publication",
+          "required_flag": "thomas_pressured",
+          "consumed_flag": "return_seen_thomas_return_pressured",
+          "text": "Отец Томас остаётся на расстоянии: «Я помню вашу угрозу публикацией. Письмо не станет яснее от давления. Всё, что могу передать без официального запроса, уже передано».",
+          "memory_set": "thomas_publication_pressure_remembered"
         }
       ]
     },
-    "thomas_truth_respected_result": {
+    "thomas_context_result": {
       "type": "narrative",
-      "text": "Томас осторожно передаёт вам письмо. «Тогда оно наконец станет свидетельством лжи, а не выдуманным признанием в убийстве».",
+      "text": "Он кивает: «Так будет честно. Письмо подтверждает ложное алиби, но не говорит, кто убил Каллиопу и что именно Мэтьюс видел. Я передам вам его копию с датой и местом хранения».",
       "end": true
     },
     "thomas_pressured_result": {
       "type": "narrative",
-      "text": "Томас отступает к алтарю. «Я уже сказал всё, что могу подтвердить. Остальное было бы исповедью под давлением, а не свидетельством».",
+      "text": "Отец Томас отступает: «Угроза не сделает письмо яснее. Я уже передал вам то, что нашёл. Больше без официального запроса я ничего не добавлю».",
       "end": true
-    },
-    "thomas_limits_result": {
-      "type": "narrative",
-      "text": "Он медленно открывает книгу. «Это справедливо. Я расскажу только то, что знаю сам, и отмечу, что пришло из чужого письма».",
-      "end": true
-    },
-    "thomas_truth_respected_return": {
-      "type": "narrative",
-      "text": "«Я помню, что вы согласились не приписывать письму того, чего в нём нет. Для меня это важно».",
-      "end": true
-    },
-    "thomas_pressured_return": {
-      "type": "narrative",
-      "text": "«Я не стану добавлять к письму слова, которых не слышал. Если вам нужны факты, задавайте вопросы о самом документе».",
-      "end": true
-    },
-    "thomas_limits_return": {
-      "type": "narrative",
-      "text": "«Вы отделили моё молчание от событий, которых я не видел. Я могу говорить о письме и его происхождении — не больше».",
-      "end": true
-    },
-    "return_dialogues": [
-      {
-        "requires_flag": "thomas_truth_respected",
-        "node": "thomas_truth_respected_return",
-        "seen_flag": "thomas_truth_respected_seen"
-      },
-      {
-        "requires_flag": "thomas_pressured",
-        "node": "thomas_pressured_return",
-        "seen_flag": "thomas_pressured_seen"
-      },
-      {
-        "requires_flag": "thomas_limits_acknowledged",
-        "node": "thomas_limits_return",
-        "seen_flag": "thomas_limits_seen"
-      }
-    ]
+    }
   },
   "npc_sebastian_blackwood": {
     "first_meeting": {
@@ -781,7 +742,31 @@
             "question": "Судья собирался пересмотреть старое дело?",
             "type": "narrative",
             "answer": "«Гаррисон был стар и боялся последствий своих решений. Люди иногда называют это раскаянием. Я называю это страхом».",
-            "triggers_critical": "critical_choice_blackwood"
+            "triggers_critical": "critical_choice_judge"
+          },
+          {
+            "id": "sebastian_delivery_statement",
+            "question": "Аптечная книга связывает заказ белладонны с вашим офисом, а карточка — вашу встречу с Гаррисоном. Вы передали ему этот флакон?",
+            "type": "important",
+            "answer": "«Да. Я пришёл на встречу и передал Гаррисону запечатанный флакон из заказа. На упаковке значился экстракт белладонны. Он попросил принести его. Я ушёл до того, как он открыл флакон. Не превращайте факт передачи в признание того, что произошло потом».",
+            "gives_clue": "sebastian_delivery_statement",
+            "requires_clues": [
+              "belladonna_invoice",
+              "judge_appointment_card"
+            ],
+            "discovers_social_event": {
+              "id": "event-sebastian-harrison-delivery-meeting",
+              "fromNpcId": "npc_sebastian_blackwood",
+              "toNpcId": "npc_harold_harrison",
+              "description": "Себастьян утверждает, что встретился с Гаррисоном и передал ему запечатанный флакон белладонны.",
+              "reportedByNpcId": "npc_sebastian_blackwood",
+              "timeLabel": "Вечер убийства Гаррисона",
+              "sourceType": "interview",
+              "certainty": "unverified",
+              "sourceRefs": [
+                "dialogue:npc_sebastian_blackwood:sebastian_delivery_statement"
+              ]
+            }
           }
         ]
       }
@@ -791,55 +776,59 @@
       "text": "Себастьян провожает вас до двери: «Вы ищете простую историю, детектив. Боюсь, Блэкфорд вам её не даст».",
       "end": true
     },
-    "critical_choice_blackwood": {
+    "critical_choice_judge": {
+      "type": "critical",
       "trigger_question": "sebastian_judge",
-      "text": "Блэквуд чуть улыбается: «Вы пришли с вопросом или уже вынесли приговор? От этого зависит, продолжим ли мы разговор».",
+      "text": "Себастьян складывает руки: «Вы пришли за фактами или за признанием, которое уже придумали? От вашего ответа зависит, будет ли этот разговор полезен».",
       "choices": [
         {
-          "id": "sebastian_present_evidence",
-          "text": "У меня есть вопросы и документы. Я не стану обвинять вас раньше проверки.",
+          "id": "sebastian_request_record",
+          "text": "Мне нужны проверяемые сведения. Начнём с документов о вашей встрече.",
           "tone": "logical",
           "effects": {
             "trust": 5
           },
-          "memory_set": "sebastian_respects_process",
-          "next_dialogue": "sebastian_process_result"
+          "memory_set": "sebastian_requested_records",
+          "next_dialogue": "sebastian_records_result"
         },
         {
-          "id": "sebastian_accuse",
-          "text": "Вы слишком много знаете о страхе Гаррисона. Думаю, вы причастны.",
+          "id": "sebastian_reject_framing",
+          "text": "Ваши оценки судьи не заменяют ответа о ваших действиях.",
           "tone": "aggressive",
           "effects": {
-            "trust": -15
+            "trust": -10
           },
-          "memory_set": "sebastian_accused",
-          "next_dialogue": "sebastian_accused_result"
+          "memory_set": "sebastian_challenged",
+          "next_dialogue": "sebastian_challenged_result"
+        }
+      ],
+      "return_reactions": [
+        {
+          "id": "sebastian_return_records",
+          "choice_id": "sebastian_request_record",
+          "required_flag": "sebastian_requested_records",
+          "consumed_flag": "return_seen_sebastian_return_records",
+          "text": "Себастьян протягивает перечень архивных документов: «Вы просили записи — вот список того, что компания обязана хранить. Доступ к ним по-прежнему будет оформлен официально».",
+          "memory_set": "sebastian_records_request_acknowledged"
         },
         {
-          "id": "sebastian_offer_deal",
-          "text": "Я готов выслушать вашу версию, но сверю каждое слово с записями.",
-          "tone": "neutral",
-          "effects": {
-            "trust": 0
-          },
-          "memory_set": "sebastian_version_requested",
-          "next_dialogue": "sebastian_version_result"
+          "id": "sebastian_return_challenged",
+          "choice_id": "sebastian_reject_framing",
+          "required_flag": "sebastian_challenged",
+          "consumed_flag": "return_seen_sebastian_return_challenged",
+          "text": "Себастьян встречает вас холодной улыбкой: «Я помню, что вы отвергли мою трактовку. Это ваше право. Но дальше нам придётся опираться на документы, а не на тон разговора».",
+          "memory_set": "sebastian_challenge_remembered"
         }
       ]
     },
-    "sebastian_process_result": {
+    "sebastian_records_result": {
       "type": "narrative",
-      "text": "«Разумно, детектив. Бумаги любят тех, кто умеет читать мелкий шрифт». Он продолжает разговор, не предлагая ничего сверх проверяемых фактов.",
+      "text": "«Разумно. Мои юристы подготовят перечень документов, которые компания обязана хранить. Это не означает, что вы получите всё без процедуры». Он не подтверждает ни время встречи, ни своё присутствие у суда.",
       "end": true
     },
-    "sebastian_accused_result": {
+    "sebastian_challenged_result": {
       "type": "narrative",
-      "text": "Улыбка исчезает. «Тогда беседа окончена. Ваши подозрения не заменят доказательств».",
-      "end": true
-    },
-    "sebastian_version_result": {
-      "type": "narrative",
-      "text": "«Сверяйте. Я не боюсь документов». Его ответ звучит спокойно, но он не раскрывает новых фактов.",
+      "text": "Улыбка Себастьяна становится холоднее: «Вы вправе задавать вопросы, детектив. Но не путайте жёсткий тон с доказательством. На этом пока остановимся». Он не признаёт и не подтверждает обстоятельства убийства.",
       "end": true
     },
     "sebastian_process_return": {
@@ -914,8 +903,31 @@
             "id": "anna_markus_last_seen",
             "question": "Когда вы видели Маркуса в последний раз?",
             "type": "important",
-            "answer": "«Вечером перед исчезновением. Он был спокоен, но проверял замки дважды. Сказал, что если кто-то придёт, я не должна отдавать коробку без объяснений».",
-            "gives_clue": "anna_markus_items"
+            "answer": "«Вечером перед исчезновением. Отец — Маркус — был спокоен, но проверял замки дважды. Сказал, что если кто-то придёт, я не должна отдавать коробку без объяснений».",
+            "gives_clue": "anna_markus_items",
+            "discovers_social_tie": {
+              "fromNpcId": "npc_anna_holt",
+              "toNpcId": "npc_markus_holt",
+              "type": "family",
+              "status": "active",
+              "basis": "Анна прямо называет Маркуса отцом в рассказе о вечере перед его исчезновением.",
+              "sourceRefs": [
+                "dialogue:npc_anna_holt:anna_markus_last_seen"
+              ]
+            },
+            "discovers_social_event": {
+              "id": "event-anna-markus-last-evening",
+              "fromNpcId": "npc_anna_holt",
+              "toNpcId": "npc_markus_holt",
+              "description": "Маркус предупредил Анну не отдавать деревянную коробку без объяснений.",
+              "reportedByNpcId": "npc_anna_holt",
+              "timeLabel": "Вечер перед исчезновением Маркуса",
+              "sourceType": "interview",
+              "certainty": "unverified",
+              "sourceRefs": [
+                "dialogue:npc_anna_holt:anna_markus_last_seen"
+              ]
+            }
           },
           {
             "id": "anna_markus_john",
@@ -934,14 +946,14 @@
             "question": "Что внутри?",
             "type": "important",
             "answer": "«Его часы, старый ключ и конверт с пометкой “после проверки плёнки”. Я не открывала всё: отец просил дождаться человека, которому сможет доверять».",
-            "gives_clue": "anna_markus_items"
+            "gives_clue": "anna_box_contents"
           },
           {
             "id": "anna_box_trust",
             "question": "Почему вы должны доверять мне?",
             "type": "narrative",
             "answer": "«Не должны. Покажите, что вы не собираетесь использовать меня как удобный источник, и тогда поговорим ещё».",
-            "triggers_critical": "critical_choice_anna"
+            "triggers_critical": "critical_choice_box"
           }
         ]
       },
@@ -963,88 +975,60 @@
       "text": "Анна убирает коробку со стола: «Я сказала всё, что могу. Не обещайте мне, что найдёте его, если не уверены».",
       "end": true
     },
-    "critical_choice_anna": {
+    "critical_choice_box": {
+      "type": "critical",
       "trigger_question": "anna_box_trust",
-      "text": "Анна держит ладонь на крышке коробки: «Мне нужно понять, видите ли вы во мне человека или просто путь к вещам моего отца».",
+      "text": "Анна не отводит взгляда: «Отец оставил мне эту коробку не просто так. Я хочу знать, что вы не заберёте её и не исчезнете, как остальные».",
       "choices": [
         {
           "id": "anna_respect_boundary",
-          "text": "Вы сами решите, что показать. Я не стану открывать коробку без вас.",
+          "text": "Коробка остаётся у вас. Я объясню каждый следующий шаг.",
           "tone": "kind",
           "effects": {
-            "trust": 18
+            "trust": 10
           },
           "memory_set": "anna_boundary_respected",
           "next_dialogue": "anna_boundary_result"
         },
         {
-          "id": "anna_promise_safety",
-          "text": "Я обещаю защитить вас, если вы поможете расследованию.",
-          "tone": "logical",
-          "effects": {
-            "trust": 7
-          },
-          "memory_set": "anna_protection_promised",
-          "next_dialogue": "anna_promise_result"
-        },
-        {
-          "id": "anna_demand_box",
-          "text": "Ваш отец мог быть причастен. Коробка нужна расследованию — отдайте её.",
+          "id": "anna_take_box",
+          "text": "Это улика. Я забираю коробку как вещдок.",
           "tone": "aggressive",
           "effects": {
-            "trust": -25
+            "trust": -20
           },
-          "memory_set": "anna_box_demanded",
-          "next_dialogue": "anna_demand_result"
+          "memory_set": "anna_box_taken",
+          "next_dialogue": "anna_box_taken_result"
+        }
+      ],
+      "return_reactions": [
+        {
+          "id": "anna_return_respected",
+          "choice_id": "anna_respect_boundary",
+          "required_flag": "anna_boundary_respected",
+          "consumed_flag": "return_seen_anna_return_respected",
+          "text": "Анна сама открывает дверь кабинета: «Я помню, что вы не стали забирать коробку. Пока я не готова отдать её, но теперь могу спокойно обсудить, что отец оставил внутри».",
+          "memory_set": "anna_box_remains_with_anna"
+        },
+        {
+          "id": "anna_return_taken",
+          "choice_id": "anna_take_box",
+          "required_flag": "anna_box_taken",
+          "consumed_flag": "return_seen_anna_return_taken",
+          "text": "Анна замечает вас и отодвигается от стола: «Я помню, как вы забрали коробку. Не ждите, что я помогу разбирать вещи отца после этого».",
+          "memory_set": "anna_box_removed_against_anna_wishes"
         }
       ]
     },
     "anna_boundary_result": {
       "type": "narrative",
-      "text": "Анна убирает руку с крышки, но не отходит. «Тогда откроем её вместе. Я покажу только то, что отец просил передать после проверки плёнки».",
+      "text": "Анна впервые смотрит вам прямо в глаза: «Хорошо. Пока коробка останется здесь. Если появится причина открыть её, вы сначала объясните мне почему. Я не обещаю доверять вам сразу».",
       "end": true
     },
-    "anna_promise_result": {
+    "anna_box_taken_result": {
       "type": "narrative",
-      "text": "«Не обещайте того, чего не можете контролировать», — отвечает Анна. Но она позволяет вам осмотреть содержимое коробки вместе.",
+      "text": "Анна отступает от стола: «Тогда вы ничем не лучше тех, кто уже приходил. Я не буду помогать вам с вещами отца».",
       "end": true
-    },
-    "anna_demand_result": {
-      "type": "narrative",
-      "text": "Анна закрывает коробку на ключ. «Вы ничем не лучше тех, кто уже использовал нашу семью». Больше она не отвечает.",
-      "end": true
-    },
-    "anna_boundary_return": {
-      "type": "narrative",
-      "text": "«Вы сказали, что не откроете коробку без меня. Я это запомнила. Если готовы, продолжим вместе».",
-      "end": true
-    },
-    "anna_protection_return": {
-      "type": "narrative",
-      "text": "«Вы обещали защиту. Я не знаю, можете ли вы это выполнить, но пока вы не нарушили моих границ».",
-      "end": true
-    },
-    "anna_demand_return": {
-      "type": "narrative",
-      "text": "«Я уже сказала, что не отдам коробку под давлением. Если вы хотите говорить со мной, начните с уважения».",
-      "end": true
-    },
-    "return_dialogues": [
-      {
-        "requires_flag": "anna_boundary_respected",
-        "node": "anna_boundary_return",
-        "seen_flag": "anna_boundary_seen"
-      },
-      {
-        "requires_flag": "anna_protection_promised",
-        "node": "anna_protection_return",
-        "seen_flag": "anna_protection_seen"
-      },
-      {
-        "requires_flag": "anna_box_demanded",
-        "node": "anna_demand_return",
-        "seen_flag": "anna_demand_seen"
-      }
-    ]
+    }
   }
 }

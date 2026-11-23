@@ -1,72 +1,172 @@
 export var Storage = {
   PREFIX: 'deadCalm_',
+  BACKUP_SUFFIX: '__backup',
+  PENDING_SUFFIX: '__pending',
+
+  _parse(serialized) {
+    if (typeof serialized !== 'string' || serialized.length === 0) return null;
+    try {
+      return JSON.parse(serialized);
+    } catch {
+      return null;
+    }
+  },
 
   save(key, data) {
+    var storageKey = this.PREFIX + key;
+    var backupKey = storageKey + this.BACKUP_SUFFIX;
+    var pendingKey = storageKey + this.PENDING_SUFFIX;
+
+    var staged = false;
     try {
       var serialized = JSON.stringify(data);
-      localStorage.setItem(this.PREFIX + key, serialized);
+      if (typeof serialized !== 'string') {
+        throw new Error('Данные сохранения не удалось сериализовать');
+      }
+
+      // Stage a complete payload first. If the tab closes during the next
+      // operations, load() can still recover this committed JSON payload.
+      localStorage.setItem(pendingKey, serialized);
+      staged = true;
+
+      var previous = localStorage.getItem(storageKey);
+      if (previous !== null && this._parse(previous) !== null) {
+        try {
+          localStorage.setItem(backupKey, previous);
+        } catch (backupError) {
+          // A full storage quota must not prevent trying to write the new
+          // primary save; the old primary remains intact until then.
+          console.warn('[Storage] Не удалось обновить резервную копию:', backupError);
+        }
+      }
+
+      localStorage.setItem(storageKey, serialized);
+      localStorage.removeItem(pendingKey);
       return true;
     } catch (error) {
       console.error('[Storage] Ошибка сохранения "' + key + '":', error);
+      if (staged) {
+        console.warn('[Storage] Новая копия сохранена в pending и будет восстановлена при следующей загрузке.');
+        return true;
+      }
       return false;
     }
   },
 
-  inspect(key) {
+  load(key) {
+    var storageKey = this.PREFIX + key;
+    var backupKey = storageKey + this.BACKUP_SUFFIX;
+    var pendingKey = storageKey + this.PENDING_SUFFIX;
     try {
-      var serialized = localStorage.getItem(this.PREFIX + key);
-      if (serialized === null) return { status: 'missing', data: null };
-      var data = JSON.parse(serialized);
-      if (!data || typeof data !== 'object' || Array.isArray(data)) {
-        return { status: 'corrupt', data: null, error: new Error('Сохранение должно содержать объект состояния') };
+      // A staged payload is the newest complete save. Recover it before
+      // considering the previous primary/backup versions.
+      var pending = this._parse(localStorage.getItem(pendingKey));
+      if (pending !== null) {
+        var previous = this._parse(localStorage.getItem(storageKey));
+        try {
+          if (previous !== null) {
+            localStorage.setItem(backupKey, JSON.stringify(previous));
+          }
+          localStorage.setItem(storageKey, JSON.stringify(pending));
+          localStorage.removeItem(pendingKey);
+        } catch (recoveryError) {
+          // The staged JSON is still usable even when storage quota or
+          // browser permissions prevent promoting it to the primary slot.
+          console.warn('[Storage] Не удалось закрепить восстановленную копию "' + key + '":', recoveryError);
+        }
+        console.warn('[Storage] Восстановлена последняя staged-копия сохранения "' + key + '"');
+        return pending;
       }
-      return { status: 'valid', data };
+
+      var primary = this._parse(localStorage.getItem(storageKey));
+      if (primary !== null) return primary;
+
+      var backup = this._parse(localStorage.getItem(backupKey));
+      if (backup !== null) {
+        console.warn('[Storage] Основное сохранение повреждено; восстановлена резервная копия "' + key + '"');
+        return backup;
+      }
+
+      return null;
     } catch (error) {
       console.error('[Storage] Ошибка загрузки "' + key + '":', error);
-      return { status: error instanceof SyntaxError ? 'corrupt' : 'unavailable', data: null, error };
+      return null;
     }
   },
 
-  load(key) {
-    var result = this.inspect(key);
-    return result.status === 'valid' ? result.data : null;
+  inspect(key) {
+    var storageKey = this.PREFIX + key;
+    try {
+      var primary = localStorage.getItem(storageKey);
+      var backup = localStorage.getItem(storageKey + this.BACKUP_SUFFIX);
+      var pending = localStorage.getItem(storageKey + this.PENDING_SUFFIX);
+      if (primary === null && backup === null && pending === null) {
+        return { status: 'missing', data: null };
+      }
+      var data = this.load(key);
+      if (data && typeof data === 'object' && !Array.isArray(data)) {
+        return { status: 'valid', data };
+      }
+      return { status: 'corrupt', data: null, error: new Error('Все копии сохранения повреждены') };
+    } catch (error) {
+      console.error('[Storage] Не удалось проверить сохранение "' + key + '":', error);
+      return { status: 'unavailable', data: null, error };
+    }
+  },
+
+  hasAnyRecord(key) {
+    var storageKey = this.PREFIX + key;
+    try {
+      return localStorage.getItem(storageKey) !== null ||
+        localStorage.getItem(storageKey + this.BACKUP_SUFFIX) !== null ||
+        localStorage.getItem(storageKey + this.PENDING_SUFFIX) !== null;
+    } catch (error) {
+      console.error('[Storage] Ошибка проверки записей сохранения "' + key + '":', error);
+      return true;
+    }
   },
 
   exists(key) {
+    var storageKey = this.PREFIX + key;
     try {
-      return localStorage.getItem(this.PREFIX + key) !== null;
+      return this._parse(localStorage.getItem(storageKey)) !== null ||
+        this._parse(localStorage.getItem(storageKey + this.BACKUP_SUFFIX)) !== null ||
+        this._parse(localStorage.getItem(storageKey + this.PENDING_SUFFIX)) !== null;
     } catch (error) {
-      console.error('[Storage] Не удалось проверить сохранение "' + key + '":', error);
+      console.error('[Storage] Ошибка проверки сохранения "' + key + '":', error);
       return false;
     }
   },
 
   remove(key) {
+    var storageKey = this.PREFIX + key;
+    localStorage.removeItem(storageKey);
+    localStorage.removeItem(storageKey + this.BACKUP_SUFFIX);
+    localStorage.removeItem(storageKey + this.PENDING_SUFFIX);
+  },
+
+  removeBackup(key) {
     try {
-      localStorage.removeItem(this.PREFIX + key);
+      localStorage.removeItem(this.PREFIX + key + this.BACKUP_SUFFIX);
       return true;
     } catch (error) {
-      console.error('[Storage] Не удалось удалить сохранение "' + key + '":', error);
+      console.error('[Storage] Не удалось удалить резервную копию "' + key + '":', error);
       return false;
     }
   },
 
   /**
-   * Очистить ВСЕ данные игры
+   * Очистить ВСЕ данные игры, включая резервные и staged-копии.
    */
   clearAll() {
-    try {
-      var keysToRemove = [];
-      for (var i = 0; i < localStorage.length; i++) {
-        var key = localStorage.key(i);
-        if (key && key.startsWith(this.PREFIX)) keysToRemove.push(key);
-      }
-      keysToRemove.forEach(function(key) { localStorage.removeItem(key); });
-      console.log('[Storage] Удалено сохранений: ' + keysToRemove.length);
-      return true;
-    } catch (error) {
-      console.error('[Storage] Не удалось очистить сохранения:', error);
-      return false;
+    var keysToRemove = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var key = localStorage.key(i);
+      if (key && key.startsWith(this.PREFIX)) keysToRemove.push(key);
     }
+    keysToRemove.forEach(function(key) {
+      localStorage.removeItem(key);
+    });
+    console.log('[Storage] Удалено записей игры: ' + keysToRemove.length);
   }
 };
