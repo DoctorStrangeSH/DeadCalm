@@ -99,3 +99,22 @@ Still not implemented:
 - automatic rumor propagation and dialogue consumption;
 - authored schedules and autonomous movement/time simulation;
 - broader relationship changes between the six active NPCs. These must wait for explicit story evidence rather than be fabricated.
+
+## Dialogue-driven interaction testimony — 2026-11-23
+
+Two one-off interactions are now recorded only after the player hears the participant's own account:
+
+- `event-anna-markus-last-evening`: Anna reports that Markus warned her not to hand over the wooden box without an explanation, on the evening before he disappeared.
+- `event-sebastian-harrison-delivery-meeting`: Sebastian states that he met Judge Harold Harrison and delivered a sealed belladonna vial on the evening of Harrison's death.
+
+Each event preserves both participants, the participant who reported it, an in-story time label (not the real-world save timestamp), the dialogue source reference, source type `interview`, and certainty `unverified`.
+
+The board and dialogue discovery card label these records as testimony requiring verification. Sebastian's statement is not proof that Harrison opened or consumed the vial, or that Sebastian caused his death. Anna's recollection is not silently upgraded into an independently witnessed event.
+
+Event metadata is optional for compatibility with older saves. The normalizer rejects invalid reporters, unsupported source/certainty values, and empty story-time labels. Recording the same authored event ID twice is idempotent.
+
+Still not implemented:
+- a player-witnessed live NPC-to-NPC meeting scene;
+- schedule-driven occurrence production;
+- knowledge/rumor transfer between NPCs (the existing transfer API still requires an explicit shared meeting event plus compatible schedule occurrences);
+- automatic rumor propagation or dialogue consumption.
