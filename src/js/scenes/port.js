@@ -184,11 +184,25 @@ export function render(container) {
     actions.appendChild(meet);
     meet.addEventListener('click', () => {
       if (!GameState.hasClue('markus_statement')) GameState.addClue(markusStatement);
+      const encounterId = 'event-markus-sebastian-final-confrontation';
+      const encounterRecorded = GameState.socialGraph?.events?.some(event => event.id === encounterId) ||
+        Boolean(GameState.recordSocialEvent({
+          id: encounterId,
+          fromNpcId: 'npc_markus_holt',
+          toNpcId: 'npc_sebastian_blackwood',
+          description: 'Джон лично наблюдал финальную встречу Маркуса и Себастьяна на причале № 4: Маркус признал фальсификацию старого дела, Себастьян потребовал отдать ему материалы, после чего попытался уничтожить доказательства.',
+          timeLabel: 'День 5 · Причал № 4',
+          sourceType: 'direct_observation',
+          certainty: 'corroborated',
+          sourceRefs: ['scene:port:day5:final_confrontation']
+        }));
       container.querySelector('#story-location-result').innerHTML = `
         <div class="card p-4">
           <p class="text-gold text-sm">МАРКУС ХОЛТ · ПРИЧАЛ № 4</p>
           <p class="text-gray-300 text-sm leading-relaxed mt-2">Маркус выходит из тени складского навеса. «Я изменил время в протоколе. Я спрятал плёнку. Я говорил себе, что спасаю невиновного, но на самом деле спасал себя. Себастьян был рядом с Каллиопой в ночь её смерти — это я видел на плёнке. А кто убил Гаррисона, я не видел. Я могу рассказать о его страхе и о том, что он собирался раскрыть, но мои догадки не заменят ваших доказательств».</p>
-          <p class="text-gray-500 text-xs mt-3">Его признание касается его собственных действий. Версию об убийстве необходимо сверить с независимыми материалами.</p>
+          <p class="text-gray-300 text-sm leading-relaxed mt-3">Из-за складского навеса появляется Себастьян. «Вы должны были оставить прошлое в покое, Маркус». Тот не отступает: «Я уже однажды промолчал. Больше не буду». Себастьян требует отдать ему материалы и резко тянется к коробке с оригиналами. Джон оказывается свидетелем их открытого столкновения; попытка уничтожить доказательства не превращается автоматически в признание убийства Гаррисона.</p>
+          <p class="text-gray-500 text-xs mt-3">Признание Маркуса касается его собственных действий. Встреча подтверждает конфликт между ним и Себастьяном, но не заменяет независимые доказательства по делу Гаррисона.</p>
+          ${encounterRecorded ? '' : '<p class="text-red-300 text-xs mt-3" role="alert">Не удалось сохранить запись о встрече. Событие показано, но не внесено в социальный граф. Повторно откройте сцену после проверки сохранения.</p>'}
         </div>
       `;
       renderEndingChoices(container);
