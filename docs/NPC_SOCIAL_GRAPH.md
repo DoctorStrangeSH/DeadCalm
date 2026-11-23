@@ -118,3 +118,5 @@ Still not implemented:
 - schedule-driven occurrence production;
 - knowledge/rumor transfer between NPCs (the existing transfer API still requires an explicit shared meeting event plus compatible schedule occurrences);
 - automatic rumor propagation or dialogue consumption.
+
+Knowledge transfer guard: `GameState.transferNpcKnowledge` and `GameState.transferNpcRumor` require a matching social event explicitly marked `sourceType: direct_observation` and `certainty: corroborated`, plus two authored schedule occurrences for the participants at the same location and within 15 in-game minutes. An interview/testimony event (including the two new unverified records above) cannot authorize a relay. This keeps a participant's account from being mistaken for a witnessed encounter.
