@@ -103,6 +103,10 @@ test('Anna-Marcus family tie is discovered from her own account, not seeded from
     assert.equal(result.addedSocialTie?.type, 'family');
     assert.match(result.text, /Отец — Маркус/);
     assert.match(result.addedSocialTie.basis, /называет Маркуса отцом/);
+    assert.equal(result.addedSocialEvent?.id, 'event-anna-markus-last-evening');
+    assert.equal(result.addedSocialEvent?.certainty, 'unverified');
+    assert.equal(result.addedSocialEvent?.reportedByNpcId, 'npc_anna_holt');
+    assert.equal(GameState.socialGraph.events.length, 1);
     assert.equal(GameState.getSocialTies('npc_anna_holt').length, 1);
 
     const snapshot = GameState.export();
@@ -110,6 +114,9 @@ test('Anna-Marcus family tie is discovered from her own account, not seeded from
     assert.equal(GameState.importSave(snapshot), true);
     assert.equal(GameState.getSocialTies('npc_anna_holt').length, 1,
       'discovered relationships survive save export/import');
+    assert.equal(GameState.socialGraph.events.length, 1,
+      'attributed interaction testimony survives save export/import');
+    assert.equal(GameState.socialGraph.events[0].timeLabel, 'Вечер перед исчезновением Маркуса');
   } finally {
     restore(previous);
   }
@@ -126,6 +133,42 @@ test('unrelated testimony does not fabricate NPC-to-NPC relationships', () => {
     if (response) assert.equal(response.addedSocialTie, null);
     assert.deepEqual(GameState.socialGraph, { ties: [], events: [] },
       'Marta does not know the identity of her anonymous source');
+  } finally {
+    restore(previous);
+  }
+});
+
+
+test('Sebastian-Harrison meeting is recorded only after the player hears Sebastian confirm it', () => {
+  const previous = preserve();
+  try {
+    setup();
+    GameState.currentCase.clues.push(clues.belladonna_invoice, clues.judge_appointment_card);
+    DialogueEngine.startDialogue('npc_sebastian_blackwood');
+    DialogueEngine.startDialogue('npc_sebastian_blackwood');
+    DialogueEngine.selectTopic('about_judge');
+    assert.equal(GameState.socialGraph.events.length, 0,
+      'hidden testimony must not pre-populate the social graph');
+
+    const result = DialogueEngine.askQuestion('sebastian_delivery_statement');
+    assert.equal(result?.type, 'answer');
+    assert.equal(result.addedSocialEvent?.id, 'event-sebastian-harrison-delivery-meeting');
+    assert.equal(result.addedSocialEvent?.fromNpcId, 'npc_sebastian_blackwood');
+    assert.equal(result.addedSocialEvent?.toNpcId, 'npc_harold_harrison');
+    assert.equal(result.addedSocialEvent?.reportedByNpcId, 'npc_sebastian_blackwood');
+    assert.equal(result.addedSocialEvent?.certainty, 'unverified');
+    assert.match(result.addedSocialEvent.description, /утверждает/);
+    assert.deepEqual(result.addedSocialEvent.sourceRefs, [
+      'dialogue:npc_sebastian_blackwood:sebastian_delivery_statement'
+    ]);
+    assert.equal(GameState.socialGraph.events.length, 1);
+    assert.equal(GameState.socialGraph.events[0].timeLabel, 'Вечер убийства Гаррисона');
+
+    const snapshot = GameState.export();
+    GameState.socialGraph = { ties: [], events: [] };
+    assert.equal(GameState.importSave(snapshot), true);
+    assert.equal(GameState.socialGraph.events.length, 1,
+      'the reported meeting survives save export/import');
   } finally {
     restore(previous);
   }
