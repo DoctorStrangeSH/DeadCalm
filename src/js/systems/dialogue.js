@@ -108,8 +108,9 @@ export var DialogueEngine = {
     // ПЕРВАЯ ВСТРЕЧА
     if (!hasMet) {
       console.log('[Dialogue] Первая встреча!');
-      NPCMemory.markMet(npcId);
 
+      // Commit the meeting, its counter and initial topics as one atomic save.
+      // A separate markMet() here would persist and count the same meeting twice.
       var firstNode = npcData.first_meeting;
       const initialTopics = Array.isArray(firstNode?.unlocks_topics) ? firstNode.unlocks_topics : [];
       if (!NPCMemory.commitFirstMeeting(npcId, initialTopics)) {
