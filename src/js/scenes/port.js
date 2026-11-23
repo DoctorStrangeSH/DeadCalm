@@ -154,6 +154,31 @@ export function render(container) {
     actions.appendChild(ledger);
   }
 
+  if (GameState.hasClue('port_cargo_ledger') && !GameState.hasClue('port_cargo_ledger_archive')) {
+    const archive = document.createElement('button');
+    archive.id = 'btn-port-archive-ledger';
+    archive.className = 'card text-left w-full';
+    archive.innerHTML = '<p class="card-title">СВЕРИТЬ С АРХИВНЫМ ЭКЗЕМПЛЯРОМ</p><p class="card-subtitle">Проверить копию Себастьяна по независимому архиву портового управления.</p>';
+    archive.addEventListener('click', () => {
+      if (GameState.hasClue('port_cargo_ledger_archive')) return;
+      const added = GameState.addClue({
+        id: 'port_cargo_ledger_archive',
+        name: 'Архивный экземпляр грузовой книги 1967 года',
+        category: 'document',
+        description: 'Архивный экземпляр грузовой книги содержит записи о грузах компании Блэквуда в ночь гибели Каллиопы. Сверка с копией, которую Себастьян передал Джону, подтверждает совпадение части записей и выявляет исправления в обеих версиях. Это независимо подтверждает связь компании с портом и временем, но не устанавливает, кто физически убил Каллиопу.',
+        location: 'port',
+        day: 4,
+        source: 'Архив портового управления',
+        connections_to: ['port_cargo_ledger', 'old_case_details', 'belladonna_invoice']
+      });
+      if (added) {
+        archive.disabled = true;
+        archive.querySelector('.card-title').textContent = 'АРХИВНАЯ СВЕРКА ДОБАВЛЕНА';
+      }
+    });
+    actions.appendChild(archive);
+  }
+
   if (!GameState.hasClue('belladonna_invoice')) {
     const invoice = document.createElement('button');
     invoice.id = 'btn-port-invoice';
