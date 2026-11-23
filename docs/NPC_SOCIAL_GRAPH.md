@@ -148,3 +148,6 @@ Examples:
 - The map does not claim that a character is physically present at another location merely because the location is nearby.
 
 Automated coverage: `tests/npc-presence.test.mjs` checks location gates, first-appearance gates, mismatched locations, malformed canon, and the absence of fabricated schedules. Visual-integrity tests verify the map integration. Manual browser/mobile QA remains pending.
+
+
+Automated validation after map integration: GitHub Actions run #858 passed **473/473 tests, 0 failures**. This includes six new NPC-presence tests, map integration checks, map re-entry regression, and full Service Worker import/precache validation. Manual browser/mobile QA remains outstanding.
