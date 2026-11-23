@@ -214,3 +214,61 @@ test('a returning NPC reaction is not shown or consumed when its save fails', ()
     });
   }
 });
+
+
+test('authored return scenes persist their fulfilment outcomes in the same one-time visit commit', () => {
+  const scenarios = [
+    ['npc_marta_hayes', 'marta_return_protected', 'marta_source_respected',
+      'return_seen_marta_return_protected', 'marta_source_protection_confirmed'],
+    ['npc_father_thomas', 'thomas_return_respected', 'thomas_context_respected',
+      'return_seen_thomas_return_respected', 'thomas_letter_context_preserved'],
+    ['npc_sebastian_blackwood', 'sebastian_return_records', 'sebastian_requested_records',
+      'return_seen_sebastian_return_records', 'sebastian_records_request_acknowledged']
+  ];
+  const previous = {
+    currentNPC: DialogueEngine._currentNPC,
+    relationships: GameState.relationships,
+    npcMemory: GameState.npcMemory,
+    save: GameState.save
+  };
+  try {
+    GameState.save = () => true;
+    for (const [npcId, reactionId, requiredFlag, consumedFlag, outcomeFlag] of scenarios) {
+      const reaction = Object.values(dialogues[npcId])
+        .filter(node => Array.isArray(node.return_reactions))
+        .flatMap(node => node.return_reactions)
+        .find(item => item.id === reactionId);
+      assert.ok(reaction, npcId + ' return reaction exists');
+      assert.equal(reaction.required_flag, requiredFlag);
+      assert.equal(reaction.consumed_flag, consumedFlag);
+      assert.equal(reaction.memory_set, outcomeFlag);
+
+      GameState.relationships = { [npcId]: { trust: 50, met: true } };
+      GameState.npcMemory = {
+        [npcId]: {
+          met: true,
+          flags: { [requiredFlag]: true },
+          conversationCount: 1,
+          questionCount: 0,
+          unlockedTopics: [],
+          askedQuestions: [],
+          criticalChoiceMade: true,
+          interviewHistory: []
+        }
+      };
+      DialogueEngine._currentNPC = npcId;
+      const result = DialogueEngine._getPendingReturnReaction(dialogues[npcId]);
+      assert.equal(result?.reactionId, reactionId);
+      assert.equal(NPCMemory.hasFlag(npcId, consumedFlag), true);
+      assert.equal(NPCMemory.hasFlag(npcId, outcomeFlag), true);
+      assert.equal(NPCMemory.getMemory(npcId).conversationCount, 2);
+      assert.equal(DialogueEngine._getPendingReturnReaction(dialogues[npcId]), null);
+      assert.equal(NPCMemory.getMemory(npcId).conversationCount, 2);
+    }
+  } finally {
+    DialogueEngine._currentNPC = previous.currentNPC;
+    GameState.relationships = previous.relationships;
+    GameState.npcMemory = previous.npcMemory;
+    GameState.save = previous.save;
+  }
+});
