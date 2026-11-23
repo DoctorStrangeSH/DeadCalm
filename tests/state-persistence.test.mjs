@@ -859,3 +859,43 @@ test('GameState.init blocks writes when every persisted copy is corrupt and keep
     Object.assign(GameState, original);
   }
 });
+
+
+test('campaign day and pending recap are committed atomically or both roll back', () => {
+  const original = snapshotGameState();
+  const originalSave = GameState.save;
+  const store = installGameStorage();
+  const required = [
+    'autopsy_report_01',
+    'court_switchboard_log',
+    'judge_appointment_card',
+    'old_case_details'
+  ];
+
+  try {
+    GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
+    GameState.currentCase = { id: 'case_001', clues: required.map(id => ({ id })), suspects: [], timeline: [], hypotheses: [] };
+    GameState.flags = {};
+    GameState.save = () => false;
+
+    assert.equal(GameState.advanceCampaignDayWithSummary(1), false);
+    assert.equal(GameState.campaign.day, 1);
+    assert.equal(GameState.hasFlag('day_2'), false);
+    assert.equal(GameState.hasFlag('campaign_day_summary_pending_1'), false);
+
+    GameState.save = originalSave;
+    assert.equal(GameState.advanceCampaignDayWithSummary(1), true);
+    assert.equal(GameState.campaign.day, 2);
+    assert.equal(GameState.hasFlag('day_2'), true);
+    assert.equal(GameState.hasFlag('campaign_day_summary_pending_1'), true);
+
+    const persisted = Storage.load('gameState');
+    assert.equal(persisted.campaign.day, 2);
+    assert.equal(persisted.flags.day_2, true);
+    assert.equal(persisted.flags.campaign_day_summary_pending_1, true);
+  } finally {
+    GameState.save = originalSave;
+    store.restore();
+    Object.assign(GameState, original);
+  }
+});
