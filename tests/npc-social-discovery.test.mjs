@@ -116,7 +116,7 @@ test('unrelated testimony does not fabricate NPC-to-NPC relationships', () => {
     DialogueEngine.startDialogue('npc_marta_hayes');
     DialogueEngine.startDialogue('npc_marta_hayes');
     DialogueEngine.selectTopic('about_source');
-    const response = DialogueEngine.askQuestion('marta_source_origin');
+    const response = DialogueEngine.askQuestion('marta_source_identity');
     if (response) assert.equal(response.addedSocialTie, null);
     assert.deepEqual(GameState.socialGraph, { ties: [], events: [] },
       'Marta does not know the identity of her anonymous source');
