@@ -244,6 +244,30 @@ export class DialogBox {
       card.append(stamp, title, basis);
       container.appendChild(card);
     }
+
+    if (node.addedSocialEvent) {
+      const event = node.addedSocialEvent;
+      const card = document.createElement('div');
+      card.className = 'dialog-discovery dialog-social-event-discovery';
+      const stamp = document.createElement('span');
+      stamp.className = 'dialog-discovery-stamp';
+      stamp.textContent = event.certainty === 'corroborated'
+        ? '◇ СОБЫТИЕ · ПОДТВЕРЖДЕНО НЕСКОЛЬКИМИ ИСТОЧНИКАМИ'
+        : '◇ СВИДЕТЕЛЬСТВО · ТРЕБУЕТ ПРОВЕРКИ';
+      const title = document.createElement('strong');
+      title.className = 'dialog-discovery-title';
+      title.textContent = event.timeLabel || 'Событие из рассказа персонажа';
+      const description = document.createElement('p');
+      description.className = 'dialog-discovery-description';
+      description.textContent = event.description;
+      const source = document.createElement('span');
+      source.className = 'dialog-social-event-source';
+      source.textContent = 'Источник: ' + (event.reportedByNpcId === 'npc_anna_holt'
+        ? 'Анна Холт' : event.reportedByNpcId === 'npc_sebastian_blackwood'
+          ? 'Себастьян Блэквуд' : event.reportedByNpcId || 'не указан');
+      card.append(stamp, title, description, source);
+      container.appendChild(card);
+    }
   }
 
   _renderChoices(node, choicesEl) {
