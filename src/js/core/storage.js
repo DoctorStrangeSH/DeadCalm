@@ -94,6 +94,26 @@ export var Storage = {
     }
   },
 
+  inspect(key) {
+    var storageKey = this.PREFIX + key;
+    try {
+      var primary = localStorage.getItem(storageKey);
+      var backup = localStorage.getItem(storageKey + this.BACKUP_SUFFIX);
+      var pending = localStorage.getItem(storageKey + this.PENDING_SUFFIX);
+      if (primary === null && backup === null && pending === null) {
+        return { status: 'missing', data: null };
+      }
+      var data = this.load(key);
+      if (data && typeof data === 'object' && !Array.isArray(data)) {
+        return { status: 'valid', data };
+      }
+      return { status: 'corrupt', data: null, error: new Error('Все копии сохранения повреждены') };
+    } catch (error) {
+      console.error('[Storage] Не удалось проверить сохранение "' + key + '":', error);
+      return { status: 'unavailable', data: null, error };
+    }
+  },
+
   hasAnyRecord(key) {
     var storageKey = this.PREFIX + key;
     try {
