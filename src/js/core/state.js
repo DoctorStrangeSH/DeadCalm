@@ -146,7 +146,7 @@ export var GameState = {
   init() {
     const inspection = typeof Storage.inspect === 'function' ? Storage.inspect('gameState') : null;
     const loadedSave = Storage.load('gameState');
-    var rawSaved = inspection?.status === 'valid' ? inspection.data : loadedSave;
+    var rawSaved = loadedSave || (inspection?.status === 'valid' ? inspection.data : null);
     this.saveStatus = rawSaved ? 'valid' : (inspection?.status || 'missing');
     this.saveBlocked = false;
     if (!rawSaved && (inspection
