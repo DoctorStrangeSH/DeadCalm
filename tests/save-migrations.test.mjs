@@ -278,3 +278,74 @@ test('save import persists canonical campaign flags and all investigation progre
     Object.assign(GameState, original);
   }
 });
+
+
+test('early schema-v1 fresh/reset saves receive the missing hypotheses collection', () => {
+  const earlyV1 = {
+    schemaVersion: CURRENT_SAVE_VERSION,
+    player: { name: 'Джон Риверс', reputation: 50 },
+    currentCase: { id: 'case_001', clues: [], suspects: [], timeline: [] },
+    campaign: { caseId: 'case_001', day: 1, completed: false, ending: null },
+    flags: {},
+    relationships: {},
+    npcMemory: {},
+    socialGraph: { ties: [], events: [] },
+    knowledgeLedger: { entries: [] },
+    npcDailyLife: { schedules: [], occurrences: [] },
+    miniGameProgress: {},
+    notebook: [],
+    settings: { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' },
+    customCampaignNote: 'keep'
+  };
+
+  const result = migrateSave(earlyV1);
+  assert.equal(result.status, 'ok');
+  assert.equal(result.migrated, true);
+  assert.equal(result.fromVersion, CURRENT_SAVE_VERSION);
+  assert.equal(result.toVersion, CURRENT_SAVE_VERSION);
+  assert.deepEqual(result.data.currentCase.hypotheses, []);
+  assert.equal(result.data.customCampaignNote, 'keep');
+});
+
+test('GameState persists normalized early schema-v1 saves during initialization', () => {
+  const originalLoad = Storage.load;
+  const originalSave = Storage.save;
+  const keys = [
+    'player', 'currentCase', 'campaign', 'flags', 'relationships', 'npcMemory',
+    'socialGraph', 'knowledgeLedger', 'npcDailyLife', 'miniGameProgress',
+    'notebook', 'settings', 'saveBlocked'
+  ];
+  const original = Object.fromEntries(keys.map(key => [key, GameState[key]]));
+  const earlyV1 = {
+    schemaVersion: CURRENT_SAVE_VERSION,
+    player: { name: 'Джон Риверс', reputation: 50 },
+    currentCase: { id: 'case_001', clues: [], suspects: [], timeline: [] },
+    campaign: { caseId: 'case_001', day: 1, completed: false, ending: null },
+    flags: {},
+    relationships: {},
+    npcMemory: {},
+    socialGraph: { ties: [], events: [] },
+    knowledgeLedger: { entries: [] },
+    npcDailyLife: { schedules: [], occurrences: [] },
+    miniGameProgress: {},
+    notebook: [],
+    settings: { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' }
+  };
+  let persisted = null;
+
+  try {
+    Storage.load = key => key === 'gameState' ? structuredClone(earlyV1) : null;
+    Storage.save = (key, data) => {
+      if (key === 'gameState') persisted = structuredClone(data);
+      return true;
+    };
+
+    assert.equal(GameState.init(), true);
+    assert.deepEqual(persisted.currentCase.hypotheses, []);
+    assert.equal(persisted.schemaVersion, CURRENT_SAVE_VERSION);
+  } finally {
+    Storage.load = originalLoad;
+    Storage.save = originalSave;
+    Object.assign(GameState, original);
+  }
+});
