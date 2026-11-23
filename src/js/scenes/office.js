@@ -3,11 +3,101 @@ import { GameState } from '../core/state.js';
 import { Inventory } from '../components/inventory.js';
 import { assessCampaignDay, advanceCampaignWhenReady, getCampaignCaseSummary } from '../systems/campaign-progression.js';
 import { canAccessCase001MiniGame } from '../systems/minigame-access.js';
+import { getPendingCampaignDaySummary, dismissCampaignDaySummary } from '../systems/campaign-day-summary.js';
 
 /**
  * Кабинет детектива — главный хаб игры.
  * Отсюда игрок переходит на карту, доску расследования, дневник и другие разделы.
  */
+function renderPendingDaySummary(container) {
+  const summary = getPendingCampaignDaySummary(GameState);
+  if (!summary) return;
+
+  const overlay = document.createElement('div');
+  overlay.className = 'dialog-overlay campaign-summary-overlay';
+  overlay.dataset.campaignDaySummary = String(summary.day);
+  overlay.setAttribute('role', 'presentation');
+
+  const modal = document.createElement('section');
+  modal.className = 'dialog-modal campaign-summary-modal';
+  modal.setAttribute('role', 'dialog');
+  modal.setAttribute('aria-modal', 'true');
+  modal.setAttribute('aria-labelledby', 'campaign-summary-title');
+
+  const content = document.createElement('div');
+  content.className = 'dialog-content';
+
+  const header = document.createElement('div');
+  header.className = 'dialog-header';
+  const emblem = document.createElement('div');
+  emblem.className = 'dialog-avatar';
+  emblem.textContent = 'Д';
+  emblem.setAttribute('aria-hidden', 'true');
+
+  const heading = document.createElement('div');
+  const kicker = document.createElement('p');
+  kicker.className = 'text-gray-500 text-xs tracking-widest';
+  kicker.textContent = 'ДНЕВНИК РАССЛЕДОВАНИЯ · ДЕНЬ ' + summary.day;
+  const title = document.createElement('h2');
+  title.id = 'campaign-summary-title';
+  title.className = 'text-gold text-lg tracking-widest';
+  title.textContent = summary.title;
+  heading.append(kicker, title);
+  header.append(emblem, heading);
+  content.append(header);
+
+  const appendSection = (label, items, className = 'text-gray-300') => {
+    if (!Array.isArray(items) || !items.length) return;
+    const section = document.createElement('section');
+    section.className = 'mb-5';
+    const sectionTitle = document.createElement('h3');
+    sectionTitle.className = 'text-gold text-xs tracking-widest mb-2';
+    sectionTitle.textContent = label;
+    const list = document.createElement('ul');
+    list.className = 'space-y-2 text-sm leading-relaxed';
+    for (const item of items) {
+      const entry = document.createElement('li');
+      entry.className = className;
+      entry.textContent = '— ' + item;
+      list.append(entry);
+    }
+    section.append(sectionTitle, list);
+    content.append(section);
+  };
+
+  appendSection('УСТАНОВЛЕНО', summary.established);
+  appendSection('ОПРОВЕРГНУТО / ОГРАНИЧЕНИЯ', summary.refuted);
+  appendSection('ПОКА НЕИЗВЕСТНО', summary.unknown);
+  appendSection('ЕЩЁ НЕ ПОЛУЧЕНЫ', summary.missingEvidence?.map(id => {
+    const clue = GameState.getClue?.(id);
+    return clue?.name || id;
+  }), 'text-amber-200');
+
+  const error = document.createElement('p');
+  error.className = 'text-red-300 text-sm mt-3';
+  error.setAttribute('role', 'alert');
+  error.hidden = true;
+
+  const close = document.createElement('button');
+  close.type = 'button';
+  close.className = 'btn-noir w-full py-3 mt-3';
+  close.textContent = 'ПРОДОЛЖИТЬ РАССЛЕДОВАНИЕ →';
+  close.addEventListener('click', () => {
+    if (!dismissCampaignDaySummary(GameState, summary.day)) {
+      error.hidden = false;
+      error.textContent = 'Не удалось сохранить прочтение сводки. Она останется на экране — проверьте хранилище и повторите попытку.';
+      return;
+    }
+    overlay.remove();
+  });
+
+  content.append(error, close);
+  modal.append(content);
+  overlay.append(modal);
+  container.append(overlay);
+  close.focus();
+}
+
 export function render(container) {
   var cluesCount = GameState.currentCase.clues.length;
   var notesCount = GameState.notebook ? GameState.notebook.length : 0;
@@ -160,7 +250,7 @@ export function render(container) {
     </div>
   `;
 
-  // === ОБРАБОТЧИКИ КНОПОК ===
+  // Показываем сохранённую сводку после перехода дня или восстановления сессии.\n  renderPendingDaySummary(container);\n\n  // === ОБРАБОТЧИКИ КНОПОК ===
 
   document.getElementById('btn-advance-day')?.addEventListener('click', function () {
     const result = advanceCampaignWhenReady(GameState);
