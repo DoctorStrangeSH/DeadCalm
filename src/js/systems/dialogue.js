@@ -416,7 +416,7 @@ export var DialogueEngine = {
     const node = npcData[key];
     if (!node || node.trigger_question !== pending.questionId ||
         !Array.isArray(node.choices) ||
-        !NPCMemory.hasFlag(this._currentNPC, 'critical_' + key) ||
+        NPCMemory.hasFlag(this._currentNPC, 'critical_' + key) ||
         NPCMemory.hasFlag(this._currentNPC, 'critical_choice_resolved_' + key)) return null;
 
     const choice = node.choices.find(item => item.id === choiceId);
