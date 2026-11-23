@@ -55,6 +55,6 @@ test('every port evidence reward uses the persistence-aware action helper', () =
   }
   assert.match(source, /addPortClue\(markusStatement, meet,/,
     'Markus testimony must be saved before the confrontation is recorded');
-  assert.equal((source.match(/GameState\.addClue\(/g) || []).length, 1,
-    'only the shared helper may call GameState.addClue in the port scene');
+  assert.equal((source.match(/GameState\.addClue\(/g) || []).length, 2,
+    'the helper and explicit sealed-agreement outcome are the only clue writers');
 });
