@@ -145,12 +145,13 @@ export var GameState = {
 
   init() {
     const inspection = typeof Storage.inspect === 'function' ? Storage.inspect('gameState') : null;
-    var rawSaved = inspection
-      ? (inspection.status === 'valid' ? inspection.data : null)
-      : Storage.load('gameState');
-    this.saveStatus = inspection?.status || (rawSaved ? 'valid' : 'missing');
+    const loadedSave = Storage.load('gameState');
+    var rawSaved = inspection?.status === 'valid' ? inspection.data : loadedSave;
+    this.saveStatus = rawSaved ? 'valid' : (inspection?.status || 'missing');
     this.saveBlocked = false;
-    if (!rawSaved && (inspection ? inspection.status !== 'missing' : Storage.hasAnyRecord('gameState'))) {
+    if (!rawSaved && (inspection
+      ? ['corrupt', 'unavailable'].includes(inspection.status) || Storage.hasAnyRecord('gameState')
+      : Storage.hasAnyRecord('gameState'))) {
       this.saveBlocked = true;
       Events.emit('save:invalid', { reason: 'no-valid-recovery-copy' });
       console.error('[State] Все копии сохранения повреждены. Исходные данные оставлены нетронутыми; запись заблокирована.');
