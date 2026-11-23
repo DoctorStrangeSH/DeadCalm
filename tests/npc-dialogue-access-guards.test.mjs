@@ -157,7 +157,7 @@ test('critical NPC choices cannot be committed directly or from a stale prompt',
     const trustBefore = NPCMemory.getTrust('npc_anna_holt');
     assert.equal(DialogueEngine.makeCriticalChoice('anna_respect_boundary'), null,
       'a choice ID alone must not bypass its trigger question');
-    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'critical_anna_box_trust'), false);
+    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'critical_critical_choice_box'), false);
     assert.equal(NPCMemory.getTrust('npc_anna_holt'), trustBefore);
 
     assert.ok(DialogueEngine.selectTopic('about_box').questions.some(q => q.id === 'anna_box_trust'));
@@ -165,10 +165,10 @@ test('critical NPC choices cannot be committed directly or from a stale prompt',
 
     assert.equal(DialogueEngine.makeCriticalChoice('unknown_choice'), null,
       'a choice from outside the active prompt must be rejected without consuming the prompt');
-    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'critical_anna_box_trust'), false);
+    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'critical_critical_choice_box'), false);
 
     assert.equal(DialogueEngine.makeCriticalChoice('anna_respect_boundary')?.type, 'critical_result');
-    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'critical_anna_box_trust'), true);
+    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'critical_critical_choice_box'), true);
     assert.equal(DialogueEngine.makeCriticalChoice('anna_respect_boundary'), null,
       'a resolved choice cannot be replayed after the active prompt is consumed');
   } finally {
@@ -189,7 +189,7 @@ test('leaving or resetting a dialogue invalidates its pending critical-choice pr
     DialogueEngine.startDialogue('npc_ray_morgan');
     assert.equal(DialogueEngine._pendingCriticalChoice, null);
     assert.equal(DialogueEngine.makeCriticalChoice('anna_respect_boundary'), null);
-    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'critical_anna_box_trust'), false);
+    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'critical_critical_choice_box'), false);
 
     DialogueEngine.reset();
     assert.equal(DialogueEngine.makeCriticalChoice('anna_respect_boundary'), null);
