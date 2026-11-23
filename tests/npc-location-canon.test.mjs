@@ -48,13 +48,15 @@ test('all six NPCs become directly encounterable only after both canon gates are
   for (const [npcId, character] of Object.entries(characters)) {
     const location = locations[character.location];
     assert.ok(location, npcId + ' canonical location exists');
+    const firstAppearanceDay = Number(character.first_appearance?.match(/^day_([1-5])$/)?.[1] || 99);
+    const locationDay = location.unlocked
+      ? 1
+      : Number(location.unlock_condition?.match(/^day_([1-5])$/)?.[1] || 99);
+    assert.equal(firstAppearanceDay, locationDay,
+      npcId + ' first appearance must match the day its canonical location becomes available');
 
     for (let day = 1; day <= 5; day++) {
       const result = getNpcPresenceAtLocation(character, location, campaignState(day));
-      const firstAppearanceDay = Number(character.first_appearance?.match(/^day_([1-5])$/)?.[1] || 99);
-      const locationDay = location.unlock_condition
-        ? Number(location.unlock_condition.match(/^day_([1-5])$/)?.[1] || 99)
-        : 1;
       const expectedAvailable = day >= Math.max(firstAppearanceDay, locationDay);
 
       assert.equal(
