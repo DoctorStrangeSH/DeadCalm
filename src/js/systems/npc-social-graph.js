@@ -1,5 +1,7 @@
 const RELATION_TYPES = new Set(['family','colleague','friend','rival','debt','protective','romantic','unknown']);
 const RELATION_STATUSES = new Set(['active','strained','broken','uncertain']);
+const EVENT_SOURCE_TYPES = new Set(['direct_observation','interview','document','rumor']);
+const EVENT_CERTAINTIES = new Set(['unverified','corroborated','disputed']);
 
 export function createEmptySocialGraph() { return { ties: [], events: [] }; }
 
@@ -17,10 +19,18 @@ function validTie(tie) {
     RELATION_STATUSES.has(tie.status) && typeof tie.basis === 'string' && !!tie.basis.trim();
 }
 function validEvent(event) {
-  return !!event && typeof event.id === 'string' && !!event.id.trim() &&
-    typeof event.fromNpcId === 'string' && !!event.fromNpcId.trim() &&
-    typeof event.toNpcId === 'string' && !!event.toNpcId.trim() &&
-    event.fromNpcId !== event.toNpcId && typeof event.description === 'string' && !!event.description.trim();
+  if (!event || typeof event.id !== 'string' || !event.id.trim() ||
+      typeof event.fromNpcId !== 'string' || !event.fromNpcId.trim() ||
+      typeof event.toNpcId !== 'string' || !event.toNpcId.trim() ||
+      event.fromNpcId === event.toNpcId ||
+      typeof event.description !== 'string' || !event.description.trim()) return false;
+  if (event.reportedByNpcId != null &&
+      (typeof event.reportedByNpcId !== 'string' ||
+       ![event.fromNpcId, event.toNpcId].includes(event.reportedByNpcId))) return false;
+  if (event.timeLabel != null && (typeof event.timeLabel !== 'string' || !event.timeLabel.trim())) return false;
+  if (event.sourceType != null && !EVENT_SOURCE_TYPES.has(event.sourceType)) return false;
+  if (event.certainty != null && !EVENT_CERTAINTIES.has(event.certainty)) return false;
+  return true;
 }
 export function normalizeSocialGraph(value) {
   if (!value || typeof value !== 'object') return createEmptySocialGraph();
@@ -61,7 +71,11 @@ export function appendSocialEvent(graph, input) {
   const event = { id: typeof input.id === 'string' && input.id.trim()
       ? input.id.trim() : 'social-event-' + (graph.events.length + 1),
     fromNpcId, toNpcId, description: description.trim(), sourceRefs: cleanRefs(input.sourceRefs),
-    occurredAt: typeof input.occurredAt === 'string' ? input.occurredAt : new Date().toISOString() };
+    ...(typeof input.reportedByNpcId === 'string' ? { reportedByNpcId: input.reportedByNpcId } : {}),
+    ...(typeof input.timeLabel === 'string' && input.timeLabel.trim() ? { timeLabel: input.timeLabel.trim() } : {}),
+    ...(EVENT_SOURCE_TYPES.has(input.sourceType) ? { sourceType: input.sourceType } : {}),
+    ...(EVENT_CERTAINTIES.has(input.certainty) ? { certainty: input.certainty } : {}),
+    ...(typeof input.occurredAt === 'string' ? { occurredAt: input.occurredAt } : {}) };
   if (graph.events.some(item => item.id === event.id)) return null;
   graph.events.push(event);
   return cloneRecord(event);
