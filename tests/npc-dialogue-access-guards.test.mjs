@@ -19,7 +19,7 @@ function preserve() {
   ];
   const dialogueKeys = [
     '_dialogues', '_characters', '_clues', '_contradictionRules', '_initialized',
-    '_currentNPC', '_currentNode', '_unlockedTopics', '_askedQuestions'
+    '_currentNPC', '_currentNode', '_pendingCriticalChoice', '_unlockedTopics', '_askedQuestions'
   ];
   return {
     state: Object.fromEntries(stateKeys.map(key => [key, GameState[key]])),
@@ -141,6 +141,58 @@ test('Sebastian only confirms the vial transfer after both the appointment and p
     assert.equal(answer?.addedClue?.id, 'sebastian_delivery_statement');
     assert.equal(GameState.hasClue('sebastian_delivery_statement'), true);
     assert.match(answer.text, /запечатанный флакон/);
+  } finally {
+    restore(previous);
+  }
+});
+
+
+test('critical NPC choices cannot be committed directly or from a stale prompt', () => {
+  const previous = preserve();
+  try {
+    setup();
+    assert.equal(DialogueEngine.startDialogue('npc_anna_holt')?.type, 'first_meeting');
+    assert.equal(DialogueEngine.startDialogue('npc_anna_holt')?.type, 'topic_selection');
+
+    const trustBefore = NPCMemory.getTrust('npc_anna_holt');
+    assert.equal(DialogueEngine.makeCriticalChoice('anna_respect_boundary'), null,
+      'a choice ID alone must not bypass its trigger question');
+    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'critical_anna_box_trust'), false);
+    assert.equal(NPCMemory.getTrust('npc_anna_holt'), trustBefore);
+
+    assert.ok(DialogueEngine.selectTopic('about_box').questions.some(q => q.id === 'anna_box_trust'));
+    assert.equal(DialogueEngine.askQuestion('anna_box_trust')?.type, 'critical_choice');
+
+    assert.equal(DialogueEngine.makeCriticalChoice('unknown_choice'), null,
+      'a choice from outside the active prompt must be rejected without consuming the prompt');
+    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'critical_anna_box_trust'), false);
+
+    assert.equal(DialogueEngine.makeCriticalChoice('anna_respect_boundary')?.type, 'critical_result');
+    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'critical_anna_box_trust'), true);
+    assert.equal(DialogueEngine.makeCriticalChoice('anna_respect_boundary'), null,
+      'a resolved choice cannot be replayed after the active prompt is consumed');
+  } finally {
+    restore(previous);
+  }
+});
+
+test('leaving or resetting a dialogue invalidates its pending critical-choice prompt', () => {
+  const previous = preserve();
+  try {
+    setup();
+    DialogueEngine.startDialogue('npc_anna_holt');
+    DialogueEngine.startDialogue('npc_anna_holt');
+    DialogueEngine.selectTopic('about_box');
+    assert.equal(DialogueEngine.askQuestion('anna_box_trust')?.type, 'critical_choice');
+    assert.ok(DialogueEngine._pendingCriticalChoice);
+
+    DialogueEngine.startDialogue('npc_ray_morgan');
+    assert.equal(DialogueEngine._pendingCriticalChoice, null);
+    assert.equal(DialogueEngine.makeCriticalChoice('anna_respect_boundary'), null);
+    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'critical_anna_box_trust'), false);
+
+    DialogueEngine.reset();
+    assert.equal(DialogueEngine.makeCriticalChoice('anna_respect_boundary'), null);
   } finally {
     restore(previous);
   }
