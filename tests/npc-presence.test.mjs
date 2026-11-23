@@ -56,3 +56,14 @@ test('presence resolution does not invent schedules or occurrences', () => {
   assert.equal(result.available, true);
   assert.deepEqual(dailyLife, { schedules: [], occurrences: [] });
 });
+
+
+test('presence requires reciprocal NPC references in both the dossier and location record', () => {
+  const result = getNpcPresenceAtLocation(
+    anna,
+    { ...annaHouse, unlocked: true, npc: 'npc_someone_else' },
+    state(4)
+  );
+  assert.equal(result.status, 'not_here');
+  assert.equal(result.available, false);
+});
