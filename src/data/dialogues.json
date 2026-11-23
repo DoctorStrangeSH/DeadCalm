@@ -281,7 +281,8 @@
               "text": "В журнале входящих отмечен звонок с внутреннего коммутатора здания суда. Имя абонента отсутствует. Нужно проверить оригинал регистрационной книги.",
               "category": "расследование"
             },
-            "requires_flag": "ray_promised_check_calls"
+            "requires_flag": "ray_promised_check_calls",
+            "memory_set": "ray_check_calls_fulfilled"
           },
           {
             "id": "review_court_register_with_ray",
