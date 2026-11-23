@@ -85,12 +85,12 @@ Integrity rules:
 
 ## Dialogue-driven relationship discovery — 2026-11-23
 
-The social graph now receives two canon-backed family ties only after the player hears the relevant in-game testimony:
+The social graph now receives two canon-backed family ties only after the player hears the relevant in-game testimony. Discovery metadata is authored on the corresponding response in `src/data/dialogues.json`; the dialogue engine does not hard-code story-specific question IDs:
 
 - `npc_lydia_winter → npc_gabriel` (`family`): created after the player asks Lydia `her_background`. Her explicit statement identifies Gabriel as her brother.
 - `npc_anna_holt → npc_markus_holt` (`family`): created after the player asks Anna `anna_markus_last_seen`. The conversation identifies Markus as her father.
 
-Both records preserve a dialogue source reference and a plain-language basis. They are not seeded from hidden character profiles, do not reveal themselves before the player hears the source, and are idempotent. The anonymous source behind Marta's documents is deliberately not linked to Markus: Marta does not know that identity.
+Both records preserve a dialogue source reference and a plain-language basis. They are not seeded from hidden character profiles, do not reveal themselves before the player hears the source, and are idempotent. The anonymous source behind Marta's documents is deliberately not linked to Markus: Marta does not know that identity. A regression test also checks that only these two source-backed relationships are currently discoverable.
 
 The new relationship discovery is shown in the dialogue result and in the investigation board's **«Люди и их связи»** section. The board explicitly labels these as source-backed relationships, not deductions from proximity or rumor.
 
