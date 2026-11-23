@@ -151,14 +151,16 @@
           "choice_id": "promise_protection",
           "required_flag": "lydia_trusts_player",
           "consumed_flag": "return_seen_lydia_return_promise",
-          "text": "Лидия встречает вас чуть мягче прежнего: «Я помню ваше обещание. Не прошу решать за меня, детектив. Просто не превращайте историю Габриэля в удобную версию дела»."
+          "text": "Лидия встречает вас чуть мягче прежнего: «Я помню ваше обещание. Не прошу решать за меня, детектив. Просто не превращайте историю Габриэля в удобную версию дела».",
+          "memory_set": "lydia_protection_promise_acknowledged"
         },
         {
           "id": "lydia_return_neutral",
           "choice_id": "stay_neutral",
           "required_flag": "lydia_cautious",
           "consumed_flag": "return_seen_lydia_return_neutral",
-          "text": "Лидия кивает сдержанно: «Вы не стали давать обещаний, которых не можете выполнить. Я это ценю. Если появятся проверяемые факты о Габриэле, я выслушаю»."
+          "text": "Лидия кивает сдержанно: «Вы не стали давать обещаний, которых не можете выполнить. Я это ценю. Если появятся проверяемые факты о Габриэле, я выслушаю».",
+          "memory_set": "lydia_no_false_promise_acknowledged"
         }
       ]
     },
@@ -546,7 +548,8 @@
           "choice_id": "marta_demand_publish",
           "required_flag": "marta_source_pressured",
           "consumed_flag": "return_seen_marta_return_pressured",
-          "text": "Марта держит папку закрытой: «Я помню, что вы требовали публикации. Новых материалов не будет, пока я не пойму, что источник в безопасности»."
+          "text": "Марта держит папку закрытой: «Я помню, что вы требовали публикации. Новых материалов не будет, пока я не пойму, что источник в безопасности».",
+          "memory_set": "marta_source_pressure_remembered"
         }
       ]
     },
@@ -662,7 +665,8 @@
           "choice_id": "thomas_threaten_publication",
           "required_flag": "thomas_pressured",
           "consumed_flag": "return_seen_thomas_return_pressured",
-          "text": "Отец Томас остаётся на расстоянии: «Я помню вашу угрозу публикацией. Письмо не станет яснее от давления. Всё, что могу передать без официального запроса, уже передано»."
+          "text": "Отец Томас остаётся на расстоянии: «Я помню вашу угрозу публикацией. Письмо не станет яснее от давления. Всё, что могу передать без официального запроса, уже передано».",
+          "memory_set": "thomas_publication_pressure_remembered"
         }
       ]
     },
@@ -809,7 +813,8 @@
           "choice_id": "sebastian_reject_framing",
           "required_flag": "sebastian_challenged",
           "consumed_flag": "return_seen_sebastian_return_challenged",
-          "text": "Себастьян встречает вас холодной улыбкой: «Я помню, что вы отвергли мою трактовку. Это ваше право. Но дальше нам придётся опираться на документы, а не на тон разговора»."
+          "text": "Себастьян встречает вас холодной улыбкой: «Я помню, что вы отвергли мою трактовку. Это ваше право. Но дальше нам придётся опираться на документы, а не на тон разговора».",
+          "memory_set": "sebastian_challenge_remembered"
         }
       ]
     },
@@ -947,14 +952,16 @@
           "choice_id": "anna_respect_boundary",
           "required_flag": "anna_boundary_respected",
           "consumed_flag": "return_seen_anna_return_respected",
-          "text": "Анна сама открывает дверь кабинета: «Я помню, что вы не стали забирать коробку. Пока я не готова отдать её, но теперь могу спокойно обсудить, что отец оставил внутри»."
+          "text": "Анна сама открывает дверь кабинета: «Я помню, что вы не стали забирать коробку. Пока я не готова отдать её, но теперь могу спокойно обсудить, что отец оставил внутри».",
+          "memory_set": "anna_box_remains_with_anna"
         },
         {
           "id": "anna_return_taken",
           "choice_id": "anna_take_box",
           "required_flag": "anna_box_taken",
           "consumed_flag": "return_seen_anna_return_taken",
-          "text": "Анна замечает вас и отодвигается от стола: «Я помню, как вы забрали коробку. Не ждите, что я помогу разбирать вещи отца после этого»."
+          "text": "Анна замечает вас и отодвигается от стола: «Я помню, как вы забрали коробку. Не ждите, что я помогу разбирать вещи отца после этого».",
+          "memory_set": "anna_box_removed_against_anna_wishes"
         }
       ]
     },
