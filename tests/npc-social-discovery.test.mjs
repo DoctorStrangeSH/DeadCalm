@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { GameState } from '../src/js/core/state.js';
+import { Storage } from '../src/js/core/storage.js';
 import { DialogueEngine } from '../src/js/systems/dialogue.js';
 
 const readJson = path => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
@@ -11,6 +12,7 @@ const clues = readJson('../src/data/clues.json');
 const contradictions = readJson('../src/data/contradictions.json');
 
 function preserve() {
+  const previousStorageSave = Storage.save;
   const stateKeys = [
     'player', 'currentCase', 'campaign', 'flags', 'relationships', 'npcMemory',
     'socialGraph', 'knowledgeLedger', 'npcDailyLife', 'miniGameProgress',
@@ -22,11 +24,13 @@ function preserve() {
   ];
   return {
     state: Object.fromEntries(stateKeys.map(key => [key, GameState[key]])),
+    storageSave: previousStorageSave,
     dialogue: Object.fromEntries(dialogueKeys.map(key => [key, DialogueEngine[key]]))
   };
 }
 
 function setup() {
+  Storage.save = () => true;
   GameState.save = () => true;
   GameState.saveBlocked = false;
   GameState.player = { name: 'Джон Риверс', reputation: 50 };
@@ -52,6 +56,7 @@ function setup() {
 }
 
 function restore(previous) {
+  Storage.save = previous.storageSave;
   Object.assign(GameState, previous.state);
   Object.assign(DialogueEngine, previous.dialogue);
 }
