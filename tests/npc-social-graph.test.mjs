@@ -57,3 +57,20 @@ test('legacy and malformed save records are safely filtered during migration', (
   assert.deepEqual(normalized.ties[0].sourceRefs, []);
   assert.deepEqual(normalized.events[0].sourceRefs, []);
 });
+
+test('the same undirected relationship cannot be duplicated by reversing its endpoints', () => {
+  const graph = createEmptySocialGraph();
+  const first = upsertSocialTie(graph, {
+    fromNpcId: 'npc_a', toNpcId: 'npc_b', type: 'family',
+    status: 'active', basis: 'They identify each other as siblings.'
+  });
+  const reversed = upsertSocialTie(graph, {
+    fromNpcId: 'npc_b', toNpcId: 'npc_a', type: 'family',
+    status: 'strained', basis: 'A later account records distance between them.'
+  });
+  assert.equal(graph.ties.length, 1);
+  assert.equal(reversed.id, first.id);
+  assert.equal(graph.ties[0].fromNpcId, 'npc_b');
+  assert.equal(graph.ties[0].toNpcId, 'npc_a');
+  assert.equal(graph.ties[0].status, 'strained');
+});
