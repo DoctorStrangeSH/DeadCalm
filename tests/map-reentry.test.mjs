@@ -15,7 +15,7 @@ test('re-entering the city map replaces the previous delegated click listener', 
 });
 
 test('map re-entry rebuilds the atlas from current campaign state and keeps navigation guarded', () => {
-  assert.match(cityMapScene, /new Map\(mapContainer, locations\)/);
+  assert.match(cityMapScene, /new Map\(mapContainer, locations(?:, characters)?\)/);
   assert.match(mapSource, /_isUnlocked\(location\)\s*\{\s*return isLocationUnlocked\(location, GameState\)/);
   assert.match(mapSource, /if \(!this\._isUnlocked\(loc\)\) return/);
   assert.match(mapSource, /Events\.emit\('navigate', \{ scene: scenes\[loc\.id\]/);
