@@ -5,7 +5,7 @@ import { Storage } from '../src/js/core/storage.js';
 
 const required = [
   'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
-  'matthews_letter', 'port_cargo_ledger', 'markus_statement',
+  'matthews_letter', 'port_cargo_ledger', 'port_cargo_ledger_archive', 'markus_statement',
   'sebastian_delivery_statement', 'port_radio_fragment'
 ];
 
