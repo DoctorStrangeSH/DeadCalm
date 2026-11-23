@@ -253,6 +253,54 @@ test('mini-game evidence quality is saved atomically and failed upgrades roll ba
 });
 
 
+test('both campaign endings roll back when the final campaign save fails', () => {
+  const previous = {
+    currentCase: GameState.currentCase,
+    campaign: GameState.campaign,
+    save: GameState.save
+  };
+  const required = [
+    'autopsy_report_01',
+    'judge_appointment_card',
+    'belladonna_invoice',
+    'matthews_letter',
+    'port_cargo_ledger',
+    'port_cargo_ledger_archive',
+    'markus_statement',
+    'sebastian_delivery_statement'
+  ];
+
+  try {
+    for (const ending of ['open_case', 'price_of_silence']) {
+      GameState.currentCase = {
+        id: 'case_001',
+        clues: [
+          ...required.map(id => ({ id })),
+          ...(ending === 'open_case'
+            ? [{ id: 'restored_film_frame', quality: 100 }]
+            : [{ id: 'port_radio_fragment' }, { id: 'sebastian_sealed_confession' }])
+        ],
+        suspects: [],
+        timeline: []
+      };
+      GameState.campaign = {
+        caseId: 'case_001', day: 5, completed: false, ending: null
+      };
+      GameState.save = () => false;
+
+      assert.equal(GameState.completeCampaign(ending), false,
+        ending + ' must not complete when its final save fails');
+      assert.equal(GameState.campaign.completed, false);
+      assert.equal(GameState.campaign.ending, null);
+    }
+  } finally {
+    GameState.currentCase = previous.currentCase;
+    GameState.campaign = previous.campaign;
+    GameState.save = previous.save;
+  }
+});
+
+
 test('full investigation state survives save/load and exports nested hypotheses', () => {
   const originalLoad = Storage.load;
   const originalSave = Storage.save;
