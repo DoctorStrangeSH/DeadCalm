@@ -3,6 +3,8 @@ import { Events } from '../core/events.js';
 import { NPCMemory } from './npc-memory.js';
 import { resolveDialogueReaction } from './dialogue-reactions.js';
 import { hasDiscoveredContradiction } from './contradictions.js';
+import { findPendingCriticalDialogueNode } from './critical-dialogue-choice.js';
+import { canSelectDialogueTopic, canAskDialogueQuestion } from './dialogue-access.js';
 
 export var DialogueEngine = {
   _dialogues: null,
@@ -129,6 +131,9 @@ export var DialogueEngine = {
     }
 
     // ПОВТОРНАЯ ВСТРЕЧА
+    const pendingCritical = findPendingCriticalDialogueNode(npcData, NPCMemory, npcId);
+    if (pendingCritical) return this._formatCriticalChoice(pendingCritical.node);
+
     const returnReaction = this._getPendingReturnReaction(npcData);
     if (returnReaction) return returnReaction;
 
@@ -233,7 +238,7 @@ export var DialogueEngine = {
     if (!npcData) return null;
 
     var topic = npcData.topics?.[topicId];
-    if (!topic || !this._unlockedTopics.includes(topicId)) {
+    if (!topic || !canSelectDialogueTopic(topicId, this._unlockedTopics)) {
       console.warn('[Dialogue] Тема не найдена или ещё не открыта: ' + topicId);
       return null;
     }
@@ -290,18 +295,29 @@ export var DialogueEngine = {
 
     // Ищем ответ только в темах, которые действительно открыты игроку.
     var foundResponse = null;
+    var foundTopicId = null;
     for (var topicId of this._unlockedTopics) {
       var topic = npcData.topics?.[topicId];
       if (topic?.responses) {
         var response = topic.responses.find(function(r) { return r.id === questionId; });
         if (response) {
           foundResponse = response;
+          foundTopicId = topicId;
           break;
         }
       }
     }
 
-    if (!foundResponse || !this._isResponseAvailable(foundResponse)) {
+    const accessGranted = foundResponse && canAskDialogueQuestion({
+      topicId: foundTopicId,
+      unlockedTopics: this._unlockedTopics,
+      askedQuestions: this._askedQuestions,
+      response: foundResponse,
+      isAvailable: response => this._isResponseAvailable(response)
+    });
+    const retryableCritical = Boolean(foundResponse?.triggers_critical &&
+      !NPCMemory.hasFlag(this._currentNPC, 'critical_' + foundResponse.triggers_critical));
+    if (!foundResponse || (!accessGranted && !retryableCritical) || !this._isResponseAvailable(foundResponse)) {
       console.warn('[Dialogue] Ответ не найден или недоступен: ' + questionId);
       return null;
     }
