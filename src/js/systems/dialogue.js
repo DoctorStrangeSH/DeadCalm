@@ -374,13 +374,20 @@ export var DialogueEngine = {
     console.log('[Dialogue] Критический выбор: ' + choiceId);
           // Commit the decision, trust change and authored memory consequences together.
           const nextNode = npcData[choice.next_dialogue];
+          const nextClue = nextNode?.gives_clue ? this._clues?.[nextNode.gives_clue] : null;
+          if (nextNode?.gives_clue && !nextClue) {
+            console.error('[Dialogue] Не найдена улика критического выбора: ' + nextNode.gives_clue);
+            return this._formatCriticalChoice(node, { saveError: true });
+          }
           const decision = NPCMemory.commitCriticalChoice(this._currentNPC, {
             questionId: node.trigger_question,
             choiceFlag: 'critical_' + key,
             trustDelta: choice.effects?.trust || 0,
             memorySet: choice.memory_set || null,
             memoryClear: choice.memory_clear || null,
-            resultFlag: nextNode?.memory_set || null
+            resultFlag: nextNode?.memory_set || null,
+            note: nextNode?.adds_note || null,
+            clue: nextClue
           });
           if (!decision) {
             return this._formatCriticalChoice(node, { saveError: true });
@@ -392,22 +399,12 @@ export var DialogueEngine = {
           const trustBefore = decision.trustBefore;
 
           if (nextNode) {
-            var addedNote = nextNode.adds_note && this._addToNotebook(nextNode.adds_note)
-              ? nextNode.adds_note : null;
-            var addedClue = null;
-            if (nextNode.gives_clue) {
-              var clue = this._clues?.[nextNode.gives_clue];
-              if (clue && !GameState.hasClue(clue.id)) {
-                GameState.addClue(clue);
-                addedClue = clue;
-              }
-            }
             return this._formatCriticalResult(nextNode, {
               type: 'critical_result',
               tone: choice.tone,
               trustDelta: NPCMemory.getTrust(this._currentNPC) - trustBefore,
-              addedNote,
-              addedClue
+              addedNote: decision.addedNote,
+              addedClue: decision.addedClue
             });
           }
     return null;
