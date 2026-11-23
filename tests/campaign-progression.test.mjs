@@ -73,6 +73,11 @@ test('final disclosure dossier requires the authored case materials, Sebastian d
   assert.equal(result.ready, true);
   assert.equal(result.fullDisclosureReady, false, 'partial film cannot support full public disclosure');
   assert.equal(result.publicReady, result.fullDisclosureReady, 'legacy alias must remain consistent');
+  found.delete('port_cargo_ledger_archive');
+  result = assessFinalEvidence(game);
+  assert.equal(result.ready, false, 'the suspect-supplied ledger copy cannot replace independent archive verification');
+  assert.ok(result.missing.includes('Независимый архивный экземпляр портовой книги'));
+  found.set('port_cargo_ledger_archive', {});
   found.set('restored_film_frame', { quality: 100 });
   result = assessFinalEvidence(game);
   assert.equal(result.ready, true);
