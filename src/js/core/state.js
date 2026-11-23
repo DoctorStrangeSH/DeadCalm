@@ -309,6 +309,7 @@ export var GameState = {
       location: clue.location,
       day: clue.day,
       connections_to: Array.isArray(clue.connections_to) ? [...clue.connections_to] : [],
+      ...(Number.isFinite(clue.quality) ? { quality: clue.quality } : {}),
       foundAt: new Date().toISOString()
     };
     this.currentCase.clues.push(record);
