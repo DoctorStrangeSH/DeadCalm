@@ -90,16 +90,21 @@ export var NPCMemory = {
     }).saved;
   },
 
-  recordConversation(npcId, consumedFlag = null) {
+  recordConversation(npcId, consumedFlag = null, memorySet = null) {
     if (typeof npcId !== 'string' || !npcId.trim()) return false;
     if (consumedFlag !== null && (typeof consumedFlag !== 'string' || !consumedFlag.trim())) return false;
-    return persistMemoryMutation(npcId, memory => {
+    if (memorySet !== null && (typeof memorySet !== 'string' || !memorySet.trim())) return false;
+    const outcome = persistMemoryMutation(npcId, memory => {
       memory.met = true;
       memory.conversationCount = (Number.isInteger(memory.conversationCount) && memory.conversationCount >= 0
         ? memory.conversationCount
         : 0) + 1;
       if (consumedFlag) memory.flags[consumedFlag] = true;
-    }).saved;
+      if (memorySet) memory.flags[memorySet] = true;
+    });
+    if (!outcome.saved) return false;
+    if (memorySet) Events.emit('npc:flag_set', { npcId, flag: memorySet });
+    return true;
   },
 
   commitFirstMeeting(npcId, topicIds = []) {
