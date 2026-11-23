@@ -5,6 +5,8 @@ import { createEmptySocialGraph, normalizeSocialGraph, upsertSocialTie, appendSo
 import { createEmptyKnowledgeLedger, normalizeKnowledgeLedger, recordNpcKnowledge, updateNpcKnowledgeState, getNpcKnowledge, getNpcKnowledgeContext } from '../systems/npc-knowledge.js';
 import { createEmptyDailyLife, normalizeDailyLife, upsertNpcSchedule, getNpcScheduleAt, recordNpcOccurrence, getNpcOccurrences } from '../systems/npc-daily-life.js';
 import { createEmptyMiniGameProgress, normalizeMiniGameProgress, recordMiniGameResult } from '../systems/minigame-progress.js';
+import { DEFAULT_SETTINGS, normalizeSettings } from '../systems/settings.js';
+import { assessCampaignDay, assessFinalEvidence } from '../systems/campaign-progression.js';
 
 const INITIAL_CAMPAIGN = Object.freeze({
   caseId: 'case_001',
@@ -12,6 +14,55 @@ const INITIAL_CAMPAIGN = Object.freeze({
   completed: false,
   ending: null
 });
+
+function isRecord(value) {
+  return !!value && typeof value === 'object' && !Array.isArray(value);
+}
+
+function normalizeCurrentCase(value) {
+  const saved = isRecord(value) ? value : {};
+  const records = key => Array.isArray(saved[key])
+    ? saved[key].filter(item => isRecord(item) && typeof item.id === 'string' && item.id.trim())
+    : [];
+  return {
+    ...saved,
+    id: 'case_001',
+    clues: records('clues'),
+    suspects: records('suspects'),
+    timeline: records('timeline'),
+    hypotheses: records('hypotheses')
+  };
+}
+
+function normalizeNpcMemory(value) {
+  if (!isRecord(value)) return {};
+  const normalized = {};
+  for (const [npcId, record] of Object.entries(value)) {
+    if (!npcId.trim() || !isRecord(record)) continue;
+    normalized[npcId] = {
+      ...record,
+      met: Boolean(record.met),
+      flags: isRecord(record.flags) ? record.flags : {},
+      conversationCount: Number.isInteger(record.conversationCount) && record.conversationCount >= 0 ? record.conversationCount : 0,
+      questionCount: Number.isInteger(record.questionCount) && record.questionCount >= 0 ? record.questionCount : 0,
+      unlockedTopics: Array.isArray(record.unlockedTopics) ? record.unlockedTopics.filter(item => typeof item === 'string') : [],
+      askedQuestions: Array.isArray(record.askedQuestions) ? record.askedQuestions.filter(item => typeof item === 'string') : [],
+      interviewHistory: Array.isArray(record.interviewHistory) ? record.interviewHistory.filter(isRecord) : []
+    };
+  }
+  return normalized;
+}
+
+function normalizeRelationships(value) {
+  if (!isRecord(value)) return {};
+  const normalized = {};
+  for (const [npcId, relationship] of Object.entries(value)) {
+    if (!npcId.trim() || !isRecord(relationship)) continue;
+    const trust = Number.isFinite(relationship.trust) ? Math.max(0, Math.min(100, relationship.trust)) : 50;
+    normalized[npcId] = { ...relationship, trust, met: Boolean(relationship.met) };
+  }
+  return normalized;
+}
 
 function normalizeCampaignState(savedCampaign, flags = {}) {
   const inferredDay = [5, 4, 3, 2].find(day => flags?.['day_' + day]) || 1;
@@ -46,37 +97,53 @@ export var GameState = {
   npcDailyLife: createEmptyDailyLife(),
   miniGameProgress: createEmptyMiniGameProgress(),
   notebook: [],
+  saveStatus: 'missing',
 
-  settings: {
-    musicVolume: 0.5,
-    sfxVolume: 0.7,
-    textSpeed: 'normal',
-  },
+  settings: { ...DEFAULT_SETTINGS },
 
   init() {
-    var saved = Storage.load('gameState');
+    const loadResult = Storage.inspect('gameState');
+    this.saveStatus = loadResult.status;
+    const saved = loadResult.status === 'valid' ? loadResult.data : null;
     if (saved) {
-      this.player = saved.player || this.player;
-      this.currentCase = saved.currentCase || this.currentCase;
-      this.flags = saved.flags || {};
+      this.player = isRecord(saved.player)
+        ? { name: typeof saved.player.name === 'string' ? saved.player.name : 'Джон Риверс',
+            reputation: Number.isFinite(saved.player.reputation) ? saved.player.reputation : 50 }
+        : { name: 'Джон Риверс', reputation: 50 };
+      this.currentCase = normalizeCurrentCase(saved.currentCase);
+      this.flags = isRecord(saved.flags) ? saved.flags : {};
       this.campaign = normalizeCampaignState(saved.campaign, this.flags);
       this._syncCampaignFlags();
-      this.relationships = saved.relationships || {};
-      this.npcMemory = saved.npcMemory || {};
+      this.relationships = normalizeRelationships(saved.relationships);
+      this.npcMemory = normalizeNpcMemory(saved.npcMemory);
       this.socialGraph = normalizeSocialGraph(saved.socialGraph);
       this.knowledgeLedger = normalizeKnowledgeLedger(saved.knowledgeLedger);
       this.npcDailyLife = normalizeDailyLife(saved.npcDailyLife);
       this.miniGameProgress = normalizeMiniGameProgress(saved.miniGameProgress);
-      this.notebook = saved.notebook || [];
-      this.settings = saved.settings || this.settings;
+      this.notebook = Array.isArray(saved.notebook) ? saved.notebook : [];
+      this.settings = normalizeSettings(saved.settings);
       console.log('[State] Состояние загружено');
       console.log('[State] - npcMemory: ' + Object.keys(this.npcMemory).length + ' NPC');
       console.log('[State] - clues: ' + this.currentCase.clues.length);
       console.log('[State] - notebook: ' + this.notebook.length);
     } else {
+      this.player = { name: 'Джон Риверс', reputation: 50 };
+      this.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
       this.campaign = { ...INITIAL_CAMPAIGN };
-      console.log('[State] Новое состояние (без сохранения)');
+      this.flags = {};
+      this.relationships = {};
+      this.npcMemory = {};
+      this.socialGraph = createEmptySocialGraph();
+      this.knowledgeLedger = createEmptyKnowledgeLedger();
+      this.npcDailyLife = createEmptyDailyLife();
+      this.miniGameProgress = createEmptyMiniGameProgress();
+      this.notebook = [];
+      this.settings = { ...DEFAULT_SETTINGS };
+      console.log(this.saveStatus === 'missing'
+        ? '[State] Новое состояние (без сохранения)'
+        : '[State] Сохранение недоступно; данные не перезаписаны: ' + this.saveStatus);
     }
+    return this.saveStatus;
   },
 
   update(key, value) {
@@ -108,6 +175,7 @@ export var GameState = {
   setCampaignDay(day) {
     if (!Number.isInteger(day) || day < 1 || day > 5) return false;
     if (this.campaign.completed || day < this.campaign.day || day > this.campaign.day + 1) return false;
+    if (day > this.campaign.day && !assessCampaignDay(this).canAdvance) return false;
     const previousDay = this.campaign.day;
     this.campaign.day = day;
     this._syncCampaignFlags();
@@ -124,9 +192,31 @@ export var GameState = {
   completeCampaign(ending) {
     if (this.campaign.completed || this.campaign.day !== 5) return false;
     if (!['open_case', 'price_of_silence'].includes(ending)) return false;
-    this.campaign.completed = true;
-    this.campaign.ending = ending;
-    this.save();
+    const evidence = assessFinalEvidence(this);
+    if (!evidence.ready) return false;
+    if (ending === 'open_case' && !evidence.publicReady) return false;
+    const previousCampaign = this.campaign;
+    const previousNpcMemory = this.npcMemory;
+    this.campaign = { ...this.campaign, completed: true, ending };
+
+    // The suspect remembers the actual outcome when the detective returns to the mansion.
+    this.npcMemory = { ...this.npcMemory };
+    const sebastianMemory = this.npcMemory.npc_sebastian_blackwood = {
+      ...(this.npcMemory.npc_sebastian_blackwood || {
+        met: false, flags: {}, conversationCount: 0, questionCount: 0,
+        unlockedTopics: [], askedQuestions: [], criticalChoiceMade: false, interviewHistory: []
+      }),
+      flags: { ...(this.npcMemory.npc_sebastian_blackwood?.flags || {}) }
+    };
+    sebastianMemory.flags.case_001_open_case = ending === 'open_case';
+    sebastianMemory.flags.case_001_price_of_silence = ending === 'price_of_silence';
+
+    // A finale is committed only if its complete state reaches persistent storage.
+    if (!this.save()) {
+      this.campaign = previousCampaign;
+      this.npcMemory = previousNpcMemory;
+      return false;
+    }
     Events.emit('campaign:completed', { caseId: this.campaign.caseId, ending });
     return true;
   },
@@ -318,20 +408,9 @@ export var GameState = {
   },
 
   save() {
-    Storage.save('gameState', {
-      player: this.player,
-      currentCase: this.currentCase,
-      campaign: this.campaign,
-      flags: this.flags,
-      relationships: this.relationships,
-      npcMemory: this.npcMemory,
-      socialGraph: this.socialGraph,
-      knowledgeLedger: this.knowledgeLedger,
-      npcDailyLife: this.npcDailyLife,
-      miniGameProgress: this.miniGameProgress,
-      notebook: this.notebook,
-      settings: this.settings,
-    });
+    const saved = Storage.save('gameState', this.export());
+    this.saveStatus = saved ? 'valid' : 'unavailable';
+    return saved;
   },
 
   /**
@@ -359,7 +438,7 @@ export var GameState = {
     this.npcDailyLife = createEmptyDailyLife();
     this.miniGameProgress = createEmptyMiniGameProgress();
     this.notebook = [];
-    this.settings = { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' };
+    // Пользовательские настройки сохраняются даже при начале нового расследования.
     
     // Очищаем localStorage
     Storage.clearAll();
@@ -379,27 +458,25 @@ export var GameState = {
   },
 
   hasSave() {
-    return Storage.exists('gameState');
+    const result = Storage.inspect('gameState');
+    this.saveStatus = result.status;
+    return result.status === 'valid';
   },
 
   export() {
     return {
-      player: Object.assign({}, this.player),
-      currentCase: {
-        id: this.currentCase.id,
-        clues: this.currentCase.clues.slice(),
-        suspects: this.currentCase.suspects.slice(),
-        timeline: this.currentCase.timeline.slice()
-      },
-      flags: Object.assign({}, this.flags),
-      relationships: Object.assign({}, this.relationships),
+      player: JSON.parse(JSON.stringify(this.player)),
+      campaign: JSON.parse(JSON.stringify(this.campaign)),
+      currentCase: JSON.parse(JSON.stringify(this.currentCase)),
+      flags: JSON.parse(JSON.stringify(this.flags)),
+      relationships: JSON.parse(JSON.stringify(this.relationships)),
       npcMemory: JSON.parse(JSON.stringify(this.npcMemory)),
       socialGraph: JSON.parse(JSON.stringify(this.socialGraph)),
       knowledgeLedger: JSON.parse(JSON.stringify(this.knowledgeLedger)),
       npcDailyLife: JSON.parse(JSON.stringify(this.npcDailyLife)),
       miniGameProgress: JSON.parse(JSON.stringify(this.miniGameProgress)),
-      notebook: this.notebook.slice(),
-      settings: Object.assign({}, this.settings)
+      notebook: JSON.parse(JSON.stringify(this.notebook)),
+      settings: JSON.parse(JSON.stringify(this.settings))
     };
   }
 };

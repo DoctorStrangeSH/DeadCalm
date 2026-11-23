@@ -36,8 +36,18 @@ export function buildCase001MiniGameEvidence(type, result) {
   if (!template || !result || typeof result !== 'object') return null;
 
   if (type === 'mechanical-repair' && result.outcome !== 'success') return null;
-  if (type === 'radio-tuning' && !(Number(result.quality) >= 38)) return null;
-  if (type === 'film-restoration' && !(Number(result.quality) >= 70)) return null;
+  if (type === 'radio-tuning') {
+    const quality = Number(result.quality);
+    const validClear = result.outcome === 'clear' && quality >= 92;
+    const validFragment = result.outcome === 'fragmented' && quality >= 68;
+    if (!validClear && !validFragment) return null;
+  }
+  if (type === 'film-restoration') {
+    const quality = Number(result.quality);
+    const validSuccess = result.outcome === 'success' && quality >= 95;
+    const validPartial = result.outcome === 'partial' && quality >= 70 && quality < 95;
+    if (!validSuccess && !validPartial) return null;
+  }
 
   const quality = type === 'mechanical-repair' ? 100 : Math.max(0, Math.min(100, Number(result.quality) || 0));
   let description = template.description;

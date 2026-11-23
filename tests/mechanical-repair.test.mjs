@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { alignComponent, createRepairSession, getRepairSummary, inspectMechanism, releasePressure, testMechanism } from '../src/js/systems/mechanical-repair.js';
+import { alignComponent, createRepairSession, getRepairSummary, getRepairOutcomeLabel, inspectMechanism, releasePressure, testMechanism } from '../src/js/systems/mechanical-repair.js';
 
 test('a careful repair completes successfully in the intended order', () => {
   const session = createRepairSession({ id: 'watch_01' });
@@ -59,4 +59,11 @@ test('summary exposes a safe recovery state without leaking mutable internals', 
   assert.equal(summary.canRecover, true);
   assert.equal(summary.outcome, null);
   assert.equal(getRepairSummary(null), null);
+});
+
+
+test('completion labels are resolved from the actual repair outcome', () => {
+  assert.equal(getRepairOutcomeLabel('success'), 'БЕЗУПРЕЧНАЯ РАБОТА');
+  assert.equal(getRepairOutcomeLabel('partial'), 'ЧАСЫ ЗАПУЩЕНЫ, НО МЕХАНИЗМ ПОСТРАДАЛ');
+  assert.equal(getRepairOutcomeLabel(null), 'РЕЗУЛЬТАТ НЕ ЗАФИКСИРОВАН');
 });

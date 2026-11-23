@@ -79,3 +79,9 @@ export function getRepairSummary(session) {
     canRecover: session.phase !== 'completed'
   };
 }
+
+export function getRepairOutcomeLabel(outcome) {
+  if (outcome === 'success') return 'БЕЗУПРЕЧНАЯ РАБОТА';
+  if (outcome === 'partial') return 'ЧАСЫ ЗАПУЩЕНЫ, НО МЕХАНИЗМ ПОСТРАДАЛ';
+  return 'РЕЗУЛЬТАТ НЕ ЗАФИКСИРОВАН';
+}

@@ -1,4 +1,6 @@
 import { DialogueEngine } from '../systems/dialogue.js';
+import { GameState } from '../core/state.js';
+import { getTextDelay } from '../systems/settings.js';
 import { Events } from '../core/events.js';
 import { escapeHtml } from '../utils/helpers.js';
 import { resolveTrustFeedback } from '../systems/dialogue-reactions.js';
@@ -160,7 +162,7 @@ export class DialogBox {
           break;
         }
         textEl.textContent += fullText[i];
-        await new Promise(resolve => setTimeout(resolve, 25));
+        await new Promise(resolve => setTimeout(resolve, getTextDelay(GameState.settings?.textSpeed)));
       }
     }
     if (token !== this.renderToken || !this.container) return;
@@ -234,6 +236,8 @@ export class DialogBox {
           btn.className = 'dialog-btn critical-btn';
           btn.innerHTML = '<span class="tone-icon">' + self._getToneIcon(choice.tone) + '</span> ' + escapeHtml(choice.text);
           btn.addEventListener('click', async function() {
+            // Lock every alternative immediately; only the first click may resolve this decision.
+            choicesEl.querySelectorAll('button').forEach(function(button) { button.disabled = true; });
             var nextNode = DialogueEngine.makeCriticalChoice(choice.id);
             if (nextNode) await self.render(nextNode);
             else self.close();
@@ -356,7 +360,12 @@ export class DialogBox {
       var simpleBtn = document.createElement('button');
       simpleBtn.className = 'dialog-btn primary-btn';
       simpleBtn.textContent = 'ЗАКОНЧИТЬ';
-      simpleBtn.addEventListener('click', function() { self.close(); });
+      simpleBtn.addEventListener('click', function() {
+        if (node.returnReactionSeenFlag) {
+          DialogueEngine.acknowledgeReturnReaction(node.returnReactionSeenFlag);
+        }
+        self.close();
+      });
       choicesEl.appendChild(simpleBtn);
     }
   }

@@ -32,15 +32,26 @@ test('day three requires a port ledger source, not only a conversation', () => {
   assert.equal(assessCampaignDay(game).canAdvance, false);
   game.hasClue = id => id === 'port_cargo_ledger';
   assert.equal(assessCampaignDay(game).canAdvance, true);
+  game.hasClue = id => id === 'port_cargo_ledger_archive';
+  assert.equal(assessCampaignDay(game).canAdvance, false, 'archive verification alone does not replace Sebastian’s copy');
 });
 
 test('day four accepts either restored film or radio fragment as an independent source', () => {
-  const game = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_radio_fragment']);
+  const game = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger_archive', 'port_radio_fragment']);
   assert.equal(assessCampaignDay(game).canAdvance, true);
-  const withoutIndependentSource = state(4, ['anna_markus_items', 'belladonna_invoice']);
+  const withoutIndependentSource = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger_archive']);
   assert.equal(assessCampaignDay(withoutIndependentSource).canAdvance, false);
-  withoutIndependentSource.hasClue = id => ['anna_markus_items', 'belladonna_invoice', 'restored_film_frame'].includes(id);
+  withoutIndependentSource.hasClue = id => ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger_archive', 'restored_film_frame'].includes(id);
   assert.equal(assessCampaignDay(withoutIndependentSource).canAdvance, true);
+});
+
+test('day four cannot advance on the suspect copy alone; independent archive comparison is mandatory', () => {
+  const suspectCopyOnly = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger', 'port_radio_fragment']);
+  assert.equal(assessCampaignDay(suspectCopyOnly).canAdvance, false);
+  assert.ok(assessCampaignDay(suspectCopyOnly).missing.includes('Независимый архивный экземпляр грузовой книги'));
+
+  const verified = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger', 'port_cargo_ledger_archive', 'port_radio_fragment']);
+  assert.equal(assessCampaignDay(verified).canAdvance, true);
 });
 
 test('day five is finale-ready and cannot advance to a nonexistent sixth day', () => {
@@ -59,6 +70,7 @@ test('final accusation requires independent medical, meeting, poison, archive an
     ['belladonna_invoice', {}],
     ['matthews_letter', {}],
     ['port_cargo_ledger', {}],
+    ['port_cargo_ledger_archive', {}],
     ['port_radio_fragment', {}],
     ['restored_film_frame', { quality: 70 }]
   ]);
@@ -73,8 +85,28 @@ test('final accusation requires independent medical, meeting, poison, archive an
   result = assessFinalEvidence(game);
   assert.equal(result.ready, true);
   assert.equal(result.publicReady, true);
+  found.delete('port_cargo_ledger_archive');
+  result = assessFinalEvidence(game);
+  assert.equal(result.ready, false, 'the suspect copy cannot replace independent archive verification');
+  assert.ok(result.missing.includes('Независимый архивный экземпляр портовой книги'));
+  found.set('port_cargo_ledger_archive', {});
   found.delete('belladonna_invoice');
   result = assessFinalEvidence(game);
   assert.equal(result.ready, false);
   assert.ok(result.missing.includes('Счёт за белладонну'));
+});
+
+
+test('Markus confession is not a substitute for independent final evidence', () => {
+  const found = new Set(['markus_statement']);
+  const game = { hasClue: id => found.has(id), getClue: () => null };
+  const result = assessFinalEvidence(game);
+  assert.equal(result.ready, false);
+  assert.equal(result.publicReady, false);
+  assert.equal(result.missing.length, 7,
+    'the confession cannot replace six mandatory records and an independent film/radio source');
+  found.add('restored_film_frame');
+  const stillIncomplete = assessFinalEvidence(game);
+  assert.equal(stillIncomplete.ready, false);
+  assert.ok(stillIncomplete.missing.some(item => item.includes('Заключение Лидии')));
 });

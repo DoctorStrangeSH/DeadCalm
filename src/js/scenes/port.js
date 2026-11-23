@@ -2,6 +2,7 @@ import { renderStoryLocation } from '../components/story-location.js';
 import { GameState } from '../core/state.js';
 import { Events } from '../core/events.js';
 import { assessFinalEvidence } from '../systems/campaign-progression.js';
+import { getCampaignDaySummary } from '../systems/campaign-day-summary.js';
 
 const markusStatement = {
   id: 'markus_statement',
@@ -16,15 +17,28 @@ const markusStatement = {
 
 function renderEnding(container, ending) {
   const openCase = ending === 'open_case';
+  const summary = getCampaignDaySummary(5, GameState, ending);
+  const summaryMarkup = summary ? `
+    <div class="card p-4 mt-4">
+      <p class="office-kicker">ЧТО ОСТАЛОСЬ ПОСЛЕ РАССЛЕДОВАНИЯ</p>
+      <h4 class="text-gold text-sm tracking-widest mt-2">${summary.title}</h4>
+      <p class="text-gray-300 text-xs tracking-widest mt-3">УСТАНОВЛЕНО</p>
+      <ul class="campaign-missing">${summary.established.map(item => '<li>— ' + item + '</li>').join('')}</ul>
+      <p class="text-gray-300 text-xs tracking-widest mt-3">ОПРОВЕРГНУТО</p>
+      <ul class="campaign-missing">${summary.refuted.map(item => '<li>— ' + item + '</li>').join('')}</ul>
+      <p class="text-gray-300 text-xs tracking-widest mt-3">ПОКА НЕИЗВЕСТНО</p>
+      <ul class="campaign-missing">${summary.unknown.map(item => '<li>— ' + item + '</li>').join('')}</ul>
+    </div>` : '';
   container.querySelector('#story-location-result').innerHTML = `
     <section class="card p-5" role="status" aria-live="polite">
       <p class="office-kicker">ДЕЛО № 001 · ФИНАЛ</p>
       <h3 class="text-gold text-lg tracking-widest mt-2">${openCase ? 'ОТКРЫТОЕ ДЕЛО' : 'ЦЕНА МОЛЧАНИЯ'}</h3>
       <p class="text-gray-300 text-sm leading-relaxed mt-3">${openCase
-        ? 'Вы передаёте проверенную цепочку материалов. Себастьян отрицает убийство, но карточка встречи, аптечная книга, экспертиза и восстановленная плёнка дают основания для официального обвинения. Признание Маркуса также становится частью дела: он отвечает за двадцать лет молчания.'
-        : 'Себастьян признаёт, что встретился с Гаррисоном и дал ему яд, но требует оставить часть материалов дела Каллиопы закрытой. Вы принимаете компромисс ради защиты части свидетелей. Маркус избегает публичного разоблачения, а доверие тех, кто вам поверил, зависит от того, сдержите ли вы обещание.'
+        ? 'Вы передаёте материалы для официальной проверки. Документы связывают офис Блэквуда с покупкой белладонны, подтверждают встречу с Гаррисоном и помещают Себастьяна рядом с Каллиопой в ночь её гибели. Это серьёзная совокупность оснований для расследования, но не судебный приговор. Маркус признаётся только в подмене записи и сокрытии плёнки; убийство Гаррисона он на себя не берёт.'
+        : 'Себастьян признаёт встречу с Гаррисоном и подтверждает, что его офис оплатил белладонну, но отказывается назвать получателя препарата и объяснить, как тот оказался у судьи. Он требует оставить часть материалов дела Каллиопы закрытой. Вы принимаете компромисс ради защиты части свидетелей, понимая, что не устанавливаете всю цепочку. Маркус избегает публичного разоблачения, а доверие тех, кто вам поверил, зависит от того, сдержите ли вы обещание.'
       }</p>
       <p class="text-gray-500 text-xs mt-4">Сохранённый исход: ${openCase ? 'open_case' : 'price_of_silence'}</p>
+      ${summaryMarkup}
       <button id="btn-finale-menu" class="btn-noir w-full py-3 mt-4">В КАБИНЕТ</button>
     </section>
   `;
@@ -50,7 +64,7 @@ function renderEndingChoices(container) {
   result.innerHTML = `
     <div class="card p-4">
       <p class="text-gold text-sm">ДОКАЗАТЕЛЬСТВА СВЕРЕНЫ</p>
-      <p class="text-gray-400 text-sm mt-2">Себастьян выходит из тени склада. Он подтверждает, что назначал встречу с Гаррисоном и что его офис купил белладонну, но утверждает, что это ничего не доказывает. Затем предлагает сделку. Теперь его слова можно сверить с независимыми документами.</p>
+      <p class="text-gray-400 text-sm mt-2">Себастьян выходит из тени склада и выслушивает предъявленные материалы. Он не признаёт ни покупку препарата лично, ни передачу яда, ни участие в смерти Гаррисона. Карточка встречи и аптечная книга — независимые записи, а не его признание. «Вы можете собрать документы в одну историю, детектив. Но пока вы не знаете, кто получил препарат и кто передал его судье». Затем он предлагает сделку.</p>
             <div class="grid gap-2 mt-4">
         ${publishReady ? "" : '<p class="text-gray-500 text-xs">Для публичного обвинения нужен чётко восстановленный кадр и проверенная связь Блэквуда с ядом. Компромиссный исход остаётся доступен.</p>'}
         <button id="btn-ending-open" class="btn-noir py-3" ${publishReady ? "" : "disabled"}>ПЕРЕДАТЬ ВСЕ МАТЕРИАЛЫ</button>
@@ -78,23 +92,33 @@ export function render(container) {
     }
   });
 
-  container.querySelector('#btn-story-action')?.addEventListener('click', () => {\n    Events.emit('navigate', { scene: 'radio-tuning' });\n  });\n\n  const actions = container.querySelector('.story-location-actions');
-  if (!GameState.hasClue('port_cargo_ledger')) {
+  // A completed campaign must restore its saved ending instead of exposing dead choice buttons.
+  if (GameState.campaign.completed && GameState.campaign.ending) {
+    renderEnding(container, GameState.campaign.ending);
+    return;
+  }
+
+  container.querySelector('#btn-story-action')?.addEventListener('click', () => {
+    Events.emit('navigate', { scene: 'radio-tuning' });
+  });
+
+  const actions = container.querySelector('.story-location-actions');
+  if (!GameState.hasClue('port_cargo_ledger_archive')) {
     const ledger = document.createElement('button');
     ledger.id = 'btn-port-ledger';
     ledger.className = 'card text-left w-full';
     ledger.innerHTML = '<p class="card-title">ПРОВЕРИТЬ ГРУЗОВУЮ КНИГУ</p><p class="card-subtitle">Сверить портовые записи с архивом дела Каллиопы.</p>';
     ledger.addEventListener('click', () => {
-      if (GameState.hasClue('port_cargo_ledger')) return;
+      if (GameState.hasClue('port_cargo_ledger_archive')) return;
       GameState.addClue({
-        id: 'port_cargo_ledger',
-        name: 'Книга портовых грузов 1967 года',
+        id: 'port_cargo_ledger_archive',
+        name: 'Архивный экземпляр грузовой книги 1967 года',
         category: 'document',
-        description: 'В копии грузовой книги есть исправления и записи о грузах компании Блэквуда в ночь гибели Каллиопы. Документ связывает его бизнес с местом и временем; страницы требуют независимой сверки.',
+        description: 'Архивный экземпляр грузовой книги содержит записи о грузах компании Блэквуда в ночь гибели Каллиопы. Сверка с копией, которую Себастьян передал Джону, подтверждает совпадение части записей и выявляет исправления в обеих версиях. Это независимо подтверждает связь компании с портом и временем, но не устанавливает, кто физически убил Каллиопу.',
         location: 'port',
         day: 4,
-        source: 'Архив порта',
-        connections_to: ['old_case_details', 'restored_film_frame']
+        source: 'Архив портового управления',
+        connections_to: ['port_cargo_ledger', 'old_case_details', 'belladonna_invoice']
       });
       ledger.disabled = true;
       ledger.querySelector('.card-title').textContent = 'ГРУЗОВАЯ КНИГА ДОБАВЛЕНА';
@@ -135,7 +159,7 @@ export function render(container) {
       container.querySelector('#story-location-result').innerHTML = `
         <div class="card p-4">
           <p class="text-gold text-sm">МАРКУС ХОЛТ · ПРИЧАЛ № 4</p>
-          <p class="text-gray-300 text-sm leading-relaxed mt-2">Маркус выходит из тени складского навеса. «Я изменил время в протоколе. Я спрятал плёнку. Я говорил себе, что спасаю невиновного, но на самом деле спасал себя. Себастьян был рядом с Каллиопой в ночь её смерти — это я видел на плёнке. А кто убил Гаррисона, я не видел. Я могу рассказать о его страхе и о том, что он собирался раскрыть, но мои догадки не заменят ваших доказательств»..</p>
+          <p class="text-gray-300 text-sm leading-relaxed mt-2">Маркус выходит из тени складского навеса. «Я изменил время в протоколе. Я спрятал плёнку. Я говорил себе, что спасаю невиновного, но на самом деле спасал себя. Себастьян был рядом с Каллиопой в ночь её смерти — это я видел на плёнке. А кто убил Гаррисона, я не видел. Я могу рассказать о его страхе и о том, что он собирался раскрыть, но мои догадки не заменят ваших доказательств».</p>
           <p class="text-gray-500 text-xs mt-3">Его признание касается его собственных действий. Версию об убийстве необходимо сверить с независимыми материалами.</p>
         </div>
       `;
