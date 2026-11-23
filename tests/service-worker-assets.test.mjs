@@ -17,6 +17,7 @@ test('Service Worker precache contains only existing same-repository assets', as
   assert.ok(assets.includes('/index.html'));
   assert.ok(assets.includes('/manifest.json'));
   assert.ok(assets.includes('/src/js/core/app.js'));
+  assert.ok(assets.includes('/src/js/systems/npc-presence.js'));
 
   for (const asset of assets) {
     assert.ok(asset.startsWith('/'), `asset path must be origin-root relative: ${asset}`);
@@ -71,7 +72,7 @@ test('story-gated mini-game modules are included in the offline precache', async
   const assets = JSON.parse(match[1]);
   assert.ok(assets.includes('/src/js/components/minigame-lock-screen.js'));
   assert.ok(assets.includes('/src/js/systems/minigame-access.js'));
-  assert.match(source, /dead-calm-visual-v109/);
+  assert.match(source, /dead-calm-visual-v110/);
 });
 
 
