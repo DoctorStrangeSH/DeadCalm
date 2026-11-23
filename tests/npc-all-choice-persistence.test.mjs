@@ -5,6 +5,7 @@ import { GameState } from '../src/js/core/state.js';
 import { Storage } from '../src/js/core/storage.js';
 import { DialogueEngine } from '../src/js/systems/dialogue.js';
 import { NPCMemory } from '../src/js/systems/npc-memory.js';
+import { Events } from '../src/js/core/events.js';
 
 const readJson = path => JSON.parse(readFileSync(new URL(path, import.meta.url), 'utf8'));
 const dialogues = readJson('../src/data/dialogues.json');
@@ -36,6 +37,11 @@ test('every authored critical NPC choice survives export/import and remains one-
   ];
   const previousState = Object.fromEntries(stateKeys.map(key => [key, GameState[key]]));
   const previousStorageSave = Storage.save;
+  let choiceSaveCount = 0;
+  const emittedFlags = [];
+  const emittedTrust = [];
+  const offFlag = Events.on('npc:flag_set', event => emittedFlags.push(event));
+  const offTrust = Events.on('relationship:changed', event => emittedTrust.push(event));
   const dialogueKeys = [
     '_dialogues', '_characters', '_clues', '_contradictionRules', '_initialized',
     '_currentNPC', '_currentNode', '_askedQuestions', '_unlockedTopics'
@@ -43,7 +49,7 @@ test('every authored critical NPC choice survives export/import and remains one-
   const previousDialogue = Object.fromEntries(dialogueKeys.map(key => [key, DialogueEngine[key]]));
 
   try {
-    Storage.save = () => true;
+    Storage.save = () => { choiceSaveCount++; return true; };
     GameState.saveBlocked = false;
     DialogueEngine._dialogues = dialogues;
     DialogueEngine._characters = characters;
@@ -71,13 +77,26 @@ test('every authored critical NPC choice survives export/import and remains one-
       const prompt = DialogueEngine.askQuestion(scenario.questionId);
       assert.equal(prompt?.type, 'critical_choice', scenario.npcId + '/' + scenario.choice.id);
 
+      choiceSaveCount = 0;
+      const flagEventStart = emittedFlags.length;
+      const trustEventStart = emittedTrust.length;
       const result = DialogueEngine.makeCriticalChoice(scenario.choice.id);
+      assert.equal(choiceSaveCount, 1, scenario.npcId + '/' + scenario.choice.id + ' must persist the complete decision once');
       assert.equal(result?.type, 'critical_result', scenario.npcId + '/' + scenario.choice.id);
 
       const expectedTrust = Math.max(0, Math.min(100,
         characters[scenario.npcId].initial_trust + (scenario.choice.effects?.trust || 0)
       ));
       assert.equal(NPCMemory.getTrust(scenario.npcId), expectedTrust);
+      assert.equal(emittedTrust.length - trustEventStart, 1,
+        scenario.npcId + '/' + scenario.choice.id + ' must emit one trust-change event');
+      assert.equal(emittedTrust.at(-1).delta, expectedTrust - characters[scenario.npcId].initial_trust);
+      const choiceFlags = emittedFlags.slice(flagEventStart).filter(event => event.npcId === scenario.npcId).map(event => event.flag);
+      assert.equal(new Set(choiceFlags).size, choiceFlags.length,
+        scenario.npcId + '/' + scenario.choice.id + ' must not emit duplicate flag events');
+      assert.ok(choiceFlags.includes('critical_' + scenario.nodeId));
+      if (scenario.choice.memory_set) assert.ok(choiceFlags.includes(scenario.choice.memory_set));
+      if (scenario.node.memory_set) assert.ok(choiceFlags.includes(scenario.node.memory_set));
       if (scenario.choice.memory_set) {
         assert.equal(NPCMemory.hasFlag(scenario.npcId, scenario.choice.memory_set), true);
       }
@@ -110,6 +129,8 @@ test('every authored critical NPC choice survives export/import and remains one-
         scenario.npcId + '/' + scenario.choice.id + ' must not re-offer the resolved choice after import');
     }
   } finally {
+    offFlag();
+    offTrust();
     Storage.save = previousStorageSave;
     Object.assign(GameState, previousState);
     Object.assign(DialogueEngine, previousDialogue);
