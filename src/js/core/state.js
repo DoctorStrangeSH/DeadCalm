@@ -16,7 +16,7 @@ const INITIAL_CAMPAIGN = Object.freeze({
 });
 
 const DEFAULT_SETTINGS = Object.freeze({ musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' });
-const TEXT_SPEEDS = new Set(['slow', 'normal', 'fast', 'instant']);
+const TEXT_SPEEDS = new Set(['slow', 'normal', 'fast']);
 
 function normalizeSettings(settings) {
   const source = settings && typeof settings === 'object' ? settings : {};
@@ -135,6 +135,7 @@ export var GameState = {
   miniGameProgress: createEmptyMiniGameProgress(),
   notebook: [],
   saveBlocked: false,
+  saveStatus: 'missing',
 
   settings: {
     musicVolume: 0.5,
@@ -143,9 +144,13 @@ export var GameState = {
   },
 
   init() {
-    var rawSaved = Storage.load('gameState');
+    const inspection = typeof Storage.inspect === 'function' ? Storage.inspect('gameState') : null;
+    var rawSaved = inspection
+      ? (inspection.status === 'valid' ? inspection.data : null)
+      : Storage.load('gameState');
+    this.saveStatus = inspection?.status || (rawSaved ? 'valid' : 'missing');
     this.saveBlocked = false;
-    if (!rawSaved && Storage.hasAnyRecord('gameState')) {
+    if (!rawSaved && (inspection ? inspection.status !== 'missing' : Storage.hasAnyRecord('gameState'))) {
       this.saveBlocked = true;
       Events.emit('save:invalid', { reason: 'no-valid-recovery-copy' });
       console.error('[State] Все копии сохранения повреждены. Исходные данные оставлены нетронутыми; запись заблокирована.');
@@ -179,6 +184,7 @@ export var GameState = {
       this.miniGameProgress = normalizeMiniGameProgress(saved.miniGameProgress);
       this.notebook = saved.notebook || [];
       this.settings = normalizeSettings(saved.settings);
+      this.saveStatus = 'valid';
       if (migration.migrated) {
         console.log('[State] Сохранение обновлено со схемы ' + migration.fromVersion + ' до ' + migration.toVersion);
         this.save();
@@ -190,6 +196,7 @@ export var GameState = {
     } else {
       this.campaign = { ...INITIAL_CAMPAIGN };
       this.settings = normalizeSettings(null);
+      this.saveStatus = 'missing';
       console.log('[State] Новое состояние (без сохранения)');
     }
     return true;
@@ -530,7 +537,7 @@ export var GameState = {
       console.warn('[State] Сохранение заблокировано: исходные данные требуют более новой версии игры или проверки.');
       return false;
     }
-    return Storage.save('gameState', {
+    const saved = Storage.save('gameState', {
       player: this.player,
       currentCase: this.currentCase,
       campaign: this.campaign,
@@ -545,12 +552,15 @@ export var GameState = {
       settings: this.settings,
       schemaVersion: CURRENT_SAVE_VERSION
     });
+    this.saveStatus = saved ? 'valid' : 'unavailable';
+    return saved;
   },
 
   /**
    * ПОЛНЫЙ СБРОС
    */
   reset() {
+    const preservedSettings = normalizeSettings(this.settings);
     console.log('═══════════════════════════════');
     console.log('[State] ⚠️ ПОЛНЫЙ СБРОС');
 
@@ -584,7 +594,8 @@ export var GameState = {
     this.npcDailyLife = createEmptyDailyLife();
     this.miniGameProgress = createEmptyMiniGameProgress();
     this.notebook = [];
-    this.settings = normalizeSettings(null);
+    this.settings = preservedSettings;
+    this.saveStatus = 'missing';
 
     if (!this.save()) {
       Object.assign(this, previousState);
@@ -603,6 +614,11 @@ export var GameState = {
   },
 
   hasSave() {
+    const inspection = typeof Storage.inspect === 'function' ? Storage.inspect('gameState') : null;
+    if (inspection) {
+      this.saveStatus = inspection.status;
+      return inspection.status === 'valid';
+    }
     return Storage.hasAnyRecord('gameState');
   },
 
