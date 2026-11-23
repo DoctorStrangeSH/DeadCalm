@@ -371,8 +371,7 @@ export var DialogueEngine = {
     const choice = node.choices.find(item => item.id === choiceId);
     if (!choice) return null;
 
-    {
-          console.log('[Dialogue] Критический выбор: ' + choiceId);
+    console.log('[Dialogue] Критический выбор: ' + choiceId);
           // Commit the decision, trust change and authored memory consequences together.
           const nextNode = npcData[choice.next_dialogue];
           const decision = NPCMemory.commitCriticalChoice(this._currentNPC, {
@@ -411,8 +410,6 @@ export var DialogueEngine = {
               addedClue
             });
           }
-          return null;
-    }
     return null;
   },
 
