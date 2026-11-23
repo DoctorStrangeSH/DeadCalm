@@ -91,7 +91,7 @@ test('Markus testimony is a deliberate day-five discovery at the port, not an au
   assert.match(portScene, /if \(GameState\.campaign\.day >= 5\) \{/);
   assert.match(portScene, /meet\.id = 'btn-find-markus'/);
   assert.match(portScene, /meet\.addEventListener\('click'/);
-  assert.match(portScene, /if \(!GameState\.hasClue\('markus_statement'\)\)\s*&&[\s\S]*?addPortClue\(markusStatement, meet,/);
+  assert.match(portScene, /if \(!GameState\.hasClue\('markus_statement'\)\s*&&\s*!addPortClue\(markusStatement, meet,/);
   assert.match(portScene, /renderEndingChoices\(container\)/);
   assert.match(portScene, /Маркус выходит из тени складского навеса/);
 });
