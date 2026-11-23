@@ -180,3 +180,15 @@ test('all NPC dialogue prerequisites resolve inside the same authored conversati
     }
   }
 });
+
+
+test('independent port archive is acquired only after the player has obtained the supplied ledger copy', () => {
+  const clues = readJson('../src/data/clues.json');
+  const portScene = readFileSync(new URL('../src/js/scenes/port.js', import.meta.url), 'utf8');
+  assert.ok(clues.port_cargo_ledger_archive);
+  assert.match(portScene, /if \(GameState\.hasClue\('port_cargo_ledger'\) && !GameState\.hasClue\('port_cargo_ledger_archive'\)\)/);
+  assert.match(portScene, /GameState\.addClue\(\{[\s\S]*?id: 'port_cargo_ledger_archive'/);
+  assert.match(portScene, /id: 'port_cargo_ledger_archive',[\s\S]*?day: 4/);
+  assert.doesNotMatch(portScene, /addClue\(archiveLedger\)/,
+    'the independent copy must not be granted automatically when the port scene opens');
+});
