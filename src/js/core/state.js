@@ -92,8 +92,9 @@ function persistNpcCollectionMutation(state, property, mutate) {
 }
 function findNpcMeetingRefs(socialGraph, dailyLife, sourceNpcId, recipientNpcId) {
   const socialEvent = socialGraph?.events?.find(event =>
-    (event.fromNpcId === sourceNpcId && event.toNpcId === recipientNpcId) ||
-    (event.fromNpcId === recipientNpcId && event.toNpcId === sourceNpcId)
+    ((event.fromNpcId === sourceNpcId && event.toNpcId === recipientNpcId) ||
+     (event.fromNpcId === recipientNpcId && event.toNpcId === sourceNpcId)) &&
+    event.sourceType === 'direct_observation' && event.certainty === 'corroborated'
   );
   if (!socialEvent) return null;
   const sourceOccurrences = (dailyLife?.occurrences || []).filter(item => item.npcId === sourceNpcId);
