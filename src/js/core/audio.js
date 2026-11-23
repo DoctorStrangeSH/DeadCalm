@@ -106,13 +106,25 @@ export const Audio = {
   setMusicVolume(value) {
     if (!Number.isFinite(value)) return;
     this._musicVolume = clamp(value);
-    if (this._musicGain) this._musicGain.gain.setTargetAtTime(this._musicVolume, this._ctx.currentTime, 0.04);
+    if (this._musicGain?.gain) {
+      if (this._ctx && typeof this._musicGain.gain.setTargetAtTime === 'function') {
+        this._musicGain.gain.setTargetAtTime(this._musicVolume, this._ctx.currentTime, 0.04);
+      } else {
+        this._musicGain.gain.value = this._musicVolume;
+      }
+    }
   },
 
   setSfxVolume(value) {
     if (!Number.isFinite(value)) return;
     this._sfxVolume = clamp(value);
-    if (this._sfxGain) this._sfxGain.gain.setTargetAtTime(this._sfxVolume, this._ctx.currentTime, 0.04);
+    if (this._sfxGain?.gain) {
+      if (this._ctx && typeof this._sfxGain.gain.setTargetAtTime === 'function') {
+        this._sfxGain.gain.setTargetAtTime(this._sfxVolume, this._ctx.currentTime, 0.04);
+      } else {
+        this._sfxGain.gain.value = this._sfxVolume;
+      }
+    }
   },
 
   _tone(frequency, startAt, duration, volume, wave = 'sine') {
