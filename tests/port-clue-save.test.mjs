@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { GameState } from '../src/js/core/state.js';
 import { addPortClue } from '../src/js/scenes/port.js';
 
@@ -40,4 +41,20 @@ test('port evidence action remains retryable when persistence fails, then confir
     GameState.currentCase = previousCase;
     GameState.save = previousSave;
   }
+});
+
+test('every port evidence reward uses the persistence-aware action helper', () => {
+  const source = readFileSync(new URL('../src/js/scenes/port.js', import.meta.url), 'utf8');
+  for (const clueId of [
+    'port_cargo_ledger',
+    'port_cargo_ledger_archive',
+    'belladonna_invoice'
+  ]) {
+    assert.match(source, new RegExp(`addPortClue\\(\\{\\s*id: '${clueId}'`),
+      clueId + ' must be committed through addPortClue');
+  }
+  assert.match(source, /addPortClue\\(markusStatement, meet,/,
+    'Markus testimony must be saved before the confrontation is recorded');
+  assert.equal((source.match(/GameState\\.addClue\\(/g) || []).length, 1,
+    'only the shared helper may call GameState.addClue in the port scene');
 });
