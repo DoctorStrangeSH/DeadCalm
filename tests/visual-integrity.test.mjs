@@ -229,7 +229,7 @@ test('city atlas displays authored NPC first-appearance availability without sim
   assert.match(map, /МОЖНО ВСТРЕТИТЬ/);
   assert.match(map, /ПОЯВИТСЯ ПОЗЖЕ/);
   assert.match(scene, /src\/data\/characters\.json/);
-  assert.match(map, /new Map\(mapContainer, locations, characters\)/);
+  assert.match(map, /constructor\(container, locations, characters = \{\}\)/);
   assert.doesNotMatch(map, /advanceCampaignDay|recordNpcOccurrence|setNpcSchedule/,
     'map presence hints must not advance time or create NPC movement/schedules');
 });
