@@ -218,12 +218,26 @@ test('a returning NPC reaction is not shown or consumed when its save fails', ()
 
 test('authored return scenes persist their fulfilment outcomes in the same one-time visit commit', () => {
   const scenarios = [
+    ['npc_lydia_winter', 'lydia_return_promise', 'lydia_trusts_player',
+      'return_seen_lydia_return_promise', 'lydia_protection_promise_acknowledged'],
+    ['npc_lydia_winter', 'lydia_return_neutral', 'lydia_cautious',
+      'return_seen_lydia_return_neutral', 'lydia_no_false_promise_acknowledged'],
     ['npc_marta_hayes', 'marta_return_protected', 'marta_source_respected',
       'return_seen_marta_return_protected', 'marta_source_protection_confirmed'],
+    ['npc_marta_hayes', 'marta_return_pressured', 'marta_source_pressured',
+      'return_seen_marta_return_pressured', 'marta_source_pressure_remembered'],
     ['npc_father_thomas', 'thomas_return_respected', 'thomas_context_respected',
       'return_seen_thomas_return_respected', 'thomas_letter_context_preserved'],
+    ['npc_father_thomas', 'thomas_return_pressured', 'thomas_pressured',
+      'return_seen_thomas_return_pressured', 'thomas_publication_pressure_remembered'],
     ['npc_sebastian_blackwood', 'sebastian_return_records', 'sebastian_requested_records',
-      'return_seen_sebastian_return_records', 'sebastian_records_request_acknowledged']
+      'return_seen_sebastian_return_records', 'sebastian_records_request_acknowledged'],
+    ['npc_sebastian_blackwood', 'sebastian_return_challenged', 'sebastian_challenged',
+      'return_seen_sebastian_return_challenged', 'sebastian_challenge_remembered'],
+    ['npc_anna_holt', 'anna_return_respected', 'anna_boundary_respected',
+      'return_seen_anna_return_respected', 'anna_box_remains_with_anna'],
+    ['npc_anna_holt', 'anna_return_taken', 'anna_box_taken',
+      'return_seen_anna_return_taken', 'anna_box_removed_against_anna_wishes']
   ];
   const previous = {
     currentNPC: DialogueEngine._currentNPC,
