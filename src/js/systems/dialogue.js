@@ -229,6 +229,8 @@ export var DialogueEngine = {
       return null;
     }
 
+    // Moving away from the active choice screen invalidates its one-time prompt.
+    this._pendingCriticalChoice = null;
     var self = this;
     var unansweredQuestions = topic.responses.filter(function(r) {
       return self._askedQuestions.indexOf(r.id) === -1 && self._isResponseAvailable(r);
@@ -251,6 +253,10 @@ export var DialogueEngine = {
   askQuestion(questionId) {
     var npcData = this._dialogues?.[this._currentNPC];
     if (!npcData) return null;
+
+    if (this._pendingCriticalChoice && this._pendingCriticalChoice.questionId !== questionId) {
+      this._pendingCriticalChoice = null;
+    }
 
     // Ищем ответ только в темах, которые действительно открыты игроку.
     var foundResponse = null;
@@ -452,6 +458,7 @@ export var DialogueEngine = {
     var npcData = this._dialogues?.[this._currentNPC];
     if (!npcData) return null;
 
+    this._pendingCriticalChoice = null;
     if (npcData.refuses_to_talk && NPCMemory.hasFlag(this._currentNPC, 'lydia_refuses')) {
       return this._formatSimpleNode(npcData.refuses_to_talk, this._currentNPC);
     }
