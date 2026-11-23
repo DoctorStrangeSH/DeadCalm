@@ -10,10 +10,19 @@ import { showNotification } from '../utils/helpers.js';
 export async function render(container) {
   // Загружаем данные локаций
   var locations = {};
+  var characters = {};
   try {
     var response = await fetch('src/data/locations.json');
     if (!response.ok) throw new Error('Ошибка загрузки');
     locations = await response.json();
+    try {
+      var characterResponse = await fetch('src/data/characters.json');
+      if (!characterResponse.ok) throw new Error('Ошибка загрузки персонажей');
+      characters = await characterResponse.json();
+    } catch (characterError) {
+      console.error('[CityMap] Не удалось загрузить справочник персонажей:', characterError);
+      characters = {};
+    }
     console.log('[CityMap] Локации загружены: ' + Object.keys(locations).length);
   } catch (error) {
     console.error('[CityMap] Ошибка загрузки локаций:', error);
@@ -49,7 +58,7 @@ export async function render(container) {
   // Создаём и отрисовываем карту
   var mapContainer = document.getElementById('map-container');
   if (mapContainer) {
-    var map = new Map(mapContainer, locations);
+    var map = new Map(mapContainer, locations, characters);
     map.render();
   }
 
