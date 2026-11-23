@@ -262,6 +262,15 @@ export var DialogueEngine = {
     return GameState.recordSocialTie(discovery);
   },
 
+  _recordDiscoveredSocialEvent(response) {
+    const event = response?.discovers_social_event;
+    if (!event || event.reportedByNpcId !== this._currentNPC ||
+        ![event.fromNpcId, event.toNpcId].includes(this._currentNPC)) return null;
+    const existing = GameState.socialGraph?.events?.find(item => item.id === event.id);
+    if (existing) return null;
+    return GameState.recordSocialEvent(event);
+  },
+
   askQuestion(questionId) {
     var npcData = this._dialogues?.[this._currentNPC];
     if (!npcData) return null;
@@ -358,6 +367,7 @@ export var DialogueEngine = {
 
     // Reveal a relationship only after the player has heard its explicit in-game source.
     const addedSocialTie = this._recordDiscoveredSocialTie(foundResponse);
+    const addedSocialEvent = this._recordDiscoveredSocialEvent(foundResponse);
 
     // Проверяем критический выбор
     if (foundResponse.triggers_critical) {
@@ -371,11 +381,11 @@ export var DialogueEngine = {
           nodeId: foundResponse.triggers_critical,
           questionId
         };
-        return this._formatCriticalChoice(criticalNode, { addedNote, addedClue, addedSocialTie });
+        return this._formatCriticalChoice(criticalNode, { addedNote, addedClue, addedSocialTie, addedSocialEvent });
       }
     }
 
-    return this._formatAnswer(foundResponse, { addedNote, addedClue, addedSocialTie });
+    return this._formatAnswer(foundResponse, { addedNote, addedClue, addedSocialTie, addedSocialEvent });
   },
 
   makeCriticalChoice(choiceId) {
@@ -570,6 +580,7 @@ export var DialogueEngine = {
       addedNote: context.addedNote || null,
       addedClue: context.addedClue || null,
       addedSocialTie: context.addedSocialTie || null,
+      addedSocialEvent: context.addedSocialEvent || null,
       saveError: Boolean(context.saveError),
       canContinue: true
     };
@@ -588,6 +599,7 @@ export var DialogueEngine = {
       addedNote: context.addedNote || null,
       addedClue: context.addedClue || null,
       addedSocialTie: context.addedSocialTie || null,
+      addedSocialEvent: context.addedSocialEvent || null,
       choices: node.choices.map(function(c) {
         return { id: c.id, text: c.text, tone: c.tone || 'neutral' };
       })
