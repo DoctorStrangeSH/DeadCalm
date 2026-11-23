@@ -104,3 +104,28 @@ test('structurally invalid payload is rejected even when its checksum is valid',
   assert.equal(parsed.reason, 'invalid-payload-shape');
   assert.equal('data' in parsed, false);
 });
+
+
+test('early schema-v1 fresh campaign can be exported after safe normalization', async () => {
+  const earlyV1 = {
+    schemaVersion: CURRENT_SAVE_VERSION,
+    player: { name: 'Джон Риверс', reputation: 50 },
+    currentCase: { id: 'case_001', clues: [], suspects: [], timeline: [] },
+    campaign: { caseId: 'case_001', day: 1, completed: false, ending: null },
+    flags: {},
+    relationships: {},
+    npcMemory: {},
+    socialGraph: { ties: [], events: [] },
+    knowledgeLedger: { entries: [] },
+    npcDailyLife: { schedules: [], occurrences: [] },
+    miniGameProgress: {},
+    notebook: [],
+    settings: { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' }
+  };
+
+  const file = await createSaveFile(earlyV1);
+  const parsed = await parseSaveFile(file);
+  assert.equal(parsed.status, 'ok');
+  assert.deepEqual(file.payload.currentCase.hypotheses, []);
+  assert.deepEqual(parsed.data.currentCase.hypotheses, []);
+});
