@@ -101,6 +101,7 @@ test('Anna-Marcus family tie is discovered from her own account, not seeded from
     assert.equal(result.addedSocialTie?.fromNpcId, 'npc_anna_holt');
     assert.equal(result.addedSocialTie?.toNpcId, 'npc_markus_holt');
     assert.equal(result.addedSocialTie?.type, 'family');
+    assert.match(result.text, /Отец — Маркус/);
     assert.match(result.addedSocialTie.basis, /называет Маркуса отцом/);
     assert.equal(GameState.getSocialTies('npc_anna_holt').length, 1);
 
