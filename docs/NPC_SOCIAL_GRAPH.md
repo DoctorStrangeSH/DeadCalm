@@ -181,3 +181,8 @@ The presence resolver now requires both sides of the authored relationship to ag
 ## Transactional NPC memory reset — 2026-11-23
 
 `NPCMemory.resetNPC(npcId)` and `NPCMemory.resetAll()` now return a boolean and treat storage success as the commit boundary. A failed/throwing save restores the previous NPC memory and reports `false`; a successful save reports `true`. The all-NPC reset restores the original collection reference on failure. These reset operations do not alter player-to-NPC trust or other case evidence. Regression coverage: `tests/npc-memory-persistence.test.mjs` (failed and successful reset paths). PWA cache revision: `dead-calm-visual-v114`.
+
+
+## Persisted return-visit counter — 2026-11-23
+
+`NPCMemory.recordConversation(npcId, consumedFlag?)` now increments the NPC's `conversationCount` for each successfully persisted return visit. When a one-time authored return reaction is pending, the visit counter and consumed-reaction flag are written in the same memory transaction; a failed save changes neither, so retrying does not double-count or lose the reaction. Ordinary return visits are counted only after their own successful save. First meetings continue to use the existing atomic `commitFirstMeeting` path and are counted once. Regression coverage: `tests/npc-memory-persistence.test.mjs` and `tests/npc-return-reactions.test.mjs`. PWA cache revision: `dead-calm-visual-v115`.
