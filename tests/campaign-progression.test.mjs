@@ -59,6 +59,7 @@ test('final disclosure dossier requires the authored case materials, Sebastian d
     ['belladonna_invoice', {}],
     ['matthews_letter', {}],
     ['port_cargo_ledger', {}],
+    ['port_cargo_ledger_archive', {}],
     ['markus_statement', {}],
     ['sebastian_delivery_statement', {}],
     ['port_radio_fragment', {}],
