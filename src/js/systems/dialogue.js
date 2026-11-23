@@ -3,7 +3,7 @@ import { Events } from '../core/events.js';
 import { NPCMemory } from './npc-memory.js';
 import { resolveDialogueReaction } from './dialogue-reactions.js';
 import { hasDiscoveredContradiction } from './contradictions.js';
-import { findPendingCriticalDialogueNode } from './critical-dialogue-choice.js';
+import { findPendingCriticalDialogueNode, claimCriticalDialogueChoice } from './critical-dialogue-choice.js';
 import { canSelectDialogueTopic, canAskDialogueQuestion } from './dialogue-access.js';
 
 export var DialogueEngine = {
@@ -308,13 +308,7 @@ export var DialogueEngine = {
       }
     }
 
-    const accessGranted = foundResponse && canAskDialogueQuestion({
-      topicId: foundTopicId,
-      unlockedTopics: this._unlockedTopics,
-      askedQuestions: this._askedQuestions,
-      response: foundResponse,
-      isAvailable: response => this._isResponseAvailable(response)
-    });
+    const accessGranted = foundResponse && canAskDialogueQuestion({ topicId: foundTopicId, unlockedTopics: this._unlockedTopics, askedQuestions: this._askedQuestions, response: foundResponse, isAvailable: response => this._isResponseAvailable(response) });
     const retryableCritical = Boolean(foundResponse?.triggers_critical &&
       !NPCMemory.hasFlag(this._currentNPC, 'critical_' + foundResponse.triggers_critical));
     if (!foundResponse || (!accessGranted && !retryableCritical) || !this._isResponseAvailable(foundResponse)) {
@@ -448,6 +442,9 @@ export var DialogueEngine = {
           if (!decision) {
             return this._formatCriticalChoice(node, { saveError: true });
           }
+          // The atomic choice transaction already persisted its resolved marker;
+          // this idempotent claim protects stale callbacks from re-entering.
+          claimCriticalDialogueChoice(NPCMemory, this._currentNPC, key);
           this._pendingCriticalChoice = null;
           if (node.trigger_question && !this._askedQuestions.includes(node.trigger_question)) {
             this._askedQuestions.push(node.trigger_question);
