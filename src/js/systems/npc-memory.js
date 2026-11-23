@@ -192,6 +192,10 @@ export var NPCMemory = {
       memory.askedQuestions.push(input.questionId);
     }
     memory.flags[input.choiceFlag] = true;
+    if (typeof input.choiceFlag === 'string' && input.choiceFlag.startsWith('critical_')) {
+      const nodeId = input.choiceFlag.slice('critical_'.length);
+      memory.flags['critical_choice_resolved_' + nodeId] = true;
+    }
     if (input.memorySet) memory.flags[input.memorySet] = true;
     if (input.resultFlag) memory.flags[input.resultFlag] = true;
     if (input.memoryClear) delete memory.flags[input.memoryClear];
