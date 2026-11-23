@@ -640,7 +640,7 @@ export var DialogueEngine = {
         if (!NPCMemory.hasFlag(this._currentNPC, reaction.required_flag) ||
             NPCMemory.hasFlag(this._currentNPC, reaction.consumed_flag)) continue;
 
-        if (!NPCMemory.recordConversation(this._currentNPC, reaction.consumed_flag)) {
+        if (!NPCMemory.recordConversation(this._currentNPC, reaction.consumed_flag, reaction.memory_set || null)) {
           return {
             type: 'simple',
             text: 'Не удалось сохранить реакцию персонажа. Последствие прошлого разговора не отмечено как показанное — попробуйте встретиться ещё раз.',
