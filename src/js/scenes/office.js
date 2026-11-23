@@ -250,7 +250,10 @@ export function render(container) {
     </div>
   `;
 
-  // Показываем сохранённую сводку после перехода дня или восстановления сессии.\n  renderPendingDaySummary(container);\n\n  // === ОБРАБОТЧИКИ КНОПОК ===
+  // Показываем сохранённую сводку после перехода дня или восстановления сессии.
+  renderPendingDaySummary(container);
+
+  // === ОБРАБОТЧИКИ КНОПОК ===
 
   document.getElementById('btn-advance-day')?.addEventListener('click', function () {
     const result = advanceCampaignWhenReady(GameState);
