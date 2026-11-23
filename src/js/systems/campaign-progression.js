@@ -64,7 +64,9 @@ export function assessCampaignDay(gameState) {
 export function advanceCampaignWhenReady(gameState) {
   const status = assessCampaignDay(gameState);
   if (!status.canAdvance) return { advanced: false, status };
-  return { advanced: Boolean(gameState.advanceCampaignDay()), status };
+  const advanced = Boolean(gameState.advanceCampaignDay());
+  if (advanced) gameState.setFlag?.('campaign_day_summary_pending_' + status.day, true);
+  return { advanced, status };
 }
 
 export function assessFinalEvidence(gameState) {
@@ -74,6 +76,7 @@ export function assessFinalEvidence(gameState) {
     ['belladonna_invoice', 'Счёт за белладонну'],
     ['matthews_letter', 'Письмо Мэтьюса'],
     ['port_cargo_ledger', 'Портовая книга грузов'],
+    ['port_cargo_ledger_archive', 'Независимый архивный экземпляр портовой книги'],
     ['markus_statement', 'Признание Маркуса Холта'],
     ['sebastian_delivery_statement', 'Показание Себастьяна о передаче флакона']
   ];
