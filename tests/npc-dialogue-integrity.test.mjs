@@ -303,3 +303,29 @@ test('Ray acknowledges the fulfilled call-log promise once on the next meeting w
     GameState.save = previous.save;
   }
 });
+
+
+test('every authored NPC return reaction records its acknowledged outcome exactly once', () => {
+  const consumedFlags = new Set();
+  const outcomeFlags = new Set();
+  let count = 0;
+  for (const [npcId, npc] of Object.entries(dialogues)) {
+    for (const [nodeId, node] of Object.entries(npc)) {
+      for (const reaction of node.return_reactions || []) {
+        count++;
+        assert.ok(NPCMemory, 'NPC memory system is available for authored outcomes');
+        assert.ok(reaction.id && reaction.text, npcId + '/' + nodeId + ' reaction needs identity and text');
+        assert.ok(reaction.required_flag, reaction.id + ' must require an authored decision');
+        assert.ok(reaction.consumed_flag, reaction.id + ' must be one-time');
+        assert.ok(reaction.memory_set, reaction.id + ' must persist the acknowledged consequence');
+        assert.ok(!consumedFlags.has(npcId + ':' + reaction.consumed_flag),
+          reaction.id + ' consumed flag must be unique per NPC');
+        assert.ok(!outcomeFlags.has(npcId + ':' + reaction.memory_set),
+          reaction.id + ' outcome flag must be unique per NPC');
+        consumedFlags.add(npcId + ':' + reaction.consumed_flag);
+        outcomeFlags.add(npcId + ':' + reaction.memory_set);
+      }
+    }
+  }
+  assert.ok(count >= 10, 'all authored return paths must be covered');
+});
