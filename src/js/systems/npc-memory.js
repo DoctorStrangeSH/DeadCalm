@@ -90,6 +90,16 @@ export var NPCMemory = {
     }).saved;
   },
 
+  recordConversation(npcId) {
+    if (typeof npcId !== 'string' || !npcId.trim()) return false;
+    return persistMemoryMutation(npcId, memory => {
+      memory.met = true;
+      memory.conversationCount = (Number.isInteger(memory.conversationCount) && memory.conversationCount >= 0
+        ? memory.conversationCount
+        : 0) + 1;
+    }).saved;
+  },
+
   commitFirstMeeting(npcId, topicIds = []) {
     if (!Array.isArray(topicIds)) return false;
     return persistMemoryMutation(npcId, memory => {
