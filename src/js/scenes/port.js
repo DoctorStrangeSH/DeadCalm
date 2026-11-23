@@ -151,28 +151,9 @@ export function render(container) {
   });
 
   const actions = container.querySelector('.story-location-actions');
-  if (!GameState.hasClue('port_cargo_ledger')) {
-    const ledger = document.createElement('button');
-    ledger.id = 'btn-port-ledger';
-    ledger.className = 'card text-left w-full';
-    ledger.innerHTML = '<p class="card-title">ПРОВЕРИТЬ ГРУЗОВУЮ КНИГУ</p><p class="card-subtitle">Сверить портовые записи с архивом дела Каллиопы.</p>';
-    ledger.addEventListener('click', () => {
-      if (GameState.hasClue('port_cargo_ledger')) return;
-      addPortClue({
-        id: 'port_cargo_ledger',
-        name: 'Книга портовых грузов 1967 года',
-        category: 'document',
-        description: 'В копии грузовой книги есть исправления и записи о грузах компании Блэквуда в ночь гибели Каллиопы. Документ связывает его бизнес с местом и временем; страницы требуют независимой сверки.',
-        location: 'port',
-        day: 4,
-        source: 'Архив порта',
-        connections_to: ['old_case_details', 'restored_film_frame']
-      }, ledger, 'ГРУЗОВАЯ КНИГА ДОБАВЛЕНА');
-    });
-    actions.appendChild(ledger);
-  }
-
-  if (GameState.hasClue('port_cargo_ledger') && !GameState.hasClue('port_cargo_ledger_archive')) {
+  const showArchiveAction = () => {
+    if (GameState.hasClue('port_cargo_ledger') && !GameState.hasClue('port_cargo_ledger_archive') &&
+        !actions.querySelector('#btn-port-archive-ledger')) {
     const archive = document.createElement('button');
     archive.id = 'btn-port-archive-ledger';
     archive.className = 'card text-left w-full';
@@ -191,7 +172,33 @@ export function render(container) {
       }, archive, 'АРХИВНАЯ СВЕРКА ДОБАВЛЕНА');
     });
     actions.appendChild(archive);
+    }
+
+  };
+
+  if (!GameState.hasClue('port_cargo_ledger')) {
+    const ledger = document.createElement('button');
+    ledger.id = 'btn-port-ledger';
+    ledger.className = 'card text-left w-full';
+    ledger.innerHTML = '<p class="card-title">ПРОВЕРИТЬ ГРУЗОВУЮ КНИГУ</p><p class="card-subtitle">Сверить портовые записи с архивом дела Каллиопы.</p>';
+    ledger.addEventListener('click', () => {
+      if (GameState.hasClue('port_cargo_ledger')) return;
+      const ledgerSaved = addPortClue({
+        id: 'port_cargo_ledger',
+        name: 'Книга портовых грузов 1967 года',
+        category: 'document',
+        description: 'В копии грузовой книги есть исправления и записи о грузах компании Блэквуда в ночь гибели Каллиопы. Документ связывает его бизнес с местом и временем; страницы требуют независимой сверки.',
+        location: 'port',
+        day: 4,
+        source: 'Архив порта',
+        connections_to: ['old_case_details', 'restored_film_frame']
+      }, ledger, 'ГРУЗОВАЯ КНИГА ДОБАВЛЕНА');
+      if (ledgerSaved) showArchiveAction();
+    });
+    actions.appendChild(ledger);
   }
+
+  showArchiveAction();
 
   if (!GameState.hasClue('belladonna_invoice')) {
     const invoice = document.createElement('button');
