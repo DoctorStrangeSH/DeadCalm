@@ -552,19 +552,28 @@ export var GameState = {
   reset() {
     console.log('═══════════════════════════════');
     console.log('[State] ⚠️ ПОЛНЫЙ СБРОС');
-    console.log('[State] До:');
-    console.log('[State] - npcMemory: ' + Object.keys(this.npcMemory).length + ' NPC');
-    console.log('[State] - relationships: ' + Object.keys(this.relationships).length);
-    console.log('[State] - clues: ' + this.currentCase.clues.length);
-    console.log('[State] - notebook: ' + this.notebook.length);
-    console.log('[State] - flags: ' + Object.keys(this.flags).length);
-    
-    // Explicit user reset is the only operation that may discard an unsupported save.
-    this.saveBlocked = false;
 
-    // Сбрасываем
+    const previousState = {
+      player: this.player,
+      currentCase: this.currentCase,
+      campaign: this.campaign,
+      flags: this.flags,
+      relationships: this.relationships,
+      npcMemory: this.npcMemory,
+      socialGraph: this.socialGraph,
+      knowledgeLedger: this.knowledgeLedger,
+      npcDailyLife: this.npcDailyLife,
+      miniGameProgress: this.miniGameProgress,
+      notebook: this.notebook,
+      settings: this.settings,
+      saveBlocked: this.saveBlocked
+    };
+
+    // An explicit reset may replace an incompatible save, but the old state
+    // remains available until the complete fresh state is safely staged.
+    this.saveBlocked = false;
     this.player = { name: 'Джон Риверс', reputation: 50 };
-    this.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
+    this.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] };
     this.campaign = { ...INITIAL_CAMPAIGN };
     this.flags = {};
     this.relationships = {};
@@ -575,22 +584,21 @@ export var GameState = {
     this.miniGameProgress = createEmptyMiniGameProgress();
     this.notebook = [];
     this.settings = normalizeSettings(null);
-    
-    // Очищаем localStorage
-    Storage.clearAll();
-    
-    // Сохраняем пустое
-    this.save();
-    
+
+    if (!this.save()) {
+      Object.assign(this, previousState);
+      console.error('[State] Сброс отменён: новое сохранение не удалось безопасно записать.');
+      return false;
+    }
+
+    // A deliberate new game must not fall back to the previous campaign if
+    // the new primary record is damaged later.
+    Storage.removeBackup('gameState');
     Events.emit('state:reset');
-    
-    console.log('[State] После:');
-    console.log('[State] - npcMemory: ' + Object.keys(this.npcMemory).length + ' NPC');
-    console.log('[State] - relationships: ' + Object.keys(this.relationships).length);
-    console.log('[State] - clues: ' + this.currentCase.clues.length);
-    console.log('[State] - notebook: ' + this.notebook.length);
-    console.log('[State] ✅ Сброс завершён');
+
+    console.log('[State] ✅ Новая кампания сохранена');
     console.log('═══════════════════════════════');
+    return true;
   },
 
   hasSave() {
