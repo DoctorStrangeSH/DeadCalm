@@ -47,7 +47,7 @@ test('PWA cache includes visual styles, map data and the new image assets', () =
   const sw = read('sw.js');
   for (const resource of [
     'src/css/art-direction.css', 'src/data/locations.json',
-    'src/js/systems/dialogue-reactions.js', 'src/js/components/story-location.js',
+    'src/js/systems/dialogue-reactions.js', 'src/js/components/story-location.js', 'src/js/systems/npc-presence.js',
     'blackford-city-atlas.webp', 'blackford-courtroom.webp',
     'blackford-precinct.webp', 'blackford-morgue.webp', 'blackford-rusty-anchor.webp',
     'lydia-winter.webp', 'lydia-winter-tension.webp', 'lydia-winter-warmth.webp', 'lydia-winter-withdrawal.webp', 'ray-morgan.webp', 'anna-holt.webp', 'marta-hayes.webp',
@@ -56,7 +56,7 @@ test('PWA cache includes visual styles, map data and the new image assets', () =
   for (const scene of ['church.js', 'blackwood-mansion.js', 'holt-house.js', 'port.js']) {
     assert.ok(sw.includes(`/src/js/scenes/${scene}`), `PWA cache missing ${scene}`);
   }
-  assert.ok(sw.includes('dead-calm-visual-v109'), 'new story scenes require a new cache version');
+  assert.ok(sw.includes('dead-calm-visual-v110'), 'new story scenes require a new cache version');
   assert.ok(sw.includes("self.addEventListener('activate'"), 'old PWA caches should be cleared');
 });
 
