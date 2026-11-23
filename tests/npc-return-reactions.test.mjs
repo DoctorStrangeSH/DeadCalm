@@ -190,12 +190,14 @@ test('a returning NPC reaction is not shown or consumed when its save fails', ()
     assert.equal(failed.saveError, true);
     assert.equal(failed.isReturnReaction, undefined);
     assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'return_seen_anna_return_respected'), false);
+    assert.equal(NPCMemory.getMemory('npc_anna_holt').conversationCount, 1, 'failed return reaction must not count as a completed visit');
 
     Storage.save = () => true;
     const retry = DialogueEngine.startDialogue('npc_anna_holt');
     assert.equal(retry?.type, 'simple');
     assert.equal(retry.isReturnReaction, true);
     assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'return_seen_anna_return_respected'), true);
+    assert.equal(NPCMemory.getMemory('npc_anna_holt').conversationCount, 2, 'successful return reaction and visit count commit together');
   } finally {
     Storage.save = previousSave;
     Object.assign(GameState, previousState);
