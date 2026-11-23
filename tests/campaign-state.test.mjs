@@ -43,7 +43,7 @@ test('five-day campaign advances sequentially only after each daily evidence gat
     assert.equal(GameState.advanceCampaignDay(), true);
     assert.equal(GameState.campaign.day, 4);
 
-    addClues(['anna_markus_items', 'belladonna_invoice', 'port_radio_fragment']);
+    addClues(['anna_markus_items', 'belladonna_invoice', 'port_radio_fragment', 'port_cargo_ledger_archive']);
     assert.equal(GameState.advanceCampaignDay(), true);
     assert.equal(GameState.campaign.day, 5);
     assert.equal(GameState.hasFlag('day_5'), true);
@@ -114,6 +114,7 @@ test('finale completion enforces ending-specific evidence at the state boundary'
       'belladonna_invoice',
       'matthews_letter',
       'port_cargo_ledger',
+      'port_cargo_ledger_archive',
       'markus_statement',
       'sebastian_delivery_statement'
     ];
@@ -157,7 +158,7 @@ test('both finale choices persist through save import and cannot be switched aft
   const originalSave = Storage.save;
   const base = [
     'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
-    'matthews_letter', 'port_cargo_ledger', 'markus_statement', 'sebastian_delivery_statement'
+    'matthews_letter', 'port_cargo_ledger', 'port_cargo_ledger_archive', 'markus_statement', 'sebastian_delivery_statement'
   ];
 
   try {
@@ -212,7 +213,7 @@ test('failed finale save rolls back completion and emits no completion event', (
       ...GameState.currentCase,
       clues: [
         'autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice',
-        'matthews_letter', 'port_cargo_ledger', 'markus_statement', 'sebastian_delivery_statement',
+        'matthews_letter', 'port_cargo_ledger', 'port_cargo_ledger_archive', 'markus_statement', 'sebastian_delivery_statement',
         'port_radio_fragment', 'sebastian_sealed_confession'
       ].map(id => ({ id }))
     };
