@@ -218,6 +218,12 @@ test('a returning NPC reaction is not shown or consumed when its save fails', ()
 
 test('authored return scenes persist their fulfilment outcomes in the same one-time visit commit', () => {
   const scenarios = [
+    ['npc_ray_morgan', 'ray_return_cooperation', 'ray_official_cooperation',
+      'return_seen_ray_return_cooperation', 'ray_cooperation_acknowledged'],
+    ['npc_ray_morgan', 'ray_return_caution', 'ray_records_first',
+      'return_seen_ray_return_caution', 'ray_procedural_caution_acknowledged'],
+    ['npc_ray_morgan', 'ray_return_calls_fulfilled', 'ray_check_calls_fulfilled',
+      'return_seen_ray_calls_fulfilled', 'ray_call_log_promise_acknowledged'],
     ['npc_lydia_winter', 'lydia_return_promise', 'lydia_trusts_player',
       'return_seen_lydia_return_promise', 'lydia_protection_promise_acknowledged'],
     ['npc_lydia_winter', 'lydia_return_neutral', 'lydia_cautious',
