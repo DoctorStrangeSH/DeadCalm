@@ -194,3 +194,8 @@ Ray's authored promise to check the incoming-call register is now explicitly clo
 
 
 Ray now has a one-time follow-up on the next meeting after the call-log evidence is recorded. He acknowledges that the register confirms a call from the courthouse switchboard but explicitly states that the caller's identity remains unknown; he points the investigation toward the original registration book. The reaction consumes `return_seen_ray_calls_fulfilled` together with the return-visit counter, so it cannot repeat after a successful save. Coverage: `tests/npc-dialogue-integrity.test.mjs` verifies the evidence boundary and one-time display. PWA cache revision: `dead-calm-visual-v117`.
+
+
+## Atomic outcomes for authored return scenes — 2026-11-23
+
+`NPCMemory.recordConversation(npcId, consumedFlag?, memorySet?)` now supports an optional authored outcome flag. `DialogueEngine._getPendingReturnReaction()` commits the visit counter, one-time reaction-consumed flag, and outcome flag in the same save. A failed save rolls all three back; a successful save emits `npc:flag_set` only after persistence. This is now used for Marta's confirmation that the source remained protected (`marta_source_protection_confirmed`), Father Thomas's preserved letter context (`thomas_letter_context_preserved`), and Sebastian's acknowledgement of the records request (`sebastian_records_request_acknowledged`). These flags record only what the scene establishes; they do not assert that a source identity, disputed historical claim, or complete archive has been verified. Coverage: `tests/npc-memory-persistence.test.mjs` and `tests/npc-return-reactions.test.mjs`. PWA cache revision: `dead-calm-visual-v118`.
