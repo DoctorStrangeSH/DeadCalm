@@ -27,11 +27,14 @@ export class InvestigationBoard {
     var clues = GameState.currentCase.clues;
     const archiveDigest = getOldCaseBoardDigest(clues, GameState.flags);
     const socialTies = Array.isArray(GameState.socialGraph?.ties) ? GameState.socialGraph.ties : [];
+    const socialEvents = Array.isArray(GameState.socialGraph?.events) ? GameState.socialGraph.events : [];
     const socialNames = {
       npc_lydia_winter: 'Доктор Лидия Винтер',
       npc_anna_holt: 'Анна Холт',
       npc_gabriel: 'Габриэль',
-      npc_markus_holt: 'Маркус Холт'
+      npc_markus_holt: 'Маркус Холт',
+      npc_sebastian_blackwood: 'Себастьян Блэквуд',
+      npc_harold_harrison: 'Гарольд Гаррисон'
     };
     const socialTypeLabels = {
       family: 'СЕМЬЯ', colleague: 'КОЛЛЕГИ', friend: 'ДРУЗЬЯ', rival: 'СОПЕРНИКИ',
@@ -120,6 +123,22 @@ export class InvestigationBoard {
             '</strong><span>' + self._escapeHtml(socialTypeLabels[tie.type] || 'СВЯЗЬ') +
             '</span></div><p>' + self._escapeHtml(tie.basis) + '</p></article>'
           ).join('') : '<p class="social-graph-empty">Подтверждённых связей пока нет. Они будут добавляться по мере того, как вы узнаёте людей и проверяете их слова.</p>'}
+        </section>
+        <section class="board-hypotheses board-social-events" aria-label="Свидетельства о встречах персонажей">
+          <h3>СВИДЕТЕЛЬСТВА О ВСТРЕЧАХ</h3>
+          <p>Записи основаны на рассказах участников. Пока нет независимого подтверждения, это свидетельства, а не установленные факты.</p>
+          ${socialEvents.length ? socialEvents.map(event =>
+            '<article class="social-event-entry"><div class="social-tie-heading"><strong>' +
+            self._escapeHtml(socialNames[event.fromNpcId] || event.fromNpcId) + ' — ' +
+            self._escapeHtml(socialNames[event.toNpcId] || event.toNpcId) +
+            '</strong><span>' + (event.certainty === 'corroborated' ? 'ПОДТВЕРЖДЕНО' :
+              event.certainty === 'disputed' ? 'ОСПАРИВАЕТСЯ' : 'НЕ ПРОВЕРЕНО') +
+            '</span></div><p class="social-event-time">' +
+            self._escapeHtml(event.timeLabel || 'Время не установлено') +
+            '</p><p>' + self._escapeHtml(event.description) + '</p><p class="social-event-source">Источник: ' +
+            self._escapeHtml(socialNames[event.reportedByNpcId] || event.reportedByNpcId || 'не указан') +
+            '</p></article>'
+          ).join('') : '<p class="social-graph-empty">Свидетельства о встречах пока не получены.</p>'}
         </section>
         <section class="board-hypotheses" aria-label="Архив гипотез">
           <h3>АРХИВ ГИПОТЕЗ</h3>
