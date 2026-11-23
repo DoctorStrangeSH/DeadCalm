@@ -94,7 +94,17 @@
             "question": "Как вы оказались в Блэкфорде?",
             "type": "narrative",
             "answer": "— Мой брат Габриэль был женихом Каллиопы. После её смерти его сделали удобным подозреваемым. Он пережил срыв и оказался в клинике. Он не убивал её. Я слишком долго молчала, потому что боялась, что ему снова не поверят.",
-            "triggers_critical": "critical_choice_trust"
+            "triggers_critical": "critical_choice_trust",
+            "discovers_social_tie": {
+              "fromNpcId": "npc_lydia_winter",
+              "toNpcId": "npc_gabriel",
+              "type": "family",
+              "status": "active",
+              "basis": "Лидия прямо сообщает, что Габриэль — её брат.",
+              "sourceRefs": [
+                "dialogue:npc_lydia_winter:her_background"
+              ]
+            }
           }
         ]
       }
@@ -806,7 +816,17 @@
             "question": "Когда вы видели Маркуса в последний раз?",
             "type": "important",
             "answer": "«Вечером перед исчезновением. Отец — Маркус — был спокоен, но проверял замки дважды. Сказал, что если кто-то придёт, я не должна отдавать коробку без объяснений».",
-            "gives_clue": "anna_markus_items"
+            "gives_clue": "anna_markus_items",
+            "discovers_social_tie": {
+              "fromNpcId": "npc_anna_holt",
+              "toNpcId": "npc_markus_holt",
+              "type": "family",
+              "status": "active",
+              "basis": "Анна прямо называет Маркуса отцом в рассказе о вечере перед его исчезновением.",
+              "sourceRefs": [
+                "dialogue:npc_anna_holt:anna_markus_last_seen"
+              ]
+            }
           },
           {
             "id": "anna_markus_john",
