@@ -593,3 +593,106 @@ test('new-game reset restores the previous in-memory campaign when no save can b
     Object.assign(GameState, original);
   }
 });
+
+
+function installGameStorage(initial = {}) {
+  const values = new Map(Object.entries(initial));
+  const previous = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  globalThis.localStorage = {
+    getItem(key) { return values.has(key) ? values.get(key) : null; },
+    setItem(key, value) { values.set(key, String(value)); },
+    removeItem(key) { values.delete(key); },
+    key(index) { return [...values.keys()][index] ?? null; },
+    get length() { return values.size; }
+  };
+  return {
+    values,
+    restore() {
+      if (previous) Object.defineProperty(globalThis, 'localStorage', previous);
+      else delete globalThis.localStorage;
+    }
+  };
+}
+
+function snapshotGameState() {
+  return Object.fromEntries([
+    'player', 'currentCase', 'campaign', 'flags', 'relationships', 'npcMemory',
+    'socialGraph', 'knowledgeLedger', 'npcDailyLife', 'miniGameProgress',
+    'notebook', 'settings', 'saveBlocked'
+  ].map(key => [key, GameState[key]]));
+}
+
+test('GameState.init restores the complete campaign from backup when primary JSON is corrupt', () => {
+  const original = snapshotGameState();
+  const store = installGameStorage();
+  try {
+    const saved = GameState.export();
+    saved.player = { name: 'Джон Риверс', reputation: 84 };
+    saved.campaign = { caseId: 'case_001', day: 4, completed: false, ending: null };
+    saved.currentCase.clues = [{ id: 'backup_clue', quality: 91 }];
+    saved.relationships = { anna_holt: { trust: 82, met: true } };
+    saved.npcMemory = { anna_holt: { met: true, promises: [{ id: 'promise_1', status: 'kept' }] } };
+    saved.notebook = [{ id: 'backup_note', text: 'Проверить журнал порта' }];
+    localStorage.setItem('deadCalm_gameState', '{corrupt-primary');
+    localStorage.setItem('deadCalm_gameState__backup', JSON.stringify(saved));
+
+    GameState.player = { name: 'Пустое состояние', reputation: 0 };
+    assert.equal(GameState.init(), true);
+    assert.equal(GameState.player.reputation, 84);
+    assert.equal(GameState.campaign.day, 4);
+    assert.equal(GameState.currentCase.clues[0].id, 'backup_clue');
+    assert.equal(GameState.relationships.anna_holt.trust, 82);
+    assert.equal(GameState.npcMemory.anna_holt.promises[0].status, 'kept');
+    assert.equal(GameState.notebook[0].text, 'Проверить журнал порта');
+    assert.equal(GameState.saveBlocked, false);
+  } finally {
+    store.restore();
+    Object.assign(GameState, original);
+  }
+});
+
+test('GameState.init restores the newest staged campaign and promotes it over an older primary', () => {
+  const original = snapshotGameState();
+  const store = installGameStorage();
+  try {
+    const older = GameState.export();
+    older.campaign = { caseId: 'case_001', day: 2, completed: false, ending: null };
+    const staged = GameState.export();
+    staged.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+    staged.flags = { day_2: true, day_3: true, day_4: true, day_5: true, staged_choice: 'kept' };
+    staged.currentCase.clues = [{ id: 'staged_clue' }];
+    localStorage.setItem('deadCalm_gameState', JSON.stringify(older));
+    localStorage.setItem('deadCalm_gameState__pending', JSON.stringify(staged));
+
+    GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
+    assert.equal(GameState.init(), true);
+    assert.equal(GameState.campaign.day, 5);
+    assert.equal(GameState.flags.staged_choice, 'kept');
+    assert.equal(GameState.currentCase.clues[0].id, 'staged_clue');
+    assert.equal(localStorage.getItem('deadCalm_gameState__pending'), null);
+    assert.equal(JSON.parse(localStorage.getItem('deadCalm_gameState')).campaign.day, 5);
+    assert.equal(JSON.parse(localStorage.getItem('deadCalm_gameState__backup')).campaign.day, 2);
+  } finally {
+    store.restore();
+    Object.assign(GameState, original);
+  }
+});
+
+test('GameState.init blocks writes when every persisted copy is corrupt and keeps the raw data', () => {
+  const original = snapshotGameState();
+  const store = installGameStorage({
+    deadCalm_gameState: '{broken-primary',
+    deadCalm_gameState__backup: '{broken-backup',
+    deadCalm_gameState__pending: '{broken-pending'
+  });
+  try {
+    const rawBefore = Object.fromEntries([...store.values.entries()]);
+    assert.equal(GameState.init(), false);
+    assert.equal(GameState.saveBlocked, true);
+    assert.deepEqual(Object.fromEntries([...store.values.entries()]), rawBefore);
+    assert.equal(GameState.save(), false);
+  } finally {
+    store.restore();
+    Object.assign(GameState, original);
+  }
+});
