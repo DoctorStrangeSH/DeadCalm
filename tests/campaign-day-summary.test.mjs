@@ -16,37 +16,46 @@ function game(day, clues = [], flags = []) {
   };
 }
 
-test('days one to three summarize only facts and limitations supported by required evidence', () => {
-  const day1 = getCampaignDaySummary(1);
+test('days one to three reveal only facts backed by clues actually collected by the player', () => {
+  const emptyDay1 = getCampaignDaySummary(1, game(1));
+  assert.deepEqual(emptyDay1.established, []);
+  assert.deepEqual(emptyDay1.refuted, []);
+  assert.equal(emptyDay1.missingEvidence.length, 3);
+
+  const day1 = getCampaignDaySummary(1, game(1, [
+    'autopsy_report_01', 'court_switchboard_log'
+  ]));
   assert.ok(day1.established.some(item => item.includes('белладонной')));
   assert.ok(day1.established.some(item => item.includes('не называет')));
+  assert.ok(day1.refuted.some(item => item.includes('не устанавливает личность')));
   assert.ok(day1.unknown.some(item => item.includes('внутренним номером 17')));
-  assert.ok(!day1.established.some(item => item.includes('несовместимые отметки')));
+  assert.ok(!day1.established.some(item => item.includes('встреча на 19:30')));
 
-  const day2 = getCampaignDaySummary(2);
+  const day2 = getCampaignDaySummary(2, game(2, ['matthews_letter']));
   assert.ok(day2.established.some(item => item.includes('ложное алиби')));
   assert.ok(day2.refuted.some(item => item.includes('не доказывает')));
+  assert.ok(!day2.established.some(item => item.includes('Марта получила')));
 
-  const day3 = getCampaignDaySummary(3);
+  const day3 = getCampaignDaySummary(3, game(3, ['port_cargo_ledger']));
   assert.ok(day3.established.some(item => item.includes('копию грузовой книги')));
   assert.ok(day3.refuted.some(item => item.includes('не является доказательством убийства')));
 });
 
 test('day four summary adapts to film and radio evidence without describing absent material', () => {
-  const film = getCampaignDaySummary(4, game(5, ['restored_film_frame', 'port_cargo_ledger_archive']));
+  const film = getCampaignDaySummary(4, game(5, ['anna_markus_items', 'belladonna_invoice', 'restored_film_frame', 'port_cargo_ledger_archive']));
   assert.ok(film.established.some(item => item.includes('опровергает часть его алиби')));
   assert.ok(film.refuted.some(item => item.includes('не показывает момент убийства')));
   assert.ok(!film.refuted.some(item => item.includes('Радиозапись')));
 
-  const radio = getCampaignDaySummary(4, game(5, ['port_radio_fragment', 'port_cargo_ledger_archive']));
+  const radio = getCampaignDaySummary(4, game(5, ['anna_markus_items', 'belladonna_invoice', 'port_radio_fragment', 'port_cargo_ledger_archive']));
   assert.ok(radio.established.some(item => item.includes('временное окно')));
   assert.ok(radio.refuted.some(item => item.includes('Радиозапись')));
   assert.ok(!radio.refuted.some(item => item.includes('Кадр плёнки')));
 
-  const noArchive = getCampaignDaySummary(4, game(5, ['restored_film_frame']));
+  const noArchive = getCampaignDaySummary(4, game(5, ['anna_markus_items', 'belladonna_invoice', 'restored_film_frame']));
   assert.ok(noArchive.unknown.some(item => item.includes('не сверена')));
   assert.ok(!noArchive.established.some(item => item.includes('независимо подтверждает')));
-  const both = getCampaignDaySummary(4, game(5, ['restored_film_frame', 'port_radio_fragment', 'port_cargo_ledger_archive']));
+  const both = getCampaignDaySummary(4, game(5, ['anna_markus_items', 'belladonna_invoice', 'restored_film_frame', 'port_radio_fragment', 'port_cargo_ledger_archive']));
   assert.ok(both.established.some(item => item.includes('кадр')));
   assert.ok(both.established.some(item => item.includes('радиосвязи')));
 });
