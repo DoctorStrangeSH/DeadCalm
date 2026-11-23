@@ -81,3 +81,21 @@ Integrity rules:
 6. No schedules are pre-seeded for the six protected original characters without approved canon.
 7. Legacy saves without `npcDailyLife` migrate to an empty model.
 8. Autonomous simulation, rumor propagation, player-facing schedule UI, and time advancement integration are not implemented yet.
+
+
+## Dialogue-driven relationship discovery — 2026-11-23
+
+The social graph now receives two canon-backed family ties only after the player hears the relevant in-game testimony:
+
+- `npc_lydia_winter → npc_gabriel` (`family`): created after the player asks Lydia `her_background`. Her explicit statement identifies Gabriel as her brother.
+- `npc_anna_holt → npc_markus_holt` (`family`): created after the player asks Anna `anna_markus_last_seen`. The conversation identifies Markus as her father.
+
+Both records preserve a dialogue source reference and a plain-language basis. They are not seeded from hidden character profiles, do not reveal themselves before the player hears the source, and are idempotent. The anonymous source behind Marta's documents is deliberately not linked to Markus: Marta does not know that identity.
+
+The new relationship discovery is shown in the dialogue result and in the investigation board's **«Люди и их связи»** section. The board explicitly labels these as source-backed relationships, not deductions from proximity or rumor.
+
+Still not implemented:
+- NPC-to-NPC event producers for actual on-screen meetings;
+- automatic rumor propagation and dialogue consumption;
+- authored schedules and autonomous movement/time simulation;
+- broader relationship changes between the six active NPCs. These must wait for explicit story evidence rather than be fabricated.
