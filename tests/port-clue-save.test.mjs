@@ -68,3 +68,14 @@ test('every port evidence reward uses the persistence-aware action helper', () =
   assert.equal((source.match(/GameState\.addClue\(/g) || []).length, 2,
     'the helper and explicit sealed-agreement outcome are the only clue writers');
 });
+
+
+test('archive cross-check appears immediately after saving the ledger without a scene reload', () => {
+  const source = readFileSync(new URL('../src/js/scenes/port.js', import.meta.url), 'utf8');
+  assert.match(source, /const showArchiveAction = \(\) => \{/);
+  assert.match(source, /if \(GameState\.hasClue\('port_cargo_ledger'\) && !GameState\.hasClue\('port_cargo_ledger_archive'\)\)/);
+  assert.match(source, /if \(actions\.querySelector\('#btn-port-archive-ledger'\)\) return;/);
+  assert.match(source, /const ledgerSaved = addPortClue\(\{/);
+  assert.match(source, /\}, ledger, 'ГРУЗОВАЯ КНИГА ДОБАВЛЕНА'\);\s*if \(ledgerSaved\) showArchiveAction\(\);/);
+  assert.match(source, /\n  showArchiveAction\(\);\n/);
+});
