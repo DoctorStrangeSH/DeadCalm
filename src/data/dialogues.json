@@ -425,6 +425,17 @@
       "condition": "ray_hostile",
       "text": "Рэй не смотрит в вашу сторону: «Убирайся из моего участка. Здесь ты чужой.»",
       "end": true
+    },
+    "ray_calls_fulfilled_followup": {
+      "type": "narrative",
+      "return_reactions": [
+        {
+          "id": "ray_return_calls_fulfilled",
+          "required_flag": "ray_check_calls_fulfilled",
+          "consumed_flag": "return_seen_ray_calls_fulfilled",
+          "text": "Рэй достаёт копию журнала и кладёт её рядом с делом: «Я обещал проверить входящие — и проверил. Запись из внутреннего коммутатора суда есть, но имени абонента нет. Мы подтвердили источник звонка, а не того, кто звонил. Дальше нужна регистрационная книга»."
+        }
+      ]
     }
   },
   "npc_marta_hayes": {
