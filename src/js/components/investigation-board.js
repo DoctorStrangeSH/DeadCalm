@@ -136,7 +136,9 @@ export class InvestigationBoard {
             '</span></div><p class="social-event-time">' +
             self._escapeHtml(event.timeLabel || 'Время не установлено') +
             '</p><p>' + self._escapeHtml(event.description) + '</p><p class="social-event-source">Источник: ' +
-            self._escapeHtml(socialNames[event.reportedByNpcId] || event.reportedByNpcId || 'не указан') +
+            self._escapeHtml(event.reportedByNpcId
+              ? (socialNames[event.reportedByNpcId] || event.reportedByNpcId)
+              : event.sourceType === 'direct_observation' ? 'личное наблюдение Джона Риверса' : 'не указан') +
             '</p></article>'
           ).join('') : '<p class="social-graph-empty">Свидетельства о встречах пока не получены.</p>'}
         </section>
