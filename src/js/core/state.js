@@ -229,7 +229,7 @@ export var GameState = {
     }
   },
 
-  setCampaignDay(day) {
+  setCampaignDay(day, options = {}) {
     if (!Number.isInteger(day) || day < 1 || day > 5) return false;
     if (this.campaign.completed || day < this.campaign.day || day > this.campaign.day + 1) return false;
     if (day > this.campaign.day && !assessCampaignDay(this).canAdvance) return false;
@@ -237,6 +237,9 @@ export var GameState = {
     const previousFlags = { ...this.flags };
     this.campaign.day = day;
     this._syncCampaignFlags();
+    for (const flag of options.flagsToSet || []) {
+      if (typeof flag === 'string' && flag) this.flags[flag] = true;
+    }
     let saved;
     try {
       saved = this.save();
@@ -257,6 +260,14 @@ export var GameState = {
   advanceCampaignDay() {
     if (this.campaign.completed || this.campaign.day >= 5) return false;
     return this.setCampaignDay(this.campaign.day + 1);
+  },
+
+  // Commit the day transition and its recap marker in one storage transaction.
+  // A failed save restores both the day and every flag to their prior values.
+  advanceCampaignDayWithSummary(summaryDay = this.campaign.day) {
+    if (this.campaign.completed || this.campaign.day >= 5 || summaryDay !== this.campaign.day) return false;
+    const pendingFlag = 'campaign_day_summary_pending_' + summaryDay;
+    return this.setCampaignDay(this.campaign.day + 1, { flagsToSet: [pendingFlag] });
   },
 
   completeCampaign(ending) {
