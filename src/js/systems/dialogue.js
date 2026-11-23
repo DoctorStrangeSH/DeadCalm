@@ -270,7 +270,10 @@ export var DialogueEngine = {
     const discovery = discoveries[questionId];
     if (!discovery || discovery.fromNpcId !== this._currentNPC) return null;
     const existing = GameState.getSocialTies(discovery.fromNpcId)
-      .find(tie => tie.toNpcId === discovery.toNpcId && tie.type === discovery.type);
+      .find(tie => tie.type === discovery.type && (
+        (tie.fromNpcId === discovery.fromNpcId && tie.toNpcId === discovery.toNpcId) ||
+        (tie.fromNpcId === discovery.toNpcId && tie.toNpcId === discovery.fromNpcId)
+      ));
     if (existing) return null;
     return GameState.recordSocialTie({
       ...discovery,
