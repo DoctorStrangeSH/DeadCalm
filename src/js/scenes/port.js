@@ -3,7 +3,7 @@ import { GameState } from '../core/state.js';
 import { Events } from '../core/events.js';
 import { assessFinalEvidence, buildFinalEvidenceDossier } from '../systems/campaign-progression.js';
 
-function addPortClue(clue, button, successLabel) {
+export function addPortClue(clue, button, successLabel) {
   const added = GameState.addClue(clue);
   const title = button.querySelector?.('.card-title');
   if (!added) {
