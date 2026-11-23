@@ -221,6 +221,29 @@ export class DialogBox {
       card.append(stamp, title);
       container.appendChild(card);
     }
+
+    if (node.addedSocialTie) {
+      const names = {
+        npc_lydia_winter: 'Доктор Лидия Винтер',
+        npc_anna_holt: 'Анна Холт',
+        npc_gabriel: 'Габриэль',
+        npc_markus_holt: 'Маркус Холт'
+      };
+      const tie = node.addedSocialTie;
+      const card = document.createElement('div');
+      card.className = 'dialog-discovery dialog-social-discovery';
+      const stamp = document.createElement('span');
+      stamp.className = 'dialog-discovery-stamp';
+      stamp.textContent = '◇ СВЯЗЬ · ПОДТВЕРЖДЕНА ИСТОЧНИКОМ';
+      const title = document.createElement('strong');
+      title.className = 'dialog-discovery-title';
+      title.textContent = `${names[tie.fromNpcId] || tie.fromNpcId} — ${names[tie.toNpcId] || tie.toNpcId}`;
+      const basis = document.createElement('p');
+      basis.className = 'dialog-discovery-description';
+      basis.textContent = tie.basis;
+      card.append(stamp, title, basis);
+      container.appendChild(card);
+    }
   }
 
   _renderChoices(node, choicesEl) {
