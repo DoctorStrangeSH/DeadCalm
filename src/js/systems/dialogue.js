@@ -253,24 +253,24 @@ export var DialogueEngine = {
   _recordDiscoveredSocialTie(questionId) {
     const discoveries = {
       'her_background': {
-        npcId: 'npc_lydia_winter',
-        otherNpcId: 'npc_gabriel',
+        fromNpcId: 'npc_lydia_winter',
+        toNpcId: 'npc_gabriel',
         type: 'family',
         basis: 'Лидия прямо сообщает, что Габриэль — её брат.',
         sourceRefs: ['dialogue:npc_lydia_winter:her_background']
       },
       'anna_markus_last_seen': {
-        npcId: 'npc_anna_holt',
-        otherNpcId: 'npc_markus_holt',
+        fromNpcId: 'npc_anna_holt',
+        toNpcId: 'npc_markus_holt',
         type: 'family',
         basis: 'В разговоре об оставленных вещах Анна прямо называет Маркуса отцом.',
         sourceRefs: ['dialogue:npc_anna_holt:anna_markus_last_seen']
       }
     };
     const discovery = discoveries[questionId];
-    if (!discovery || discovery.npcId !== this._currentNPC) return null;
-    const existing = GameState.getSocialTies(discovery.npcId)
-      .find(tie => tie.toNpcId === discovery.otherNpcId && tie.type === discovery.type);
+    if (!discovery || discovery.fromNpcId !== this._currentNPC) return null;
+    const existing = GameState.getSocialTies(discovery.fromNpcId)
+      .find(tie => tie.toNpcId === discovery.toNpcId && tie.type === discovery.type);
     if (existing) return null;
     return GameState.recordSocialTie({
       ...discovery,
