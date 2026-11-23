@@ -111,3 +111,55 @@ test('revision comparison reports evidence, status and reasoning changes', () =>
   assert.equal(compareHypothesisRevisions(first.history), null);
   assert.equal(compareHypothesisRevisions([null, {}]), null);
 });
+
+
+test('a player cannot manually promote an unconfirmed hypothesis to confirmed', () => {
+  const draft = createHypothesis({ id: 'h', title: 'Версия', reasoning: 'Проверяемое предположение', clueIds: ['autopsy'] }, evidence, '2026-11-21');
+  assert.throws(
+    () => reviseHypothesis(draft, { status: 'confirmed' }, evidence, '2026-11-21T01:00:00Z'),
+    /Нельзя подтвердить версию вручную/
+  );
+  assert.equal(draft.status, 'unchecked');
+  assert.equal(draft.history.length, 1);
+});
+
+test('legacy confirmed hypotheses remain readable and can be downgraded, not re-certified', () => {
+  const legacy = createHypothesis({ id: 'legacy', title: 'Старая версия', reasoning: 'Старое сохранение' }, evidence, '2026-01-01');
+  const imported = { ...legacy, status: 'confirmed', history: [...legacy.history, {
+    at: '2026-01-02', type: 'revised', status: 'confirmed', clueIds: [], reasoning: legacy.reasoning, title: legacy.title
+  }] };
+  assert.throws(() => reviseHypothesis({ ...legacy, status: 'unchecked' }, { status: 'confirmed' }, evidence),
+    /Нельзя подтвердить версию вручную/);
+  const downgraded = reviseHypothesis(imported, { status: 'probable' }, evidence, '2026-01-03');
+  assert.equal(downgraded.status, 'probable');
+  assert.equal(downgraded.history.at(-1).status, 'probable');
+});
+
+
+test('legacy confirmed hypotheses cannot be edited while retaining confirmation', () => {
+  const legacy = createHypothesis({ id: 'legacy-edit', title: 'Старая версия', reasoning: 'Старое обоснование', clueIds: ['autopsy'] }, evidence, '2026-01-01');
+  const confirmed = { ...legacy, status: 'confirmed', history: [...legacy.history, {
+    at: '2026-01-02', type: 'revised', status: 'confirmed', clueIds: ['autopsy'],
+    reasoning: legacy.reasoning, title: legacy.title
+  }] };
+
+  assert.equal(reviseHypothesis(confirmed, {}, evidence), confirmed);
+  assert.throws(
+    () => reviseHypothesis(confirmed, { reasoning: 'Новое, ещё не проверенное обоснование' }, evidence),
+    /Сначала измените статус подтверждённой версии/
+  );
+  assert.throws(
+    () => reviseHypothesis(confirmed, { clueIds: [] }, evidence),
+    /Сначала измените статус подтверждённой версии/
+  );
+
+  const downgraded = reviseHypothesis(confirmed, { status: 'probable' }, evidence, '2026-01-03');
+  const revised = reviseHypothesis(downgraded, {
+    reasoning: 'Новое обоснование после снятия подтверждения',
+    clueIds: []
+  }, evidence, '2026-01-04');
+  assert.equal(revised.status, 'probable');
+  assert.equal(revised.reasoning, 'Новое обоснование после снятия подтверждения');
+  assert.deepEqual(revised.clueIds, []);
+  assert.equal(revised.history.at(-1).status, 'probable');
+});

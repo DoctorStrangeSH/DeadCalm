@@ -46,7 +46,7 @@ export class NotebookUI {
       text: clue.description || '',
       timestamp: clue.foundAt || '',
       day: clue.day || 1,
-      source: clue.location || 'Материалы дела',
+      source: clue.source || 'Источник не установлен',
       category: evidenceCategoryLabel(clue.category),
       isClue: true
     })) : Notebook.getAllNotes();
@@ -274,7 +274,8 @@ export class NotebookUI {
           <p class="dialog-type-label">◇ УЛИКА · МАТЕРИАЛЫ ДЕЛА</p>
           <h3 class="notebook-evidence-title">${escapeHtml(clue.name || '')}</h3>
           <p class="notebook-evidence-description">${escapeHtml(clue.description || '')}</p>
-          <p class="notebook-evidence-source">${escapeHtml(clue.location || 'Источник не указан')}</p>
+          <p class="notebook-evidence-source">ИСТОЧНИК: ${escapeHtml(clue.source || 'Не установлен')}</p>
+          <p class="notebook-evidence-location">МЕСТО ОБНАРУЖЕНИЯ: ${escapeHtml(clue.location || 'Не зафиксировано')}</p>
           ${links.length ? `<section class="notebook-evidence-links" aria-label="Связанные материалы">
             <p class="notebook-evidence-links-title">СВЯЗАННЫЕ МАТЕРИАЛЫ · ${links.filter(link => link.found).length}/${links.length}</p>
             <ul>${links.map(link => `<li>${link.found

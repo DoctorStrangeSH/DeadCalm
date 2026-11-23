@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { findContradictions, hasDiscoveredContradiction } from '../src/js/systems/contradictions.js';
 import { DialogueEngine } from '../src/js/systems/dialogue.js';
 import { GameState } from '../src/js/core/state.js';
+import { NPCMemory } from '../src/js/systems/npc-memory.js';
 import { readFileSync } from 'node:fs';
 
 const rules = [{ id: 'timeline_conflict', clueIds: ['a', 'b'],
@@ -141,17 +142,27 @@ test('phone log appears only after confronting Ray and rewards the documented cl
   assert.equal(followUp.requires_question, 'confront_report_timing');
   assert.equal(followUp.gives_clue, 'court_switchboard_log');
   assert.ok(clues[followUp.gives_clue]);
+  assert.equal(followUp.requires_flag, 'ray_promised_check_calls');
   const oldAsked = DialogueEngine._askedQuestions;
   const oldCase = GameState.currentCase;
+  const oldNPCMemory = GameState.npcMemory;
+  const oldNPC = DialogueEngine._currentNPC;
   try {
+    DialogueEngine._currentNPC = 'npc_ray_morgan';
     DialogueEngine._askedQuestions = ['initial_report'];
     GameState.currentCase = { clues: [], hypotheses: [] };
+    GameState.npcMemory = { npc_ray_morgan: { flags: {} } };
     assert.equal(DialogueEngine._isResponseAvailable(followUp), false);
     DialogueEngine._askedQuestions.push('confront_report_timing');
+    assert.equal(DialogueEngine._isResponseAvailable(followUp), false,
+      'asking the question alone must not count as Ray keeping his promise');
+    GameState.npcMemory.npc_ray_morgan.flags.ray_promised_check_calls = true;
     assert.equal(DialogueEngine._isResponseAvailable(followUp), true);
   } finally {
     DialogueEngine._askedQuestions = oldAsked;
+    DialogueEngine._currentNPC = oldNPC;
     GameState.currentCase = oldCase;
+    GameState.npcMemory = oldNPCMemory;
   }
 });
 
@@ -191,4 +202,18 @@ test('court register interview requires prior evidence and trust, but formal req
     DialogueEngine._currentNPC = previousNPC;
     DialogueEngine._askedQuestions = previousAsked;
   }
+});
+
+
+test('one clue repeated twice cannot manufacture a contradiction requiring two independent facts', () => {
+  const duplicateRule = [{ id: 'fake_conflict', clueIds: ['a', 'a'], summary: 'Невозможное противоречие' }];
+  assert.deepEqual(findContradictions({ clueIds: ['a'] }, [{ id: 'a' }], duplicateRule), []);
+  assert.deepEqual(findContradictions({ clueIds: ['a', 'a'] }, [{ id: 'a' }, { id: 'a' }], duplicateRule), []);
+});
+
+test('malformed case and clue collections fail closed instead of throwing', () => {
+  assert.deepEqual(findContradictions(null, discovered, rules), []);
+  assert.deepEqual(findContradictions({ clueIds: ['a', 'b'] }, null, rules), []);
+  assert.deepEqual(findContradictions({ clueIds: ['a', 'b'] }, [{ id: null }, null], rules), []);
+  assert.deepEqual(findContradictions({ clueIds: ['a', 'b'] }, discovered, null), []);
 });

@@ -1,12 +1,19 @@
 import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { isLocationUnlocked } from '../systems/location-access.js';
+import { getNpcPresenceAtLocation } from '../systems/npc-presence.js';
+import { DialogBox } from './dialog-box.js';
+
+// A city-map scene can be opened repeatedly inside the same persistent container.
+// Keep one delegated click listener per container to avoid stale Map instances.
+const containerClickHandlers = new WeakMap();
 
 /** Интерактивный атлас Блэкфорда. Открытость локаций задаётся locations.json. */
 export class Map {
-  constructor(container, locations) {
+  constructor(container, locations, characters = {}) {
     this.container = container;
     this.locations = locations;
+    this.characters = characters;
     this.selectedLocation = null;
   }
 
@@ -41,10 +48,15 @@ export class Map {
         <p class="text-gray-500 text-xs text-center">Выберите локацию на карте или в списке</p>
       </div>
     `;
-    this.container.addEventListener('click', event => {
+    const previousHandler = containerClickHandlers.get(this.container);
+    if (previousHandler) this.container.removeEventListener('click', previousHandler);
+
+    const handler = event => {
       const button = event.target.closest('[data-location]');
       if (button && this.container.contains(button)) this._selectLocation(button.dataset.location);
-    });
+    };
+    containerClickHandlers.set(this.container, handler);
+    this.container.addEventListener('click', handler);
   }
 
   _renderLocation(loc) {
@@ -78,10 +90,28 @@ export class Map {
     info.innerHTML = `<div class="atlas-location-detail"><span class="atlas-detail-seal">◆</span><div class="atlas-detail-content">
       <p class="text-gold">${loc.name}</p>
       <p class="text-gray-400 text-sm mt-2">${loc.description}</p>
-      ${loc.npc ? '<p class="text-gray-500 text-xs mt-2">Здесь можно поговорить с персонажем</p>' : ''}
+      ${loc.npc ? (() => {
+        const character = this.characters[loc.npc];
+        const presence = getNpcPresenceAtLocation(character, loc, GameState);
+        const name = character?.name || 'Персонаж';
+        const label = presence.available ? 'МОЖНО ВСТРЕТИТЬ' : presence.status === 'not_yet_introduced' ? 'ПОЯВИТСЯ ПОЗЖЕ' : 'НЕТ ПОДТВЕРЖДЁННОГО ПОЯВЛЕНИЯ';
+        const talkAction = presence.available
+          ? '<button type="button" id="btn-talk-npc" class="btn-noir text-xs py-2 mt-3 w-full">ПОГОВОРИТЬ ↗</button>'
+          : '';
+        return '<div class="mt-3 border-l-2 border-gray-700 pl-3"><p class="text-gray-300 text-xs">' +
+          name + ' · ' + label + '</p><p class="text-gray-500 text-xs mt-1">' + presence.reason +
+          '</p>' + talkAction + '</div>';
+      })() : ''}
       <button id="btn-go-location" class="btn-noir text-xs py-2 mt-4 w-full">ОТПРАВИТЬСЯ →</button>
     </div></div>`;
     info.querySelector('#btn-go-location').addEventListener('click', () => this._goToLocation(loc));
+    info.querySelector('#btn-talk-npc')?.addEventListener('click', async () => {
+      const character = this.characters[loc.npc];
+      const presence = getNpcPresenceAtLocation(character, loc, GameState);
+      if (!presence.available) return;
+      const dialog = new DialogBox();
+      await dialog.show(loc.npc);
+    });
   }
 
   _highlightLocation(locId) {

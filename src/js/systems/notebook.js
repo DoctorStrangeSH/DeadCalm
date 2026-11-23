@@ -148,11 +148,42 @@ export var Notebook = {
     for (var day in days) {
       text += '\n--- ДЕНЬ ' + day + ' ---\n\n';
       days[day].forEach(function(n) {
-        text += '[' + n.category.toUpperCase() + '] ' + n.title + '\n';
-        text += n.text + '\n';
+        text += '[' + String(n.category || 'общее').toUpperCase() + '] ' + (n.title || 'Без названия') + '\n';
+        text += (n.text || '') + '\n';
+        if (n.source) text += 'Источник: ' + n.source + '\n';
+        if (n.timestamp) text += 'Записано: ' + n.timestamp + '\n';
         text += '---\n\n';
       });
     }
+
+    // The journal export is a complete case notebook: personal notes alone
+    // are not enough to reconstruct what evidence the investigator found.
+    var clues = this.getAllClues();
+    text += '\n=== ОБНАРУЖЕННЫЕ УЛИКИ (' + clues.length + ') ===\n\n';
+    clues.forEach(function(clue) {
+      text += '[' + String(clue.category || 'прочее').toUpperCase() + '] ' +
+        (clue.name || 'Без названия') + '\n';
+      text += (clue.description || '') + '\n';
+      text += 'Источник: ' + (clue.source || 'Не установлен') + '\n';
+      text += 'Место обнаружения: ' + (clue.location || 'Не зафиксировано') + '\n';
+      text += 'День: ' + (clue.day || 1) + '\n';
+      if (clue.foundAt) text += 'Обнаружено: ' + clue.foundAt + '\n';
+      text += 'ID: ' + (clue.id || 'не указан') + '\n---\n\n';
+    });
+
+    var hypotheses = Array.isArray(GameState.currentCase?.hypotheses) ? GameState.currentCase.hypotheses : [];
+    text += '\n=== АРХИВ ГИПОТЕЗ (' + hypotheses.length + ') ===\n\n';
+    hypotheses.forEach(function(hypothesis) {
+      text += (hypothesis.title || 'Версия без названия') + '\n';
+      text += 'Статус: ' + (hypothesis.status || 'unchecked') + '\n';
+      text += (hypothesis.reasoning || '') + '\n';
+      var attached = (hypothesis.clueIds || []).map(function(id) {
+        var clue = clues.find(function(item) { return item.id === id; });
+        return clue ? clue.name : null;
+      }).filter(Boolean);
+      text += 'Опорные улики: ' + (attached.length ? attached.join(', ') : 'Не указаны') + '\n';
+      text += '---\n\n';
+    });
 
     return text;
   }

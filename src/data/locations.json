@@ -88,7 +88,8 @@
     "position": {
       "x": 85,
       "y": 15
-    }
+    },
+    "npc": "npc_sebastian_blackwood"
   },
   "holt_house": {
     "id": "holt_house",
