@@ -151,3 +151,14 @@ Automated coverage: `tests/npc-presence.test.mjs` checks location gates, first-a
 
 
 Automated validation after map integration: GitHub Actions run #858 passed **473/473 tests, 0 failures**. This includes six new NPC-presence tests, map integration checks, map re-entry regression, and full Service Worker import/precache validation. Manual browser/mobile QA remains outstanding.
+
+
+### Direct conversation from the city atlas — 2026-11-23
+
+A location's NPC panel now exposes a **«ПОГОВОРИТЬ»** action only when the canonical presence resolver returns `available: true`. The action re-checks availability at click time before opening the existing `DialogBox`, so a stale panel cannot bypass the story gate. «ОТПРАВИТЬСЯ» remains a separate action for entering the location scene.
+
+The resolver and its regression tests are present in the release branch:
+- `src/js/systems/npc-presence.js`
+- `tests/npc-presence.test.mjs`
+
+This is still story availability, not a claim that the character is physically standing at a particular coordinate or following a minute-by-minute schedule.
