@@ -95,5 +95,9 @@ export function recordCase001MiniGameEvidence(gameState, type, result) {
     return true;
   }
 
-  return Boolean(gameState.addClue(clue));
+  const added = gameState.addClue(clue);
+  // Some lightweight adapters return no value but expose the committed record;
+  // trust the stored clue, not the adapter's return convention.
+  const stored = gameState.getClue?.(clue.id);
+  return Boolean(stored && (stored.quality === undefined || stored.quality === clue.quality) && added !== false);
 }
