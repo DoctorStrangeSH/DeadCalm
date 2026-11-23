@@ -180,3 +180,54 @@ test('resetting all NPC memories restores the complete prior collection when sav
     Object.assign(GameState, previous);
   }
 });
+
+
+test('return conversation count and one-time reaction flag are committed atomically', () => {
+  const previous = captureState();
+  const previousSave = Storage.save;
+  const emitted = [];
+  const off = Events.on('npc:flag_set', payload => emitted.push(payload));
+  try {
+    GameState.npcMemory = {
+      npc_test: {
+        met: true, flags: {}, conversationCount: 4, questionCount: 0,
+        unlockedTopics: [], askedQuestions: [], criticalChoiceMade: false, interviewHistory: []
+      }
+    };
+    const memory = NPCMemory.getMemory('npc_test');
+    Storage.save = () => false;
+    assert.equal(NPCMemory.recordConversation('npc_test', 'return_reaction_seen'), false);
+    assert.equal(memory.conversationCount, 4);
+    assert.equal(memory.flags.return_reaction_seen, undefined);
+    assert.deepEqual(emitted, []);
+
+    Storage.save = () => true;
+    assert.equal(NPCMemory.recordConversation('npc_test', 'return_reaction_seen'), true);
+    assert.equal(memory.conversationCount, 5);
+    assert.equal(memory.flags.return_reaction_seen, true);
+    assert.deepEqual(emitted, []);
+  } finally {
+    off();
+    Storage.save = previousSave;
+    Object.assign(GameState, previous);
+  }
+});
+
+test('return visits without a pending reaction still increment exactly once after a successful save', () => {
+  const previous = captureState();
+  const previousSave = Storage.save;
+  try {
+    GameState.npcMemory = {
+      npc_test: {
+        met: true, flags: {}, conversationCount: 2, questionCount: 0,
+        unlockedTopics: [], askedQuestions: [], criticalChoiceMade: false, interviewHistory: []
+      }
+    };
+    Storage.save = () => true;
+    assert.equal(NPCMemory.recordConversation('npc_test'), true);
+    assert.equal(NPCMemory.getMemory('npc_test').conversationCount, 3);
+  } finally {
+    Storage.save = previousSave;
+    Object.assign(GameState, previous);
+  }
+});
