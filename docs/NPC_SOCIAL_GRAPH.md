@@ -114,10 +114,17 @@ The board and dialogue discovery card label these records as testimony requiring
 Event metadata is optional for compatibility with older saves. The normalizer rejects invalid reporters, unsupported source/certainty values, and empty story-time labels. Recording the same authored event ID twice is idempotent.
 
 Still not implemented:
-- a player-witnessed live NPC-to-NPC meeting scene;
-- schedule-driven occurrence production;
-- knowledge/rumor transfer between NPCs (the existing transfer API still requires an explicit shared meeting event plus compatible schedule occurrences);
+- schedule-driven occurrence production and autonomous NPC movement;
 - automatic rumor propagation or dialogue consumption.
 
 Knowledge transfer guard: `GameState.transferNpcKnowledge` and `GameState.transferNpcRumor` require a matching social event explicitly marked `sourceType: direct_observation` and `certainty: corroborated`, plus two authored schedule occurrences for the participants at the same location and within 15 in-game minutes. An interview/testimony event (including the two new unverified records above) cannot authorize a relay. This keeps a participant's account from being mistaken for a witnessed encounter.
 Validation for this implementation slice: GitHub Actions run #833 passed **465/465 tests, 0 failures** on code/test HEAD `dde287ade1b7a6173a1328e9d2c67d41c546083f`. The test suite covers dialogue discovery, source attribution, save export/import, event normalization, duplicate rejection, and the stricter witnessed-meeting gate for knowledge relay. Manual browser/mobile presentation QA remains outstanding.
+## Player-witnessed finale encounter — 2026-11-23
+
+The day-five port finale now records the authored face-to-face confrontation between Markus Holt and Sebastian Blackwood when the player chooses to find Markus. The scene explicitly shows Markus admitting his own falsification, Sebastian confronting him, and Sebastian trying to seize the box containing the originals.
+
+The event is persisted as `direct_observation` / `corroborated`, with source reference `scene:port:day5:final_confrontation`. It is not recorded from a character's hearsay, and it does not claim that the confrontation proves who killed Harrison. The board attributes the source to John Rivers' personal observation.
+
+This is a single authored story encounter, **not** an autonomous daily schedule. No clock time or recurring NPC routine has been invented. Knowledge/rumor relay remains unavailable until compatible, source-backed schedule occurrences exist for both participants; this finale encounter alone does not fabricate those occurrences.
+
+Manual verification still required: reach day five in a browser, visit the port, trigger the confrontation, confirm the board entry, reload the save, and verify the entry remains present.
