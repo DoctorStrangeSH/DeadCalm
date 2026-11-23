@@ -564,3 +564,7 @@ body { background:#071015; color:#d3d5cc; }
 .social-tie-heading span { color:#a8c7b5; font:10px 'Courier New',monospace; letter-spacing:.1em; }
 .social-tie-entry p { margin:7px 0 0; color:#b9c5ba; font:12px/1.55 Georgia,serif; }
 .social-graph-empty { padding:12px; border:1px dashed #5c5548; color:#8e897d !important; }
+
+.cinematic-dialog .dialog-social-event-discovery { border-left-color:#c39a68; background:linear-gradient(110deg,#3a3026,#292a29); }
+.cinematic-dialog .dialog-social-event-discovery .dialog-discovery-stamp { color:#d0ad7e; }
+.cinematic-dialog .dialog-social-event-source { display:block; margin-top:8px; color:#9e9a8d; font:10px/1.4 'Courier New',monospace; letter-spacing:.06em; }
