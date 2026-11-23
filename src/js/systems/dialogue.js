@@ -250,6 +250,34 @@ export var DialogueEngine = {
     return this._formatTopicQuestions(topic, unansweredQuestions);
   },
 
+  _recordDiscoveredSocialTie(questionId) {
+    const discoveries = {
+      'her_background': {
+        npcId: 'npc_lydia_winter',
+        otherNpcId: 'npc_gabriel',
+        type: 'family',
+        basis: 'Лидия прямо сообщает, что Габриэль — её брат.',
+        sourceRefs: ['dialogue:npc_lydia_winter:her_background']
+      },
+      'anna_markus_last_seen': {
+        npcId: 'npc_anna_holt',
+        otherNpcId: 'npc_markus_holt',
+        type: 'family',
+        basis: 'В разговоре об оставленных вещах Анна прямо называет Маркуса отцом.',
+        sourceRefs: ['dialogue:npc_anna_holt:anna_markus_last_seen']
+      }
+    };
+    const discovery = discoveries[questionId];
+    if (!discovery || discovery.npcId !== this._currentNPC) return null;
+    const existing = GameState.getSocialTies(discovery.npcId)
+      .find(tie => tie.toNpcId === discovery.otherNpcId && tie.type === discovery.type);
+    if (existing) return null;
+    return GameState.recordSocialTie({
+      ...discovery,
+      status: 'active'
+    });
+  },
+
   askQuestion(questionId) {
     var npcData = this._dialogues?.[this._currentNPC];
     if (!npcData) return null;
@@ -344,6 +372,9 @@ export var DialogueEngine = {
       });
     }
 
+    // Reveal a relationship only after the player has heard its explicit in-game source.
+    const addedSocialTie = this._recordDiscoveredSocialTie(questionId);
+
     // Проверяем критический выбор
     if (foundResponse.triggers_critical) {
       var criticalNode = npcData[foundResponse.triggers_critical];
@@ -356,11 +387,11 @@ export var DialogueEngine = {
           nodeId: foundResponse.triggers_critical,
           questionId
         };
-        return this._formatCriticalChoice(criticalNode, { addedNote, addedClue });
+        return this._formatCriticalChoice(criticalNode, { addedNote, addedClue, addedSocialTie });
       }
     }
 
-    return this._formatAnswer(foundResponse, { addedNote, addedClue });
+    return this._formatAnswer(foundResponse, { addedNote, addedClue, addedSocialTie });
   },
 
   makeCriticalChoice(choiceId) {
@@ -554,6 +585,7 @@ export var DialogueEngine = {
       trust,
       addedNote: context.addedNote || null,
       addedClue: context.addedClue || null,
+      addedSocialTie: context.addedSocialTie || null,
       saveError: Boolean(context.saveError),
       canContinue: true
     };
@@ -571,6 +603,7 @@ export var DialogueEngine = {
       saveError: Boolean(context.saveError),
       addedNote: context.addedNote || null,
       addedClue: context.addedClue || null,
+      addedSocialTie: context.addedSocialTie || null,
       choices: node.choices.map(function(c) {
         return { id: c.id, text: c.text, tone: c.tone || 'neutral' };
       })
