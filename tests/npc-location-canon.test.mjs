@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { getNpcPresenceAtLocation } from '../src/js/systems/npc-presence.js';
 import { readFileSync } from 'node:fs';
 
 const characters = JSON.parse(readFileSync(new URL('../src/data/characters.json', import.meta.url), 'utf8'));
@@ -32,7 +33,6 @@ test('Sebastian is attached to Blackwood Mansion and remains gated by his day-th
 });
 
 
-import { getNpcPresenceAtLocation } from '../src/js/systems/npc-presence.js';
 
 function campaignState(day) {
   const flags = Object.fromEntries(
