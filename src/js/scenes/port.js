@@ -152,8 +152,8 @@ export function render(container) {
 
   const actions = container.querySelector('.story-location-actions');
   const showArchiveAction = () => {
-    if (GameState.hasClue('port_cargo_ledger') && !GameState.hasClue('port_cargo_ledger_archive') &&
-        !actions.querySelector('#btn-port-archive-ledger')) {
+    if (GameState.hasClue('port_cargo_ledger') && !GameState.hasClue('port_cargo_ledger_archive')) {
+      if (actions.querySelector('#btn-port-archive-ledger')) return;
     const archive = document.createElement('button');
     archive.id = 'btn-port-archive-ledger';
     archive.className = 'card text-left w-full';
