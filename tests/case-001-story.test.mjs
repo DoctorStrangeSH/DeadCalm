@@ -80,3 +80,21 @@ test('Marta does not identify Markus as her anonymous source during the first me
   assert.match(firstMeeting, /Кто её оставил — не знаю/);
   assert.doesNotMatch(firstMeeting, /Маркус|Холт/);
 });
+
+
+test('day-five port confrontation records a player-witnessed Markus-Sebastian event, not an invented schedule', () => {
+  const portScene = readFileSync(new URL('../src/js/scenes/port.js', import.meta.url), 'utf8');
+  const finaleGate = portScene.indexOf("if (GameState.campaign.day >= 5)");
+  const encounter = portScene.indexOf("event-markus-sebastian-final-confrontation");
+  assert.ok(finaleGate >= 0 && encounter > finaleGate,
+    'the encounter must only be available in the authored day-five finale');
+  const encounterBlock = portScene.slice(encounter, encounter + 1100);
+  assert.match(encounterBlock, /fromNpcId: 'npc_markus_holt'/);
+  assert.match(encounterBlock, /toNpcId: 'npc_sebastian_blackwood'/);
+  assert.match(encounterBlock, /sourceType: 'direct_observation'/);
+  assert.match(encounterBlock, /certainty: 'corroborated'/);
+  assert.match(encounterBlock, /scene:port:day5:final_confrontation/);
+  assert.match(portScene, /Джон оказывается свидетелем их открытого столкновения/);
+  assert.doesNotMatch(encounterBlock, /recordNpcOccurrence|setNpcSchedule/,
+    'a one-off authored confrontation must not fabricate daily schedules or clock times');
+});
