@@ -130,3 +130,21 @@ This is a single authored story encounter, **not** an autonomous daily schedule.
 Manual verification still required: reach day five in a browser, visit the port, trigger the confrontation, confirm the board entry, reload the save, and verify the entry remains present.
 
 Automated validation after the implementation: GitHub Actions run #842 passed **466/466 tests, 0 failures**. The added story-integrity regression verifies that the encounter is gated to day five, records the correct participants and source classification, and does not create fictional schedule occurrences. Browser/mobile playthrough and save-reload QA are still pending.
+## Canon-backed NPC presence on the city map — 2026-11-23
+
+The city atlas now displays whether a location's authored NPC can appear on the current campaign day. The resolver in `src/js/systems/npc-presence.js` requires all three facts to agree:
+
+1. the location is unlocked by its existing story flag;
+2. the character dossier assigns that NPC to this exact location;
+3. the campaign day has reached the dossier's explicit `first_appearance` value.
+
+The map loads `characters.json` and shows the character's name plus one of three grounded states: available, appears later, or no confirmed appearance. Unknown or malformed canon fails closed.
+
+This deliberately does **not** simulate walking, invent clock times, create recurring schedules, or record an occurrence. It is a player-facing availability layer that makes the current story route legible while the schedule/movement system remains unimplemented.
+
+Examples:
+- Anna's dossier says `first_appearance: day_1`, but the Holt house remains locked until day 4; she is therefore not shown as available before the house opens.
+- Sebastian's mansion opens on day 3 and his first appearance is day 3; both gates must be satisfied.
+- The map does not claim that a character is physically present at another location merely because the location is nearby.
+
+Automated coverage: `tests/npc-presence.test.mjs` checks location gates, first-appearance gates, mismatched locations, malformed canon, and the absence of fabricated schedules. Visual-integrity tests verify the map integration. Manual browser/mobile QA remains pending.
