@@ -1,6 +1,7 @@
 import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { isLocationUnlocked } from '../systems/location-access.js';
+import { getNpcPresenceAtLocation } from '../systems/npc-presence.js';
 
 // A city-map scene can be opened repeatedly inside the same persistent container.
 // Keep one delegated click listener per container to avoid stale Map instances.
@@ -8,9 +9,10 @@ const containerClickHandlers = new WeakMap();
 
 /** Интерактивный атлас Блэкфорда. Открытость локаций задаётся locations.json. */
 export class Map {
-  constructor(container, locations) {
+  constructor(container, locations, characters = {}) {
     this.container = container;
     this.locations = locations;
+    this.characters = characters;
     this.selectedLocation = null;
   }
 
@@ -87,7 +89,14 @@ export class Map {
     info.innerHTML = `<div class="atlas-location-detail"><span class="atlas-detail-seal">◆</span><div class="atlas-detail-content">
       <p class="text-gold">${loc.name}</p>
       <p class="text-gray-400 text-sm mt-2">${loc.description}</p>
-      ${loc.npc ? '<p class="text-gray-500 text-xs mt-2">Здесь можно поговорить с персонажем</p>' : ''}
+      ${loc.npc ? (() => {
+        const character = this.characters[loc.npc];
+        const presence = getNpcPresenceAtLocation(character, loc, GameState);
+        const name = character?.name || 'Персонаж';
+        const label = presence.available ? 'МОЖНО ВСТРЕТИТЬ' : presence.status === 'not_yet_introduced' ? 'ПОЯВИТСЯ ПОЗЖЕ' : 'НЕТ ПОДТВЕРЖДЁННОГО ПОЯВЛЕНИЯ';
+        return '<div class="mt-3 border-l-2 border-gray-700 pl-3"><p class="text-gray-300 text-xs">' +
+          name + ' · ' + label + '</p><p class="text-gray-500 text-xs mt-1">' + presence.reason + '</p></div>';
+      })() : ''}
       <button id="btn-go-location" class="btn-noir text-xs py-2 mt-4 w-full">ОТПРАВИТЬСЯ →</button>
     </div></div>`;
     info.querySelector('#btn-go-location').addEventListener('click', () => this._goToLocation(loc));
