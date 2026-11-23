@@ -160,3 +160,29 @@ test('all critical choice branches resolve to complete authored outcomes and val
 
   assert.equal(choiceCount, 14, 'all 14 authored critical choice branches must be covered');
 });
+
+
+test('social relationship discoveries are explicit, source-backed and attached to the correct NPC', () => {
+  const discoveries = [];
+  const types = new Set(['family','colleague','friend','rival','debt','protective','romantic','unknown']);
+  const statuses = new Set(['active','strained','broken','uncertain']);
+
+  for (const [npcId, npc] of Object.entries(dialogues)) {
+    for (const [topicId, topic] of Object.entries(npc.topics || {})) {
+      for (const response of topic.responses || []) {
+        if (!response.discovers_social_tie) continue;
+        const tie = response.discovers_social_tie;
+        assert.equal(tie.fromNpcId, npcId, npcId + '/' + response.id + ' tie must originate from the speaking NPC');
+        assert.ok(typeof tie.toNpcId === 'string' && tie.toNpcId.trim());
+        assert.notEqual(tie.fromNpcId, tie.toNpcId);
+        assert.ok(types.has(tie.type));
+        assert.ok(statuses.has(tie.status));
+        assert.ok(typeof tie.basis === 'string' && tie.basis.trim());
+        assert.ok(Array.isArray(tie.sourceRefs) && tie.sourceRefs.includes('dialogue:' + npcId + ':' + response.id));
+        discoveries.push(tie);
+      }
+    }
+  }
+
+  assert.equal(discoveries.length, 2, 'only the two explicitly established family relationships are currently discoverable');
+});
