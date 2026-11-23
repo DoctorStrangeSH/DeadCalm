@@ -109,7 +109,7 @@ function renderEndingChoices(container) {
   });
   result.querySelector('#btn-ending-silence')?.addEventListener('click', () => {
     if (!GameState.hasClue('sebastian_sealed_confession')) {
-      GameState.addClue({
+      const confessionSaved = GameState.addClue({
         id: 'sebastian_sealed_confession',
         name: 'Запечатанное признание Себастьяна',
         category: 'testimony',
@@ -119,6 +119,10 @@ function renderEndingChoices(container) {
         source: 'Подписанное заявление Себастьяна Блэквуда',
         connections_to: ['autopsy_report_01', 'judge_appointment_card', 'belladonna_invoice']
       });
+      if (!confessionSaved && !GameState.hasClue('sebastian_sealed_confession')) {
+        showFinaleSaveError(container);
+        return;
+      }
     }
     if (GameState.completeCampaign('price_of_silence')) renderEnding(container, 'price_of_silence');
     else showFinaleSaveError(container);
