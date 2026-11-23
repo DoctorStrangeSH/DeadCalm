@@ -64,8 +64,14 @@ export function assessCampaignDay(gameState) {
 export function advanceCampaignWhenReady(gameState) {
   const status = assessCampaignDay(gameState);
   if (!status.canAdvance) return { advanced: false, status };
-  const advanced = Boolean(gameState.advanceCampaignDay());
-  if (advanced) gameState.setFlag?.('campaign_day_summary_pending_' + status.day, true);
+  // Production GameState commits the day and recap marker together. Keep the
+  // fallback for small adapters/test doubles that only expose the older API.
+  const advanced = typeof gameState.advanceCampaignDayWithSummary === 'function'
+    ? Boolean(gameState.advanceCampaignDayWithSummary(status.day))
+    : Boolean(gameState.advanceCampaignDay());
+  if (advanced && typeof gameState.advanceCampaignDayWithSummary !== 'function') {
+    gameState.setFlag?.('campaign_day_summary_pending_' + status.day, true);
+  }
   return { advanced, status };
 }
 
