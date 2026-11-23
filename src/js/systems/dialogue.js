@@ -11,6 +11,7 @@ export var DialogueEngine = {
   _contradictionRules: [],
   _currentNPC: null,
   _currentNode: null,
+  _pendingCriticalChoice: null,
   _unlockedTopics: [],
   _askedQuestions: [],
   _initialized: false,
@@ -50,6 +51,7 @@ export var DialogueEngine = {
   reset() {
     this._currentNPC = null;
     this._currentNode = null;
+    this._pendingCriticalChoice = null;
     this._unlockedTopics = [];
     this._askedQuestions = [];
     console.log('[Dialogue] Внутреннее состояние сброшено');
@@ -66,6 +68,7 @@ export var DialogueEngine = {
     }
 
     this._currentNPC = npcId;
+    this._pendingCriticalChoice = null;
 
     // Загружаем сохранённые данные
     this._askedQuestions = NPCMemory.getAskedQuestions(npcId);
@@ -343,6 +346,10 @@ export var DialogueEngine = {
       if (criticalNode && Array.isArray(criticalNode.choices) &&
           !NPCMemory.hasFlag(this._currentNPC, flagName)) {
         console.log('[Dialogue] 🔴 КРИТИЧЕСКИЙ ВЫБОР ОЖИДАЕТ РЕШЕНИЯ');
+        this._pendingCriticalChoice = {
+          nodeId: foundResponse.triggers_critical,
+          questionId
+        };
         return this._formatCriticalChoice(criticalNode, { addedNote, addedClue });
       }
     }
@@ -352,13 +359,19 @@ export var DialogueEngine = {
 
   makeCriticalChoice(choiceId) {
     var npcData = this._dialogues?.[this._currentNPC];
-    if (!npcData) return null;
+    const pending = this._pendingCriticalChoice;
+    if (!npcData || !pending) return null;
 
-    for (var key in npcData) {
-      var node = npcData[key];
-      if (node.choices && node.trigger_question) {
-        var choice = node.choices.find(function(c) { return c.id === choiceId; });
-        if (choice) {
+    const key = pending.nodeId;
+    const node = npcData[key];
+    if (!node || node.trigger_question !== pending.questionId ||
+        !Array.isArray(node.choices) ||
+        NPCMemory.hasFlag(this._currentNPC, 'critical_' + key)) return null;
+
+    const choice = node.choices.find(item => item.id === choiceId);
+    if (!choice) return null;
+
+    {
           console.log('[Dialogue] Критический выбор: ' + choiceId);
           // Commit the decision, trust change and authored memory consequences together.
           const nextNode = npcData[choice.next_dialogue];
@@ -373,6 +386,7 @@ export var DialogueEngine = {
           if (!decision) {
             return this._formatCriticalChoice(node, { saveError: true });
           }
+          this._pendingCriticalChoice = null;
           if (node.trigger_question && !this._askedQuestions.includes(node.trigger_question)) {
             this._askedQuestions.push(node.trigger_question);
           }
@@ -398,8 +412,6 @@ export var DialogueEngine = {
             });
           }
           return null;
-        }
-      }
     }
     return null;
   },
