@@ -233,3 +233,14 @@ test('city atlas displays authored NPC first-appearance availability without sim
   assert.doesNotMatch(map, /advanceCampaignDay|recordNpcOccurrence|setNpcSchedule/,
     'map presence hints must not advance time or create NPC movement/schedules');
 });
+
+
+test('city atlas offers direct dialogue only when the NPC is canonically available', () => {
+  const map = read('src/js/components/map.js');
+  assert.match(map, /import \{ DialogBox \} from '\.\/dialog-box\.js'/);
+  assert.match(map, /presence\.available\s*\?\s*'<button[^']*id="btn-talk-npc"/);
+  assert.match(map, /info\.querySelector\('#btn-talk-npc'\)\?\.addEventListener/);
+  assert.match(map, /if \(!presence\.available\) return/);
+  assert.match(map, /await dialog\.show\(loc\.npc\)/);
+  assert.match(map, /btn-go-location/);
+});
