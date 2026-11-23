@@ -53,8 +53,8 @@ test('every port evidence reward uses the persistence-aware action helper', () =
     assert.match(source, new RegExp(`addPortClue\\(\\{\\s*id: '${clueId}'`),
       clueId + ' must be committed through addPortClue');
   }
-  assert.match(source, /addPortClue\\(markusStatement, meet,/,
+  assert.match(source, /addPortClue\(markusStatement, meet,/,
     'Markus testimony must be saved before the confrontation is recorded');
-  assert.equal((source.match(/GameState\\.addClue\\(/g) || []).length, 1,
+  assert.equal((source.match(/GameState\.addClue\(/g) || []).length, 1,
     'only the shared helper may call GameState.addClue in the port scene');
 });
