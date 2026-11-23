@@ -108,3 +108,36 @@ test('hasAnyRecord detects corrupt records even when no valid copy can be parsed
     globalThis.localStorage = previous;
   }
 });
+
+
+test('save fails only when it cannot stage a complete recoverable payload', () => {
+  const previous = globalThis.localStorage;
+  globalThis.localStorage = {
+    getItem() { return null; },
+    setItem() { throw new Error('storage quota exceeded'); },
+    removeItem() {},
+    key() { return null; },
+    get length() { return 0; }
+  };
+  try {
+    assert.equal(Storage.save('gameState', { day: 1 }), false);
+  } finally {
+    globalThis.localStorage = previous;
+  }
+});
+
+test('removeBackup deletes only the previous campaign backup', () => {
+  const previous = globalThis.localStorage;
+  globalThis.localStorage = createMemoryStorage();
+  try {
+    localStorage.setItem('deadCalm_gameState', JSON.stringify({ day: 1 }));
+    localStorage.setItem('deadCalm_gameState__backup', JSON.stringify({ day: 5 }));
+    localStorage.setItem('deadCalm_gameState__pending', JSON.stringify({ day: 2 }));
+    assert.equal(Storage.removeBackup('gameState'), true);
+    assert.deepEqual(JSON.parse(localStorage.getItem('deadCalm_gameState')), { day: 1 });
+    assert.deepEqual(JSON.parse(localStorage.getItem('deadCalm_gameState__pending')), { day: 2 });
+    assert.equal(localStorage.getItem('deadCalm_gameState__backup'), null);
+  } finally {
+    globalThis.localStorage = previous;
+  }
+});
