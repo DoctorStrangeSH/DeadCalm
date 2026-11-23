@@ -155,7 +155,7 @@ export var GameState = {
       this.saveBlocked = true;
       Events.emit('save:invalid', { reason: 'no-valid-recovery-copy' });
       console.error('[State] Все копии сохранения повреждены. Исходные данные оставлены нетронутыми; запись заблокирована.');
-      return false;
+      return this.saveStatus === 'missing' ? 'corrupt' : this.saveStatus;
     }
     const migration = rawSaved ? migrateSave(rawSaved) : null;
     if (migration && migration.status === 'unsupported') {
