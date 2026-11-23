@@ -186,3 +186,29 @@ test('social relationship discoveries are explicit, source-backed and attached t
 
   assert.equal(discoveries.length, 2, 'only the two explicitly established family relationships are currently discoverable');
 });
+
+
+test('NPC interaction events are authored as attributed, unverified testimony with source references', () => {
+  const events = [];
+  for (const [npcId, npc] of Object.entries(dialogues)) {
+    for (const [topicId, topic] of Object.entries(npc.topics || {})) {
+      for (const response of topic.responses || []) {
+        if (!response.discovers_social_event) continue;
+        const event = response.discovers_social_event;
+        assert.ok(event.id && event.id.trim());
+        assert.equal(event.reportedByNpcId, npcId);
+        assert.ok([event.fromNpcId, event.toNpcId].includes(npcId));
+        assert.notEqual(event.fromNpcId, event.toNpcId);
+        assert.ok(event.description && event.description.trim());
+        assert.ok(event.timeLabel && event.timeLabel.trim());
+        assert.equal(event.sourceType, 'interview');
+        assert.equal(event.certainty, 'unverified',
+          'a participant account must not become an established fact automatically');
+        assert.deepEqual(event.sourceRefs, ['dialogue:' + npcId + ':' + response.id]);
+        events.push(event);
+      }
+    }
+  }
+  assert.equal(events.length, 2,
+    'only the two explicitly authored NPC interaction accounts are currently recorded');
+});
