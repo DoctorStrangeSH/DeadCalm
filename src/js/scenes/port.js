@@ -3,6 +3,22 @@ import { GameState } from '../core/state.js';
 import { Events } from '../core/events.js';
 import { assessFinalEvidence, buildFinalEvidenceDossier } from '../systems/campaign-progression.js';
 
+function addPortClue(clue, button, successLabel) {
+  const added = GameState.addClue(clue);
+  const title = button.querySelector?.('.card-title');
+  if (!added) {
+    if (title) title.textContent = 'НЕ УДАЛОСЬ СОХРАНИТЬ — ПОВТОРИТЬ';
+    else button.textContent = 'НЕ УДАЛОСЬ СОХРАНИТЬ — ПОВТОРИТЬ';
+    button.disabled = false;
+    return false;
+  }
+
+  if (title) title.textContent = successLabel;
+  else button.textContent = successLabel;
+  button.disabled = true;
+  return true;
+}
+
 const markusStatement = {
   id: 'markus_statement',
   name: 'Показания Маркуса Холта',
@@ -138,7 +154,7 @@ export function render(container) {
     ledger.innerHTML = '<p class="card-title">ПРОВЕРИТЬ ГРУЗОВУЮ КНИГУ</p><p class="card-subtitle">Сверить портовые записи с архивом дела Каллиопы.</p>';
     ledger.addEventListener('click', () => {
       if (GameState.hasClue('port_cargo_ledger')) return;
-      GameState.addClue({
+      addPortClue({
         id: 'port_cargo_ledger',
         name: 'Книга портовых грузов 1967 года',
         category: 'document',
@@ -147,9 +163,7 @@ export function render(container) {
         day: 4,
         source: 'Архив порта',
         connections_to: ['old_case_details', 'restored_film_frame']
-      });
-      ledger.disabled = true;
-      ledger.querySelector('.card-title').textContent = 'ГРУЗОВАЯ КНИГА ДОБАВЛЕНА';
+      }, ledger, 'ГРУЗОВАЯ КНИГА ДОБАВЛЕНА');
     });
     actions.appendChild(ledger);
   }
@@ -161,7 +175,7 @@ export function render(container) {
     archive.innerHTML = '<p class="card-title">СВЕРИТЬ С АРХИВНЫМ ЭКЗЕМПЛЯРОМ</p><p class="card-subtitle">Проверить копию Себастьяна по независимому архиву портового управления.</p>';
     archive.addEventListener('click', () => {
       if (GameState.hasClue('port_cargo_ledger_archive')) return;
-      const added = GameState.addClue({
+      addPortClue({
         id: 'port_cargo_ledger_archive',
         name: 'Архивный экземпляр грузовой книги 1967 года',
         category: 'document',
@@ -170,11 +184,7 @@ export function render(container) {
         day: 4,
         source: 'Архив портового управления',
         connections_to: ['port_cargo_ledger', 'old_case_details', 'belladonna_invoice']
-      });
-      if (added) {
-        archive.disabled = true;
-        archive.querySelector('.card-title').textContent = 'АРХИВНАЯ СВЕРКА ДОБАВЛЕНА';
-      }
+      }, archive, 'АРХИВНАЯ СВЕРКА ДОБАВЛЕНА');
     });
     actions.appendChild(archive);
   }
@@ -186,7 +196,7 @@ export function render(container) {
     invoice.innerHTML = '<p class="card-title">ПРОВЕРИТЬ АПТЕЧНУЮ КНИГУ</p><p class="card-subtitle">Сверить закупки портового офиса с заключением Лидии.</p>';
     invoice.addEventListener('click', () => {
       if (GameState.hasClue('belladonna_invoice')) return;
-      GameState.addClue({
+      addPortClue({
         id: 'belladonna_invoice',
         name: 'Счёт за экстракт белладонны',
         category: 'document',
@@ -195,9 +205,7 @@ export function render(container) {
         day: 4,
         source: 'Портовая аптечная книга',
         connections_to: ['autopsy_report_01', 'port_cargo_ledger']
-      });
-      invoice.disabled = true;
-      invoice.querySelector('.card-title').textContent = 'СЧЁТ ДОБАВЛЕН В ДЕЛО';
+      }, invoice, 'СЧЁТ ДОБАВЛЕН В ДЕЛО');
     });
     actions.appendChild(invoice);
   }
@@ -208,7 +216,14 @@ export function render(container) {
     meet.textContent = GameState.hasClue('markus_statement') ? 'ПРОВЕРИТЬ ПРИЗНАНИЕ МАРКУСА' : 'НАЙТИ МАРКУСА ХОЛТА';
     actions.appendChild(meet);
     meet.addEventListener('click', () => {
-      if (!GameState.hasClue('markus_statement')) GameState.addClue(markusStatement);
+      if (!GameState.hasClue('markus_statement') &&
+          !addPortClue(markusStatement, meet, 'ПОКАЗАНИЯ МАРКУСА СОХРАНЕНЫ')) {
+        const result = container.querySelector('#story-location-result');
+        if (result) {
+          result.innerHTML = '<p class="text-red-300 text-sm" role="alert">Не удалось сохранить показания Маркуса. Сцена не будет засчитана; проверьте хранилище браузера и повторите попытку.</p>';
+        }
+        return;
+      }
       const encounterId = 'event-markus-sebastian-final-confrontation';
       const encounterRecorded = GameState.socialGraph?.events?.some(event => event.id === encounterId) ||
         Boolean(GameState.recordSocialEvent({
