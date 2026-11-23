@@ -1,4 +1,4 @@
-const CACHE_NAME = 'dead-calm-visual-v109';
+const CACHE_NAME = 'dead-calm-visual-v110';
 const ASSETS = [
   "/",
   "/index.html",
@@ -106,6 +106,7 @@ const ASSETS = [
   "/src/js/systems/npc-dossiers.js",
   "/src/js/systems/npc-knowledge.js",
   "/src/js/systems/npc-memory.js",
+  "/src/js/systems/npc-presence.js",
   "/src/js/systems/npc-social-graph.js",
   "/src/js/systems/old-case-board-digest.js",
   "/src/js/systems/old-case-closure.js",
