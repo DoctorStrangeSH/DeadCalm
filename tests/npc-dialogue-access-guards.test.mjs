@@ -193,6 +193,17 @@ test('leaving or resetting a dialogue invalidates its pending critical-choice pr
 
     DialogueEngine.reset();
     assert.equal(DialogueEngine.makeCriticalChoice('anna_respect_boundary'), null);
+
+    setup();
+    DialogueEngine.startDialogue('npc_anna_holt');
+    DialogueEngine.startDialogue('npc_anna_holt');
+    DialogueEngine.selectTopic('about_box');
+    assert.equal(DialogueEngine.askQuestion('anna_box_trust')?.type, 'critical_choice');
+    DialogueEngine.selectTopic('about_markus');
+    assert.equal(DialogueEngine._pendingCriticalChoice, null,
+      'navigating to another topic must invalidate the old choice prompt');
+    assert.equal(DialogueEngine.makeCriticalChoice('anna_respect_boundary'), null);
+    assert.equal(NPCMemory.hasFlag('npc_anna_holt', 'critical_critical_choice_box'), false);
   } finally {
     restore(previous);
   }
