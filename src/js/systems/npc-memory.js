@@ -134,6 +134,42 @@ export var NPCMemory = {
     const relationship = GameState.relationships[npcId] || { trust: 50, met: false };
     const trustBefore = relationship.trust;
     const trustDelta = Number.isFinite(input.trustDelta) ? input.trustDelta : 0;
+    const notebook = Array.isArray(GameState.notebook) ? GameState.notebook : (GameState.notebook = []);
+    const caseClues = Array.isArray(GameState.currentCase?.clues)
+      ? GameState.currentCase.clues
+      : (GameState.currentCase.clues = []);
+    const notebookSnapshot = JSON.parse(JSON.stringify(notebook));
+    const cluesSnapshot = JSON.parse(JSON.stringify(caseClues));
+    let addedNote = null;
+    let addedClue = null;
+
+    if (input.note && typeof input.note.title === 'string' && input.note.title.trim() &&
+        typeof input.note.text === 'string' &&
+        !notebook.some(item => item.title === input.note.title)) {
+      addedNote = {
+        title: input.note.title,
+        text: input.note.text,
+        category: input.note.category || 'общее',
+        timestamp: new Date().toISOString()
+      };
+      notebook.push(addedNote);
+    }
+
+    if (input.clue && typeof input.clue.id === 'string' && input.clue.id &&
+        !caseClues.some(item => item.id === input.clue.id)) {
+      addedClue = {
+        id: input.clue.id,
+        name: input.clue.name,
+        category: input.clue.category,
+        description: input.clue.description,
+        source: input.clue.source || null,
+        location: input.clue.location,
+        day: input.clue.day,
+        connections_to: Array.isArray(input.clue.connections_to) ? [...input.clue.connections_to] : [],
+        foundAt: new Date().toISOString()
+      };
+      caseClues.push(addedClue);
+    }
 
     if (input.questionId && !memory.askedQuestions.includes(input.questionId)) {
       memory.askedQuestions.push(input.questionId);
@@ -180,6 +216,8 @@ export var NPCMemory = {
       memory.askedQuestions = askedRef;
       memory.unlockedTopics = unlockedRef;
       memory.interviewHistory = interviewsRef;
+      notebook.splice(0, notebook.length, ...notebookSnapshot);
+      caseClues.splice(0, caseClues.length, ...cluesSnapshot);
       if (!hadMemory) delete GameState.npcMemory[npcId];
       if (hadRelationship) {
         const current = GameState.relationships[npcId] || {};
@@ -197,6 +235,7 @@ export var NPCMemory = {
     for (const flag of committedFlags) {
       Events.emit('npc:flag_set', { npcId, flag });
     }
+    if (addedClue) Events.emit('clue:added', input.clue);
     if (trustDelta !== 0) {
       Events.emit('relationship:changed', {
         npcId,
@@ -205,7 +244,7 @@ export var NPCMemory = {
         oldTrust: trustBefore
       });
     }
-    return { trustBefore, trustAfter: relationship.trust };
+    return { trustBefore, trustAfter: relationship.trust, addedNote, addedClue };
   },
 
   changeTrust(npcId, delta) {
