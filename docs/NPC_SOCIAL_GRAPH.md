@@ -162,3 +162,12 @@ The resolver and its regression tests are present in the release branch:
 - `tests/npc-presence.test.mjs`
 
 This is still story availability, not a claim that the character is physically standing at a particular coordinate or following a minute-by-minute schedule.
+
+
+### Canonical atlas roster completion — 2026-11-23
+
+The atlas roster now links all six original NPC dossiers to exactly one canonical location. A concrete gap was fixed: `npc_sebastian_blackwood` existed in `characters.json` with `location: blackwood_mansion`, but the mansion record had no `npc` reference, so the atlas could never show his availability or direct conversation action. `locations.json` now declares that reference.
+
+No time-of-day schedule was invented. The story bible establishes a 19:30 appointment with Sebastian on day one at the courthouse, but that is a specific plot event—not a recurring daily routine. The existing daily-life ledger remains empty until recurring schedules are explicitly authored in canon.
+
+Regression coverage: `tests/npc-location-canon.test.mjs` verifies every dossier maps to exactly one matching atlas location, every location reference resolves, and Sebastian's day-three introduction remains intact.
