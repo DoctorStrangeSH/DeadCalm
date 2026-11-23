@@ -75,3 +75,41 @@ test('failed persistence rolls back the finale without leaving a completed campa
     assert.equal(GameState.campaign.ending, null);
   });
 });
+
+
+test('strong evidence can unlock full disclosure after a partial film, without altering the compromise route', () => {
+  withCampaign(5, ['restored_film_frame', 'sebastian_sealed_confession'], () => {
+    const film = GameState.getClue('restored_film_frame');
+    film.quality = 70;
+    assert.equal(GameState.completeCampaign('open_case'), false,
+      'a partial film must never be described as clear independent proof');
+    assert.equal(GameState.campaign.completed, false);
+    film.quality = 100;
+    assert.equal(GameState.completeCampaign('open_case'), true,
+      'replaying the film to a clear frame should permit public disclosure');
+  });
+
+  withCampaign(5, ['restored_film_frame', 'sebastian_sealed_confession'], () => {
+    GameState.getClue('restored_film_frame').quality = 70;
+    assert.equal(GameState.completeCampaign('price_of_silence'), true,
+      'an imperfect film must not block the compromise ending when the dossier is complete');
+  });
+});
+
+test('NPC trust penalties and critical choices cannot silently revoke already obtained mandatory evidence', () => {
+  withCampaign(5, ['restored_film_frame', 'sebastian_sealed_confession'], () => {
+    GameState.getClue('restored_film_frame').quality = 100;
+    GameState.relationships = {
+      npc_ray_morgan: { trust: 0, met: true },
+      npc_marta_hayes: { trust: 0, met: true },
+      npc_father_thomas: { trust: 0, met: true },
+      npc_anna_holt: { trust: 0, met: true },
+      npc_sebastian_blackwood: { trust: 0, met: true }
+    };
+    GameState.npcMemory = {
+      npc_marta_hayes: { flags: { marta_source_pressured: true } },
+      npc_anna_holt: { flags: { anna_box_taken: true } }
+    };
+    assert.equal(GameState.completeCampaign('open_case'), true);
+  });
+});
