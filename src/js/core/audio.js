@@ -108,7 +108,7 @@ export const Audio = {
     this._musicVolume = clamp(value);
     if (this._musicGain?.gain) {
       if (this._ctx && typeof this._musicGain.gain.setTargetAtTime === 'function') {
-        this._musicGain.gain.setTargetAtTime(this._musicVolume, this._ctx.currentTime, 0.04);
+        this._musicGain.gain.setTargetAtTime(this._musicVolume, (this._ctx?.currentTime ?? 0), 0.04);
       } else {
         this._musicGain.gain.value = this._musicVolume;
       }
@@ -120,7 +120,7 @@ export const Audio = {
     this._sfxVolume = clamp(value);
     if (this._sfxGain?.gain) {
       if (this._ctx && typeof this._sfxGain.gain.setTargetAtTime === 'function') {
-        this._sfxGain.gain.setTargetAtTime(this._sfxVolume, this._ctx.currentTime, 0.04);
+        this._sfxGain.gain.setTargetAtTime(this._sfxVolume, (this._ctx?.currentTime ?? 0), 0.04);
       } else {
         this._sfxGain.gain.value = this._sfxVolume;
       }
