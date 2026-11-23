@@ -41,7 +41,7 @@ Each event requires two distinct NPC IDs, a non-empty description, and may inclu
 - Tests: `tests/npc-social-graph.test.mjs`
 - PWA cache: `sw.js`
 
-The data model and state API are implemented. A player-facing graph visualization, authored relationship content, and narrative event producers remain future work. Do not describe those future features as already implemented.
+The data model and state API are implemented. Two canon-backed family relationships are now discovered through dialogue and shown in both the dialogue discovery card and the investigation board. NPC-to-NPC event producers, the wider relationship map, and autonomous social simulation remain future work. Do not describe those future features as already implemented.
 
 ## NPC knowledge ledger
 
