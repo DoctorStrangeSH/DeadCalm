@@ -277,3 +277,53 @@ test('fulfilling an authored NPC promise is saved with the answered question and
     Object.assign(GameState, previous);
   }
 });
+
+
+test('return reaction consumption and authored fulfilment outcome commit or roll back together', () => {
+  const previous = captureState();
+  const previousSave = Storage.save;
+  const emitted = [];
+  const off = Events.on('npc:flag_set', payload => emitted.push(payload));
+  try {
+    GameState.npcMemory = {
+      npc_marta_hayes: {
+        met: true, flags: { marta_source_respected: true }, conversationCount: 2,
+        questionCount: 0, unlockedTopics: [], askedQuestions: [],
+        criticalChoiceMade: true, interviewHistory: []
+      }
+    };
+    Storage.save = () => false;
+    assert.equal(NPCMemory.recordConversation(
+      'npc_marta_hayes',
+      'return_seen_marta_return_protected',
+      'marta_source_protection_confirmed'
+    ), false);
+    assert.equal(NPCMemory.getMemory('npc_marta_hayes').conversationCount, 2);
+    assert.equal(NPCMemory.hasFlag('npc_marta_hayes', 'return_seen_marta_return_protected'), false);
+    assert.equal(NPCMemory.hasFlag('npc_marta_hayes', 'marta_source_protection_confirmed'), false);
+    assert.deepEqual(emitted, []);
+
+    Storage.save = () => true;
+    assert.equal(NPCMemory.recordConversation(
+      'npc_marta_hayes',
+      'return_seen_marta_return_protected',
+      'marta_source_protection_confirmed'
+    ), true);
+    assert.equal(NPCMemory.getMemory('npc_marta_hayes').conversationCount, 3);
+    assert.equal(NPCMemory.hasFlag('npc_marta_hayes', 'return_seen_marta_return_protected'), true);
+    assert.equal(NPCMemory.hasFlag('npc_marta_hayes', 'marta_source_protection_confirmed'), true);
+    assert.deepEqual(emitted, [{
+      npcId: 'npc_marta_hayes',
+      flag: 'marta_source_protection_confirmed'
+    }]);
+
+    const snapshot = GameState.export();
+    GameState.npcMemory = {};
+    assert.equal(GameState.importSave(snapshot), true);
+    assert.equal(NPCMemory.hasFlag('npc_marta_hayes', 'marta_source_protection_confirmed'), true);
+  } finally {
+    off();
+    Storage.save = previousSave;
+    Object.assign(GameState, previous);
+  }
+});
