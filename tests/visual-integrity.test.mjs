@@ -220,3 +220,16 @@ test('procedural audio is unlocked by user gesture and connected to story events
   assert.ok(audio.includes("finale: {") && audio.includes("this.playMusic(theme)"), 'story music themes must include the finale');
   assert.ok(audio.includes('this._ambientGain.gain.value = 1'), 'ambient bus must not attenuate its own signal');
 });
+
+
+test('city atlas displays authored NPC first-appearance availability without simulating movement', () => {
+  const map = read('src/js/components/map.js');
+  const scene = read('src/js/scenes/city-map.js');
+  assert.match(map, /getNpcPresenceAtLocation\(character, loc, GameState\)/);
+  assert.match(map, /МОЖНО ВСТРЕТИТЬ/);
+  assert.match(map, /ПОЯВИТСЯ ПОЗЖЕ/);
+  assert.match(scene, /src\/data\/characters\.json/);
+  assert.match(map, /new Map\(mapContainer, locations, characters\)/);
+  assert.doesNotMatch(map, /advanceCampaignDay|recordNpcOccurrence|setNpcSchedule/,
+    'map presence hints must not advance time or create NPC movement/schedules');
+});
