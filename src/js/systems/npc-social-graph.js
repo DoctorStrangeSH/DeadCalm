@@ -68,6 +68,12 @@ export function appendSocialEvent(graph, input) {
   if (typeof fromNpcId !== 'string' || !fromNpcId.trim() ||
       typeof toNpcId !== 'string' || !toNpcId.trim() || fromNpcId === toNpcId ||
       typeof description !== 'string' || !description.trim()) return null;
+  if (input.reportedByNpcId != null &&
+      (typeof input.reportedByNpcId !== 'string' ||
+       ![fromNpcId, toNpcId].includes(input.reportedByNpcId))) return null;
+  if (input.timeLabel != null && (typeof input.timeLabel !== 'string' || !input.timeLabel.trim())) return null;
+  if (input.sourceType != null && !EVENT_SOURCE_TYPES.has(input.sourceType)) return null;
+  if (input.certainty != null && !EVENT_CERTAINTIES.has(input.certainty)) return null;
   const event = { id: typeof input.id === 'string' && input.id.trim()
       ? input.id.trim() : 'social-event-' + (graph.events.length + 1),
     fromNpcId, toNpcId, description: description.trim(), sourceRefs: cleanRefs(input.sourceRefs),
