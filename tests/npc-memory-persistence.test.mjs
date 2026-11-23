@@ -231,3 +231,49 @@ test('return visits without a pending reaction still increment exactly once afte
     Object.assign(GameState, previous);
   }
 });
+
+
+test('fulfilling an authored NPC promise is saved with the answered question and rolls back on failure', () => {
+  const previous = captureState();
+  const previousSave = Storage.save;
+  const emitted = [];
+  const off = Events.on('npc:flag_set', payload => emitted.push(payload));
+  try {
+    GameState.npcMemory = {
+      npc_ray_morgan: {
+        met: true,
+        flags: { ray_promised_check_calls: true },
+        conversationCount: 2,
+        questionCount: 0,
+        unlockedTopics: ['about_case'],
+        askedQuestions: ['confront_report_timing'],
+        criticalChoiceMade: false,
+        interviewHistory: []
+      }
+    };
+    Storage.save = () => false;
+    assert.equal(NPCMemory.markQuestionAsked('npc_ray_morgan', 'inspect_incoming_calls', {
+      memorySet: 'ray_check_calls_fulfilled'
+    }), false);
+    assert.equal(NPCMemory.hasFlag('npc_ray_morgan', 'ray_check_calls_fulfilled'), false);
+    assert.equal(NPCMemory.getAskedQuestions('npc_ray_morgan').includes('inspect_incoming_calls'), false);
+    assert.deepEqual(emitted, []);
+
+    Storage.save = () => true;
+    assert.equal(NPCMemory.markQuestionAsked('npc_ray_morgan', 'inspect_incoming_calls', {
+      memorySet: 'ray_check_calls_fulfilled'
+    }), true);
+    assert.equal(NPCMemory.hasFlag('npc_ray_morgan', 'ray_check_calls_fulfilled'), true);
+    assert.equal(NPCMemory.getAskedQuestions('npc_ray_morgan').includes('inspect_incoming_calls'), true);
+    assert.deepEqual(emitted, [{ npcId: 'npc_ray_morgan', flag: 'ray_check_calls_fulfilled' }]);
+
+    const snapshot = GameState.export();
+    GameState.npcMemory = {};
+    assert.equal(GameState.importSave(snapshot), true);
+    assert.equal(NPCMemory.hasFlag('npc_ray_morgan', 'ray_check_calls_fulfilled'), true);
+  } finally {
+    off();
+    Storage.save = previousSave;
+    Object.assign(GameState, previous);
+  }
+});
