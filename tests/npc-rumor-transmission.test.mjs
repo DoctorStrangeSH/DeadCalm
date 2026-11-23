@@ -23,7 +23,7 @@ function sourceLedger() {
 function setupMeeting(fromNpcId, toNpcId, suffix) {
   GameState.socialGraph = {
     ties: [],
-    events: [{ id: 'social-' + suffix, fromNpcId, toNpcId, description: 'A witnessed conversation.' }]
+    events: [{ id: 'social-' + suffix, fromNpcId, toNpcId, description: 'A witnessed conversation.', sourceType: 'direct_observation', certainty: 'corroborated', sourceRefs: ['player-witnessed-' + suffix] }]
   };
   GameState.npcDailyLife = {
     schedules: [],
