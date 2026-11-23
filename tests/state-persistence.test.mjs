@@ -221,6 +221,38 @@ test('partial mini-game evidence survives reload and upgrades in place after a s
 });
 
 
+test('mini-game evidence quality is saved atomically and failed upgrades roll back', () => {
+  const previousCase = GameState.currentCase;
+  const previousSave = GameState.save;
+  let writes = 0;
+
+  try {
+    GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [] };
+    GameState.save = () => { writes++; return true; };
+
+    assert.equal(recordCase001MiniGameEvidence(GameState, 'film-restoration', {
+      outcome: 'partial', quality: 78
+    }), true);
+    assert.equal(writes, 1, 'new clue and its quality must be committed in one save');
+    assert.equal(GameState.currentCase.clues.length, 1);
+    assert.equal(GameState.currentCase.clues[0].quality, 78);
+
+    const originalDescription = GameState.currentCase.clues[0].description;
+    GameState.save = () => false;
+    assert.equal(recordCase001MiniGameEvidence(GameState, 'film-restoration', {
+      outcome: 'success', quality: 100
+    }), false, 'a failed quality upgrade must not report success');
+    assert.equal(GameState.currentCase.clues[0].quality, 78,
+      'failed upgrade must restore the previous quality');
+    assert.equal(GameState.currentCase.clues[0].description, originalDescription,
+      'failed upgrade must restore the previous evidence description');
+  } finally {
+    GameState.currentCase = previousCase;
+    GameState.save = previousSave;
+  }
+});
+
+
 test('full investigation state survives save/load and exports nested hypotheses', () => {
   const originalLoad = Storage.load;
   const originalSave = Storage.save;
