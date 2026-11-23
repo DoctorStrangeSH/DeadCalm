@@ -171,3 +171,8 @@ The atlas roster now links all six original NPC dossiers to exactly one canonica
 No time-of-day schedule was invented. The story bible establishes a 19:30 appointment with Sebastian on day one at the courthouse, but that is a specific plot event—not a recurring daily routine. The existing daily-life ledger remains empty until recurring schedules are explicitly authored in canon.
 
 Regression coverage: `tests/npc-location-canon.test.mjs` verifies every dossier maps to exactly one matching atlas location, every location reference resolves, and Sebastian's day-three introduction remains intact.
+
+
+### Reciprocal NPC/location identity guard — 2026-11-23
+
+The presence resolver now requires both sides of the authored relationship to agree: `character.location === location.id` and `location.npc === character.id`. A one-sided or stale reference fails closed as `not_here`; a mismatched NPC can no longer be offered a direct conversation merely because the character dossier points at that location. Regression coverage is in `tests/npc-presence.test.mjs`. PWA cache revision: `dead-calm-visual-v113`.
