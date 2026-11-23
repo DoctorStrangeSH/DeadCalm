@@ -13,9 +13,6 @@ export function getNpcPresenceAtLocation(character, location, state) {
       character.location !== location.id || location.npc !== character.id) {
     return { status: 'not_here', available: false, reason: 'Персонаж не закреплён за этой локацией.' };
   }
-  if (!isLocationUnlocked(location, state)) {
-    return { status: 'location_locked', available: false, reason: 'Локация пока закрыта по сюжету.' };
-  }
   const match = typeof character.first_appearance === 'string'
     ? /^day_([1-5])$/.exec(character.first_appearance)
     : null;
@@ -31,6 +28,9 @@ export function getNpcPresenceAtLocation(character, location, state) {
       firstDay,
       reason: `Персонаж появится не раньше ${firstDay}-го дня расследования.`
     };
+  }
+  if (!isLocationUnlocked(location, state)) {
+    return { status: 'location_locked', available: false, reason: 'Локация пока закрыта по сюжету.' };
   }
   return {
     status: 'available',
