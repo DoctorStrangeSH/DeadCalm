@@ -301,6 +301,88 @@ test('both campaign endings roll back when the final campaign save fails', () =>
 });
 
 
+test('both completed campaign endings survive a fresh-session save reload', () => {
+  const original = {
+    player: GameState.player,
+    currentCase: GameState.currentCase,
+    campaign: GameState.campaign,
+    flags: GameState.flags,
+    relationships: GameState.relationships,
+    npcMemory: GameState.npcMemory,
+    socialGraph: GameState.socialGraph,
+    knowledgeLedger: GameState.knowledgeLedger,
+    npcDailyLife: GameState.npcDailyLife,
+    miniGameProgress: GameState.miniGameProgress,
+    notebook: GameState.notebook,
+    settings: GameState.settings,
+    saveBlocked: GameState.saveBlocked,
+    saveStatus: GameState.saveStatus
+  };
+  const storageMethods = {
+    save: Storage.save,
+    load: Storage.load,
+    inspect: Storage.inspect
+  };
+  const requiredClues = [
+    'autopsy_report_01',
+    'judge_appointment_card',
+    'belladonna_invoice',
+    'matthews_letter',
+    'port_cargo_ledger',
+    'port_cargo_ledger_archive',
+    'markus_statement',
+    'sebastian_delivery_statement'
+  ];
+  let persisted = null;
+
+  try {
+    Storage.save = (key, payload) => {
+      if (key === 'gameState') persisted = structuredClone(payload);
+      return true;
+    };
+    Storage.load = key => key === 'gameState' && persisted ? structuredClone(persisted) : null;
+    Storage.inspect = key => key === 'gameState'
+      ? { status: persisted ? 'valid' : 'missing', data: persisted ? structuredClone(persisted) : null }
+      : { status: 'missing', data: null };
+
+    for (const ending of ['open_case', 'price_of_silence']) {
+      GameState.saveBlocked = false;
+      GameState.currentCase = {
+        id: 'case_001',
+        clues: [
+          ...requiredClues.map(id => ({ id })),
+          ...(ending === 'open_case'
+            ? [{ id: 'restored_film_frame', quality: 100 }]
+            : [{ id: 'port_radio_fragment' }, { id: 'sebastian_sealed_confession' }])
+        ],
+        suspects: [],
+        timeline: [],
+        hypotheses: []
+      };
+      GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+      GameState.flags = { day_2: true, day_3: true, day_4: true, day_5: true };
+
+      assert.equal(GameState.completeCampaign(ending), true, ending + ' should commit');
+      assert.equal(persisted.campaign.completed, true);
+      assert.equal(persisted.campaign.ending, ending);
+
+      GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
+      GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] };
+      assert.equal(GameState.init(), true, 'a fresh app session should restore ' + ending);
+      assert.equal(GameState.campaign.day, 5);
+      assert.equal(GameState.campaign.completed, true);
+      assert.equal(GameState.campaign.ending, ending);
+      assert.equal(GameState.flags.day_5, true);
+      assert.equal(GameState.currentCase.clues.some(clue => clue.id === 'sebastian_sealed_confession'),
+        ending === 'price_of_silence');
+    }
+  } finally {
+    Object.assign(Storage, storageMethods);
+    Object.assign(GameState, original);
+  }
+});
+
+
 test('full investigation state survives save/load and exports nested hypotheses', () => {
   const originalLoad = Storage.load;
   const originalSave = Storage.save;
