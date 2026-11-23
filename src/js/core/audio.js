@@ -98,6 +98,11 @@ export const Audio = {
     if (this._pendingScene) this.setScene(this._pendingScene);
   },
 
+  applySettings(settings = {}) {
+    this.setMusicVolume(Number.isFinite(Number(settings.musicVolume)) ? Number(settings.musicVolume) : this._musicVolume);
+    this.setSfxVolume(Number.isFinite(Number(settings.sfxVolume)) ? Number(settings.sfxVolume) : this._sfxVolume);
+  },
+
   setMusicVolume(value) {
     if (!Number.isFinite(value)) return;
     this._musicVolume = clamp(value);
