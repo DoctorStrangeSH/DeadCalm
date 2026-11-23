@@ -899,3 +899,23 @@ test('campaign day and pending recap are committed atomically or both roll back'
     Object.assign(GameState, original);
   }
 });
+
+
+test('clearing a campaign recap flag rolls back when storage rejects dismissal', () => {
+  const previousFlags = GameState.flags;
+  const previousSave = GameState.save;
+  try {
+    GameState.flags = { campaign_day_summary_pending_1: true };
+    GameState.save = () => false;
+    assert.equal(GameState.clearFlag('campaign_day_summary_pending_1'), false);
+    assert.equal(GameState.hasFlag('campaign_day_summary_pending_1'), true,
+      'a failed dismissal must leave the recap pending');
+
+    GameState.save = () => true;
+    assert.equal(GameState.clearFlag('campaign_day_summary_pending_1'), true);
+    assert.equal(GameState.hasFlag('campaign_day_summary_pending_1'), false);
+  } finally {
+    GameState.flags = previousFlags;
+    GameState.save = previousSave;
+  }
+});
