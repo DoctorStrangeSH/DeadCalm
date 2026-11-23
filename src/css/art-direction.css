@@ -568,3 +568,11 @@ body { background:#071015; color:#d3d5cc; }
 .cinematic-dialog .dialog-social-event-discovery { border-left-color:#c39a68; background:linear-gradient(110deg,#3a3026,#292a29); }
 .cinematic-dialog .dialog-social-event-discovery .dialog-discovery-stamp { color:#d0ad7e; }
 .cinematic-dialog .dialog-social-event-source { display:block; margin-top:8px; color:#9e9a8d; font:10px/1.4 'Courier New',monospace; letter-spacing:.06em; }
+
+/* Attributed NPC interaction testimony on the investigation board. */
+.board-social-events > p { color:#a7a294; font-size:12px; line-height:1.6; }
+.social-event-entry { margin-top:10px; padding:12px 14px; border:1px solid #665b48; border-left:3px solid #c39a68; background:linear-gradient(110deg,#3a3026,#292a29); }
+.social-event-entry .social-tie-heading span { color:#d0ad7e; }
+.social-event-entry > p { margin:7px 0 0; color:#c4bcaa; font:12px/1.55 Georgia,serif; }
+.social-event-entry .social-event-time { color:#e0c59a; font-size:11px; }
+.social-event-entry .social-event-source { color:#9e9a8d; font:10px/1.4 'Courier New',monospace; letter-spacing:.06em; }
