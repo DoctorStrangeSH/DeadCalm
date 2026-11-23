@@ -732,7 +732,20 @@
             "requires_clues": [
               "belladonna_invoice",
               "judge_appointment_card"
-            ]
+            ],
+            "discovers_social_event": {
+              "id": "event-sebastian-harrison-delivery-meeting",
+              "fromNpcId": "npc_sebastian_blackwood",
+              "toNpcId": "npc_harold_harrison",
+              "description": "Себастьян утверждает, что встретился с Гаррисоном и передал ему запечатанный флакон белладонны.",
+              "reportedByNpcId": "npc_sebastian_blackwood",
+              "timeLabel": "Вечер убийства Гаррисона",
+              "sourceType": "interview",
+              "certainty": "unverified",
+              "sourceRefs": [
+                "dialogue:npc_sebastian_blackwood:sebastian_delivery_statement"
+              ]
+            }
           }
         ]
       }
@@ -823,6 +836,19 @@
               "type": "family",
               "status": "active",
               "basis": "Анна прямо называет Маркуса отцом в рассказе о вечере перед его исчезновением.",
+              "sourceRefs": [
+                "dialogue:npc_anna_holt:anna_markus_last_seen"
+              ]
+            },
+            "discovers_social_event": {
+              "id": "event-anna-markus-last-evening",
+              "fromNpcId": "npc_anna_holt",
+              "toNpcId": "npc_markus_holt",
+              "description": "Маркус предупредил Анну не отдавать деревянную коробку без объяснений.",
+              "reportedByNpcId": "npc_anna_holt",
+              "timeLabel": "Вечер перед исчезновением Маркуса",
+              "sourceType": "interview",
+              "certainty": "unverified",
               "sourceRefs": [
                 "dialogue:npc_anna_holt:anna_markus_last_seen"
               ]
