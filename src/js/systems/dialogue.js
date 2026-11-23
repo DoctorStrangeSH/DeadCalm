@@ -131,11 +131,11 @@ export var DialogueEngine = {
     }
 
     // ПОВТОРНАЯ ВСТРЕЧА
-    const pendingCritical = findPendingCriticalDialogueNode(npcData, NPCMemory, npcId);
-    if (pendingCritical) return this._formatCriticalChoice(pendingCritical.node);
-
     const returnReaction = this._getPendingReturnReaction(npcData);
     if (returnReaction) return returnReaction;
+
+    const pendingCritical = findPendingCriticalDialogueNode(npcData, NPCMemory, npcId);
+    if (pendingCritical) return this._formatCriticalChoice(pendingCritical.node);
 
     // Count each successfully persisted return visit, not merely the first meeting.
     if (!NPCMemory.recordConversation(npcId)) {
@@ -416,7 +416,8 @@ export var DialogueEngine = {
     const node = npcData[key];
     if (!node || node.trigger_question !== pending.questionId ||
         !Array.isArray(node.choices) ||
-        NPCMemory.hasFlag(this._currentNPC, 'critical_' + key)) return null;
+        !NPCMemory.hasFlag(this._currentNPC, 'critical_' + key) ||
+        NPCMemory.hasFlag(this._currentNPC, 'critical_choice_resolved_' + key)) return null;
 
     const choice = node.choices.find(item => item.id === choiceId);
     if (!choice) return null;
