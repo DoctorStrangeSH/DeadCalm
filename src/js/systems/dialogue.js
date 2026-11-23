@@ -250,24 +250,8 @@ export var DialogueEngine = {
     return this._formatTopicQuestions(topic, unansweredQuestions);
   },
 
-  _recordDiscoveredSocialTie(questionId) {
-    const discoveries = {
-      'her_background': {
-        fromNpcId: 'npc_lydia_winter',
-        toNpcId: 'npc_gabriel',
-        type: 'family',
-        basis: 'Лидия прямо сообщает, что Габриэль — её брат.',
-        sourceRefs: ['dialogue:npc_lydia_winter:her_background']
-      },
-      'anna_markus_last_seen': {
-        fromNpcId: 'npc_anna_holt',
-        toNpcId: 'npc_markus_holt',
-        type: 'family',
-        basis: 'В разговоре об оставленных вещах Анна прямо называет Маркуса отцом.',
-        sourceRefs: ['dialogue:npc_anna_holt:anna_markus_last_seen']
-      }
-    };
-    const discovery = discoveries[questionId];
+  _recordDiscoveredSocialTie(response) {
+    const discovery = response?.discovers_social_tie;
     if (!discovery || discovery.fromNpcId !== this._currentNPC) return null;
     const existing = GameState.getSocialTies(discovery.fromNpcId)
       .find(tie => tie.type === discovery.type && (
@@ -275,10 +259,7 @@ export var DialogueEngine = {
         (tie.fromNpcId === discovery.toNpcId && tie.toNpcId === discovery.fromNpcId)
       ));
     if (existing) return null;
-    return GameState.recordSocialTie({
-      ...discovery,
-      status: 'active'
-    });
+    return GameState.recordSocialTie(discovery);
   },
 
   askQuestion(questionId) {
@@ -376,7 +357,7 @@ export var DialogueEngine = {
     }
 
     // Reveal a relationship only after the player has heard its explicit in-game source.
-    const addedSocialTie = this._recordDiscoveredSocialTie(questionId);
+    const addedSocialTie = this._recordDiscoveredSocialTie(foundResponse);
 
     // Проверяем критический выбор
     if (foundResponse.triggers_critical) {
