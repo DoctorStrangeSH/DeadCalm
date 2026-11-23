@@ -128,3 +128,5 @@ The event is persisted as `direct_observation` / `corroborated`, with source ref
 This is a single authored story encounter, **not** an autonomous daily schedule. No clock time or recurring NPC routine has been invented. Knowledge/rumor relay remains unavailable until compatible, source-backed schedule occurrences exist for both participants; this finale encounter alone does not fabricate those occurrences.
 
 Manual verification still required: reach day five in a browser, visit the port, trigger the confrontation, confirm the board entry, reload the save, and verify the entry remains present.
+
+Automated validation after the implementation: GitHub Actions run #842 passed **466/466 tests, 0 failures**. The added story-integrity regression verifies that the encounter is gated to day five, records the correct participants and source classification, and does not create fictional schedule occurrences. Browser/mobile playthrough and save-reload QA are still pending.
