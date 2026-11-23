@@ -181,18 +181,12 @@ export function render(container) {
     console.log('🆕 НАЧАЛО НОВОЙ ИГРЫ');
     console.log('═══════════════════════════════');
 
-    // 1. Сбрасываем игровое состояние (улики, заметки, флаги)
-    GameState.reset();
+    // Reset commits the fresh campaign before the old backup is discarded.
+    if (!GameState.reset()) {
+      alert('Не удалось безопасно создать новую игру. Предыдущее сохранение сохранено; освободите место в хранилище браузера и попробуйте снова.');
+      return;
+    }
     Audio.init(GameState.settings);
-
-    // 2. Явно очищаем память всех NPC
-    NPCMemory.resetAll();
-
-    // 3. Очищаем отношения
-    GameState.relationships = {};
-
-    // 4. Сохраняем пустое состояние
-    GameState.save();
 
     // Логируем результат сброса
     console.log('[Menu] ✅ Состояние полностью сброшено');
