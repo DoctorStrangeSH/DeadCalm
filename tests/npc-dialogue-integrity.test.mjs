@@ -116,3 +116,47 @@ test('Anna separates the last-seen account from the physical contents of Markus�
   assert.notEqual(lastSeen.gives_clue, box.gives_clue);
   assert.match(clues.anna_box_contents.description, /не раскрывает назначение ключа/);
 });
+
+
+test('all critical choice branches resolve to complete authored outcomes and valid rewards', () => {
+  const choiceIds = new Set();
+  let choiceCount = 0;
+
+  for (const [npcId, npc] of Object.entries(dialogues)) {
+    for (const [nodeId, node] of Object.entries(npc)) {
+      if (!Array.isArray(node.choices)) continue;
+      assert.ok(typeof node.trigger_question === 'string' && node.trigger_question,
+        npcId + '/' + nodeId + ' needs a trigger question');
+      assert.ok(Object.values(npc.topics || {}).some(topic =>
+        topic.responses.some(response => response.id === node.trigger_question)),
+      npcId + '/' + nodeId + ' trigger question must be authored in an NPC topic');
+
+      for (const choice of node.choices) {
+        choiceCount++;
+        assert.ok(choice.id && !choiceIds.has(choice.id), 'critical choice IDs must be unique: ' + choice.id);
+        choiceIds.add(choice.id);
+        assert.ok(typeof choice.text === 'string' && choice.text.trim().length > 10,
+          npcId + '/' + choice.id + ' needs player-facing choice text');
+        assert.ok(typeof choice.memory_set === 'string' && choice.memory_set.trim(),
+          npcId + '/' + choice.id + ' needs a persistent decision flag');
+        assert.ok(Number.isFinite(choice.effects?.trust) && choice.effects.trust >= -100 && choice.effects.trust <= 100,
+          npcId + '/' + choice.id + ' needs a bounded trust consequence');
+
+        const outcome = npc[choice.next_dialogue];
+        assert.ok(outcome && typeof outcome.text === 'string' && outcome.text.trim().length > 20,
+          npcId + '/' + choice.id + ' points to a missing or incomplete outcome');
+        if (outcome.adds_note) {
+          assert.ok(typeof outcome.adds_note.title === 'string' && outcome.adds_note.title.trim(),
+            npcId + '/' + choice.id + ' note needs a title');
+          assert.ok(typeof outcome.adds_note.text === 'string' && outcome.adds_note.text.trim(),
+            npcId + '/' + choice.id + ' note needs text');
+        }
+        if (outcome.gives_clue) {
+          assert.ok(clues[outcome.gives_clue], npcId + '/' + choice.id + ' references missing clue ' + outcome.gives_clue);
+        }
+      }
+    }
+  }
+
+  assert.equal(choiceCount, 14, 'all 14 authored critical choice branches must be covered');
+});
