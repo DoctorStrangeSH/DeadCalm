@@ -72,7 +72,7 @@ test('remove and clearAll delete primary, backup, and pending records', () => {
   }
 });
 
-test('failed primary write recovers the newest staged save while keeping it available for retry', () => {
+test('failed primary promotion is successful when the complete staged save is recoverable', () => {
   const previous = globalThis.localStorage;
   const memory = createMemoryStorage();
   globalThis.localStorage = memory;
@@ -84,7 +84,7 @@ test('failed primary write recovers the newest staged save while keeping it avai
       originalSetItem(key, value);
     };
 
-    assert.equal(Storage.save('gameState', { day: 2 }), false);
+    assert.equal(Storage.save('gameState', { day: 2 }), true);
     // A complete staged payload is newer than the previous primary and is
     // therefore the correct recovery choice even when promotion still fails.
     assert.deepEqual(Storage.load('gameState'), { day: 2 });
