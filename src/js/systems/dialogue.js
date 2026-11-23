@@ -132,6 +132,15 @@ export var DialogueEngine = {
     const returnReaction = this._getPendingReturnReaction(npcData);
     if (returnReaction) return returnReaction;
 
+    // Count each successfully persisted return visit, not merely the first meeting.
+    if (!NPCMemory.recordConversation(npcId)) {
+      return {
+        type: 'simple',
+        text: 'Не удалось сохранить повторную встречу. Прогресс разговора не изменён — попробуйте ещё раз.',
+        saveError: true
+      };
+    }
+
     console.log('[Dialogue] Повторная встреча');
 
     // Проверяем доступные темы
@@ -631,7 +640,7 @@ export var DialogueEngine = {
         if (!NPCMemory.hasFlag(this._currentNPC, reaction.required_flag) ||
             NPCMemory.hasFlag(this._currentNPC, reaction.consumed_flag)) continue;
 
-        if (!NPCMemory.setFlag(this._currentNPC, reaction.consumed_flag)) {
+        if (!NPCMemory.recordConversation(this._currentNPC, reaction.consumed_flag)) {
           return {
             type: 'simple',
             text: 'Не удалось сохранить реакцию персонажа. Последствие прошлого разговора не отмечено как показанное — попробуйте встретиться ещё раз.',
