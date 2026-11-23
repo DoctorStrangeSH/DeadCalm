@@ -1,14 +1,12 @@
 const DAY_SUMMARIES = {
   1: {
     title: 'Чужое время',
-    established: [
-      'Экспертиза Лидии установила отравление белладонной и более длительное действие яда, чем указано в первом рапорте.',
-      'В ежедневнике Гаррисона назначена встреча с Себастьяном Блэквудом на 19:30.',
-      'Выписка подтверждает звонок из суда, но не называет человека, который его совершил.'
-    ],
-    refuted: [
-      'Карточка встречи не доказывает, что Блэквуд действительно пришёл.',
-      'Запись о звонке сама по себе не устанавливает личность звонившего.'
+    facts: [
+      ['autopsy_report_01', 'established', 'Экспертиза Лидии установила отравление белладонной и более длительное действие яда, чем указано в первом рапорте.'],
+      ['judge_appointment_card', 'established', 'В ежедневнике Гаррисона назначена встреча с Себастьяном Блэквудом на 19:30.'],
+      ['court_switchboard_log', 'established', 'Выписка подтверждает звонок из суда, но не называет человека, который его совершил.'],
+      ['judge_appointment_card', 'refuted', 'Карточка встречи не доказывает, что Блэквуд действительно пришёл.'],
+      ['court_switchboard_log', 'refuted', 'Запись о звонке сама по себе не устанавливает личность звонившего.']
     ],
     unknown: [
       'Кто именно звонил из комнаты секретарей и кто пользовался внутренним номером 17.',
@@ -17,13 +15,11 @@ const DAY_SUMMARIES = {
   },
   2: {
     title: 'Чужие показания',
-    established: [
-      'Марта получила документы от неизвестного источника; сам конверт не раскрывает его личность.',
-      'Письмо Мэтьюса подтверждает, что он дал ложное алиби человеку, связанному с портом.'
-    ],
-    refuted: [
-      'Письмо не доказывает, что Мэтьюс видел убийство Каллиопы.',
-      'Ложное алиби не устанавливает, кто именно совершил убийство.'
+    facts: [
+      ['marta_source_envelope', 'established', 'Марта получила документы от неизвестного источника; сам конверт не раскрывает его личность.'],
+      ['matthews_letter', 'established', 'Письмо Мэтьюса подтверждает, что он дал ложное алиби человеку, связанному с портом.'],
+      ['matthews_letter', 'refuted', 'Письмо не доказывает, что Мэтьюс видел убийство Каллиопы.'],
+      ['matthews_letter', 'refuted', 'Ложное алиби не устанавливает, кто именно совершил убийство.']
     ],
     unknown: [
       'Кем был источник Марты и какие сведения он наблюдал лично.',
@@ -32,13 +28,11 @@ const DAY_SUMMARIES = {
   },
   3: {
     title: 'Человек на холме',
-    established: [
-      'Себастьян предоставил копию грузовой книги с исправлениями и записями о грузах своей компании в ночь гибели Каллиопы.',
-      'Документ связывает компанию Блэквуда с портом и нужным временным окном.'
-    ],
-    refuted: [
-      'Сам факт знакомства Себастьяна с Каллиопой не является доказательством убийства.',
-      'Копия, переданная самим подозреваемым, не становится независимым подтверждением только из-за наличия печатей и записей.'
+    facts: [
+      ['port_cargo_ledger', 'established', 'Себастьян предоставил копию грузовой книги с исправлениями и записями о грузах своей компании в ночь гибели Каллиопы.'],
+      ['port_cargo_ledger', 'established', 'Документ связывает компанию Блэквуда с портом и нужным временным окном.'],
+      ['port_cargo_ledger', 'refuted', 'Сам факт знакомства Себастьяна с Каллиопой не является доказательством убийства.'],
+      ['port_cargo_ledger', 'refuted', 'Копия, переданная самим подозреваемым, не становится независимым подтверждением только из-за наличия печатей и записей.']
     ],
     unknown: [
       'Подлинность и полнота копии, переданной Себастьяном, требуют сравнения с архивным экземпляром.',
@@ -47,13 +41,11 @@ const DAY_SUMMARIES = {
   },
   4: {
     title: 'Плёнка и след Маркуса',
-    established: [
-      'Анна показывает часы, ключ и конверт, оставленные Маркусом; назначение этих вещей пока не установлено.',
-      'Аптечная книга связывает покупку белладонны с офисом Блэквуда, но не называет получателя.'
-    ],
-    refuted: [
-      'Счёт за яд не доказывает, кто именно забрал препарат и применил его.',
-      'Ни один из материалов этого дня сам по себе не устанавливает, кто применил яд.'
+    facts: [
+      ['anna_markus_items', 'established', 'Анна показывает часы, ключ и конверт, оставленные Маркусом; назначение этих вещей пока не установлено.'],
+      ['belladonna_invoice', 'established', 'Аптечная книга связывает покупку белладонны с офисом Блэквуда, но не называет получателя.'],
+      ['belladonna_invoice', 'refuted', 'Счёт за яд не доказывает, кто именно забрал препарат и применил его.'],
+      ['belladonna_invoice', 'refuted', 'Ни один из материалов этого дня сам по себе не устанавливает, кто применил яд.']
     ],
     unknown: [
       'Где находится Маркус, кому предназначен ключ и что содержится в оставленном конверте.',
@@ -62,17 +54,34 @@ const DAY_SUMMARIES = {
   }
 };
 
+function buildEvidenceBackedSummary(day, gameState = {}) {
+  const source = DAY_SUMMARIES[day];
+  if (!source) return null;
+  const hasClue = typeof gameState.hasClue === 'function' ? gameState.hasClue.bind(gameState) : () => false;
+  const established = [];
+  const refuted = [];
+  const missing = [];
+  for (const [clueId, section, text] of source.facts) {
+    if (hasClue(clueId)) (section === 'established' ? established : refuted).push(text);
+    else if (!missing.includes(clueId)) missing.push(clueId);
+  }
+  return {
+    title: source.title,
+    established,
+    refuted,
+    unknown: [...source.unknown],
+    missingEvidence: missing
+  };
+}
+
 export function getCampaignDaySummary(day, gameState = {}, ending = null) {
+  if (day >= 1 && day <= 3) return buildEvidenceBackedSummary(day, gameState);
+
   if (day === 4) {
+    const summary = buildEvidenceBackedSummary(4, gameState);
     const hasFilm = Boolean(gameState.hasClue?.('restored_film_frame'));
     const hasRadio = Boolean(gameState.hasClue?.('port_radio_fragment'));
     const hasVerifiedLedger = Boolean(gameState.hasClue?.('port_cargo_ledger_archive'));
-    const summary = {
-      ...DAY_SUMMARIES[4],
-      established: [...DAY_SUMMARIES[4].established],
-      refuted: [...DAY_SUMMARIES[4].refuted],
-      unknown: [...DAY_SUMMARIES[4].unknown]
-    };
     if (hasVerifiedLedger) summary.established.push('Архивный экземпляр портовой книги независимо подтверждает связь компании Блэквуда с грузами и временным окном 1967 года.');
     if (hasFilm) {
       summary.established.push('Восстановленный кадр помещает Себастьяна и Каллиопу у старого причала незадолго до её смерти; это опровергает часть его алиби.');
@@ -121,7 +130,7 @@ export function getCampaignDaySummary(day, gameState = {}, ending = null) {
     };
   }
 
-  return DAY_SUMMARIES[day] || null;
+  return null;
 }
 
 export function getPendingCampaignDaySummary(gameState) {
