@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { assessCampaignDay, advanceCampaignWhenReady, assessFinalEvidence } from '../src/js/systems/campaign-progression.js';
+import { assessCampaignDay, advanceCampaignWhenReady, assessFinalEvidence, buildFinalEvidenceDossier, getCampaignCaseSummary } from '../src/js/systems/campaign-progression.js';
 
 function state(day, clues = []) {
   const found = new Set(clues);
@@ -32,26 +32,15 @@ test('day three requires a port ledger source, not only a conversation', () => {
   assert.equal(assessCampaignDay(game).canAdvance, false);
   game.hasClue = id => id === 'port_cargo_ledger';
   assert.equal(assessCampaignDay(game).canAdvance, true);
-  game.hasClue = id => id === 'port_cargo_ledger_archive';
-  assert.equal(assessCampaignDay(game).canAdvance, false, 'archive verification alone does not replace Sebastian’s copy');
 });
 
 test('day four accepts either restored film or radio fragment as an independent source', () => {
-  const game = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger_archive', 'port_radio_fragment']);
+  const game = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_radio_fragment']);
   assert.equal(assessCampaignDay(game).canAdvance, true);
-  const withoutIndependentSource = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger_archive']);
+  const withoutIndependentSource = state(4, ['anna_markus_items', 'belladonna_invoice']);
   assert.equal(assessCampaignDay(withoutIndependentSource).canAdvance, false);
-  withoutIndependentSource.hasClue = id => ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger_archive', 'restored_film_frame'].includes(id);
+  withoutIndependentSource.hasClue = id => ['anna_markus_items', 'belladonna_invoice', 'restored_film_frame'].includes(id);
   assert.equal(assessCampaignDay(withoutIndependentSource).canAdvance, true);
-});
-
-test('day four cannot advance on the suspect copy alone; independent archive comparison is mandatory', () => {
-  const suspectCopyOnly = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger', 'port_radio_fragment']);
-  assert.equal(assessCampaignDay(suspectCopyOnly).canAdvance, false);
-  assert.ok(assessCampaignDay(suspectCopyOnly).missing.includes('Независимый архивный экземпляр грузовой книги'));
-
-  const verified = state(4, ['anna_markus_items', 'belladonna_invoice', 'port_cargo_ledger', 'port_cargo_ledger_archive', 'port_radio_fragment']);
-  assert.equal(assessCampaignDay(verified).canAdvance, true);
 });
 
 test('day five is finale-ready and cannot advance to a nonexistent sixth day', () => {
@@ -63,14 +52,15 @@ test('day five is finale-ready and cannot advance to a nonexistent sixth day', (
   assert.equal(game.campaign.day, 5);
 });
 
-test('final accusation requires independent medical, meeting, poison, archive and scene evidence', () => {
+test('final disclosure dossier requires the authored case materials, Sebastian delivery statement and a clear film restoration', () => {
   const found = new Map([
     ['autopsy_report_01', {}],
     ['judge_appointment_card', {}],
     ['belladonna_invoice', {}],
     ['matthews_letter', {}],
     ['port_cargo_ledger', {}],
-    ['port_cargo_ledger_archive', {}],
+    ['markus_statement', {}],
+    ['sebastian_delivery_statement', {}],
     ['port_radio_fragment', {}],
     ['restored_film_frame', { quality: 70 }]
   ]);
@@ -80,16 +70,23 @@ test('final accusation requires independent medical, meeting, poison, archive an
   };
   let result = assessFinalEvidence(game);
   assert.equal(result.ready, true);
-  assert.equal(result.publicReady, false, 'partial film cannot support the full public ending');
+  assert.equal(result.fullDisclosureReady, false, 'partial film cannot support full public disclosure');
+  assert.equal(result.publicReady, result.fullDisclosureReady, 'legacy alias must remain consistent');
   found.set('restored_film_frame', { quality: 100 });
   result = assessFinalEvidence(game);
   assert.equal(result.ready, true);
-  assert.equal(result.publicReady, true);
-  found.delete('port_cargo_ledger_archive');
+  assert.equal(result.fullDisclosureReady, true);
+  assert.equal(result.publicReady, result.fullDisclosureReady, 'legacy alias must remain consistent');
+  found.delete('sebastian_delivery_statement');
   result = assessFinalEvidence(game);
-  assert.equal(result.ready, false, 'the suspect copy cannot replace independent archive verification');
-  assert.ok(result.missing.includes('Независимый архивный экземпляр портовой книги'));
-  found.set('port_cargo_ledger_archive', {});
+  assert.equal(result.ready, false);
+  assert.ok(result.missing.includes('Показание Себастьяна о передаче флакона'));
+  found.set('sebastian_delivery_statement', {});
+  found.delete('markus_statement');
+  result = assessFinalEvidence(game);
+  assert.equal(result.ready, false);
+  assert.ok(result.missing.includes('Признание Маркуса Холта'));
+  found.set('markus_statement', {});
   found.delete('belladonna_invoice');
   result = assessFinalEvidence(game);
   assert.equal(result.ready, false);
@@ -97,16 +94,71 @@ test('final accusation requires independent medical, meeting, poison, archive an
 });
 
 
-test('Markus confession is not a substitute for independent final evidence', () => {
-  const found = new Set(['markus_statement']);
-  const game = { hasClue: id => found.has(id), getClue: () => null };
-  const result = assessFinalEvidence(game);
-  assert.equal(result.ready, false);
-  assert.equal(result.publicReady, false);
-  assert.equal(result.missing.length, 7,
-    'the confession cannot replace six mandatory records and an independent film/radio source');
-  found.add('restored_film_frame');
-  const stillIncomplete = assessFinalEvidence(game);
-  assert.equal(stillIncomplete.ready, false);
-  assert.ok(stillIncomplete.missing.some(item => item.includes('Заключение Лидии')));
+test('case summary reflects an active case before the finale', () => {
+  assert.deepEqual(getCampaignCaseSummary({ campaign: { day: 3, completed: false, ending: null } }), {
+    completed: false,
+    activeCount: 1,
+    completedCount: 0,
+    endingLabel: null
+  });
+});
+
+test('case summary reflects either saved finale using a player-facing label', async () => {
+  assert.deepEqual(getCampaignCaseSummary({ campaign: { day: 5, completed: true, ending: 'open_case' } }), {
+    completed: true,
+    activeCount: 0,
+    completedCount: 1,
+    endingLabel: 'ОТКРЫТОЕ ДЕЛО'
+  });
+  assert.deepEqual(getCampaignCaseSummary({ campaign: { day: 5, completed: true, ending: 'price_of_silence' } }), {
+    completed: true,
+    activeCount: 0,
+    completedCount: 1,
+    endingLabel: 'ЦЕНА МОЛЧАНИЯ'
+  });
+});
+
+
+test('final evidence dossier explains both findings and limits without overstating clues', () => {
+  const found = new Map([
+    ['restored_film_frame', { quality: 100 }],
+    ['port_radio_fragment', { quality: 82 }],
+    ['court_switchboard_log', {}],
+    ['sebastian_delivery_statement', {}]
+  ]);
+  const game = {
+    hasClue: id => found.has(id),
+    getClue: id => found.get(id) || null
+  };
+  const dossier = buildFinalEvidenceDossier(game);
+  const film = dossier.find(item => item.title === 'Восстановленная плёнка');
+  const radio = dossier.find(item => item.title === 'Радиофрагмент');
+  const autopsy = dossier.find(item => item.title === 'Причина смерти');
+  const poison = dossier.find(item => item.title === 'Источник белладонны');
+  const timeline = dossier.find(item => item.title === 'Расхождение во времени');
+
+  assert.match(film.finding, /Себастьян и Каллиопа/);
+  assert.match(film.limit, /не показывает момент убийства/);
+  assert.match(radio.limit, /Голос не идентифицирован/);
+  assert.match(autopsy.limit, /не устанавливает, кто приобрёл яд/);
+  assert.match(poison.limit, /Получатель препарата/);
+  assert.match(timeline.limit, /не устанавливают личность убийцы/);
+  assert.equal(dossier.length, 10);
+  const transfer = dossier.find(item => item.title === 'Передача флакона');
+  assert.match(transfer.finding, /Себастьян подтверждает/);
+  assert.match(transfer.limit, /не доказывает, что Гаррисон выпил/);
+  const charge = dossier.find(item => item.title === 'Основание для официального обвинения');
+  assert.match(charge.finding, /дают основания предъявить официальное обвинение/);
+  assert.match(charge.limit, /не судебный приговор/);
+  assert.match(charge.limit, /должны быть независимо проверены/);
+});
+
+test('partial film is described as unidentified and does not become proof of identity', () => {
+  const game = {
+    hasClue: id => id === 'restored_film_frame',
+    getClue: () => ({ quality: 70 })
+  };
+  const film = buildFinalEvidenceDossier(game).find(item => item.title === 'Восстановленная плёнка');
+  assert.match(film.finding, /две фигуры/);
+  assert.match(film.limit, /нельзя считать установленными/);
 });

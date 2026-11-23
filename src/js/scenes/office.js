@@ -1,8 +1,8 @@
 import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { Inventory } from '../components/inventory.js';
-import { assessCampaignDay, advanceCampaignWhenReady } from '../systems/campaign-progression.js';
-import { getPendingCampaignDaySummary, dismissCampaignDaySummary } from '../systems/campaign-day-summary.js';
+import { assessCampaignDay, advanceCampaignWhenReady, getCampaignCaseSummary } from '../systems/campaign-progression.js';
+import { canAccessCase001MiniGame } from '../systems/minigame-access.js';
 
 /**
  * Кабинет детектива — главный хаб игры.
@@ -14,6 +14,9 @@ export function render(container) {
   var radioProgress = GameState.miniGameProgress?.['radio-tuning'];
   var repairProgress = GameState.miniGameProgress?.['mechanical-repair'];
   var filmProgress = GameState.miniGameProgress?.['film-restoration'];
+  var canRadio = canAccessCase001MiniGame('radio-tuning', GameState);
+  var canRepair = canAccessCase001MiniGame('mechanical-repair', GameState);
+  var canFilm = canAccessCase001MiniGame('film-restoration', GameState);
   var radioStatus = radioProgress
     ? 'Попыток: ' + radioProgress.attempts + ' · Лучший приём: ' + (radioProgress.bestOutcome === 'clear' ? 'чистый' : radioProgress.bestOutcome === 'fragmented' ? 'фрагменты' : 'неразборчиво')
     : 'Ещё не настраивали';
@@ -22,25 +25,7 @@ export function render(container) {
     : 'Ещё не ремонтировали';
   var filmStatus = filmProgress ? 'Попыток: ' + filmProgress.attempts + ' · Лучший результат: ' + filmProgress.bestQuality + '%' : 'Катушка № 014 · ожидает реставрации';
   var campaignStatus = assessCampaignDay(GameState);
-  var pendingDaySummary = getPendingCampaignDaySummary(GameState);
-  var daySummaryMarkup = pendingDaySummary ? `
-    <section id="campaign-day-summary" class="campaign-progress card p-4 mt-4" aria-labelledby="campaign-day-summary-title">
-      <p class="office-kicker">ИТОГ ДНЯ ${pendingDaySummary.day} / 5</p>
-      <h3 id="campaign-day-summary-title" class="text-gold text-sm tracking-widest mt-1">${pendingDaySummary.title}</h3>
-      <div class="mt-3">
-        <p class="text-gray-300 text-xs tracking-widest">УСТАНОВЛЕНО</p>
-        <ul class="campaign-missing">${pendingDaySummary.established.map(item => '<li>— ' + item + '</li>').join('')}</ul>
-      </div>
-      <div class="mt-3">
-        <p class="text-gray-300 text-xs tracking-widest">ОПРОВЕРГНУТО</p>
-        <ul class="campaign-missing">${pendingDaySummary.refuted.map(item => '<li>— ' + item + '</li>').join('')}</ul>
-      </div>
-      <div class="mt-3">
-        <p class="text-gray-300 text-xs tracking-widest">ПОКА НЕИЗВЕСТНО</p>
-        <ul class="campaign-missing">${pendingDaySummary.unknown.map(item => '<li>— ' + item + '</li>').join('')}</ul>
-      </div>
-      <button id="btn-dismiss-day-summary" class="btn-noir w-full py-3 mt-4">ПРОДОЛЖИТЬ</button>
-    </section>` : '';
+  var caseSummary = getCampaignCaseSummary(GameState);
   var campaignMissing = campaignStatus.missing.length
     ? '<ul class="campaign-missing">' + campaignStatus.missing.map(item => '<li>— ' + item + '</li>').join('') + '</ul>'
     : '<p class="text-gray-500 text-xs mt-2">Все условия текущего дня выполнены.</p>';
@@ -113,35 +98,35 @@ export function render(container) {
         </button>
 
         <!-- Радиоприёмная -->
-        <button id="btn-radio" class="card office-card text-left w-full">
+        <button id="btn-radio" class="card office-card text-left w-full" ${canRadio ? "" : "disabled"}>
           <span class="office-card-icon" aria-hidden="true">⌁</span><span class="office-card-number">08</span>
           <p class="card-title">РАДИОПРИЁМНАЯ</p>
-          <p class="card-subtitle">Настроить коротковолновый приёмник</p>
+          <p class="card-subtitle">${canRadio ? "Настроить коротковолновый приёмник" : "Доступно с четвёртого дня расследования"}</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">${radioStatus}</p>
         </button>
 
         <!-- Мастерская -->
-        <button id="btn-repair" class="card office-card text-left w-full">
+        <button id="btn-repair" class="card office-card text-left w-full" ${canRepair ? "" : "disabled"}>
           <span class="office-card-icon" aria-hidden="true">⚙</span><span class="office-card-number">07</span>
           <p class="card-title">МАСТЕРСКАЯ</p>
-          <p class="card-subtitle">Практика ремонта механизма</p>
+          <p class="card-subtitle">${canRepair ? "Практика ремонта механизма" : "Сначала получите вещи Маркуса от Анны · день 4"}</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">${repairStatus}</p>
         </button>
 
         <!-- Реставрация киноплёнки -->
-        <button id="btn-film" class="card office-card text-left w-full">
+        <button id="btn-film" class="card office-card text-left w-full" ${canFilm ? "" : "disabled"}>
           <span class="office-card-icon" aria-hidden="true">▥</span><span class="office-card-number">09</span>
           <p class="card-title">АРХИВ КИНОПЛЁНКИ</p>
-          <p class="card-subtitle">Восстановить повреждённую катушку</p>
+          <p class="card-subtitle">${canFilm ? "Восстановить повреждённую катушку" : "Нужен ключ из часов Маркуса · день 4"}</p>
           <p class="hidden md:block text-gray-600 text-xs mt-3">${filmStatus}</p>
         </button>
 
         <!-- Дела -->
         <button id="btn-cases" class="card office-card text-left w-full">
           <span class="office-card-icon" aria-hidden="true">§</span><span class="office-card-number">06</span>
-          <p class="card-title">АКТИВНЫЕ ДЕЛА</p>
+          <p class="card-title">ДЕЛА</p>
           <p class="card-subtitle">Активные и завершённые расследования</p>
-          <p class="hidden md:block text-gray-600 text-xs mt-3">Активных: 1</p>
+          <p class="hidden md:block text-gray-600 text-xs mt-3">Активных: ${caseSummary.activeCount} · Завершённых: ${caseSummary.completedCount}</p>
         </button>
 
       </div>
@@ -156,11 +141,10 @@ export function render(container) {
         </div>
         ${campaignStatus.day < 5 && !campaignStatus.complete ? campaignMissing : ""}
         ${campaignStatus.finaleReady ? '<p class="text-gray-400 text-sm mt-2">Последняя встреча ждёт вас на старом причале.</p>' : ""}
-        ${campaignStatus.complete ? '<p class="text-gray-400 text-sm mt-2">Сохранённый финал: ' + GameState.campaign.ending + '</p>' : ""}
+        ${campaignStatus.complete ? '<p class="text-gray-400 text-sm mt-2">Сохранённый финал: ' + (caseSummary.endingLabel || 'не определён') + '</p>' : ""}
         ${campaignStatus.day < 5 && !campaignStatus.complete ? '<button id="btn-advance-day" class="btn-noir w-full py-3 mt-3" ' + (campaignStatus.canAdvance ? "" : "disabled") + '>ЗАВЕРШИТЬ ДЕНЬ ' + campaignStatus.day + ' →</button>' : ""}
         ${campaignStatus.finaleReady ? '<button id="btn-go-finale" class="btn-noir w-full py-3 mt-3">ОТПРАВИТЬСЯ В ПОРТ →</button>' : ""}
       </section>
-      ${daySummaryMarkup}
 
       <!-- Статус-бар -->
       <div class="status-bar mt-4 md:mt-8 text-xs md:text-sm">
@@ -180,12 +164,22 @@ export function render(container) {
 
   document.getElementById('btn-advance-day')?.addEventListener('click', function () {
     const result = advanceCampaignWhenReady(GameState);
-    if (result.advanced) Events.emit('navigate', { scene: 'office' });
-  });
-
-  document.getElementById('btn-dismiss-day-summary')?.addEventListener('click', function () {
-    dismissCampaignDaySummary(GameState, pendingDaySummary.day);
-    Events.emit('navigate', { scene: 'office' });
+    if (result.advanced) {
+      Events.emit('navigate', { scene: 'office' });
+      return;
+    }
+    if (result.status?.canAdvance) {
+      const section = document.querySelector('.campaign-progress');
+      if (section && !section.querySelector('[data-campaign-save-error]')) {
+        const message = document.createElement('p');
+        message.dataset.campaignSaveError = 'true';
+        message.className = 'text-red-300 text-sm mt-3';
+        message.setAttribute('role', 'alert');
+        message.setAttribute('aria-live', 'assertive');
+        message.textContent = 'Не удалось сохранить переход на следующий день. Прогресс не изменён — проверьте хранилище браузера и повторите попытку.';
+        section.append(message);
+      }
+    }
   });
 
   document.getElementById('btn-go-finale')?.addEventListener('click', function () {
@@ -194,16 +188,19 @@ export function render(container) {
 
   // Радиоприёмная — отдельная сенсорная мини-игра
   document.getElementById('btn-radio').addEventListener('click', function () {
+    if (!canRadio) return;
     Events.emit('navigate', { scene: 'radio-tuning' });
   });
 
   // Архивная киноплёнка — отдельная сенсорная мини-игра
   document.getElementById('btn-film').addEventListener('click', function () {
+    if (!canFilm) return;
     Events.emit('navigate', { scene: 'film-restoration' });
   });
 
   // Мастерская — отдельная игровая мини-сцена
   document.getElementById('btn-repair').addEventListener('click', function () {
+    if (!canRepair) return;
     Events.emit('navigate', { scene: 'mechanical-repair' });
   });
 
@@ -252,20 +249,25 @@ export function render(container) {
     Events.emit('navigate', { scene: 'timeline' });
   });
 
-  // Дела (заглушка)
+  // Дела — показываем фактическое состояние кампании, а не статическую заглушку.
   document.getElementById('btn-cases').addEventListener('click', function () {
     var overlay = document.createElement('div');
+    var currentCaseStatus = GameState.campaign?.completed ? 'завершено' : 'активно';
+    var endingSummary = caseSummary.completed && caseSummary.endingLabel
+      ? '<p class="text-gold text-xs mt-2">ИТОГ: ' + caseSummary.endingLabel + '</p>'
+      : '';
     overlay.className = 'dialog-overlay';
     overlay.innerHTML = `
-      <div class="dialog-modal">
+      <div class="dialog-modal" role="dialog" aria-modal="true" aria-labelledby="cases-dialog-title">
         <div class="dialog-content">
-          <p class="dialog-type-label">АКТИВНЫЕ ДЕЛА</p>
+          <p class="dialog-type-label" id="cases-dialog-title">ДЕЛА</p>
           <div class="card p-4 mb-3">
             <p class="card-title">🔪 УБИЙСТВО СУДЬИ ГАРРИСОНА</p>
-            <p class="card-subtitle">Дело №001 — активно</p>
+            <p class="card-subtitle">Дело №001 — ${currentCaseStatus}</p>
             <p class="text-gray-500 text-xs mt-2">Судья найден мёртвым в зале суда. Несовпадение времени, звонок из комнаты секретарей и старое дело Каллиопы.</p>
+            ${endingSummary}
           </div>
-          <p class="text-gray-600 text-xs mb-4">Завершённых дел: 0</p>
+          <p class="text-gray-600 text-xs mb-4">Активных дел: ${caseSummary.activeCount} · Завершённых дел: ${caseSummary.completedCount}</p>
           <button class="dialog-btn primary-btn close-cases">ЗАКРЫТЬ</button>
         </div>
       </div>

@@ -10,7 +10,8 @@
     "connections_to": [
       "poison_vial_info",
       "letter_k_mark",
-      "patrol_initial_report"
+      "patrol_initial_report",
+      "sebastian_delivery_statement"
     ]
   },
   "patrol_initial_report": {
@@ -930,7 +931,8 @@
     "source": "Ежедневник Гаррисона",
     "connections_to": [
       "judge_notes",
-      "autopsy_report_01"
+      "autopsy_report_01",
+      "sebastian_delivery_statement"
     ]
   },
   "belladonna_invoice": {
@@ -944,21 +946,36 @@
     "connections_to": [
       "autopsy_report_01",
       "port_cargo_ledger",
-      "port_cargo_ledger_archive"
+      "sebastian_delivery_statement"
     ]
   },
-  "port_cargo_ledger_archive": {
-    "id": "port_cargo_ledger_archive",
-    "name": "Архивный экземпляр грузовой книги 1967 года",
-    "category": "document",
-    "description": "Архивный экземпляр грузовой книги содержит записи о грузах компании Блэквуда в ночь гибели Каллиопы. Сверка с копией, которую Себастьян передал Джону, подтверждает совпадение части записей и выявляет исправления в обеих версиях. Это независимо подтверждает связь компании с портом и временем, но не устанавливает, кто физически убил Каллиопу.",
-    "location": "port",
+  "anna_box_contents": {
+    "id": "anna_box_contents",
+    "name": "Содержимое коробки Маркуса",
+    "category": "object",
+    "description": "В коробке лежат часы Маркуса, старый ключ и запечатанный конверт с пометкой «после проверки плёнки». Это подтверждает, что Маркус оставил Анне предметы и инструкцию, но не раскрывает назначение ключа или содержимое конверта.",
+    "location": "holt_house",
     "day": 4,
-    "source": "Архив портового управления",
+    "source": "Коробка Маркуса, переданная Анной",
     "connections_to": [
-      "port_cargo_ledger",
-      "old_case_details",
-      "belladonna_invoice"
+      "anna_markus_items",
+      "restored_film_frame",
+      "markus_statement"
+    ]
+  },
+  "sebastian_delivery_statement": {
+    "id": "sebastian_delivery_statement",
+    "name": "Показание Себастьяна о передаче флакона",
+    "category": "testimony",
+    "description": "Себастьян подтверждает, что пришёл на назначенную встречу и передал Гаррисону запечатанный флакон из аптечного заказа; на упаковке, по его словам, значился экстракт белладонны. Он утверждает, что ушёл до вскрытия флакона. Показание связывает заказ, встречу и передачу препарата, но само по себе не доказывает, что Гаррисон выпил содержимое или что Себастьян намеревался его отравить.",
+    "location": "blackwood_mansion",
+    "day": 4,
+    "source": "Повторный разговор с Себастьяном Блэквудом",
+    "connections_to": [
+      "judge_appointment_card",
+      "belladonna_invoice",
+      "autopsy_report_01",
+      "port_cargo_ledger"
     ]
   }
 }

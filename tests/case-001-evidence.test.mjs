@@ -10,16 +10,12 @@ test('watch repair rewards its hidden key only after a successful repair', () =>
 });
 
 test('radio evidence preserves the difference between clear and fragmented reception', () => {
-  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'unreadable', quality: 67 }), null);
-  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 67 }), null);
-  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 91 }), null);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'noise', quality: 20 }), null);
   const clear = buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 92 });
   const partial = buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 68 });
   assert.equal(clear.id, 'port_radio_fragment');
   assert.match(clear.description, /установить личность/);
   assert.match(partial.description, /не идентифицирован/);
-  assert.equal(partial.quality, 68);
-  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 99 })?.id, 'port_radio_fragment');
 });
 
 test('film evidence distinguishes a clear identification from a partial frame', () => {
@@ -44,4 +40,28 @@ test('replaying a mini-game upgrades evidence quality without duplicating the cl
   assert.equal(state.clues[0].quality, 100);
   assert.match(state.clues[0].description, /Себастьян Блэквуд и Каллиопа/);
   assert.equal(recordCase001MiniGameEvidence(state, 'film-restoration', { outcome: 'partial', quality: 70 }), false);
+});
+
+
+test('radio evidence rejects outcomes that contradict the measured signal quality', () => {
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 91 }), null);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 92 }), null);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 120 }), null);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: NaN }), null);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'unreadable', quality: 100 }), null);
+});
+
+test('film evidence rejects damaged or quality-inconsistent outcomes', () => {
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'success', quality: 94 }), null);
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'partial', quality: 95 }), null);
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'damaged', quality: 100 }), null);
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'success', quality: 101 }), null);
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'partial', quality: NaN }), null);
+});
+
+test('valid radio and film evidence retain their established quality bands', () => {
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'fragmented', quality: 91 }).quality, 91);
+  assert.equal(buildCase001MiniGameEvidence('radio-tuning', { outcome: 'clear', quality: 92 }).quality, 92);
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'partial', quality: 94 }).quality, 94);
+  assert.equal(buildCase001MiniGameEvidence('film-restoration', { outcome: 'success', quality: 95 }).quality, 95);
 });

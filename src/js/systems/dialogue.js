@@ -3,8 +3,6 @@ import { Events } from '../core/events.js';
 import { NPCMemory } from './npc-memory.js';
 import { resolveDialogueReaction } from './dialogue-reactions.js';
 import { hasDiscoveredContradiction } from './contradictions.js';
-import { claimCriticalDialogueChoice, findPendingCriticalDialogueNode } from './critical-dialogue-choice.js';
-import { canSelectDialogueTopic, canAskDialogueQuestion } from './dialogue-access.js';
 
 export var DialogueEngine = {
   _dialogues: null,
@@ -13,6 +11,7 @@ export var DialogueEngine = {
   _contradictionRules: [],
   _currentNPC: null,
   _currentNode: null,
+  _pendingCriticalChoice: null,
   _unlockedTopics: [],
   _askedQuestions: [],
   _initialized: false,
@@ -52,6 +51,7 @@ export var DialogueEngine = {
   reset() {
     this._currentNPC = null;
     this._currentNode = null;
+    this._pendingCriticalChoice = null;
     this._unlockedTopics = [];
     this._askedQuestions = [];
     console.log('[Dialogue] Внутреннее состояние сброшено');
@@ -68,6 +68,7 @@ export var DialogueEngine = {
     }
 
     this._currentNPC = npcId;
+    this._pendingCriticalChoice = null;
 
     // Загружаем сохранённые данные
     this._askedQuestions = NPCMemory.getAskedQuestions(npcId);
@@ -77,6 +78,15 @@ export var DialogueEngine = {
     if (!npcData) {
       console.warn('[Dialogue] Нет данных для NPC: ' + npcId);
       return null;
+    }
+
+    var character = this.getCharacter(npcId);
+    if (!GameState.ensureRelationship(npcId, character?.initial_trust ?? 50)) {
+      return {
+        type: 'simple',
+        text: 'Не удалось сохранить начало разговора. Ваш прогресс не изменён — проверьте хранилище браузера и попробуйте ещё раз.',
+        saveError: true
+      };
     }
 
     console.log('[Dialogue] === Начало диалога с ' + npcId + ' ===');
@@ -101,40 +111,37 @@ export var DialogueEngine = {
     // ПЕРВАЯ ВСТРЕЧА
     if (!hasMet) {
       console.log('[Dialogue] Первая встреча!');
-      NPCMemory.markMet(npcId);
 
+      // Commit the meeting, its counter and initial topics as one atomic save.
+      // A separate markMet() here would persist and count the same meeting twice.
       var firstNode = npcData.first_meeting;
-      if (firstNode && firstNode.unlocks_topics) {
-        this._unlockedTopics = firstNode.unlocks_topics.slice();
-        NPCMemory.unlockTopics(npcId, firstNode.unlocks_topics);
-        console.log('[Dialogue] Разблокированы темы: ' + this._unlockedTopics.join(', '));
+      const initialTopics = Array.isArray(firstNode?.unlocks_topics) ? firstNode.unlocks_topics : [];
+      if (!NPCMemory.commitFirstMeeting(npcId, initialTopics)) {
+        return {
+          type: 'simple',
+          text: 'Не удалось сохранить первую встречу. Персонаж не отметил разговор как состоявшийся — попробуйте начать его ещё раз.',
+          saveError: true
+        };
       }
+      this._unlockedTopics = NPCMemory.getUnlockedTopics(npcId);
+      console.log('[Dialogue] Разблокированы темы: ' + this._unlockedTopics.join(', '));
       return this._formatFirstMeeting(firstNode, npcId);
     }
 
     // ПОВТОРНАЯ ВСТРЕЧА
+    const returnReaction = this._getPendingReturnReaction(npcData);
+    if (returnReaction) return returnReaction;
+
+    // Count each successfully persisted return visit, not merely the first meeting.
+    if (!NPCMemory.recordConversation(npcId)) {
+      return {
+        type: 'simple',
+        text: 'Не удалось сохранить повторную встречу. Прогресс разговора не изменён — попробуйте ещё раз.',
+        saveError: true
+      };
+    }
+
     console.log('[Dialogue] Повторная встреча');
-
-    // Если игрок сохранился или закрыл игру посреди решающего выбора,
-    // возвращаем незавершённый вопрос вместо потери обязательного решения.
-    var pendingCritical = findPendingCriticalDialogueNode(npcData, NPCMemory, npcId);
-    if (pendingCritical) {
-      return this._formatCriticalChoice(pendingCritical.node);
-    }
-
-    // Однократная реакция на прошлый выбор: NPC помнит поступок и отвечает на него при следующей встрече.
-    var returnReaction = (npcData.return_dialogues || []).find(function(entry) {
-      return entry && entry.requires_flag && entry.seen_flag && entry.node &&
-        NPCMemory.hasFlag(npcId, entry.requires_flag) &&
-        !NPCMemory.hasFlag(npcId, entry.seen_flag) &&
-        npcData[entry.node]?.text;
-    });
-    if (returnReaction) {
-      var reactionNode = this._formatSimpleNode(npcData[returnReaction.node], npcId);
-      // Mark the reaction as seen only after the player acknowledges it in the UI.
-      reactionNode.returnReactionSeenFlag = returnReaction.seen_flag;
-      return reactionNode;
-    }
 
     // Проверяем доступные темы
     var availableTopics = this._getAvailableTopics(npcData);
@@ -213,7 +220,9 @@ export var DialogueEngine = {
 
   _isResponseAvailable(response) {
     if (response.requires_question && !this._askedQuestions.includes(response.requires_question)) return false;
+    if (response.requires_flag && !NPCMemory.hasFlag(this._currentNPC, response.requires_flag)) return false;
     if (response.requires_clue && !GameState.hasClue(response.requires_clue)) return false;
+    if (Array.isArray(response.requires_clues) && !response.requires_clues.every(clueId => GameState.hasClue(clueId))) return false;
     if (response.min_trust != null && NPCMemory.getTrust(this._currentNPC) < response.min_trust) return false;
     return hasDiscoveredContradiction(response.requires_contradiction,
       GameState.currentCase.hypotheses, GameState.currentCase.clues, this._contradictionRules);
@@ -224,11 +233,13 @@ export var DialogueEngine = {
     if (!npcData) return null;
 
     var topic = npcData.topics?.[topicId];
-    if (!topic || !canSelectDialogueTopic(topicId, this._unlockedTopics)) {
-      console.warn('[Dialogue] Тема не найдена: ' + topicId);
+    if (!topic || !this._unlockedTopics.includes(topicId)) {
+      console.warn('[Dialogue] Тема не найдена или ещё не открыта: ' + topicId);
       return null;
     }
 
+    // Moving away from the active choice screen invalidates its one-time prompt.
+    this._pendingCriticalChoice = null;
     var self = this;
     var unansweredQuestions = topic.responses.filter(function(r) {
       return self._askedQuestions.indexOf(r.id) === -1 && self._isResponseAvailable(r);
@@ -248,135 +259,240 @@ export var DialogueEngine = {
     return this._formatTopicQuestions(topic, unansweredQuestions);
   },
 
+  _recordDiscoveredSocialTie(response) {
+    const discovery = response?.discovers_social_tie;
+    if (!discovery || discovery.fromNpcId !== this._currentNPC) return null;
+    const existing = GameState.getSocialTies(discovery.fromNpcId)
+      .find(tie => tie.type === discovery.type && (
+        (tie.fromNpcId === discovery.fromNpcId && tie.toNpcId === discovery.toNpcId) ||
+        (tie.fromNpcId === discovery.toNpcId && tie.toNpcId === discovery.fromNpcId)
+      ));
+    if (existing) return null;
+    return GameState.recordSocialTie(discovery);
+  },
+
+  _recordDiscoveredSocialEvent(response) {
+    const event = response?.discovers_social_event;
+    if (!event || event.reportedByNpcId !== this._currentNPC ||
+        ![event.fromNpcId, event.toNpcId].includes(this._currentNPC)) return null;
+    const existing = GameState.socialGraph?.events?.find(item => item.id === event.id);
+    if (existing) return null;
+    return GameState.recordSocialEvent(event);
+  },
+
   askQuestion(questionId) {
     var npcData = this._dialogues?.[this._currentNPC];
     if (!npcData) return null;
 
-    // Ищем ответ
+    if (this._pendingCriticalChoice && this._pendingCriticalChoice.questionId !== questionId) {
+      this._pendingCriticalChoice = null;
+    }
+
+    // Ищем ответ только в темах, которые действительно открыты игроку.
     var foundResponse = null;
-    var foundTopicId = null;
-    for (var topicId in npcData.topics) {
-      var topic = npcData.topics[topicId];
-      if (topic.responses) {
+    for (var topicId of this._unlockedTopics) {
+      var topic = npcData.topics?.[topicId];
+      if (topic?.responses) {
         var response = topic.responses.find(function(r) { return r.id === questionId; });
         if (response) {
           foundResponse = response;
-          foundTopicId = topicId;
           break;
         }
       }
     }
 
-    if (!canAskDialogueQuestion({ topicId: foundTopicId, unlockedTopics: this._unlockedTopics,
-      askedQuestions: this._askedQuestions, response: foundResponse,
-      isAvailable: response => this._isResponseAvailable(response) })) {
-      console.warn('[Dialogue] Ответ не найден для вопроса: ' + questionId);
+    if (!foundResponse || !this._isResponseAvailable(foundResponse)) {
+      console.warn('[Dialogue] Ответ не найден или недоступен: ' + questionId);
       return null;
     }
 
-    // Отмечаем как заданный
-    this._askedQuestions.push(questionId);
-    NPCMemory.markQuestionAsked(this._currentNPC, questionId);
+    // Критический вопрос остаётся доступным, пока игрок не подтвердит один
+    // из вариантов. Обычные вопросы после первого ответа повторно не исполняются.
+    const pendingCriticalNode = foundResponse.triggers_critical
+      ? npcData[foundResponse.triggers_critical]
+      : null;
+    const criticalFlag = foundResponse.triggers_critical
+      ? 'critical_' + foundResponse.triggers_critical
+      : null;
+    const opensUnresolvedChoice = !!(pendingCriticalNode &&
+      Array.isArray(pendingCriticalNode.choices) &&
+      !NPCMemory.hasFlag(this._currentNPC, criticalFlag));
+
+    if (this._askedQuestions.includes(questionId) && !opensUnresolvedChoice) {
+      console.warn('[Dialogue] Вопрос уже был задан: ' + questionId);
+      return null;
+    }
+
+    const shouldRememberQuestion = !opensUnresolvedChoice;
     console.log('[Dialogue] Задан вопрос: ' + questionId);
 
-    // Добавляем заметку (только для важных)
+    // Добавляем заметку (только для важных); не отмечаем вопрос использованным,
+    // если заметку не удалось сохранить.
+    const noteAlreadyExists = !!(foundResponse.adds_note &&
+      GameState.notebook?.some(item => item.title === foundResponse.adds_note.title));
     var addedNote = foundResponse.adds_note && this._addToNotebook(foundResponse.adds_note)
       ? foundResponse.adds_note : null;
+    if (foundResponse.adds_note && !addedNote && !noteAlreadyExists) {
+      return this._formatAnswer(foundResponse, { saveError: true });
+    }
 
-    // Выдаём улику
+    // Улика считается полученной только после успешной записи сохранения.
     var addedClue = null;
+    var clueSaveFailed = false;
     if (foundResponse.gives_clue) {
       var clue = this._clues?.[foundResponse.gives_clue];
       if (clue && !GameState.hasClue(clue.id)) {
-        GameState.addClue(clue);
-        addedClue = clue;
-        console.log('[Dialogue] Выдана улика: ' + clue.name);
+        if (GameState.addClue(clue) === false) {
+          clueSaveFailed = true;
+          if (shouldRememberQuestion) {
+            const askedIndex = this._askedQuestions.lastIndexOf(questionId);
+            if (askedIndex !== -1) this._askedQuestions.splice(askedIndex, 1);
+          }
+        } else {
+          addedClue = clue;
+          console.log('[Dialogue] Выдана улика: ' + clue.name);
+        }
       }
     }
+
+    if (shouldRememberQuestion && !clueSaveFailed &&
+        !NPCMemory.markQuestionAsked(this._currentNPC, questionId, {
+          memorySet: foundResponse.memory_set || null,
+          memoryClear: foundResponse.memory_clear || null
+        })) {
+      return this._formatAnswer(foundResponse, {
+        addedNote,
+        addedClue,
+        saveError: true
+      });
+    }
+    if (clueSaveFailed) {
+      return this._formatAnswer(foundResponse, {
+        addedNote: null,
+        addedClue: null,
+        saveError: true
+      });
+    }
+
+    // Reveal a relationship only after the player has heard its explicit in-game source.
+    const addedSocialTie = this._recordDiscoveredSocialTie(foundResponse);
+    const addedSocialEvent = this._recordDiscoveredSocialEvent(foundResponse);
 
     // Проверяем критический выбор
     if (foundResponse.triggers_critical) {
       var criticalNode = npcData[foundResponse.triggers_critical];
       var flagName = 'critical_' + foundResponse.triggers_critical;
 
-      if (criticalNode && !NPCMemory.hasFlag(this._currentNPC, flagName)) {
-        NPCMemory.setFlag(this._currentNPC, flagName);
-        console.log('[Dialogue] 🔴 КРИТИЧЕСКИЙ ВЫБОР!');
-        return this._formatCriticalChoice(criticalNode, { addedNote, addedClue });
+      if (criticalNode && Array.isArray(criticalNode.choices) &&
+          !NPCMemory.hasFlag(this._currentNPC, flagName)) {
+        console.log('[Dialogue] 🔴 КРИТИЧЕСКИЙ ВЫБОР ОЖИДАЕТ РЕШЕНИЯ');
+        this._pendingCriticalChoice = {
+          nodeId: foundResponse.triggers_critical,
+          questionId
+        };
+        return this._formatCriticalChoice(criticalNode, { addedNote, addedClue, addedSocialTie, addedSocialEvent });
       }
     }
 
-    return this._formatAnswer(foundResponse, { addedNote, addedClue });
+    return this._formatAnswer(foundResponse, { addedNote, addedClue, addedSocialTie, addedSocialEvent });
   },
 
   makeCriticalChoice(choiceId) {
     var npcData = this._dialogues?.[this._currentNPC];
-    if (!npcData) return null;
+    const pending = this._pendingCriticalChoice;
+    if (!npcData || !pending) return null;
 
-    for (var key in npcData) {
-      var node = npcData[key];
-      if (node.choices && node.trigger_question) {
-        var choice = node.choices.find(function(c) { return c.id === choiceId; });
-        if (choice) {
-          var nextNode = npcData[choice.next_dialogue];
-          if (!nextNode || !claimCriticalDialogueChoice(NPCMemory, this._currentNPC, key)) {
-            console.warn('[Dialogue] Критический выбор уже разрешён или не был открыт: ' + choiceId);
-            return null;
-          }
+    const key = pending.nodeId;
+    const node = npcData[key];
+    if (!node || node.trigger_question !== pending.questionId ||
+        !Array.isArray(node.choices) ||
+        NPCMemory.hasFlag(this._currentNPC, 'critical_' + key)) return null;
 
-          console.log('[Dialogue] Критический выбор: ' + choiceId);
-          var trustBefore = NPCMemory.getTrust(this._currentNPC);
+    const choice = node.choices.find(item => item.id === choiceId);
+    if (!choice) return null;
 
-          if (choice.effects?.trust) {
-            NPCMemory.changeTrust(this._currentNPC, choice.effects.trust);
+    console.log('[Dialogue] Критический выбор: ' + choiceId);
+          // Commit the decision, trust change and authored memory consequences together.
+          const nextNode = npcData[choice.next_dialogue];
+          const nextClue = nextNode?.gives_clue ? this._clues?.[nextNode.gives_clue] : null;
+          if (nextNode?.gives_clue && !nextClue) {
+            console.error('[Dialogue] Не найдена улика критического выбора: ' + nextNode.gives_clue);
+            return this._formatCriticalChoice(node, { saveError: true });
           }
-          if (choice.memory_set) {
-            NPCMemory.setFlag(this._currentNPC, choice.memory_set);
+          const decision = NPCMemory.commitCriticalChoice(this._currentNPC, {
+            questionId: node.trigger_question,
+            choiceFlag: 'critical_' + key,
+            trustDelta: choice.effects?.trust || 0,
+            memorySet: choice.memory_set || null,
+            memoryClear: choice.memory_clear || null,
+            resultFlag: nextNode?.memory_set || null,
+            note: nextNode?.adds_note || null,
+            clue: nextClue
+          });
+          if (!decision) {
+            return this._formatCriticalChoice(node, { saveError: true });
           }
-          if (choice.memory_clear) {
-            NPCMemory.clearFlag(this._currentNPC, choice.memory_clear);
+          this._pendingCriticalChoice = null;
+          if (node.trigger_question && !this._askedQuestions.includes(node.trigger_question)) {
+            this._askedQuestions.push(node.trigger_question);
           }
+          const trustBefore = decision.trustBefore;
 
           if (nextNode) {
-            var addedNote = nextNode.adds_note && this._addToNotebook(nextNode.adds_note)
-              ? nextNode.adds_note : null;
-            var addedClue = null;
-            if (nextNode.gives_clue) {
-              var clue = this._clues?.[nextNode.gives_clue];
-              if (clue && !GameState.hasClue(clue.id)) {
-                GameState.addClue(clue);
-                addedClue = clue;
-              }
-            }
-            if (nextNode.memory_set) {
-              NPCMemory.setFlag(this._currentNPC, nextNode.memory_set);
-            }
             return this._formatCriticalResult(nextNode, {
               type: 'critical_result',
               tone: choice.tone,
               trustDelta: NPCMemory.getTrust(this._currentNPC) - trustBefore,
-              addedNote,
-              addedClue
+              addedNote: decision.addedNote,
+              addedClue: decision.addedClue
             });
           }
-          return null;
-        }
-      }
-    }
     return null;
   },
 
-  acknowledgeReturnReaction(seenFlag) {
-    if (!this._currentNPC || typeof seenFlag !== 'string' || !seenFlag) return false;
-    if (NPCMemory.hasFlag(this._currentNPC, seenFlag)) return false;
-    NPCMemory.setFlag(this._currentNPC, seenFlag);
-    return true;
+  /**
+   * Present discovered evidence against this NPC's recorded account.
+   * The authored reaction is presentation only; evidence never writes a confession
+   * or changes trust unless a separate authored choice explicitly does so.
+   */
+  presentEvidence({ entryId, clueIds, reason, reactionText } = {}) {
+    if (!this._currentNPC || typeof reactionText !== 'string' || !reactionText.trim()) return null;
+    const entry = GameState.getNpcKnowledge(this._currentNPC)
+      .find(item => item.id === entryId);
+    if (!entry) return null;
+
+    const challenged = GameState.challengeNpcKnowledge({
+      entryId,
+      npcId: this._currentNPC,
+      clueIds,
+      reason
+    });
+    if (!challenged) {
+      return {
+        type: 'evidence_challenge',
+        speaker: this.getCharacter(this._currentNPC)?.name || this._currentNPC,
+        text: 'Не удалось зафиксировать предъявление доказательств. Сохранение не изменено — попробуйте ещё раз.',
+        saveError: true
+      };
+    }
+
+    return {
+      type: 'evidence_challenge',
+      speaker: this.getCharacter(this._currentNPC)?.name || this._currentNPC,
+      text: reactionText.trim(),
+      beliefState: challenged.state,
+      challengedEntryId: challenged.id,
+      evidenceIds: [...challenged.challengeHistory.at(-1).clueIds],
+      trust: NPCMemory.getTrust(this._currentNPC),
+      isEnd: true
+    };
   },
 
   backToTopics() {
     var npcData = this._dialogues?.[this._currentNPC];
     if (!npcData) return null;
 
+    this._pendingCriticalChoice = null;
     if (npcData.refuses_to_talk && NPCMemory.hasFlag(this._currentNPC, 'lydia_refuses')) {
       return this._formatSimpleNode(npcData.refuses_to_talk, this._currentNPC);
     }
@@ -393,20 +509,27 @@ export var DialogueEngine = {
 
   _addToNotebook(note) {
     if (!GameState.notebook) GameState.notebook = [];
-    var exists = GameState.notebook.some(function(n) {
-      return n.title === note.title;
-    });
-    if (!exists) {
-      GameState.notebook.push({
-        title: note.title,
-        text: note.text,
-        category: note.category || 'общее',
-        timestamp: new Date().toISOString()
-      });
-      GameState.save();
-      return true;
+    const exists = GameState.notebook.some(item => item.title === note.title);
+    if (exists) return false;
+
+    const record = {
+      title: note.title,
+      text: note.text,
+      category: note.category || 'общее',
+      timestamp: new Date().toISOString()
+    };
+    GameState.notebook.push(record);
+    let saved = false;
+    try {
+      saved = GameState.save();
+    } catch (error) {
+      console.error('[Dialogue] Не удалось сохранить запись в блокноте:', error);
     }
-    return false;
+    if (saved === false) {
+      GameState.notebook.pop();
+      return false;
+    }
+    return true;
   },
 
   // === ФОРМАТИРОВАНИЕ ===
@@ -465,6 +588,9 @@ export var DialogueEngine = {
       trust,
       addedNote: context.addedNote || null,
       addedClue: context.addedClue || null,
+      addedSocialTie: context.addedSocialTie || null,
+      addedSocialEvent: context.addedSocialEvent || null,
+      saveError: Boolean(context.saveError),
       canContinue: true
     };
   },
@@ -478,8 +604,11 @@ export var DialogueEngine = {
       speakerRole: character?.role || '',
       trust: NPCMemory.getTrust(this._currentNPC),
       reaction: resolveDialogueReaction({ type: 'critical_choice' }),
+      saveError: Boolean(context.saveError),
       addedNote: context.addedNote || null,
       addedClue: context.addedClue || null,
+      addedSocialTie: context.addedSocialTie || null,
+      addedSocialEvent: context.addedSocialEvent || null,
       choices: node.choices.map(function(c) {
         return { id: c.id, text: c.text, tone: c.tone || 'neutral' };
       })
@@ -500,6 +629,38 @@ export var DialogueEngine = {
       addedClue: context.addedClue || null,
       isEnd: !!node.end
     };
+  },
+
+  _getPendingReturnReaction(npcData) {
+    for (const node of Object.values(npcData || {})) {
+      if (!Array.isArray(node?.return_reactions)) continue;
+      for (const reaction of node.return_reactions) {
+        if (!reaction || typeof reaction.text !== 'string' ||
+            !reaction.required_flag || !reaction.consumed_flag) continue;
+        if (!NPCMemory.hasFlag(this._currentNPC, reaction.required_flag) ||
+            NPCMemory.hasFlag(this._currentNPC, reaction.consumed_flag)) continue;
+
+        if (!NPCMemory.recordConversation(this._currentNPC, reaction.consumed_flag, reaction.memory_set || null)) {
+          return {
+            type: 'simple',
+            text: 'Не удалось сохранить реакцию персонажа. Последствие прошлого разговора не отмечено как показанное — попробуйте встретиться ещё раз.',
+            saveError: true
+          };
+        }
+        const character = this.getCharacter(this._currentNPC);
+        return {
+          type: 'simple',
+          text: reaction.text,
+          speaker: character?.name || this._currentNPC,
+          speakerRole: character?.role || '',
+          trust: NPCMemory.getTrust(this._currentNPC),
+          isEnd: true,
+          isReturnReaction: true,
+          reactionId: reaction.id
+        };
+      }
+    }
+    return null;
   },
 
   _formatSimpleNode(node, npcId) {

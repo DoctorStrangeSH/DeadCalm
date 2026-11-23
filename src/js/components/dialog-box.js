@@ -1,7 +1,6 @@
 import { DialogueEngine } from '../systems/dialogue.js';
-import { GameState } from '../core/state.js';
-import { getTextDelay } from '../systems/settings.js';
 import { Events } from '../core/events.js';
+import { GameState } from '../core/state.js';
 import { escapeHtml } from '../utils/helpers.js';
 import { resolveTrustFeedback } from '../systems/dialogue-reactions.js';
 
@@ -63,6 +62,7 @@ export class DialogBox {
   async show(npcId) {
     var node = DialogueEngine.startDialogue(npcId);
     if (!node) return;
+    Events.emit('dialogue:opened', { npcId });
 
     // Создаём оверлей
     this._createOverlay();
@@ -152,7 +152,9 @@ export class DialogBox {
     this.isTyping = true;
     textEl.textContent = '';
     const fullText = String(node.text || '');
-    if (reducedMotion) {
+    const textDelays = { slow: 42, normal: 25, fast: 12, instant: 0 };
+    const textDelay = textDelays[GameState.settings?.textSpeed] ?? textDelays.normal;
+    if (reducedMotion || textDelay === 0) {
       textEl.textContent = fullText;
     } else {
       for (let i = 0; i < fullText.length; i++) {
@@ -162,7 +164,7 @@ export class DialogBox {
           break;
         }
         textEl.textContent += fullText[i];
-        await new Promise(resolve => setTimeout(resolve, getTextDelay(GameState.settings?.textSpeed)));
+        await new Promise(resolve => setTimeout(resolve, textDelay));
       }
     }
     if (token !== this.renderToken || !this.container) return;
@@ -219,6 +221,53 @@ export class DialogBox {
       card.append(stamp, title);
       container.appendChild(card);
     }
+
+    if (node.addedSocialTie) {
+      const names = {
+        npc_lydia_winter: 'Доктор Лидия Винтер',
+        npc_anna_holt: 'Анна Холт',
+        npc_gabriel: 'Габриэль',
+        npc_markus_holt: 'Маркус Холт'
+      };
+      const tie = node.addedSocialTie;
+      const card = document.createElement('div');
+      card.className = 'dialog-discovery dialog-social-discovery';
+      const stamp = document.createElement('span');
+      stamp.className = 'dialog-discovery-stamp';
+      stamp.textContent = '◇ СВЯЗЬ · ПОДТВЕРЖДЕНА ИСТОЧНИКОМ';
+      const title = document.createElement('strong');
+      title.className = 'dialog-discovery-title';
+      title.textContent = `${names[tie.fromNpcId] || tie.fromNpcId} — ${names[tie.toNpcId] || tie.toNpcId}`;
+      const basis = document.createElement('p');
+      basis.className = 'dialog-discovery-description';
+      basis.textContent = tie.basis;
+      card.append(stamp, title, basis);
+      container.appendChild(card);
+    }
+
+    if (node.addedSocialEvent) {
+      const event = node.addedSocialEvent;
+      const card = document.createElement('div');
+      card.className = 'dialog-discovery dialog-social-event-discovery';
+      const stamp = document.createElement('span');
+      stamp.className = 'dialog-discovery-stamp';
+      stamp.textContent = event.certainty === 'corroborated'
+        ? '◇ СОБЫТИЕ · ПОДТВЕРЖДЕНО НЕСКОЛЬКИМИ ИСТОЧНИКАМИ'
+        : '◇ СВИДЕТЕЛЬСТВО · ТРЕБУЕТ ПРОВЕРКИ';
+      const title = document.createElement('strong');
+      title.className = 'dialog-discovery-title';
+      title.textContent = event.timeLabel || 'Событие из рассказа персонажа';
+      const description = document.createElement('p');
+      description.className = 'dialog-discovery-description';
+      description.textContent = event.description;
+      const source = document.createElement('span');
+      source.className = 'dialog-social-event-source';
+      source.textContent = 'Источник: ' + (event.reportedByNpcId === 'npc_anna_holt'
+        ? 'Анна Холт' : event.reportedByNpcId === 'npc_sebastian_blackwood'
+          ? 'Себастьян Блэквуд' : event.reportedByNpcId || 'не указан');
+      card.append(stamp, title, description, source);
+      container.appendChild(card);
+    }
   }
 
   _renderChoices(node, choicesEl) {
@@ -228,6 +277,14 @@ export class DialogBox {
     // КРИТИЧЕСКИЙ ВЫБОР
     if (node.type === 'critical_choice') {
       choicesEl.innerHTML = '<p class="critical-warning">Этот выбор изменит отношение персонажа к вам навсегда</p>';
+      if (node.saveError) {
+        const warning = document.createElement('p');
+        warning.className = 'dialog-save-warning text-red-300 text-sm';
+        warning.setAttribute('role', 'alert');
+        warning.setAttribute('aria-live', 'assertive');
+        warning.textContent = 'Не удалось сохранить ваш выбор. Последствия не применены — выберите вариант ещё раз.';
+        choicesEl.appendChild(warning);
+      }
       this._renderDiscoveryCards(node, choicesEl);
 
       if (node.choices) {
@@ -236,8 +293,6 @@ export class DialogBox {
           btn.className = 'dialog-btn critical-btn';
           btn.innerHTML = '<span class="tone-icon">' + self._getToneIcon(choice.tone) + '</span> ' + escapeHtml(choice.text);
           btn.addEventListener('click', async function() {
-            // Lock every alternative immediately; only the first click may resolve this decision.
-            choicesEl.querySelectorAll('button').forEach(function(button) { button.disabled = true; });
             var nextNode = DialogueEngine.makeCriticalChoice(choice.id);
             if (nextNode) await self.render(nextNode);
             else self.close();
@@ -343,6 +398,14 @@ export class DialogBox {
     // ОТВЕТ
     if (node.type === 'answer') {
       this._renderDiscoveryCards(node, choicesEl);
+      if (node.saveError) {
+        const warning = document.createElement('p');
+        warning.className = 'dialog-save-warning text-red-300 text-sm';
+        warning.setAttribute('role', 'alert');
+        warning.setAttribute('aria-live', 'assertive');
+        warning.textContent = 'Не удалось сохранить улику. Вопрос останется доступен — проверьте хранилище браузера и повторите попытку.';
+        choicesEl.appendChild(warning);
+      }
       var continueBtn = document.createElement('button');
       continueBtn.className = 'dialog-btn primary-btn';
       continueBtn.textContent = 'ПРОДОЛЖИТЬ';
@@ -357,15 +420,18 @@ export class DialogBox {
 
     // ПРОСТОЙ УЗЕЛ
     if (node.type === 'simple') {
+      if (node.saveError) {
+        const warning = document.createElement('p');
+        warning.className = 'dialog-save-warning text-red-300 text-sm';
+        warning.setAttribute('role', 'alert');
+        warning.setAttribute('aria-live', 'assertive');
+        warning.textContent = 'Не удалось сохранить разговор. Закройте это окно и повторите попытку — неподтверждённое действие не засчитано.';
+        choicesEl.appendChild(warning);
+      }
       var simpleBtn = document.createElement('button');
       simpleBtn.className = 'dialog-btn primary-btn';
       simpleBtn.textContent = 'ЗАКОНЧИТЬ';
-      simpleBtn.addEventListener('click', function() {
-        if (node.returnReactionSeenFlag) {
-          DialogueEngine.acknowledgeReturnReaction(node.returnReactionSeenFlag);
-        }
-        self.close();
-      });
+      simpleBtn.addEventListener('click', function() { self.close(); });
       choicesEl.appendChild(simpleBtn);
     }
   }

@@ -35,21 +35,22 @@ export function buildCase001MiniGameEvidence(type, result) {
   const template = evidence[type];
   if (!template || !result || typeof result !== 'object') return null;
 
+  const reportedQuality = Number(result.quality);
   if (type === 'mechanical-repair' && result.outcome !== 'success') return null;
   if (type === 'radio-tuning') {
-    const quality = Number(result.quality);
-    const validClear = result.outcome === 'clear' && quality >= 92;
-    const validFragment = result.outcome === 'fragmented' && quality >= 68;
-    if (!validClear && !validFragment) return null;
+    if (!Number.isFinite(reportedQuality) || reportedQuality < 68 || reportedQuality > 100) return null;
+    if (result.outcome === 'clear' && reportedQuality < 92) return null;
+    if (result.outcome === 'fragmented' && (reportedQuality < 68 || reportedQuality >= 92)) return null;
+    if (!['clear', 'fragmented'].includes(result.outcome)) return null;
   }
   if (type === 'film-restoration') {
-    const quality = Number(result.quality);
-    const validSuccess = result.outcome === 'success' && quality >= 95;
-    const validPartial = result.outcome === 'partial' && quality >= 70 && quality < 95;
-    if (!validSuccess && !validPartial) return null;
+    if (!Number.isFinite(reportedQuality) || reportedQuality < 70 || reportedQuality > 100) return null;
+    if (result.outcome === 'success' && reportedQuality < 95) return null;
+    if (result.outcome === 'partial' && (reportedQuality < 70 || reportedQuality >= 95)) return null;
+    if (!['success', 'partial'].includes(result.outcome)) return null;
   }
 
-  const quality = type === 'mechanical-repair' ? 100 : Math.max(0, Math.min(100, Number(result.quality) || 0));
+  const quality = type === 'mechanical-repair' ? 100 : Math.round(reportedQuality);
   let description = template.description;
 
   if (type === 'radio-tuning') {

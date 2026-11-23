@@ -527,32 +527,52 @@ body { background:#071015; color:#d3d5cc; }
 .npc-dossier p:last-child { padding-top:7px; border-top:1px solid #34413d; color:#899b92; font-style:italic; }
 
 
-/* Functional settings screen — restrained Blackford archive aesthetic. */
-.settings-scene { overflow-y:auto; background:radial-gradient(ellipse at 50% 0%,#233236 0%,#10191c 48%,#080d0f 100%); }
-.settings-panel { margin:auto; padding:clamp(22px,5vw,48px); border:1px solid #665b43; background:linear-gradient(145deg,#182326ee,#0d1416f5); box-shadow:0 24px 70px #0009,inset 0 1px #ffffff12; }
-.settings-eyebrow { margin:0 0 12px; color:#a99770; font:10px 'Courier New',monospace; letter-spacing:.2em; }
-.settings-heading { margin:0; color:#e0c896; font:clamp(27px,5vw,42px) Georgia,serif; letter-spacing:.16em; }
-.settings-intro { max-width:520px; margin:12px 0 30px; color:#9da9a3; font-size:13px; line-height:1.65; }
-.settings-section { padding:20px 0; border-top:1px solid #35413e; }
-.settings-section-title { margin:0 0 18px; color:#c5a978; font:11px 'Courier New',monospace; letter-spacing:.18em; }
-.settings-control { display:flex; align-items:center; justify-content:space-between; gap:22px; padding:14px 0; }
-.settings-control-copy { display:grid; gap:5px; }
-.settings-control-title { color:#e0ded2; font:15px Georgia,serif; }
-.settings-control-description { color:#87958e; font-size:11px; line-height:1.45; }
-.settings-range-wrap { display:flex; align-items:center; gap:12px; width:min(48%,260px); }
-.settings-range { width:100%; accent-color:#c5a572; cursor:pointer; }
-.settings-range-wrap output { min-width:42px; color:#d4bd91; text-align:right; font:11px 'Courier New',monospace; }
-.settings-select { min-width:140px; padding:9px 12px; border:1px solid #62583f; border-radius:0; color:#e1d5b7; background:#111b1d; font:12px Georgia,serif; }
-.settings-select:focus-visible,.settings-range:focus-visible,.settings-back:focus-visible { outline:2px solid #e6c98e; outline-offset:3px; }
-.settings-footer { display:flex; align-items:center; justify-content:space-between; gap:16px; padding-top:22px; border-top:1px solid #35413e; }
-.settings-footer [role=status] { color:#819087; font:10px 'Courier New',monospace; line-height:1.5; }
-.settings-back { padding:12px 16px; font-size:10px; white-space:nowrap; }
-@media(max-width:560px) {
-  .settings-control { align-items:stretch; flex-direction:column; gap:12px; }
-  .settings-range-wrap { width:100%; }
-  .settings-select { width:100%; }
-  .settings-footer { align-items:stretch; flex-direction:column; }
-  .settings-back { width:100%; }
-}
+/* Settings — restrained Blackford Noir instrument panel. */
+.settings-overlay { position:fixed; inset:0; z-index:80; display:grid; place-items:center; padding:18px; background:#03090bdc; backdrop-filter:blur(7px); -webkit-backdrop-filter:blur(7px); }
+.settings-panel { width:min(100%,540px); max-height:min(88vh,720px); overflow-y:auto; padding:clamp(19px,4vw,30px); border:1px solid #61716b; border-top:2px solid #b89a6c; background:linear-gradient(145deg,#1b3033f7,#0b171bf7 70%); box-shadow:0 24px 70px #000c,inset 0 1px #ffffff12; color:#d4d9d0; }
+.settings-header { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; padding-bottom:17px; border-bottom:1px solid #435550; }
+.settings-kicker { color:#c1a679; font:10px 'Courier New',monospace; letter-spacing:.2em; }
+.settings-header h2 { margin-top:7px; color:#e8dcc2; font:normal clamp(25px,5vw,34px) Georgia,serif; letter-spacing:.05em; }
+.settings-close { width:38px; height:38px; border:1px solid #53635d; color:#d5c29d; background:#142326; font:26px/1 Georgia,serif; cursor:pointer; }
+.settings-close:hover { border-color:#d0b17d; background:#24383a; }
+.settings-intro { margin:17px 0 21px; color:#aebdb4; font:13px/1.65 Georgia,serif; }
+.settings-controls { display:grid; gap:20px; }
+.settings-control { display:grid; gap:9px; color:#d8d7ca; }
+.settings-control > span { display:flex; justify-content:space-between; gap:14px; align-items:baseline; }
+.settings-control strong { color:#e7d8b9; font:normal 15px Georgia,serif; }
+.settings-control output { color:#c5a778; font:11px 'Courier New',monospace; }
+.settings-control input[type="range"] { width:100%; accent-color:#b89a6c; cursor:pointer; }
+.settings-control select { width:100%; min-height:43px; padding:9px 12px; border:1px solid #53665f; color:#e1dac8; background:#101f22; font:13px Georgia,serif; }
+.settings-control small { color:#829790; font:11px/1.5 Georgia,serif; }
+.settings-control :focus-visible,.settings-close:focus-visible,.settings-done:focus-visible { outline:2px solid #e4c58f; outline-offset:3px; }
+.settings-status { min-height:34px; margin-top:20px; padding:9px 11px; border-left:2px solid #a88b61; background:#122326; color:#aebfb5; font:11px/1.5 Georgia,serif; }
+.settings-footer { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-top:18px; padding-top:15px; border-top:1px solid #3d504b; color:#72857d; font:9px 'Courier New',monospace; letter-spacing:.12em; }
+.settings-done { min-width:112px; padding:11px 16px; border:1px solid #9b835d; color:#ecd7ae; background:linear-gradient(120deg,#34413c,#1b2b2d); font:11px Georgia,serif; letter-spacing:.12em; cursor:pointer; }
+.settings-done:hover { border-color:#e1c38f; background:#3b4b43; }
+@media(max-width:520px) { .settings-overlay { padding:10px; } .settings-panel { max-height:92vh; padding:18px; } .settings-footer { align-items:flex-start; flex-direction:column; } .settings-done { width:100%; } }
+@media(prefers-reduced-motion:reduce) { .settings-overlay,.settings-panel { animation:none !important; transition:none !important; } }
 
-.settings-audio-note { margin:-6px 0 10px; padding:10px 12px; border-left:2px solid #746346; background:#111b1d; color:#9da69b; font-size:11px; line-height:1.5; }
+.cinematic-dialog .dialog-social-discovery { border-left-color:#8ca99b; background:linear-gradient(110deg,#293a35,#202b2b); }
+.cinematic-dialog .dialog-social-discovery .dialog-discovery-stamp { color:#a8c7b5; }
+.cinematic-dialog .dialog-discovery-description { margin:0; color:#b9c5ba; font:12px/1.5 Georgia,serif; }
+
+/* Confirmed character ties on the investigation board. */
+.board-social-graph > p { color:#a7a294; font-size:12px; line-height:1.6; }
+.social-tie-entry { margin-top:10px; padding:12px 14px; border:1px solid #665b48; border-left:3px solid #8ca99b; background:linear-gradient(110deg,#293a35,#202b2b); }
+.social-tie-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
+.social-tie-heading strong { color:#e5d8b7; font:15px/1.4 Georgia,serif; }
+.social-tie-heading span { color:#a8c7b5; font:10px 'Courier New',monospace; letter-spacing:.1em; }
+.social-tie-entry p { margin:7px 0 0; color:#b9c5ba; font:12px/1.55 Georgia,serif; }
+.social-graph-empty { padding:12px; border:1px dashed #5c5548; color:#8e897d !important; }
+
+.cinematic-dialog .dialog-social-event-discovery { border-left-color:#c39a68; background:linear-gradient(110deg,#3a3026,#292a29); }
+.cinematic-dialog .dialog-social-event-discovery .dialog-discovery-stamp { color:#d0ad7e; }
+.cinematic-dialog .dialog-social-event-source { display:block; margin-top:8px; color:#9e9a8d; font:10px/1.4 'Courier New',monospace; letter-spacing:.06em; }
+
+/* Attributed NPC interaction testimony on the investigation board. */
+.board-social-events > p { color:#a7a294; font-size:12px; line-height:1.6; }
+.social-event-entry { margin-top:10px; padding:12px 14px; border:1px solid #665b48; border-left:3px solid #c39a68; background:linear-gradient(110deg,#3a3026,#292a29); }
+.social-event-entry .social-tie-heading span { color:#d0ad7e; }
+.social-event-entry > p { margin:7px 0 0; color:#c4bcaa; font:12px/1.55 Georgia,serif; }
+.social-event-entry .social-event-time { color:#e0c59a; font-size:11px; }
+.social-event-entry .social-event-source { color:#9e9a8d; font:10px/1.4 'Courier New',monospace; letter-spacing:.06em; }
