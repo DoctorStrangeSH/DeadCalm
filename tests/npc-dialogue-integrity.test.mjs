@@ -255,3 +255,51 @@ test('Ray’s promised call-log check is recorded as fulfilled only by the autho
     GameState.currentCase = previous.currentCase;
   }
 });
+
+
+test('Ray acknowledges the fulfilled call-log promise once on the next meeting without overstating the evidence', () => {
+  const npcId = 'npc_ray_morgan';
+  const reaction = dialogues[npcId].ray_calls_fulfilled_followup.return_reactions[0];
+  assert.equal(reaction.required_flag, 'ray_check_calls_fulfilled');
+  assert.equal(reaction.consumed_flag, 'return_seen_ray_calls_fulfilled');
+  assert.match(reaction.text, /имени абонента нет/);
+  assert.match(reaction.text, /не того, кто звонил/);
+
+  const previous = {
+    currentNPC: DialogueEngine._currentNPC,
+    relationships: GameState.relationships,
+    npcMemory: GameState.npcMemory,
+    save: GameState.save
+  };
+  try {
+    GameState.relationships = { [npcId]: { trust: 50, met: true } };
+    GameState.npcMemory = {
+      [npcId]: {
+        met: true,
+        flags: { ray_check_calls_fulfilled: true },
+        conversationCount: 2,
+        questionCount: 0,
+        unlockedTopics: [],
+        askedQuestions: ['inspect_incoming_calls'],
+        criticalChoiceMade: false,
+        interviewHistory: []
+      }
+    };
+    GameState.save = () => true;
+    DialogueEngine._currentNPC = npcId;
+    const result = DialogueEngine._getPendingReturnReaction(dialogues[npcId]);
+    assert.equal(result?.isReturnReaction, true);
+    assert.equal(result?.reactionId, 'ray_return_calls_fulfilled');
+    assert.equal(NPCMemory.hasFlag(npcId, 'return_seen_ray_calls_fulfilled'), true);
+    assert.equal(NPCMemory.getMemory(npcId).conversationCount, 3);
+
+    const repeated = DialogueEngine._getPendingReturnReaction(dialogues[npcId]);
+    assert.equal(repeated, null, 'the follow-up must be consumed after one successful display');
+    assert.equal(NPCMemory.getMemory(npcId).conversationCount, 3);
+  } finally {
+    DialogueEngine._currentNPC = previous.currentNPC;
+    GameState.relationships = previous.relationships;
+    GameState.npcMemory = previous.npcMemory;
+    GameState.save = previous.save;
+  }
+});
