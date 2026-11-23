@@ -43,6 +43,16 @@ test('port evidence action remains retryable when persistence fails, then confir
   }
 });
 
+
+test('sealed-agreement finale cannot proceed when its confession clue fails to persist', () => {
+  const source = readFileSync(new URL('../src/js/scenes/port.js', import.meta.url), 'utf8');
+  assert.match(source, /const confessionSaved = GameState\.addClue\(\{/);
+  assert.match(source, /if \(!confessionSaved && !GameState\.hasClue\('sebastian_sealed_confession'\)\)\s*\{\s*showFinaleSaveError\(container\);\s*return;/);
+  assert.ok(source.indexOf('showFinaleSaveError(container);\n        return;') <
+    source.indexOf("GameState.completeCampaign('price_of_silence')"),
+    'the finale must stop before completion when the confession is not persisted');
+});
+
 test('every port evidence reward uses the persistence-aware action helper', () => {
   const source = readFileSync(new URL('../src/js/scenes/port.js', import.meta.url), 'utf8');
   for (const clueId of [
