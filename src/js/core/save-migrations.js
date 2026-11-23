@@ -31,6 +31,14 @@ export function migrateSave(rawSave) {
 
   let data = clone(rawSave);
   const fromVersion = version;
+  let normalized = false;
+
+  if (version === CURRENT_SAVE_VERSION && isRecord(data.currentCase) && !Array.isArray(data.currentCase.hypotheses)) {
+    // Early schema-v1 saves created from a fresh/reset campaign omitted this
+    // optional collection. Backfill it without discarding any player data.
+    data.currentCase.hypotheses = [];
+    normalized = true;
+  }
 
   if (version === 0) {
     data = {
@@ -63,7 +71,7 @@ export function migrateSave(rawSave) {
   return {
     status: 'ok',
     data,
-    migrated: fromVersion !== CURRENT_SAVE_VERSION,
+    migrated: fromVersion !== CURRENT_SAVE_VERSION || normalized,
     fromVersion,
     toVersion: CURRENT_SAVE_VERSION
   };
