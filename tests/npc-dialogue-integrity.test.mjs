@@ -212,3 +212,46 @@ test('NPC interaction events are authored as attributed, unverified testimony wi
   assert.equal(events.length, 2,
     'only the two explicitly authored NPC interaction accounts are currently recorded');
 });
+
+
+test('Ray’s promised call-log check is recorded as fulfilled only by the authored evidence response', () => {
+  const response = dialogues.npc_ray_morgan.topics.about_case.responses
+    .find(item => item.id === 'inspect_incoming_calls');
+  assert.ok(response, 'the call-log evidence response must exist');
+  assert.equal(response.requires_flag, 'ray_promised_check_calls');
+  assert.equal(response.memory_set, 'ray_check_calls_fulfilled');
+
+  const previous = {
+    currentNPC: DialogueEngine._currentNPC,
+    asked: DialogueEngine._askedQuestions,
+    relationships: GameState.relationships,
+    npcMemory: GameState.npcMemory,
+    currentCase: GameState.currentCase
+  };
+  try {
+    GameState.relationships = { npc_ray_morgan: { trust: 50, met: true } };
+    GameState.npcMemory = {
+      npc_ray_morgan: {
+        met: true,
+        flags: { ray_promised_check_calls: true },
+        conversationCount: 1,
+        questionCount: 0,
+        unlockedTopics: [],
+        askedQuestions: ['confront_report_timing'],
+        criticalChoiceMade: false,
+        interviewHistory: []
+      }
+    };
+    GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] };
+    DialogueEngine._currentNPC = 'npc_ray_morgan';
+    DialogueEngine._askedQuestions = ['confront_report_timing'];
+    assert.equal(DialogueEngine._isResponseAvailable(response), true);
+    assert.equal(NPCMemory.hasFlag('npc_ray_morgan', 'ray_check_calls_fulfilled'), false);
+  } finally {
+    DialogueEngine._currentNPC = previous.currentNPC;
+    DialogueEngine._askedQuestions = previous.asked;
+    GameState.relationships = previous.relationships;
+    GameState.npcMemory = previous.npcMemory;
+    GameState.currentCase = previous.currentCase;
+  }
+});
