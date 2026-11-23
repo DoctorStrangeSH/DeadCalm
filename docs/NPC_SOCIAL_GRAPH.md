@@ -186,3 +186,8 @@ The presence resolver now requires both sides of the authored relationship to ag
 ## Persisted return-visit counter — 2026-11-23
 
 `NPCMemory.recordConversation(npcId, consumedFlag?)` now increments the NPC's `conversationCount` for each successfully persisted return visit. When a one-time authored return reaction is pending, the visit counter and consumed-reaction flag are written in the same memory transaction; a failed save changes neither, so retrying does not double-count or lose the reaction. Ordinary return visits are counted only after their own successful save. First meetings continue to use the existing atomic `commitFirstMeeting` path and are counted once. Regression coverage: `tests/npc-memory-persistence.test.mjs` and `tests/npc-return-reactions.test.mjs`. PWA cache revision: `dead-calm-visual-v115`.
+
+
+## Promise fulfilment evidence — Ray Morgan — 2026-11-23
+
+Ray's authored promise to check the incoming-call register is now explicitly closed only by the `inspect_incoming_calls` response. That response already requires the promise flag and the preceding confrontation question; it now also carries `memory_set: ray_check_calls_fulfilled`. `DialogueEngine.askQuestion()` passes this authored consequence into `NPCMemory.markQuestionAsked()`, which persists the answered-question ID and fulfilment flag in one save. If the save fails, neither is committed and the player can retry. The flag means Ray produced the call-log evidence; it does not identify the anonymous caller or imply the case is solved. Coverage: `tests/npc-dialogue-integrity.test.mjs` and `tests/npc-memory-persistence.test.mjs`. PWA cache revision: `dead-calm-visual-v116`.
