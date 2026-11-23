@@ -8,8 +8,8 @@ const summary = readFileSync(new URL('../src/js/systems/campaign-day-summary.js'
 test('detective office renders a pending daily recap on entry and after restoring a save', () => {
   assert.match(office, /getPendingCampaignDaySummary, dismissCampaignDaySummary/);
   assert.match(office, /renderPendingDaySummary\(container\)/);
-  assert.match(office, /^  renderPendingDaySummary\\(container\\);$/m);
-  assert.match(office, /dataset\\.campaignDaySummary/);
+  assert.match(office, /^  renderPendingDaySummary\(container\);$/m);
+  assert.match(office, /dataset\.campaignDaySummary/);
   assert.match(office, /aria-modal/);
 });
 
