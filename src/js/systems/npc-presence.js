@@ -10,7 +10,7 @@ export function getNpcPresenceAtLocation(character, location, state) {
   }
   if (typeof character.id !== 'string' || !character.id.trim() ||
       typeof location.id !== 'string' || !location.id.trim() ||
-      character.location !== location.id) {
+      character.location !== location.id || location.npc !== character.id) {
     return { status: 'not_here', available: false, reason: 'Персонаж не закреплён за этой локацией.' };
   }
   if (!isLocationUnlocked(location, state)) {
