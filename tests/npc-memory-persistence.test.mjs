@@ -115,3 +115,68 @@ test('ordinary NPC memory mutations become visible only after a successful save'
     Object.assign(GameState, previous);
   }
 });
+
+
+test('resetting one NPC rolls back completely when saving fails and succeeds only after persistence', () => {
+  const previous = captureState();
+  const previousSave = Storage.save;
+  try {
+    GameState.npcMemory = {
+      npc_test: {
+        met: true,
+        flags: { promise_kept: true },
+        conversationCount: 3,
+        questionCount: 7,
+        unlockedTopics: ['intro', 'case'],
+        askedQuestions: ['first', 'second'],
+        criticalChoiceMade: true,
+        interviewHistory: [{ sequence: 1, tone: 'patient', response: 'shared_lead' }]
+      }
+    };
+    const memory = NPCMemory.getMemory('npc_test');
+    const flagsRef = memory.flags;
+    Storage.save = () => false;
+    assert.equal(NPCMemory.resetNPC('npc_test'), false);
+    assert.equal(GameState.npcMemory.npc_test, memory);
+    assert.equal(memory.flags, flagsRef);
+    assert.equal(memory.met, true);
+    assert.equal(memory.conversationCount, 3);
+    assert.deepEqual(memory.flags, { promise_kept: true });
+    assert.deepEqual(memory.askedQuestions, ['first', 'second']);
+
+    Storage.save = () => true;
+    assert.equal(NPCMemory.resetNPC('npc_test'), true);
+    assert.equal(memory.met, false);
+    assert.equal(memory.conversationCount, 0);
+    assert.deepEqual(memory.flags, {});
+    assert.deepEqual(memory.askedQuestions, []);
+    assert.deepEqual(memory.interviewHistory, []);
+  } finally {
+    Storage.save = previousSave;
+    Object.assign(GameState, previous);
+  }
+});
+
+test('resetting all NPC memories restores the complete prior collection when saving fails', () => {
+  const previous = captureState();
+  const previousSave = Storage.save;
+  try {
+    GameState.npcMemory = {
+      npc_a: { met: true, flags: { clue_shared: true }, conversationCount: 2 },
+      npc_b: { met: false, flags: { cautious: true }, conversationCount: 0 }
+    };
+    const collection = GameState.npcMemory;
+    const snapshot = structuredClone(collection);
+    Storage.save = () => false;
+    assert.equal(NPCMemory.resetAll(), false);
+    assert.equal(GameState.npcMemory, collection);
+    assert.deepEqual(GameState.npcMemory, snapshot);
+
+    Storage.save = () => true;
+    assert.equal(NPCMemory.resetAll(), true);
+    assert.deepEqual(GameState.npcMemory, {});
+  } finally {
+    Storage.save = previousSave;
+    Object.assign(GameState, previous);
+  }
+});
