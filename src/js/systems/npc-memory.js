@@ -302,26 +302,42 @@ export var NPCMemory = {
    * Сбросить память конкретного NPC
    */
   resetNPC(npcId) {
-    GameState.npcMemory[npcId] = {
-      met: false,
-      flags: {},
-      conversationCount: 0,
-      questionCount: 0,
-      unlockedTopics: [],
-      askedQuestions: [],
-      criticalChoiceMade: false,
-      interviewHistory: []
-    };
-    GameState.save();
+    if (typeof npcId !== 'string' || !npcId.trim()) return false;
+    const outcome = persistMemoryMutation(npcId, memory => {
+      memory.met = false;
+      memory.flags = {};
+      memory.conversationCount = 0;
+      memory.questionCount = 0;
+      memory.unlockedTopics = [];
+      memory.askedQuestions = [];
+      memory.criticalChoiceMade = false;
+      memory.interviewHistory = [];
+    });
+    if (!outcome.saved) return false;
     console.log('[NPCMemory] Память ' + npcId + ' сброшена');
+    return true;
   },
 
   /**
-   * Сбросить память ВСЕХ NPC
+   * Сбросить память всех NPC только после подтверждённого сохранения.
    */
   resetAll() {
+    const previous = GameState.npcMemory || {};
+    const previousSnapshot = JSON.parse(JSON.stringify(previous));
     GameState.npcMemory = {};
-    GameState.save();
+    let saved = false;
+    try {
+      saved = GameState.save();
+    } catch (error) {
+      console.error('[NPCMemory] Не удалось сбросить память всех персонажей:', error);
+    }
+    if (saved === false) {
+      GameState.npcMemory = previous;
+      for (const key of Object.keys(previous)) delete previous[key];
+      Object.assign(previous, previousSnapshot);
+      return false;
+    }
     console.log('[NPCMemory] Память всех NPC очищена');
+    return true;
   }
 };
