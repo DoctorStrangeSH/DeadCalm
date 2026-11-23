@@ -538,7 +538,8 @@
           "choice_id": "marta_protect_source",
           "required_flag": "marta_source_respected",
           "consumed_flag": "return_seen_marta_return_protected",
-          "text": "Марта сама подходит к вам: «Я проверила копию. Источник не раскрыт, как мы и договорились. Теперь можно говорить о фактах, а не о том, кто их принёс»."
+          "text": "Марта сама подходит к вам: «Я проверила копию. Источник не раскрыт, как мы и договорились. Теперь можно говорить о фактах, а не о том, кто их принёс».",
+          "memory_set": "marta_source_protection_confirmed"
         },
         {
           "id": "marta_return_pressured",
@@ -653,7 +654,8 @@
           "choice_id": "thomas_preserve_context",
           "required_flag": "thomas_context_respected",
           "consumed_flag": "return_seen_thomas_return_respected",
-          "text": "Отец Томас приготовил копию письма: «Я сохранил контекст и происхождение документа. Надеюсь, теперь мы сможем говорить о том, что он подтверждает, и о том, чего он не доказывает»."
+          "text": "Отец Томас приготовил копию письма: «Я сохранил контекст и происхождение документа. Надеюсь, теперь мы сможем говорить о том, что он подтверждает, и о том, чего он не доказывает».",
+          "memory_set": "thomas_letter_context_preserved"
         },
         {
           "id": "thomas_return_pressured",
@@ -799,7 +801,8 @@
           "choice_id": "sebastian_request_record",
           "required_flag": "sebastian_requested_records",
           "consumed_flag": "return_seen_sebastian_return_records",
-          "text": "Себастьян протягивает перечень архивных документов: «Вы просили записи — вот список того, что компания обязана хранить. Доступ к ним по-прежнему будет оформлен официально»."
+          "text": "Себастьян протягивает перечень архивных документов: «Вы просили записи — вот список того, что компания обязана хранить. Доступ к ним по-прежнему будет оформлен официально».",
+          "memory_set": "sebastian_records_request_acknowledged"
         },
         {
           "id": "sebastian_return_challenged",
