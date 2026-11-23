@@ -507,3 +507,89 @@ test('save import downgrades unverified confirmed labels and preserves a visible
     Object.assign(GameState, original);
   }
 });
+
+
+test('new-game reset commits a complete fresh campaign and removes the previous backup', () => {
+  const keys = [
+    'player', 'currentCase', 'campaign', 'flags', 'relationships', 'npcMemory',
+    'socialGraph', 'knowledgeLedger', 'npcDailyLife', 'miniGameProgress',
+    'notebook', 'settings', 'saveBlocked'
+  ];
+  const original = Object.fromEntries(keys.map(key => [key, GameState[key]]));
+  const originalSave = Storage.save;
+  const originalRemoveBackup = Storage.removeBackup;
+  let persisted = null;
+  let backupRemoved = false;
+
+  try {
+    GameState.player = { name: 'Джон Риверс', reputation: 91 };
+    GameState.currentCase = { id: 'case_001', clues: [{ id: 'old_clue' }], suspects: [], timeline: [], hypotheses: [] };
+    GameState.campaign = { caseId: 'case_001', day: 4, completed: false, ending: null };
+    GameState.flags = { day_4: true, old_choice: true };
+    GameState.relationships = { anna_holt: { trust: 90 } };
+    GameState.npcMemory = { anna_holt: { met: true } };
+    GameState.saveBlocked = true;
+    Storage.save = (key, data) => {
+      if (key === 'gameState') persisted = structuredClone(data);
+      return true;
+    };
+    Storage.removeBackup = key => {
+      assert.equal(key, 'gameState');
+      backupRemoved = true;
+      return true;
+    };
+
+    assert.equal(GameState.reset(), true);
+    assert.equal(backupRemoved, true);
+    assert.equal(persisted.campaign.day, 1);
+    assert.deepEqual(persisted.currentCase.hypotheses, []);
+    assert.deepEqual(persisted.currentCase.clues, []);
+    assert.deepEqual(persisted.flags, {});
+    assert.deepEqual(persisted.relationships, {});
+    assert.deepEqual(persisted.npcMemory, {});
+    assert.equal(GameState.saveBlocked, false);
+  } finally {
+    Storage.save = originalSave;
+    Storage.removeBackup = originalRemoveBackup;
+    Object.assign(GameState, original);
+  }
+});
+
+test('new-game reset restores the previous in-memory campaign when no save can be staged', () => {
+  const keys = [
+    'player', 'currentCase', 'campaign', 'flags', 'relationships', 'npcMemory',
+    'socialGraph', 'knowledgeLedger', 'npcDailyLife', 'miniGameProgress',
+    'notebook', 'settings', 'saveBlocked'
+  ];
+  const original = Object.fromEntries(keys.map(key => [key, GameState[key]]));
+  const originalSave = Storage.save;
+  const originalRemoveBackup = Storage.removeBackup;
+  const previousPlayer = { name: 'Джон Риверс', reputation: 88 };
+  const previousCase = { id: 'case_001', clues: [{ id: 'keep_this_clue' }], suspects: [], timeline: [], hypotheses: [] };
+
+  try {
+    GameState.player = previousPlayer;
+    GameState.currentCase = previousCase;
+    GameState.campaign = { caseId: 'case_001', day: 3, completed: false, ending: null };
+    GameState.flags = { day_3: true, keep_choice: true };
+    GameState.relationships = { anna_holt: { trust: 74 } };
+    GameState.npcMemory = { anna_holt: { met: true } };
+    GameState.saveBlocked = false;
+    Storage.save = () => false;
+    Storage.removeBackup = () => {
+      throw new Error('backup must not be touched when reset save fails');
+    };
+
+    assert.equal(GameState.reset(), false);
+    assert.equal(GameState.player, previousPlayer);
+    assert.equal(GameState.currentCase, previousCase);
+    assert.equal(GameState.campaign.day, 3);
+    assert.deepEqual(GameState.flags, { day_3: true, keep_choice: true });
+    assert.equal(GameState.relationships.anna_holt.trust, 74);
+    assert.equal(GameState.npcMemory.anna_holt.met, true);
+  } finally {
+    Storage.save = originalSave;
+    Storage.removeBackup = originalRemoveBackup;
+    Object.assign(GameState, original);
+  }
+});
