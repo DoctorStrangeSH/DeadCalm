@@ -555,3 +555,12 @@ body { background:#071015; color:#d3d5cc; }
 .cinematic-dialog .dialog-social-discovery { border-left-color:#8ca99b; background:linear-gradient(110deg,#293a35,#202b2b); }
 .cinematic-dialog .dialog-social-discovery .dialog-discovery-stamp { color:#a8c7b5; }
 .cinematic-dialog .dialog-discovery-description { margin:0; color:#b9c5ba; font:12px/1.5 Georgia,serif; }
+
+/* Confirmed character ties on the investigation board. */
+.board-social-graph > p { color:#a7a294; font-size:12px; line-height:1.6; }
+.social-tie-entry { margin-top:10px; padding:12px 14px; border:1px solid #665b48; border-left:3px solid #8ca99b; background:linear-gradient(110deg,#293a35,#202b2b); }
+.social-tie-heading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px; }
+.social-tie-heading strong { color:#e5d8b7; font:15px/1.4 Georgia,serif; }
+.social-tie-heading span { color:#a8c7b5; font:10px 'Courier New',monospace; letter-spacing:.1em; }
+.social-tie-entry p { margin:7px 0 0; color:#b9c5ba; font:12px/1.55 Georgia,serif; }
+.social-graph-empty { padding:12px; border:1px dashed #5c5548; color:#8e897d !important; }
