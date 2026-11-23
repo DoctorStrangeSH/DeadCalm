@@ -176,3 +176,8 @@ Regression coverage: `tests/npc-location-canon.test.mjs` verifies every dossier 
 ### Reciprocal NPC/location identity guard — 2026-11-23
 
 The presence resolver now requires both sides of the authored relationship to agree: `character.location === location.id` and `location.npc === character.id`. A one-sided or stale reference fails closed as `not_here`; a mismatched NPC can no longer be offered a direct conversation merely because the character dossier points at that location. Regression coverage is in `tests/npc-presence.test.mjs`. PWA cache revision: `dead-calm-visual-v113`.
+
+
+## Transactional NPC memory reset — 2026-11-23
+
+`NPCMemory.resetNPC(npcId)` and `NPCMemory.resetAll()` now return a boolean and treat storage success as the commit boundary. A failed/throwing save restores the previous NPC memory and reports `false`; a successful save reports `true`. The all-NPC reset restores the original collection reference on failure. These reset operations do not alter player-to-NPC trust or other case evidence. Regression coverage: `tests/npc-memory-persistence.test.mjs` (failed and successful reset paths). PWA cache revision: `dead-calm-visual-v114`.
