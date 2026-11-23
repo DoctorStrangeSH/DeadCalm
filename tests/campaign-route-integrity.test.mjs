@@ -109,3 +109,29 @@ test('Sebastian delivery testimony is reachable only after the appointment and p
   assert.equal(response.gives_clue, clue.id);
   assert.equal(isLocationUnlocked(locations.blackwood_mansion, stateAtDay(4)), true);
 });
+
+
+test('every mandatory finale exhibit is obtainable by day five through an unlocked location', () => {
+  const finalEvidence = [
+    'autopsy_report_01',
+    'judge_appointment_card',
+    'belladonna_invoice',
+    'matthews_letter',
+    'port_cargo_ledger',
+    'markus_statement',
+    'sebastian_delivery_statement'
+  ];
+
+  for (const clueId of [...finalEvidence, ...independentDayFourSources]) {
+    const clue = clues[clueId];
+    assert.ok(clue, `finale references missing clue ${clueId}`);
+    assert.ok(Number(clue.day) <= 5, `${clueId} is not scheduled by the finale day`);
+    const location = locations[clue.location];
+    assert.ok(location, `${clueId} references missing location ${clue.location}`);
+    assert.equal(
+      isLocationUnlocked(location, stateAtDay(5)),
+      true,
+      `${clueId} is required or accepted by the finale, but ${clue.location} is still locked on day five`
+    );
+  }
+});
