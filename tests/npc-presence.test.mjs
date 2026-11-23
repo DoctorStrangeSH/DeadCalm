@@ -27,7 +27,7 @@ test('NPC first appearance day is respected independently of an unlocked locatio
     id: 'npc_sebastian_blackwood', name: 'Себастьян Блэквуд',
     location: 'blackwood_mansion', first_appearance: 'day_3'
   };
-  const mansion = { id: 'blackwood_mansion', unlocked: false, unlock_condition: 'day_3' };
+  const mansion = { id: 'blackwood_mansion', unlocked: false, unlock_condition: 'day_3', npc: 'npc_sebastian_blackwood' };
   const result = getNpcPresenceAtLocation(sebastian, mansion, state(2, { day_3: true }));
   assert.equal(result.status, 'not_yet_introduced');
   assert.equal(result.available, false);
@@ -43,7 +43,7 @@ test('NPC is not shown as present at a location outside the character dossier', 
 test('missing or malformed first-appearance canon fails closed', () => {
   const result = getNpcPresenceAtLocation(
     { ...anna, first_appearance: 'whenever' },
-    { id: 'holt_house', unlocked: true },
+    { id: 'holt_house', unlocked: true, npc: 'npc_anna_holt' },
     state(5)
   );
   assert.equal(result.status, 'unknown');
