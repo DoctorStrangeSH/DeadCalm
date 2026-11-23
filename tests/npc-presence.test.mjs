@@ -7,7 +7,7 @@ function state(day, flags = {}) {
 }
 
 const anna = { id: 'npc_anna_holt', name: 'Анна Холт', location: 'holt_house', first_appearance: 'day_1' };
-const annaHouse = { id: 'holt_house', unlocked: false, unlock_condition: 'day_4' };
+const annaHouse = { id: 'holt_house', unlocked: false, unlock_condition: 'day_4', npc: 'npc_anna_holt' };
 
 test('NPC presence requires the canonical location to be unlocked', () => {
   const result = getNpcPresenceAtLocation(anna, annaHouse, state(1));
