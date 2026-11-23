@@ -26,6 +26,18 @@ export class InvestigationBoard {
     this.focusedHypothesisId = null;
     var clues = GameState.currentCase.clues;
     const archiveDigest = getOldCaseBoardDigest(clues, GameState.flags);
+    const socialTies = Array.isArray(GameState.socialGraph?.ties) ? GameState.socialGraph.ties : [];
+    const socialNames = {
+      npc_lydia_winter: 'Доктор Лидия Винтер',
+      npc_anna_holt: 'Анна Холт',
+      npc_gabriel: 'Габриэль',
+      npc_markus_holt: 'Маркус Холт'
+    };
+    const socialTypeLabels = {
+      family: 'СЕМЬЯ', colleague: 'КОЛЛЕГИ', friend: 'ДРУЗЬЯ', rival: 'СОПЕРНИКИ',
+      debt: 'ДОЛГ', protective: 'ЗАЩИТА', romantic: 'ЛИЧНЫЕ ОТНОШЕНИЯ',
+      unknown: 'СВЯЗЬ НЕ УСТАНОВЛЕНА'
+    };
     this.connections = Investigation.getConnections();
     var self = this;
 
@@ -98,6 +110,17 @@ export class InvestigationBoard {
           ${archiveDigest.observations.map(note => `<p class="hypothesis-evidence">✓ ${self._escapeHtml(note)}</p>`).join('')}
           <small>${self._escapeHtml(archiveDigest.warning)}</small>
         </section>` : ''}
+        <section class="board-hypotheses board-social-graph" aria-label="Подтверждённые связи персонажей">
+          <h3>ЛЮДИ И ИХ СВЯЗИ</h3>
+          <p>Здесь отображаются только отношения, подтверждённые словами персонажей или найденными материалами. Слухи и догадки не становятся фактами.</p>
+          ${socialTies.length ? socialTies.map(tie =>
+            '<article class="social-tie-entry"><div class="social-tie-heading"><strong>' +
+            self._escapeHtml(socialNames[tie.fromNpcId] || tie.fromNpcId) + ' — ' +
+            self._escapeHtml(socialNames[tie.toNpcId] || tie.toNpcId) +
+            '</strong><span>' + self._escapeHtml(socialTypeLabels[tie.type] || 'СВЯЗЬ') +
+            '</span></div><p>' + self._escapeHtml(tie.basis) + '</p></article>'
+          ).join('') : '<p class="social-graph-empty">Подтверждённых связей пока нет. Они будут добавляться по мере того, как вы узнаёте людей и проверяете их слова.</p>'}
+        </section>
         <section class="board-hypotheses" aria-label="Архив гипотез">
           <h3>АРХИВ ГИПОТЕЗ</h3>
           <p>Запишите свою версию событий. Гипотеза — предположение детектива, а не установленный факт.</p>
