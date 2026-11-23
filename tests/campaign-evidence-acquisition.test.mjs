@@ -120,10 +120,10 @@ test('scene-only mandatory clues have a real acquisition action in the authored 
 
   assert.match(crimeScene, /id: 'judge_appointment_card'/);
   assert.match(crimeScene, /GameState\.addClue\(\{[\s\S]*?id: 'judge_appointment_card'/);
-  assert.match(portScene, /addPortClue\\(\\{\\s*id: 'belladonna_invoice'/);
+  assert.match(portScene, /addPortClue\(\{\s*id: 'belladonna_invoice'/);
   assert.match(portScene, /invoice\.id = 'btn-port-invoice'/);
   assert.match(portScene, /if \(GameState\.campaign\.day >= 5\) \{/);
-  assert.match(portScene, /GameState\.addClue\(markusStatement\)/);
+  assert.match(portScene, /addPortClue\(markusStatement, meet,/);
 });
 
 test('the two independent day-four evidence routes are actually wired to their minigames and quality thresholds', () => {
