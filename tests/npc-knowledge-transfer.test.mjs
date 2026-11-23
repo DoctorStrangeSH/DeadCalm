@@ -12,7 +12,10 @@ function setupMeeting() {
       id: 'social-event-ray-anna-meeting',
       fromNpcId: 'npc_ray_morgan',
       toNpcId: 'npc_anna_holt',
-      description: 'Ray and Anna spoke in the archive.'
+      description: 'Ray and Anna spoke in the archive.',
+      sourceType: 'direct_observation',
+      certainty: 'corroborated',
+      sourceRefs: ['player-witnessed-meeting']
     }]
   };
   GameState.npcDailyLife = {
@@ -147,6 +150,37 @@ test('GameState persists a knowledge relay atomically and emits only after succe
     assert.deepEqual(emitted.map(item => item[0]), ['transferred', 'recorded']);
   } finally {
     off.forEach(unsubscribe => unsubscribe());
+    Storage.save = previousSave;
+    GameState.knowledgeLedger = previousLedger;
+    GameState.socialGraph = previousSocialGraph;
+    GameState.npcDailyLife = previousDailyLife;
+    GameState.saveBlocked = previousBlocked;
+  }
+});
+
+
+test('participant testimony alone cannot authorize knowledge transfer without a witnessed meeting', () => {
+  const previousLedger = GameState.knowledgeLedger;
+  const previousSocialGraph = GameState.socialGraph;
+  const previousDailyLife = GameState.npcDailyLife;
+  const previousSave = Storage.save;
+  const previousBlocked = GameState.saveBlocked;
+  try {
+    GameState.saveBlocked = false;
+    GameState.knowledgeLedger = setupLedger();
+    setupMeeting();
+    GameState.socialGraph.events[0].sourceType = 'interview';
+    GameState.socialGraph.events[0].certainty = 'unverified';
+    Storage.save = () => true;
+    assert.equal(GameState.transferNpcKnowledge({
+      fromNpcId: 'npc_ray_morgan',
+      toNpcId: 'npc_anna_holt',
+      sourceKnowledgeId: 'knowledge-ray-calls',
+      sourceType: 'rumor',
+      provenance: 'Ray told Anna what he found.'
+    }), null, 'a reported account is not a witnessed meeting');
+    assert.equal(GameState.knowledgeLedger.entries.length, 1);
+  } finally {
     Storage.save = previousSave;
     GameState.knowledgeLedger = previousLedger;
     GameState.socialGraph = previousSocialGraph;
