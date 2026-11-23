@@ -1,7 +1,6 @@
 import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { Audio } from '../core/audio.js';
-import { NPCMemory } from '../systems/npc-memory.js';
 import { createSaveFile, parseSaveFile } from '../core/save-transfer.js';
 import { assessCampaignDay } from '../systems/campaign-progression.js';
 
