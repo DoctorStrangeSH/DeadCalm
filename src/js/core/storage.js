@@ -17,6 +17,7 @@ export var Storage = {
     var backupKey = storageKey + this.BACKUP_SUFFIX;
     var pendingKey = storageKey + this.PENDING_SUFFIX;
 
+    var staged = false;
     try {
       var serialized = JSON.stringify(data);
       if (typeof serialized !== 'string') {
@@ -26,6 +27,7 @@ export var Storage = {
       // Stage a complete payload first. If the tab closes during the next
       // operations, load() can still recover this committed JSON payload.
       localStorage.setItem(pendingKey, serialized);
+      staged = true;
 
       var previous = localStorage.getItem(storageKey);
       if (previous !== null && this._parse(previous) !== null) {
@@ -43,6 +45,10 @@ export var Storage = {
       return true;
     } catch (error) {
       console.error('[Storage] Ошибка сохранения "' + key + '":', error);
+      if (staged) {
+        console.warn('[Storage] Новая копия сохранена в pending и будет восстановлена при следующей загрузке.');
+        return true;
+      }
       return false;
     }
   },
@@ -117,6 +123,16 @@ export var Storage = {
     localStorage.removeItem(storageKey);
     localStorage.removeItem(storageKey + this.BACKUP_SUFFIX);
     localStorage.removeItem(storageKey + this.PENDING_SUFFIX);
+  },
+
+  removeBackup(key) {
+    try {
+      localStorage.removeItem(this.PREFIX + key + this.BACKUP_SUFFIX);
+      return true;
+    } catch (error) {
+      console.error('[Storage] Не удалось удалить резервную копию "' + key + '":', error);
+      return false;
+    }
   },
 
   /**
