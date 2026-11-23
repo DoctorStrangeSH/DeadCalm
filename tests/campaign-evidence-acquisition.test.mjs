@@ -159,6 +159,7 @@ test('radio-first day-four route can still reach the film evidence required for 
     ['belladonna_invoice', { id: 'belladonna_invoice' }],
     ['matthews_letter', { id: 'matthews_letter' }],
     ['port_cargo_ledger', { id: 'port_cargo_ledger' }],
+    ['port_cargo_ledger_archive', { id: 'port_cargo_ledger_archive' }],
     ['markus_statement', { id: 'markus_statement' }],
     ['sebastian_delivery_statement', { id: 'sebastian_delivery_statement' }],
     ['anna_markus_items', { id: 'anna_markus_items' }],
