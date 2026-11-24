@@ -584,3 +584,10 @@ body { background:#071015; color:#d3d5cc; }
   .investigation-board .clue-card-connections { display:block; margin-top:4px; padding-top:6px; border-top:1px dashed #8c795d; color:#65513a; font:11px/1.4 Georgia,serif; overflow-wrap:anywhere; }
   .investigation-board .board-clue-card { min-height:136px; }
 }
+
+
+/* Touch reordering for the mobile evidence board. */
+@media(max-width:900px) {
+  .investigation-board .board-clue-card { touch-action:none; user-select:none; -webkit-user-select:none; }
+  .investigation-board .board-clue-card:active { cursor:grabbing; }
+}
