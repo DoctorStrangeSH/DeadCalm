@@ -591,3 +591,18 @@ body { background:#071015; color:#d3d5cc; }
   .investigation-board .board-clue-card { touch-action:none; user-select:none; -webkit-user-select:none; }
   .investigation-board .board-clue-card:active { cursor:grabbing; }
 }
+
+
+/* Long-form journal entries remain readable in the detective dossier. */
+.notebook-note-detail .dialog-content { max-height:min(82dvh,780px); overflow-y:auto; overscroll-behavior:contain; }
+.notebook-note-detail-text { margin:18px 0 22px; color:#e1ded1; font:16px/1.75 Georgia,serif; white-space:pre-wrap; overflow-wrap:anywhere; }
+.notebook-note-detail-meta { display:grid; gap:8px; margin:18px 0 22px; padding:13px 15px; border:1px solid #625b4c; background:#222a29; color:#bdb5a4; font:12px/1.5 'Courier New',monospace; overflow-wrap:anywhere; }
+.notebook-note-detail .dialog-content > .flex:last-child { flex-wrap:wrap; }
+.notebook-note-detail .dialog-btn { min-height:46px; }
+@media(max-width:600px) {
+  .notebook-note-detail { width:min(100vw - 16px,620px); max-height:94dvh; margin:8px; }
+  .notebook-note-detail .dialog-content { max-height:calc(94dvh - 24px); padding:18px; }
+  .notebook-note-detail-text { font-size:15px; line-height:1.7; }
+  .notebook-note-detail .dialog-content > .flex:last-child { display:grid; grid-template-columns:1fr; }
+  .notebook-note-detail .dialog-btn { width:100%; }
+}
