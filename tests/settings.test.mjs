@@ -4,6 +4,9 @@ import { DEFAULT_SETTINGS, normalizeSettings, getTextDelay } from '../src/js/sys
 import { GameState } from '../src/js/core/state.js';
 import { Storage } from '../src/js/core/storage.js';
 import { Audio } from '../src/js/core/audio.js';
+import { readFileSync } from 'node:fs';
+
+const dialogBox = readFileSync(new URL('../src/js/components/dialog-box.js', import.meta.url), 'utf8');
 
 test('settings normalization clamps volume and rejects unknown text speed', () => {
   assert.deepEqual(normalizeSettings({ musicVolume: 2, sfxVolume: -1, textSpeed: 'warp-speed' }), {
@@ -105,4 +108,11 @@ test('instant dialogue speed is a supported preference and maps to zero delay', 
     textSpeed: 'instant'
   });
   assert.equal(getTextDelay('instant'), 0);
+});
+
+
+test('dialogue rendering uses the shared text-speed timing instead of a duplicate table', () => {
+  assert.match(dialogBox, /import \{ getTextDelay \} from '\.\.\/systems\/settings\.js'/);
+  assert.match(dialogBox, /const textDelay = getTextDelay\(GameState\.settings\?\.textSpeed\)/);
+  assert.doesNotMatch(dialogBox, /const textDelays =/);
 });
