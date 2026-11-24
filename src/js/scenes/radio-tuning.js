@@ -42,12 +42,12 @@ export function render(container) {
             <p class="radio-step">ПОИСК ЧИСТОГО СИГНАЛА</p>
             <p class="radio-description">Где-то в эфире повторяется короткая передача. Вращайте настройку медленно. Когда голос станет различим, уберите лишний треск фильтром.</p>
             <label class="radio-control-label" for="radio-frequency"><span>ТОЧНАЯ НАСТРОЙКА</span><strong id="radio-frequency-value">${session.frequency.toFixed(1)} MHz</strong></label>
-            <input id="radio-frequency" class="radio-range" type="range" min="88" max="108" step="0.1" value="${session.frequency}" aria-label="Частота радиоприёмника">
+            <input id="radio-frequency" class="radio-range" type="range" min="88" max="108" step="0.1" value="${session.frequency}" aria-label="Частота радиоприёмника" aria-valuetext="${session.frequency.toFixed(1)} мегагерц">
             <div class="radio-range-ends"><span>88.0</span><span>108.0 MHz</span></div>
             <label class="radio-control-label" for="radio-filter"><span>ФИЛЬТР ПОМЕХ</span><strong id="radio-filter-value">${session.filter}%</strong></label>
-            <input id="radio-filter" class="radio-range filter-range" type="range" min="0" max="100" step="1" value="${session.filter}" aria-label="Фильтр радиопомех">
+            <input id="radio-filter" class="radio-range filter-range" type="range" min="0" max="100" step="1" value="${session.filter}" aria-label="Фильтр радиопомех" aria-valuetext="${session.filter} процентов">
             <div class="radio-range-ends"><span>ШИРОКО</span><span>УЗКО</span></div>
-            <div class="radio-feedback" id="radio-feedback" aria-live="polite">${message}</div>
+            <div class="radio-feedback" id="radio-feedback" role="status" aria-live="polite" aria-atomic="true">${message}</div>
             <div class="radio-quality" id="radio-quality-label"><span>КАЧЕСТВО ПРИЁМА</span><strong>${signal.quality}%</strong></div>
             <div class="radio-quality-track" role="progressbar" aria-labelledby="radio-quality-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${signal.quality}"><span style="width:${signal.quality}%"></span></div>
             <button class="radio-finish" id="radio-finish" ${finished ? 'disabled' : ''}>ЗАВЕРШИТЬ ПРИЁМ</button>
@@ -63,6 +63,8 @@ export function render(container) {
       const current = getRadioSignal(session);
       container.querySelector('#radio-frequency-value').textContent = session.frequency.toFixed(1) + ' MHz';
       container.querySelector('#radio-filter-value').textContent = session.filter + '%';
+      frequency.setAttribute('aria-valuetext', session.frequency.toFixed(1) + ' мегагерц');
+      filter.setAttribute('aria-valuetext', session.filter + ' процентов');
       container.querySelector('.radio-frequency').innerHTML = session.frequency.toFixed(1) + ' <small>MHz</small>';
       container.querySelector('.radio-display-status').textContent = current.clarity === 'clear'
         ? 'ГОЛОС ПРОСТУПАЕТ ЧЁТКО' : current.clarity === 'fragmented' ? 'СЛОВА ТОНУТ В ПОМЕХАХ' : 'ТОЛЬКО ШУМ И ТРЕСК';
