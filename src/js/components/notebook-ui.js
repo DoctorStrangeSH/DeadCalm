@@ -180,7 +180,7 @@ export class NotebookUI {
         <p class="notebook-card-text">${escapeHtml(note.text.substring(0, 180))}${note.text.length > 180 ? '…' : ''}</p>
         <div class="notebook-card-footer">
           <span class="notebook-date">${escapeHtml(dateStr)}</span>
-          <span class="notebook-source">${escapeHtml(note.source)}</span>
+          <span class="notebook-source">${escapeHtml(note.source || 'Не указан')}</span>
         </div>
       </button>
     `;
@@ -314,8 +314,8 @@ export class NotebookUI {
     var overlay = document.createElement('div');
     overlay.className = 'dialog-overlay';
 
-    var date = new Date(note.timestamp);
-    var dateStr = date.toLocaleDateString('ru-RU', {
+    var date = new Date(note.timestamp || '');
+    var dateStr = Number.isNaN(date.getTime()) ? 'Дата не указана' : date.toLocaleDateString('ru-RU', {
       day: 'numeric',
       month: 'long',
       year: 'numeric',
@@ -324,11 +324,11 @@ export class NotebookUI {
     });
 
     overlay.innerHTML = `
-      <div class="dialog-modal">
+      <div class="dialog-modal" role="dialog" aria-modal="true" aria-label="Запись дневника">
         <div class="dialog-content">
           <div class="flex justify-between items-start mb-4">
             <div>
-              <p class="dialog-type-label">${escapeHtml(note.category.toUpperCase())} — ДЕНЬ ${note.day}</p>
+              <p class="dialog-type-label">${escapeHtml(String(note.category || 'общее').toUpperCase())} — ДЕНЬ ${note.day || 1}</p>
               <h3 class="text-gold text-lg mt-1">${note.pinned ? '◆ ' : ''}${escapeHtml(note.title)}</h3>
             </div>
             <div class="flex gap-2">
@@ -338,7 +338,7 @@ export class NotebookUI {
             </div>
           </div>
 
-          <p class="text-gray-400 text-sm leading-relaxed mb-4">${escapeHtml(note.text)}</p>
+          <p class="text-gray-400 text-sm leading-relaxed mb-4">${escapeHtml(note.text || '')}</p>
 
           <div class="text-gray-600 text-xs space-y-1 mb-4">
             <p>Дата: ${escapeHtml(dateStr)}</p>
