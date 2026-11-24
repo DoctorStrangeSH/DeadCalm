@@ -192,3 +192,28 @@ test('independent port archive is acquired only after the player has obtained th
   assert.doesNotMatch(portScene, /addClue\(archiveLedger\)/,
     'the independent copy must not be granted automatically when the port scene opens');
 });
+
+
+test('day-five finale exposes a reachable return path to Sebastian for the missing delivery statement', () => {
+  const dialogues = readJson('../src/data/dialogues.json');
+  const portScene = readFileSync(new URL('../src/js/scenes/port.js', import.meta.url), 'utf8');
+  const dialogueEngine = readFileSync(new URL('../src/js/systems/dialogue.js', import.meta.url), 'utf8');
+  const sebastian = dialogues.npc_sebastian_blackwood;
+  assert.ok(sebastian.first_meeting.unlocks_topics.includes('about_judge'));
+  const response = sebastian.topics.about_judge.responses.find(item => item.id === 'sebastian_delivery_statement');
+  assert.ok(response, 'Sebastian must have a dedicated delivery-statement question');
+  assert.equal(response.gives_clue, 'sebastian_delivery_statement');
+  assert.deepEqual(response.requires_clues, ['belladonna_invoice', 'judge_appointment_card']);
+  assert.match(dialogueEngine, /response\.requires_clues\)\) return false/);
+  assert.match(portScene, /needsSebastianStatement[\s\S]*?btn-return-sebastian/);
+  assert.match(portScene, /querySelector\('#btn-return-sebastian'\)[\s\S]*?scene: 'blackwood-mansion'/);
+});
+
+test('day-five finale offers a safe film replay when only full-disclosure quality is missing', () => {
+  const portScene = readFileSync(new URL('../src/js/scenes/port.js', import.meta.url), 'utf8');
+  const access = readFileSync(new URL('../src/js/systems/minigame-access.js', import.meta.url), 'utf8');
+  assert.match(portScene, /!fullDisclosureReady && canAccessCase001MiniGame\('film-restoration', GameState\)/);
+  assert.match(portScene, /querySelector\('#btn-retry-finale-film'\)[\s\S]*?scene: 'film-restoration'/);
+  assert.match(portScene, /btn-ending-open[\s\S]*?disabled/);
+  assert.match(access, /case 'film-restoration':[\\s\\S]*?hasClue\('markus_watch_key'\)/);
+});
