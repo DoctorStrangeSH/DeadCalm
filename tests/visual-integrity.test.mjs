@@ -161,8 +161,8 @@ test('detective journal has a separate searchable evidence archive', () => {
   assert.ok(notebook.includes('GameState.currentCase?.clues || []'), 'evidence is read from saved case state');
   assert.ok(ui.includes('data-filter="clues"'), 'evidence must have its own filter');
   assert.ok(ui.includes("this.filter === 'clues'"), 'evidence filter must load clues');
-  assert.ok(ui.includes("(n.source || '').toLowerCase().includes(query)"), 'search includes the source');
-  assert.ok(ui.includes('_showClueDetail(title)'), 'clues should have readable detail view');
+  assert.ok(ui.includes("String(n.source || '').toLowerCase().includes(query)"), 'search includes the source');
+  assert.ok(ui.includes('_showClueDetail(this.getAttribute(\'data-clue-id\') || title)'), 'clues should have readable detail view');
   assert.ok(css.includes('.notebook-evidence-detail'), 'evidence details should match the noir journal');
 });
 
