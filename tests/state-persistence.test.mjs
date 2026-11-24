@@ -513,7 +513,7 @@ test('full investigation state survives save/load and exports nested hypotheses'
     assert.equal(GameState.socialGraph.ties[0].status, 'strained');
     assert.equal(GameState.socialGraph.events[0].description, 'Анна передала вещи Маркуса детективу.');
     assert.equal(GameState.knowledgeLedger.entries[0].state, 'disputed');
-      assert.equal(GameState.knowledgeLedger.entries[0].provenance, 'Себастьян оспаривает детали передачи флакона.');
+      assert.equal(GameState.knowledgeLedger.entries[0].provenance, 'Анна рассказала, что брат просил её хранить бумаги.');
     assert.equal(GameState.knowledgeLedger.entries[0].stateHistory.length, 1);
     assert.equal(GameState.npcDailyLife.schedules[0].locationId, 'holt_house');
     assert.equal(GameState.npcDailyLife.occurrences[0].id, 'occurrence_anna_home');
