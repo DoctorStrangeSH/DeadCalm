@@ -58,22 +58,22 @@ export function render(container) {
             <p class="film-step">01 / ПРОТЯЖНЫЙ МЕХАНИЗМ</p>
             <p class="film-description">Ацетатная плёнка стала хрупкой. Неверное натяжение или скорость могут разорвать её окончательно.</p>
             <label class="film-control-label" for="film-tension"><span>НАТЯЖЕНИЕ</span><strong id="film-tension-value">${session.tension}%</strong></label>
-            <input class="film-range" id="film-tension" type="range" min="0" max="100" value="${session.tension}" aria-label="Натяжение плёнки">
+            <input class="film-range" id="film-tension" type="range" min="0" max="100" value="${session.tension}" aria-label="Натяжение плёнки" aria-valuetext="${session.tension} процентов">
             <div class="film-range-ends"><span>СЛАБО</span><span>ОПТИМУМ 35–62</span><span>СИЛЬНО</span></div>
             <label class="film-control-label" for="film-speed"><span>СКОРОСТЬ ПРОТЯЖКИ</span><strong id="film-speed-value">${session.speed}×</strong></label>
-            <input class="film-range" id="film-speed" type="range" min="1" max="5" value="${session.speed}" aria-label="Скорость протяжки">
+            <input class="film-range" id="film-speed" type="range" min="1" max="5" value="${session.speed}" aria-label="Скорость протяжки" aria-valuetext="${session.speed} раза">
             <div class="film-range-ends"><span>МЕДЛЕННО</span><span>БЫСТРО</span></div>
-            <div class="film-transport-status ${safe?'safe':'warning'}" id="film-transport-status" aria-live="polite">${safe?'НАТЯЖЕНИЕ В ДОПУСТИМОМ ДИАПАЗОНЕ':'ВНИМАНИЕ: РИСК ПОВРЕЖДЕНИЯ ПЛЁНКИ'}</div>
+            <div class="film-transport-status ${safe?'safe':'warning'}" id="film-transport-status" role="status" aria-live="polite" aria-atomic="true">${safe?'НАТЯЖЕНИЕ В ДОПУСТИМОМ ДИАПАЗОНЕ':'ВНИМАНИЕ: РИСК ПОВРЕЖДЕНИЯ ПЛЁНКИ'}</div>
             <div class="film-divider"></div>
             <p class="film-step">02 / РЕСТАВРАЦИЯ КАДРА</p>
             ${defect ? `
               <p class="film-defect-title">${defect.title}</p><p class="film-description">${defect.text}</p>
               <label class="film-control-label" for="film-tool"><span>${defect.unit}</span><strong id="film-tool-value">${defect.value}</strong></label>
-              <input class="film-range" id="film-tool" type="range" min="${defect.min}" max="${defect.max}" step="${defect.step}" value="${defect.value}" aria-label="${defect.unit}">
+              <input class="film-range" id="film-tool" type="range" min="${defect.min}" max="${defect.max}" step="${defect.step}" value="${defect.value}" aria-label="${defect.unit}" aria-valuetext="${defect.value}">
               <div class="film-range-ends"><span>МИНИМУМ</span><span>МАКСИМУМ</span></div>
               <button class="film-action" id="film-restore" ${frame.restored?'disabled':''}>${frame.restored?'КАДР ВОССТАНОВЛЕН':defect.button}</button>
             ` : '<p class="film-defect-title">КАТУШКА ГОТОВА К ПРОСМОТРУ</p><p class="film-description">Все кадры обработаны. Запустите контрольную проекцию.</p>'}
-            <div class="film-feedback" id="film-feedback" aria-live="polite">${message}</div>
+            <div class="film-feedback" id="film-feedback" role="status" aria-live="polite" aria-atomic="true">${message}</div>
             <div class="film-progress" id="film-progress-label"><span>СОСТОЯНИЕ КАТУШКИ</span><strong>${progress}%</strong></div><div class="film-progress-track" role="progressbar" aria-labelledby="film-progress-label" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${progress}"><i style="width:${progress}%"></i></div>
             <div class="film-actions-row"><button class="film-secondary" id="film-advance" ${canAdvanceFilm(session)?'':'disabled'}>${session.phase==='projection'?'ЗАПУСТИТЬ ПРОЕКТОР':'СЛЕДУЮЩИЙ КАДР →'}</button><button class="film-exit" id="film-exit">ВЫХОД</button></div>
           </div>
@@ -95,14 +95,20 @@ export function render(container) {
     tension.addEventListener('input', () => {
       adjustFilmTransport(session,{tension:Number(tension.value)});
       container.querySelector('#film-tension-value').textContent=session.tension+'%';
+      tension.setAttribute('aria-valuetext', session.tension + ' процентов');
       refreshTransport();
     });
     speed.addEventListener('input', () => {
       adjustFilmTransport(session,{speed:Number(speed.value)});
       container.querySelector('#film-speed-value').textContent=session.speed+'×';
+      speed.setAttribute('aria-valuetext', session.speed + ' раза');
       refreshTransport();
     });
-    if (tool && defect && !frame.restored) tool.addEventListener('input',()=>container.querySelector('#film-tool-value').textContent=Number(tool.value).toFixed(defect.action==='splice'?2:0));
+    if (tool && defect && !frame.restored) tool.addEventListener('input',()=>{
+      const value = Number(tool.value);
+      container.querySelector('#film-tool-value').textContent=value.toFixed(defect.action==='splice'?2:0);
+      tool.setAttribute('aria-valuetext', String(value));
+    });
     if (defect && !frame.restored) container.querySelector('#film-restore').addEventListener('click',()=>{
       const ok=restoreFilmFrame(session,defect.action,Number(tool.value));
       draw(ok?defect.success:defect.failure);
