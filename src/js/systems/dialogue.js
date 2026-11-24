@@ -98,9 +98,13 @@ export var DialogueEngine = {
     console.log('[Dialogue] Темы: ' + this._unlockedTopics.join(', '));
     console.log('[Dialogue] Доверие: ' + NPCMemory.getTrust(npcId) + '%');
 
-    // Проверяем специальные условия (враждебность)
+    // Лидия может отказаться от личного разговора, но не должна блокировать
+    // единственное обязательное медицинское доказательство расследования.
     if (npcData.refuses_to_talk && NPCMemory.hasFlag(npcId, 'lydia_refuses')) {
-      console.log('[Dialogue] NPC отказывается говорить (lydia_refuses)');
+      console.log('[Dialogue] Лидия отказывается от личного разговора (lydia_refuses)');
+      if (!GameState.hasClue('autopsy_report_01')) {
+        return this._formatTopicSelection(npcId, ['about_autopsy'], npcData);
+      }
       return this._formatSimpleNode(npcData.refuses_to_talk, npcId);
     }
     if (npcData.hostile && NPCMemory.hasFlag(npcId, 'ray_hostile')) {
@@ -237,6 +241,9 @@ export var DialogueEngine = {
     var npcData = this._dialogues?.[this._currentNPC];
     if (!npcData) return null;
 
+    const lydiaRefuses = npcData.refuses_to_talk && NPCMemory.hasFlag(this._currentNPC, 'lydia_refuses');
+    if (lydiaRefuses && topicId !== 'about_autopsy') return null;
+
     var topic = npcData.topics?.[topicId];
     if (!topic || !canSelectDialogueTopic(topicId, this._unlockedTopics)) {
       console.warn('[Dialogue] Тема не найдена или ещё не открыта: ' + topicId);
@@ -247,7 +254,10 @@ export var DialogueEngine = {
     this._pendingCriticalChoice = null;
     var self = this;
     var unansweredQuestions = topic.responses.filter(function(r) {
-      return self._askedQuestions.indexOf(r.id) === -1 && self._isResponseAvailable(r);
+      const requiredAutopsyRetry = lydiaRefuses && r.id === 'cause_of_death' &&
+        !GameState.hasClue('autopsy_report_01');
+      return (self._askedQuestions.indexOf(r.id) === -1 || requiredAutopsyRetry) &&
+        (!lydiaRefuses || r.id === 'cause_of_death') && self._isResponseAvailable(r);
     });
 
     console.log('[Dialogue] Выбрана тема: ' + topicId + ', незаданных вопросов: ' + unansweredQuestions.length);
@@ -289,6 +299,11 @@ export var DialogueEngine = {
     var npcData = this._dialogues?.[this._currentNPC];
     if (!npcData) return null;
 
+    const lydiaRefuses = npcData.refuses_to_talk && NPCMemory.hasFlag(this._currentNPC, 'lydia_refuses');
+    const retryableRequiredEvidence = Boolean(lydiaRefuses && questionId === 'cause_of_death' &&
+      !GameState.hasClue('autopsy_report_01'));
+    if (lydiaRefuses && questionId !== 'cause_of_death') return null;
+
     if (this._pendingCriticalChoice && this._pendingCriticalChoice.questionId !== questionId) {
       this._pendingCriticalChoice = null;
     }
@@ -311,7 +326,8 @@ export var DialogueEngine = {
     const accessGranted = foundResponse && canAskDialogueQuestion({ topicId: foundTopicId, unlockedTopics: this._unlockedTopics, askedQuestions: this._askedQuestions, response: foundResponse, isAvailable: response => this._isResponseAvailable(response) });
     const retryableCritical = Boolean(foundResponse?.triggers_critical &&
       !NPCMemory.hasFlag(this._currentNPC, 'critical_' + foundResponse.triggers_critical));
-    if (!foundResponse || (!accessGranted && !retryableCritical) || !this._isResponseAvailable(foundResponse)) {
+    if (!foundResponse || (!accessGranted && !retryableCritical && !retryableRequiredEvidence) ||
+        !this._isResponseAvailable(foundResponse)) {
       console.warn('[Dialogue] Ответ не найден или недоступен: ' + questionId);
       return null;
     }
@@ -333,7 +349,8 @@ export var DialogueEngine = {
       return null;
     }
 
-    const shouldRememberQuestion = !opensUnresolvedChoice;
+    const shouldRememberQuestion = !opensUnresolvedChoice && !retryableRequiredEvidence &&
+      !this._askedQuestions.includes(questionId);
     console.log('[Dialogue] Задан вопрос: ' + questionId);
 
     // Добавляем заметку (только для важных); не отмечаем вопрос использованным,
@@ -508,6 +525,9 @@ export var DialogueEngine = {
 
     this._pendingCriticalChoice = null;
     if (npcData.refuses_to_talk && NPCMemory.hasFlag(this._currentNPC, 'lydia_refuses')) {
+      if (!GameState.hasClue('autopsy_report_01')) {
+        return this._formatTopicSelection(this._currentNPC, ['about_autopsy'], npcData);
+      }
       return this._formatSimpleNode(npcData.refuses_to_talk, this._currentNPC);
     }
     if (npcData.hostile && NPCMemory.hasFlag(this._currentNPC, 'ray_hostile')) {
