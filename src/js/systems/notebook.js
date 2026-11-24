@@ -82,10 +82,10 @@ export var Notebook = {
   /**
    * Закрепить/открепить заметку
    */
-  togglePin(title) {
-    var notes = GameState.notebook;
+  togglePin(identifier) {
+    var notes = GameState.notebook || [];
     for (var i = 0; i < notes.length; i++) {
-      if (notes[i].title === title) {
+      if (notes[i].id === identifier || (!notes[i].id && notes[i].title === identifier)) {
         notes[i].pinned = !notes[i].pinned;
         GameState.save();
         Events.emit('notebook:updated');
@@ -98,10 +98,10 @@ export var Notebook = {
   /**
    * Удалить заметку
    */
-  removeNote(title) {
-    var notes = GameState.notebook;
+  removeNote(identifier) {
+    var notes = GameState.notebook || [];
     for (var i = 0; i < notes.length; i++) {
-      if (notes[i].title === title) {
+      if (notes[i].id === identifier || (!notes[i].id && notes[i].title === identifier)) {
         notes.splice(i, 1);
         GameState.save();
         Events.emit('notebook:note_removed', identifier);
