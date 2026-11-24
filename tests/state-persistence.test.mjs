@@ -513,6 +513,7 @@ test('full investigation state survives save/load and exports nested hypotheses'
     assert.equal(GameState.socialGraph.ties[0].status, 'strained');
     assert.equal(GameState.socialGraph.events[0].description, 'Анна передала вещи Маркуса детективу.');
     assert.equal(GameState.knowledgeLedger.entries[0].state, 'disputed');
+      assert.equal(GameState.knowledgeLedger.entries[0].provenance, 'Себастьян оспаривает детали передачи флакона.');
     assert.equal(GameState.knowledgeLedger.entries[0].stateHistory.length, 1);
     assert.equal(GameState.npcDailyLife.schedules[0].locationId, 'holt_house');
     assert.equal(GameState.npcDailyLife.occurrences[0].id, 'occurrence_anna_home');
@@ -965,10 +966,10 @@ test('real storage adapter restores both completed endings and the full investig
           flags: { sealed_confession_offered: true }
         }
       };
-      GameState.socialGraph = { ties: [{ id: 'tie_1', fromNpcId: 'anna_holt', toNpcId: 'markus_holt' }], events: [] };
-      GameState.knowledgeLedger = { entries: [{ id: 'claim_final', state: 'disputed' }] };
-      GameState.npcDailyLife = { schedules: [], occurrences: [{ id: 'final_observation', day: 5 }] };
-      GameState.miniGameProgress = { filmRestoration: { bestQuality: ending === 'open_case' ? 100 : 72 } };
+      GameState.socialGraph = { ties: [{ id: 'tie_1', fromNpcId: 'anna_holt', toNpcId: 'markus_holt', type: 'family', status: 'strained', basis: 'Анна передала вещи брата детективу.' }], events: [] };
+      GameState.knowledgeLedger = { entries: [{ id: 'claim_final', npcId: 'npc_sebastian_blackwood', claimRef: 'claim_poison_delivery', sourceType: 'interview', state: 'disputed', provenance: 'Себастьян оспаривает детали передачи флакона.', sourceRefs: ['sebastian_delivery_statement'], stateHistory: [] }] };
+      GameState.npcDailyLife = { schedules: [{ id: 'schedule_final', npcId: 'npc_sebastian_blackwood', activity: 'private', startMinute: 0, endMinute: 1439, days: [1, 2, 3, 4, 5, 6, 7], locationId: 'blackwood_mansion', basis: 'Авторское расписание персонажа.' }], occurrences: [{ id: 'final_observation', npcId: 'npc_sebastian_blackwood', scheduleId: 'schedule_final', day: 5, minute: 600, locationId: 'blackwood_mansion', description: 'Себастьян находился в особняке.', basis: 'Наблюдение игрока.' }] };
+      GameState.miniGameProgress = { 'film-restoration': { attempts: 2, bestOutcome: 'success', bestQuality: ending === 'open_case' ? 100 : 72, lastOutcome: 'success', lastQuality: ending === 'open_case' ? 100 : 72, completedAt: '2026-11-24T08:00:00.000Z' } };
       GameState.notebook = [{ id: 'final_note', text: 'Сверить показания и архивный экземпляр.' }];
       GameState.settings = { musicVolume: 0.35, sfxVolume: 0.65, textSpeed: 'fast' };
 
@@ -1002,9 +1003,11 @@ test('real storage adapter restores both completed endings and the full investig
       assert.equal(GameState.npcMemory.npc_sebastian_blackwood.promises[0].status, 'broken');
       assert.equal(GameState.npcMemory.npc_sebastian_blackwood.flags.sealed_confession_offered, true);
       assert.equal(GameState.socialGraph.ties[0].id, 'tie_1');
+      assert.equal(GameState.socialGraph.ties[0].basis, 'Анна передала вещи брата детективу.');
       assert.equal(GameState.knowledgeLedger.entries[0].state, 'disputed');
       assert.equal(GameState.npcDailyLife.occurrences[0].id, 'final_observation');
-      assert.equal(GameState.miniGameProgress.filmRestoration.bestQuality, ending === 'open_case' ? 100 : 72);
+      assert.equal(GameState.npcDailyLife.schedules[0].id, 'schedule_final');
+      assert.equal(GameState.miniGameProgress['film-restoration'].bestQuality, ending === 'open_case' ? 100 : 72);
       assert.equal(GameState.notebook[0].id, 'final_note');
       assert.equal(GameState.settings.textSpeed, 'fast');
       assert.equal(GameState.flags.day_5, true);
