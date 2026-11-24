@@ -104,7 +104,7 @@ export var Notebook = {
       if (notes[i].title === title) {
         notes.splice(i, 1);
         GameState.save();
-        Events.emit('notebook:note_removed', title);
+        Events.emit('notebook:note_removed', identifier);
         return true;
       }
     }
