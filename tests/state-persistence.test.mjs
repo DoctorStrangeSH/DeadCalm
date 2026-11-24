@@ -1051,3 +1051,31 @@ test('real storage reset cannot resurrect the previous campaign through a backup
     Object.assign(GameState, original);
   }
 });
+
+
+test('GameState.init preserves the supported instant dialogue speed from a save', () => {
+  const originalLoad = Storage.load;
+  const original = {
+    player: GameState.player,
+    currentCase: GameState.currentCase,
+    campaign: GameState.campaign,
+    flags: GameState.flags,
+    relationships: GameState.relationships,
+    npcMemory: GameState.npcMemory,
+    socialGraph: GameState.socialGraph,
+    knowledgeLedger: GameState.knowledgeLedger,
+    npcDailyLife: GameState.npcDailyLife,
+    miniGameProgress: GameState.miniGameProgress,
+    notebook: GameState.notebook,
+    settings: GameState.settings,
+    saveStatus: GameState.saveStatus
+  };
+  try {
+    Storage.load = () => ({ settings: { musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'instant' } });
+    GameState.init();
+    assert.equal(GameState.settings.textSpeed, 'instant');
+  } finally {
+    Storage.load = originalLoad;
+    Object.assign(GameState, original);
+  }
+});
