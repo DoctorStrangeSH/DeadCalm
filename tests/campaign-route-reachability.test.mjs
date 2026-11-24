@@ -204,7 +204,7 @@ test('day-five finale exposes a reachable return path to Sebastian for the missi
   assert.ok(response, 'Sebastian must have a dedicated delivery-statement question');
   assert.equal(response.gives_clue, 'sebastian_delivery_statement');
   assert.deepEqual(response.requires_clues, ['belladonna_invoice', 'judge_appointment_card']);
-  assert.match(dialogueEngine, /response\.requires_clues\)\) return false/);
+  assert.match(dialogueEngine, /Array\.isArray\(response\.requires_clues\)[\s\S]*?response\.requires_clues\.every/);
   assert.match(portScene, /needsSebastianStatement[\s\S]*?btn-return-sebastian/);
   assert.match(portScene, /querySelector\('#btn-return-sebastian'\)[\s\S]*?scene: 'blackwood-mansion'/);
 });
