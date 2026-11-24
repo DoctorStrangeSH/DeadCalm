@@ -919,3 +919,132 @@ test('clearing a campaign recap flag rolls back when storage rejects dismissal',
     GameState.save = previousSave;
   }
 });
+
+
+test('real storage adapter restores both completed endings and the full investigation after a fresh session', () => {
+  const original = snapshotGameState();
+  const store = installGameStorage();
+
+  const requiredClues = [
+    'autopsy_report_01',
+    'judge_appointment_card',
+    'belladonna_invoice',
+    'matthews_letter',
+    'port_cargo_ledger',
+    'port_cargo_ledger_archive',
+    'markus_statement',
+    'sebastian_delivery_statement'
+  ];
+
+  try {
+    for (const ending of ['open_case', 'price_of_silence']) {
+      store.values.clear();
+      const endingClues = ending === 'open_case'
+        ? [{ id: 'restored_film_frame', quality: 100, source: 'Плёнка Маркуса' }]
+        : [
+            { id: 'port_radio_fragment', quality: 82, source: 'Портовый радиоканал' },
+            { id: 'sebastian_sealed_confession', source: 'Запечатанное признание Себастьяна' }
+          ];
+
+      GameState.saveBlocked = false;
+      GameState.player = { name: 'Джон Риверс', reputation: 73 };
+      GameState.currentCase = {
+        id: 'case_001',
+        clues: [...requiredClues.map(id => ({ id, source: 'Проверенный источник' })), ...endingClues],
+        suspects: [{ id: 'sebastian_blackwood', status: 'under_investigation' }],
+        timeline: [{ id: 'meeting_1967', day: 5, verified: true }],
+        hypotheses: [{ id: 'hyp_final', status: 'probable', clueIds: ['port_cargo_ledger'] }]
+      };
+      GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+      GameState.flags = { day_2: true, day_3: true, day_4: true, day_5: true, final_choice_seen: true };
+      GameState.relationships = { npc_sebastian_blackwood: { trust: 12, met: true } };
+      GameState.npcMemory = {
+        npc_sebastian_blackwood: {
+          met: true,
+          promises: [{ id: 'promise_final', status: 'broken' }],
+          flags: { sealed_confession_offered: true }
+        }
+      };
+      GameState.socialGraph = { ties: [{ id: 'tie_1', fromNpcId: 'anna_holt', toNpcId: 'markus_holt' }], events: [] };
+      GameState.knowledgeLedger = { entries: [{ id: 'claim_final', state: 'disputed' }] };
+      GameState.npcDailyLife = { schedules: [], occurrences: [{ id: 'final_observation', day: 5 }] };
+      GameState.miniGameProgress = { filmRestoration: { bestQuality: ending === 'open_case' ? 100 : 72 } };
+      GameState.notebook = [{ id: 'final_note', text: 'Сверить показания и архивный экземпляр.' }];
+      GameState.settings = { musicVolume: 0.35, sfxVolume: 0.65, textSpeed: 'fast' };
+
+      assert.equal(GameState.completeCampaign(ending), true, ending + ' should save through real Storage');
+      assert.ok(store.values.has('deadCalm_gameState'));
+
+      // Simulate closing the app: discard every in-memory campaign object.
+      Object.assign(GameState, {
+        player: { name: 'Пустая сессия', reputation: 0 },
+        currentCase: { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] },
+        campaign: { caseId: 'case_001', day: 1, completed: false, ending: null },
+        flags: {},
+        relationships: {},
+        npcMemory: {},
+        socialGraph: { ties: [], events: [] },
+        knowledgeLedger: { entries: [] },
+        npcDailyLife: { schedules: [], occurrences: [] },
+        miniGameProgress: {},
+        notebook: [],
+        settings: {},
+        saveBlocked: false
+      });
+
+      assert.equal(GameState.init(), true, 'fresh session should load ' + ending);
+      assert.equal(GameState.campaign.day, 5);
+      assert.equal(GameState.campaign.completed, true);
+      assert.equal(GameState.campaign.ending, ending);
+      assert.equal(GameState.currentCase.clues.length, requiredClues.length + endingClues.length);
+      assert.equal(GameState.currentCase.clues.find(clue => clue.id === endingClues[0].id).source, endingClues[0].source);
+      assert.equal(GameState.relationships.npc_sebastian_blackwood.trust, 12);
+      assert.equal(GameState.npcMemory.npc_sebastian_blackwood.promises[0].status, 'broken');
+      assert.equal(GameState.npcMemory.npc_sebastian_blackwood.flags.sealed_confession_offered, true);
+      assert.equal(GameState.socialGraph.ties[0].id, 'tie_1');
+      assert.equal(GameState.knowledgeLedger.entries[0].state, 'disputed');
+      assert.equal(GameState.npcDailyLife.occurrences[0].id, 'final_observation');
+      assert.equal(GameState.miniGameProgress.filmRestoration.bestQuality, ending === 'open_case' ? 100 : 72);
+      assert.equal(GameState.notebook[0].id, 'final_note');
+      assert.equal(GameState.settings.textSpeed, 'fast');
+      assert.equal(GameState.flags.day_5, true);
+    }
+  } finally {
+    store.restore();
+    Object.assign(GameState, original);
+  }
+});
+
+test('real storage reset cannot resurrect the previous campaign through a backup after restart', () => {
+  const original = snapshotGameState();
+  const store = installGameStorage();
+  try {
+    GameState.saveBlocked = false;
+    GameState.currentCase = {
+      id: 'case_001',
+      clues: [{ id: 'old_campaign_secret' }],
+      suspects: [],
+      timeline: [],
+      hypotheses: []
+    };
+    GameState.campaign = { caseId: 'case_001', day: 4, completed: false, ending: null };
+    GameState.flags = { day_2: true, day_3: true, day_4: true, old_choice: true };
+    assert.equal(GameState.save(), true);
+    assert.ok(store.values.has('deadCalm_gameState'));
+
+    assert.equal(GameState.reset(), true);
+    assert.equal(store.values.has('deadCalm_gameState__backup'), false);
+    assert.equal(JSON.parse(store.values.get('deadCalm_gameState')).campaign.day, 1);
+
+    GameState.campaign = { caseId: 'case_001', day: 5, completed: true, ending: 'open_case' };
+    GameState.currentCase.clues.push({ id: 'unsaved_memory_only' });
+    assert.equal(GameState.init(), true);
+    assert.equal(GameState.campaign.day, 1);
+    assert.equal(GameState.campaign.completed, false);
+    assert.deepEqual(GameState.currentCase.clues, []);
+    assert.deepEqual(GameState.flags, {});
+  } finally {
+    store.restore();
+    Object.assign(GameState, original);
+  }
+});
