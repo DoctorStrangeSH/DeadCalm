@@ -75,3 +75,26 @@ test('export tolerates older or partial journal records', () => {
     assert.match(exported, /\[ОБЩЕЕ\]/);
   });
 });
+
+
+test('notes with duplicate titles are pinned and deleted by stable id', () => {
+  withNotebook(() => {
+    GameState.notebook = [
+      { id: 'note-first', title: 'Одинаковое название', text: 'Первая запись', pinned: false },
+      { id: 'note-second', title: 'Одинаковое название', text: 'Вторая запись', pinned: false }
+    ];
+    assert.equal(Notebook.togglePin('note-second'), true);
+    assert.equal(GameState.notebook[0].pinned, false);
+    assert.equal(GameState.notebook[1].pinned, true);
+    assert.equal(Notebook.removeNote('note-second'), true);
+    assert.equal(GameState.notebook.length, 1);
+    assert.equal(GameState.notebook[0].id, 'note-first');
+  });
+});
+
+test('new journal notes receive a stable identifier', () => {
+  withNotebook(() => {
+    assert.equal(Notebook.addNote({ title: 'Запись с идентификатором', text: 'Текст' }), true);
+    assert.match(GameState.notebook[0].id, /^note-\d+-[a-z0-9]+$/);
+  });
+});
