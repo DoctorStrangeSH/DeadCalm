@@ -12,13 +12,16 @@ export var Notebook = {
   addNote(note) {
     if (!GameState.notebook) GameState.notebook = [];
 
-    // Проверяем, нет ли уже такой заметки
-    var exists = GameState.notebook.some(function(n) {
-      return n.title === note.title;
+    // Avoid exact duplicate imports while allowing distinct notes to share a title.
+    var duplicate = GameState.notebook.some(function(existing) {
+      if (note.id) return existing.id === note.id;
+      return existing.title === note.title
+        && (existing.text || '') === (note.text || '')
+        && (existing.source || 'Заметки детектива') === (note.source || 'Заметки детектива');
     });
 
-    if (exists) {
-      console.log('[Notebook] Заметка уже существует: ' + note.title);
+    if (duplicate) {
+      console.log('[Notebook] Точная копия заметки уже существует: ' + note.title);
       return false;
     }
 
