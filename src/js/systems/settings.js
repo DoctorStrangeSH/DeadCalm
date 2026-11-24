@@ -12,11 +12,11 @@ export function normalizeSettings(input = {}) {
   return {
     musicVolume: volume(input.musicVolume, DEFAULT_SETTINGS.musicVolume),
     sfxVolume: volume(input.sfxVolume, DEFAULT_SETTINGS.sfxVolume),
-    textSpeed: ['slow', 'normal', 'fast'].includes(input.textSpeed)
+    textSpeed: ['slow', 'normal', 'fast', 'instant'].includes(input.textSpeed)
       ? input.textSpeed : DEFAULT_SETTINGS.textSpeed
   };
 }
 
 export function getTextDelay(speed) {
-  return ({ slow: 45, normal: 25, fast: 8 })[speed] || 25;
+  return ({ slow: 45, normal: 25, fast: 8, instant: 0 })[speed] ?? 25;
 }
