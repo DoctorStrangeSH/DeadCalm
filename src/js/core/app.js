@@ -4,6 +4,7 @@ import { Events } from './events.js';
 import { Audio, getMiniGameResultCue } from './audio.js';
 import { DialogueEngine } from '../systems/dialogue.js';
 import { Investigation } from '../systems/investigation.js';
+import { shouldNavigateBackFromTouch } from '../systems/touch-navigation.js';
 
 /**
  * Точка входа в приложение.
@@ -143,21 +144,37 @@ async function init() {
     }
   });
 
-  // 7. Обработка свайпов (назад — только на мобилке)
+  // 7. Обработка свайпов (назад — только с безопасной области сцены)
   var touchStartX = 0;
+  var touchStartTarget = null;
   document.addEventListener('touchstart', function(e) {
+    if (e.touches.length !== 1) {
+      touchStartTarget = null;
+      return;
+    }
     touchStartX = e.touches[0].clientX;
-  });
+    touchStartTarget = e.target;
+  }, { passive: true });
 
   document.addEventListener('touchend', function(e) {
+    if (!touchStartTarget || e.changedTouches.length !== 1) {
+      touchStartTarget = null;
+      return;
+    }
+
     var touchEndX = e.changedTouches[0].clientX;
     var diff = touchEndX - touchStartX;
+    var shouldNavigateBack = shouldNavigateBackFromTouch({
+      startTarget: touchStartTarget,
+      distance: diff,
+      currentScene: Router.getCurrentScene()
+    });
+    touchStartTarget = null;
 
-    // Свайп вправо > 100px — назад
-    if (diff > 100 && Router.getCurrentScene() !== 'main-menu') {
+    if (shouldNavigateBack) {
       Events.emit('navigate', { scene: 'office' });
     }
-  });
+  }, { passive: true });
 
   // 8. Прячем Splash Screen и запускаем игру
   setTimeout(function() {
