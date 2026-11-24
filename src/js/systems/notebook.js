@@ -23,6 +23,7 @@ export var Notebook = {
     }
 
     GameState.notebook.push({
+      id: note.id || `note-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`,
       title: note.title,
       text: note.text,
       category: note.category || 'общее',
