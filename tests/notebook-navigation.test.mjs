@@ -28,3 +28,12 @@ test('long journal entries use a dedicated responsive detail layout', () => {
   assert.match(styles, /\.notebook-note-detail-text \{ margin:18px 0 22px;[^}]*white-space:pre-wrap/);
   assert.match(styles, /@media\(max-width:600px\) \{\s*\.notebook-note-detail \{/);
 });
+
+
+test('journal note cards and detail actions use stable ids with legacy fallback', () => {
+  assert.match(source, /data-note-id="\$\{escapeHtml\(note\.id\)\}"/);
+  assert.match(source, /self\._showNoteDetail\(this\.getAttribute\('data-note-id'\) \|\| title\)/);
+  assert.match(source, /n\.id === identifier \|\| \(!n\.id && n\.title === identifier\)/);
+  assert.match(source, /Notebook\.togglePin\(note\.id \|\| note\.title\)/);
+  assert.match(source, /Notebook\.removeNote\(note\.id \|\| note\.title\)/);
+});
