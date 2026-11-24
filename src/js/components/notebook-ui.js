@@ -170,7 +170,7 @@ export class NotebookUI {
     };
 
     return `
-      <button type="button" class="notebook-card ${note.pinned ? 'notebook-card-pinned' : ''}" data-title="${escapeHtml(note.title || 'Без названия')}" ${!note.isClue && note.id ? `data-note-id="${escapeHtml(note.id)}"` : ''} ${!note.isClue && note.id ? `data-note-id="${escapeHtml(note.id)}"` : ''} ${note.isClue ? `data-clue-id="${escapeHtml(note.id || '')}"` : ''} data-kind="${note.isClue ? 'clue' : 'note'}" aria-label="Открыть: ${escapeHtml(note.title || 'Без названия')}">
+      <button type="button" class="notebook-card ${note.pinned ? 'notebook-card-pinned' : ''}" data-title="${escapeHtml(note.title || 'Без названия')}" ${!note.isClue && note.id ? `data-note-id="${escapeHtml(note.id)}"` : ''} ${note.isClue ? `data-clue-id="${escapeHtml(note.id || '')}"` : ''} data-kind="${note.isClue ? 'clue' : 'note'}" aria-label="Открыть: ${escapeHtml(note.title || 'Без названия')}">
         <div class="notebook-card-header">
           <span class="notebook-category ${categoryColors[note.category] || ''}">${escapeHtml(note.category || 'Общее')}</span>
           ${note.pinned ? '<span class="notebook-pin">◆ ЗАКРЕПЛЕНО</span>' : ''}
