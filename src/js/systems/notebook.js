@@ -88,31 +88,37 @@ export var Notebook = {
    */
   togglePin(identifier) {
     var notes = GameState.notebook || [];
-    for (var i = 0; i < notes.length; i++) {
-      if (notes[i].id === identifier || (!notes[i].id && notes[i].title === identifier)) {
-        notes[i].pinned = !notes[i].pinned;
-        GameState.save();
-        Events.emit('notebook:updated');
-        return true;
-      }
+    var index = notes.findIndex(function(note) { return note.id === identifier; });
+    if (index < 0) {
+      var titleMatches = notes.map(function(note, i) {
+        return { note: note, index: i };
+      }).filter(function(entry) { return entry.note.title === identifier; });
+      if (titleMatches.length !== 1) return false;
+      index = titleMatches[0].index;
     }
-    return false;
+    notes[index].pinned = !notes[index].pinned;
+    GameState.save();
+    Events.emit('notebook:updated');
+    return true;
   },
 
   /**
-   * Удалить заметку
+   * Удалить заметку по ID; уникальное название поддерживается для старых сохранений и вызовов.
    */
   removeNote(identifier) {
     var notes = GameState.notebook || [];
-    for (var i = 0; i < notes.length; i++) {
-      if (notes[i].id === identifier || (!notes[i].id && notes[i].title === identifier)) {
-        notes.splice(i, 1);
-        GameState.save();
-        Events.emit('notebook:note_removed', identifier);
-        return true;
-      }
+    var index = notes.findIndex(function(note) { return note.id === identifier; });
+    if (index < 0) {
+      var titleMatches = notes.map(function(note, i) {
+        return { note: note, index: i };
+      }).filter(function(entry) { return entry.note.title === identifier; });
+      if (titleMatches.length !== 1) return false;
+      index = titleMatches[0].index;
     }
-    return false;
+    var removed = notes.splice(index, 1)[0];
+    GameState.save();
+    Events.emit('notebook:note_removed', removed.id || removed.title);
+    return true;
   },
 
   /**
