@@ -3,6 +3,7 @@ import { Events } from '../core/events.js';
 import { GameState } from '../core/state.js';
 import { escapeHtml } from '../utils/helpers.js';
 import { resolveTrustFeedback } from '../systems/dialogue-reactions.js';
+import { getTextDelay } from '../systems/settings.js';
 
 const CHARACTER_PORTRAITS = Object.freeze({
   'Доктор Лидия Винтер': 'lydia-winter.webp',
@@ -152,8 +153,7 @@ export class DialogBox {
     this.isTyping = true;
     textEl.textContent = '';
     const fullText = String(node.text || '');
-    const textDelays = { slow: 42, normal: 25, fast: 12, instant: 0 };
-    const textDelay = textDelays[GameState.settings?.textSpeed] ?? textDelays.normal;
+    const textDelay = getTextDelay(GameState.settings?.textSpeed);
     if (reducedMotion || textDelay === 0) {
       textEl.textContent = fullText;
     } else {
