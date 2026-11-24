@@ -113,3 +113,86 @@ test('NPC trust penalties and critical choices cannot silently revoke already ob
     assert.equal(GameState.completeCampaign('open_case'), true);
   });
 });
+
+
+test('both committed endings survive a fresh application session and reload with their exact ending ID', () => {
+  const stateKeys = ['player', 'currentCase', 'campaign', 'flags', 'relationships', 'npcMemory',
+    'socialGraph', 'knowledgeLedger', 'npcDailyLife', 'miniGameProgress', 'notebook',
+    'settings', 'saveBlocked', 'saveStatus'];
+  const previousState = Object.fromEntries(stateKeys.map(key => [key, GameState[key]]));
+  const previousStorageSave = Storage.save;
+  const previousStorageLoad = Storage.load;
+  const previousStorageInspect = Storage.inspect;
+  const previousStorageHasAnyRecord = Storage.hasAnyRecord;
+  const previousStorageRemoveBackup = Storage.removeBackup;
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'localStorage');
+  const values = new Map();
+  Object.defineProperty(globalThis, 'localStorage', {
+    configurable: true,
+    value: {
+      getItem(key) { return values.has(key) ? values.get(key) : null; },
+      setItem(key, value) { values.set(key, String(value)); },
+      removeItem(key) { values.delete(key); },
+      key(index) { return [...values.keys()][index] ?? null; },
+      get length() { return values.size; }
+    }
+  });
+
+  try {
+    for (const ending of ['open_case', 'price_of_silence']) {
+      values.clear();
+      GameState.saveBlocked = false;
+      GameState.campaign = { caseId: 'case_001', day: 5, completed: false, ending: null };
+      const clues = [...required];
+      if (ending === 'open_case') clues.push('restored_film_frame');
+      else clues.push('sebastian_sealed_confession');
+      GameState.currentCase = {
+        id: 'case_001',
+        clues: clues.map(id => ({
+          id,
+          name: id,
+          quality: id === 'restored_film_frame' ? 100 : undefined
+        })),
+        suspects: [],
+        timeline: [],
+        hypotheses: []
+      };
+      GameState.flags = {};
+      assert.equal(GameState.completeCampaign(ending), true, ending + ' should commit');
+      assert.equal(GameState.campaign.completed, true);
+
+      GameState.player = { name: 'Fresh session', reputation: 0 };
+      GameState.currentCase = { id: 'case_001', clues: [], suspects: [], timeline: [], hypotheses: [] };
+      GameState.campaign = { caseId: 'case_001', day: 1, completed: false, ending: null };
+      GameState.flags = {};
+      GameState.relationships = {};
+      GameState.npcMemory = {};
+      GameState.socialGraph = { ties: [], events: [] };
+      GameState.knowledgeLedger = { entries: [] };
+      GameState.npcDailyLife = { schedules: [], occurrences: [] };
+      GameState.miniGameProgress = {};
+      GameState.notebook = [];
+
+      assert.equal(GameState.init(), true, 'a fresh application session should load ' + ending);
+      assert.equal(GameState.campaign.day, 5);
+      assert.equal(GameState.campaign.completed, true);
+      assert.equal(GameState.campaign.ending, ending);
+      assert.ok(GameState.hasClue('port_cargo_ledger_archive'));
+      assert.ok(GameState.hasClue('sebastian_delivery_statement'));
+      if (ending === 'open_case') {
+        assert.equal(GameState.getClue('restored_film_frame').quality, 100);
+      } else {
+        assert.ok(GameState.hasClue('sebastian_sealed_confession'));
+      }
+    }
+  } finally {
+    Storage.save = previousStorageSave;
+    Storage.load = previousStorageLoad;
+    Storage.inspect = previousStorageInspect;
+    Storage.hasAnyRecord = previousStorageHasAnyRecord;
+    Storage.removeBackup = previousStorageRemoveBackup;
+    Object.assign(GameState, previousState);
+    if (descriptor) Object.defineProperty(globalThis, 'localStorage', descriptor);
+    else delete globalThis.localStorage;
+  }
+});
