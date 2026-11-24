@@ -289,3 +289,99 @@ test('Ray hostility keeps essential case-file questions available but blocks per
     restore(previous);
   }
 });
+
+
+test('all remaining critical-choice branches preserve their return reaction and required evidence access', () => {
+  const previous = preserve();
+  const scenarios = [
+    {
+      npcId: 'npc_marta_hayes',
+      topicId: 'about_publication',
+      triggerQuestion: 'marta_publication_risk',
+      choices: [
+        { choiceId: 'marta_protect_source', reactionId: 'marta_return_protected' },
+        { choiceId: 'marta_demand_publish', reactionId: 'marta_return_pressured' }
+      ],
+      evidence: [{ topicId: 'about_source', questionId: 'marta_source_identity', clueId: 'marta_source_envelope' }]
+    },
+    {
+      npcId: 'npc_father_thomas',
+      topicId: 'about_conscience',
+      triggerQuestion: 'thomas_fear',
+      choices: [
+        { choiceId: 'thomas_preserve_context', reactionId: 'thomas_return_respected' },
+        { choiceId: 'thomas_threaten_publication', reactionId: 'thomas_return_pressured' }
+      ],
+      evidence: [{ topicId: 'about_letter', questionId: 'thomas_matthews_letter', clueId: 'matthews_letter' }]
+    },
+    {
+      npcId: 'npc_sebastian_blackwood',
+      topicId: 'about_judge',
+      triggerQuestion: 'sebastian_judge',
+      choices: [
+        { choiceId: 'sebastian_request_record', reactionId: 'sebastian_return_records' },
+        { choiceId: 'sebastian_reject_framing', reactionId: 'sebastian_return_challenged' }
+      ],
+      evidence: [
+        { topicId: 'about_port', questionId: 'sebastian_port_business', clueId: 'port_cargo_ledger' },
+        { topicId: 'about_calliope', questionId: 'sebastian_calliope', clueId: 'kalliopa_name' }
+      ],
+      prerequisites: ['belladonna_invoice', 'judge_appointment_card']
+    },
+    {
+      npcId: 'npc_anna_holt',
+      topicId: 'about_box',
+      triggerQuestion: 'anna_box_trust',
+      choices: [
+        { choiceId: 'anna_respect_boundary', reactionId: 'anna_return_respected' },
+        { choiceId: 'anna_take_box', reactionId: 'anna_return_taken' }
+      ],
+      evidence: [
+        { topicId: 'about_markus', questionId: 'anna_markus_last_seen', clueId: 'anna_markus_items' },
+        { topicId: 'about_box', questionId: 'anna_box_contents', clueId: 'anna_box_contents' }
+      ]
+    }
+  ];
+
+  try {
+    for (const scenario of scenarios) {
+      for (const branch of scenario.choices) {
+        setup();
+        assert.equal(DialogueEngine.startDialogue(scenario.npcId)?.type, 'first_meeting');
+        assert.equal(DialogueEngine.startDialogue(scenario.npcId)?.type, 'topic_selection');
+        const triggerTopic = DialogueEngine.selectTopic(scenario.topicId);
+        assert.ok(triggerTopic.questions.some(item => item.id === scenario.triggerQuestion),
+          scenario.npcId + ' must expose its declared critical trigger');
+        assert.equal(DialogueEngine.askQuestion(scenario.triggerQuestion)?.type, 'critical_choice');
+        assert.equal(DialogueEngine.makeCriticalChoice(branch.choiceId)?.type, 'critical_result');
+
+        const reaction = DialogueEngine.startDialogue(scenario.npcId);
+        assert.equal(reaction?.type, 'simple');
+        assert.equal(reaction?.isReturnReaction, true);
+        assert.equal(reaction?.reactionId, branch.reactionId,
+          scenario.npcId + ' must show the reaction for the committed branch exactly once');
+
+        const afterReaction = DialogueEngine.startDialogue(scenario.npcId);
+        assert.equal(afterReaction?.type, 'topic_selection');
+        assert.equal(afterReaction?.isReturnReaction, undefined,
+          scenario.npcId + ' must not repeat an already-consumed return reaction');
+
+        for (const clueId of scenario.prerequisites || []) {
+          GameState.currentCase.clues.push({ ...clues[clueId] });
+        }
+
+        for (const evidence of scenario.evidence) {
+          const topic = DialogueEngine.selectTopic(evidence.topicId);
+          assert.ok(topic?.questions.some(item => item.id === evidence.questionId),
+            scenario.npcId + ' / ' + branch.choiceId + ' must preserve access to ' + evidence.questionId);
+          const answer = DialogueEngine.askQuestion(evidence.questionId);
+          assert.equal(answer?.addedClue?.id, evidence.clueId,
+            scenario.npcId + ' / ' + branch.choiceId + ' must still yield ' + evidence.clueId);
+          assert.equal(GameState.hasClue(evidence.clueId), true);
+        }
+      }
+    }
+  } finally {
+    restore(previous);
+  }
+});
