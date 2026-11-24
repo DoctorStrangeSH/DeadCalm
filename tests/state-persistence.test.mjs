@@ -781,7 +781,7 @@ function snapshotGameState() {
   return Object.fromEntries([
     'player', 'currentCase', 'campaign', 'flags', 'relationships', 'npcMemory',
     'socialGraph', 'knowledgeLedger', 'npcDailyLife', 'miniGameProgress',
-    'notebook', 'settings', 'saveBlocked'
+    'notebook', 'settings', 'saveBlocked', 'saveStatus'
   ].map(key => [key, GameState[key]]));
 }
 
