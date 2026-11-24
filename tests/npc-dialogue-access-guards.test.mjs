@@ -242,3 +242,50 @@ test('Lydia refusal preserves access to the mandatory autopsy clue without reope
     restore(previous);
   }
 });
+
+
+test('Ray hostility keeps essential case-file questions available but blocks personal and optional dialogue', () => {
+  const previous = preserve();
+  try {
+    setup();
+    assert.equal(DialogueEngine.startDialogue('npc_ray_morgan')?.type, 'first_meeting');
+    assert.equal(DialogueEngine.startDialogue('npc_ray_morgan')?.type, 'topic_selection');
+    assert.ok(DialogueEngine.selectTopic('about_blackwood').questions.some(item => item.id === 'blackwood_power'));
+    assert.equal(DialogueEngine.askQuestion('blackwood_power')?.type, 'critical_choice');
+    assert.equal(DialogueEngine.makeCriticalChoice('report_raid')?.type, 'critical_result');
+    assert.equal(NPCMemory.hasFlag('npc_ray_morgan', 'ray_hostile'), true);
+
+    const hostileReturn = DialogueEngine.startDialogue('npc_ray_morgan');
+    assert.equal(hostileReturn?.type, 'topic_selection');
+    assert.deepEqual(hostileReturn.topics.map(item => item.id), ['about_case']);
+
+    GameState.currentCase.clues.push({ ...clues.autopsy_report_01 });
+    const caseTopic = DialogueEngine.selectTopic('about_case');
+    assert.ok(caseTopic.questions.some(item => item.id === 'initial_report'));
+    assert.ok(caseTopic.questions.some(item => item.id === 'old_case'));
+    assert.equal(DialogueEngine.selectTopic('about_blackwood'), null);
+    assert.equal(DialogueEngine.askQuestion('ray_background'), null);
+
+    assert.equal(DialogueEngine.askQuestion('initial_report')?.addedClue?.id, 'patrol_initial_report');
+    assert.equal(DialogueEngine.askQuestion('old_case')?.addedClue?.id, 'old_case_details');
+    GameState.currentCase.hypotheses.push({
+      id: 'hyp_ray_report_timing',
+      title: 'Расхождение времени смерти',
+      reasoning: 'Сверить предварительный рапорт с медицинским заключением.',
+      clueIds: ['patrol_initial_report', 'autopsy_report_01']
+    });
+
+    const confrontation = DialogueEngine.selectTopic('about_case');
+    assert.ok(confrontation.questions.some(item => item.id === 'confront_report_timing'));
+    assert.equal(DialogueEngine.askQuestion('confront_report_timing')?.type, 'answer');
+    const callRecord = DialogueEngine.selectTopic('about_case');
+    assert.ok(callRecord.questions.some(item => item.id === 'inspect_incoming_calls'));
+    assert.equal(DialogueEngine.askQuestion('inspect_incoming_calls')?.addedClue?.id, 'court_switchboard_log');
+    assert.equal(GameState.hasClue('court_switchboard_log'), true);
+
+    assert.equal(DialogueEngine.backToTopics()?.type, 'simple',
+      'once the mandatory records are secured, Ray can end all remaining contact');
+  } finally {
+    restore(previous);
+  }
+});
