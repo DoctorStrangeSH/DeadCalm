@@ -208,3 +208,37 @@ test('leaving or resetting a dialogue invalidates its pending critical-choice pr
     restore(previous);
   }
 });
+
+
+test('Lydia refusal preserves access to the mandatory autopsy clue without reopening personal dialogue', () => {
+  const previous = preserve();
+  try {
+    setup();
+    assert.equal(DialogueEngine.startDialogue('npc_lydia_winter')?.type, 'first_meeting');
+    assert.equal(DialogueEngine.startDialogue('npc_lydia_winter')?.type, 'topic_selection');
+
+    assert.ok(DialogueEngine.selectTopic('about_herself').questions.some(item => item.id === 'her_background'));
+    assert.equal(DialogueEngine.askQuestion('her_background')?.type, 'critical_choice');
+    assert.equal(DialogueEngine.makeCriticalChoice('pressure_her')?.type, 'critical_result');
+    assert.equal(NPCMemory.hasFlag('npc_lydia_winter', 'lydia_refuses'), true);
+
+    const refusedReturn = DialogueEngine.startDialogue('npc_lydia_winter');
+    assert.equal(refusedReturn?.type, 'topic_selection');
+    assert.deepEqual(refusedReturn.topics.map(item => item.id), ['about_autopsy'],
+      'the hostile response must expose only the essential medical topic');
+
+    const autopsyTopic = DialogueEngine.selectTopic('about_autopsy');
+    assert.deepEqual(autopsyTopic.questions.map(item => item.id), ['cause_of_death'],
+      'optional personal questions must remain unavailable after the refusal');
+    assert.equal(DialogueEngine.askQuestion('unusual_marks'), null,
+      'the refusal must not permit unrelated questions through a stale UI action');
+
+    const evidence = DialogueEngine.askQuestion('cause_of_death');
+    assert.equal(evidence?.addedClue?.id, 'autopsy_report_01');
+    assert.equal(GameState.hasClue('autopsy_report_01'), true);
+    assert.equal(DialogueEngine.backToTopics()?.type, 'simple',
+      'once the mandatory evidence is secured, Lydia can fully end the conversation');
+  } finally {
+    restore(previous);
+  }
+});
