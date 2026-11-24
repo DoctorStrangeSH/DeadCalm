@@ -108,7 +108,14 @@ export var DialogueEngine = {
       return this._formatSimpleNode(npcData.refuses_to_talk, npcId);
     }
     if (npcData.hostile && NPCMemory.hasFlag(npcId, 'ray_hostile')) {
-      console.log('[Dialogue] NPC враждебен (ray_hostile)');
+      const coreEvidencePending = !GameState.hasClue('patrol_initial_report') ||
+        !GameState.hasClue('court_switchboard_log') || !GameState.hasClue('old_case_details');
+      if (coreEvidencePending) {
+        const restricted = this._formatTopicSelection(npcId, ['about_case'], npcData);
+        restricted.text = 'Рэй отказывается от личного разговора и обсуждения Блэквуда. Но материалы текущего дела остаются доступны для проверки.';
+        return restricted;
+      }
+      console.log('[Dialogue] Рэй завершил личный разговор (ray_hostile)');
       return this._formatSimpleNode(npcData.hostile, npcId);
     }
 
@@ -242,7 +249,9 @@ export var DialogueEngine = {
     if (!npcData) return null;
 
     const lydiaRefuses = npcData.refuses_to_talk && NPCMemory.hasFlag(this._currentNPC, 'lydia_refuses');
+    const rayHostile = npcData.hostile && NPCMemory.hasFlag(this._currentNPC, 'ray_hostile');
     if (lydiaRefuses && topicId !== 'about_autopsy') return null;
+    if (rayHostile && topicId !== 'about_case') return null;
 
     var topic = npcData.topics?.[topicId];
     if (!topic || !canSelectDialogueTopic(topicId, this._unlockedTopics)) {
@@ -253,11 +262,17 @@ export var DialogueEngine = {
     // Moving away from the active choice screen invalidates its one-time prompt.
     this._pendingCriticalChoice = null;
     var self = this;
+    const rayCoreQuestions = new Set([
+      'initial_report', 'confront_report_timing', 'inspect_incoming_calls', 'old_case'
+    ]);
     var unansweredQuestions = topic.responses.filter(function(r) {
       const requiredAutopsyRetry = lydiaRefuses && r.id === 'cause_of_death' &&
         !GameState.hasClue('autopsy_report_01');
-      return (self._askedQuestions.indexOf(r.id) === -1 || requiredAutopsyRetry) &&
-        (!lydiaRefuses || r.id === 'cause_of_death') && self._isResponseAvailable(r);
+      const requiredRayEvidenceRetry = rayHostile && rayCoreQuestions.has(r.id) &&
+        r.gives_clue && !GameState.hasClue(r.gives_clue);
+      return (self._askedQuestions.indexOf(r.id) === -1 || requiredAutopsyRetry || requiredRayEvidenceRetry) &&
+        (!lydiaRefuses || r.id === 'cause_of_death') &&
+        (!rayHostile || rayCoreQuestions.has(r.id)) && self._isResponseAvailable(r);
     });
 
     console.log('[Dialogue] Выбрана тема: ' + topicId + ', незаданных вопросов: ' + unansweredQuestions.length);
@@ -300,9 +315,14 @@ export var DialogueEngine = {
     if (!npcData) return null;
 
     const lydiaRefuses = npcData.refuses_to_talk && NPCMemory.hasFlag(this._currentNPC, 'lydia_refuses');
-    const retryableRequiredEvidence = Boolean(lydiaRefuses && questionId === 'cause_of_death' &&
+    const rayHostile = npcData.hostile && NPCMemory.hasFlag(this._currentNPC, 'ray_hostile');
+    const rayCoreQuestions = new Set([
+      'initial_report', 'confront_report_timing', 'inspect_incoming_calls', 'old_case'
+    ]);
+    const retryableAutopsyEvidence = Boolean(lydiaRefuses && questionId === 'cause_of_death' &&
       !GameState.hasClue('autopsy_report_01'));
     if (lydiaRefuses && questionId !== 'cause_of_death') return null;
+    if (rayHostile && !rayCoreQuestions.has(questionId)) return null;
 
     if (this._pendingCriticalChoice && this._pendingCriticalChoice.questionId !== questionId) {
       this._pendingCriticalChoice = null;
@@ -324,6 +344,9 @@ export var DialogueEngine = {
     }
 
     const accessGranted = foundResponse && canAskDialogueQuestion({ topicId: foundTopicId, unlockedTopics: this._unlockedTopics, askedQuestions: this._askedQuestions, response: foundResponse, isAvailable: response => this._isResponseAvailable(response) });
+    const retryableRequiredEvidence = retryableAutopsyEvidence || Boolean(rayHostile &&
+      rayCoreQuestions.has(questionId) && foundResponse?.gives_clue &&
+      !GameState.hasClue(foundResponse.gives_clue));
     const retryableCritical = Boolean(foundResponse?.triggers_critical &&
       !NPCMemory.hasFlag(this._currentNPC, 'critical_' + foundResponse.triggers_critical));
     if (!foundResponse || (!accessGranted && !retryableCritical && !retryableRequiredEvidence) ||
@@ -531,6 +554,13 @@ export var DialogueEngine = {
       return this._formatSimpleNode(npcData.refuses_to_talk, this._currentNPC);
     }
     if (npcData.hostile && NPCMemory.hasFlag(this._currentNPC, 'ray_hostile')) {
+      const coreEvidencePending = !GameState.hasClue('patrol_initial_report') ||
+        !GameState.hasClue('court_switchboard_log') || !GameState.hasClue('old_case_details');
+      if (coreEvidencePending) {
+        const restricted = this._formatTopicSelection(this._currentNPC, ['about_case'], npcData);
+        restricted.text = 'Рэй отказывается от личного разговора и обсуждения Блэквуда. Но материалы текущего дела остаются доступны для проверки.';
+        return restricted;
+      }
       return this._formatSimpleNode(npcData.hostile, this._currentNPC);
     }
 
