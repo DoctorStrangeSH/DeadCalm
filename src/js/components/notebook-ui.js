@@ -67,9 +67,9 @@ export class NotebookUI {
     if (this.searchQuery && !isEvidence) {
       var query = this.searchQuery.toLowerCase();
       notes = notes.filter(function(n) {
-        return n.title.toLowerCase().indexOf(query) !== -1 ||
-               n.text.toLowerCase().indexOf(query) !== -1 ||
-               (n.source || '').toLowerCase().includes(query);
+        return String(n.title || '').toLowerCase().includes(query) ||
+               String(n.text || '').toLowerCase().includes(query) ||
+               String(n.source || '').toLowerCase().includes(query);
       });
     }
 
@@ -153,8 +153,8 @@ export class NotebookUI {
   }
 
   _renderNoteCard(note) {
-    var date = new Date(note.timestamp);
-    var dateStr = date.toLocaleDateString('ru-RU', {
+    var date = new Date(note.timestamp || '');
+    var dateStr = Number.isNaN(date.getTime()) ? 'Дата не указана' : date.toLocaleDateString('ru-RU', {
       day: 'numeric',
       month: 'long',
       hour: '2-digit',
@@ -352,28 +352,36 @@ export class NotebookUI {
         </div>
       </div>
     `;
+    const returnFocus = document.activeElement;
     document.body.appendChild(overlay);
-
-    overlay.querySelector('.close-detail').addEventListener('click', function() {
+    const close = (restoreFocus = true) => {
+      overlay.removeEventListener('keydown', onKeydown);
       overlay.remove();
-    });
+      if (restoreFocus && returnFocus?.isConnected) returnFocus.focus();
+    };
+    const onKeydown = event => {
+      if (event.key === 'Escape') close();
+    };
+    overlay.addEventListener('keydown', onKeydown);
+    overlay.querySelector('.close-detail').addEventListener('click', () => close());
+    overlay.querySelector('.close-detail').focus();
 
     overlay.querySelector('.btn-pin').addEventListener('click', function() {
       Notebook.togglePin(title);
-      overlay.remove();
+      close(false);
       self.render();
     });
 
     overlay.querySelector('.delete-note').addEventListener('click', function() {
       if (confirm('Удалить заметку "' + note.title + '"?')) {
         Notebook.removeNote(title);
-        overlay.remove();
+        close(false);
         self.render();
       }
     });
 
     overlay.addEventListener('click', function(e) {
-      if (e.target === overlay) overlay.remove();
+      if (e.target === overlay) close();
     });
   }
 }
