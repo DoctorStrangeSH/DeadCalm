@@ -18,3 +18,20 @@ test('desktop evidence connection lines remain unchanged', () => {
   assert.match(styles, /\.investigation-board \.connection-line \{ stroke:/);
   assert.match(styles, /\.investigation-board \.board-lines \{ display:none; \}/);
 });
+
+test('mobile touch reordering persists clue order and cancels when save fails', () => {
+  const source = readFileSync(new URL('../src/js/components/investigation-board.js', import.meta.url), 'utf8');
+  assert.match(source, /_setupTouchReordering\(\)/);
+  assert.match(source, /event\.pointerType === 'mouse'/);
+  assert.match(source, /GameState\.currentCase\.boardOrder = ids/);
+  assert.match(source, /GameState\.save\(\) === false/);
+  assert.match(source, /delete GameState\.currentCase\.boardOrder/);
+  assert.match(source, /card\.dataset\.touchDragged = 'true'/);
+  assert.match(source, /this\.render\(\)/);
+});
+
+test('saved board order is restored when the investigation board renders', () => {
+  const source = readFileSync(new URL('../src/js/components/investigation-board.js', import.meta.url), 'utf8');
+  assert.match(source, /const savedBoardOrder = Array\.isArray\(GameState\.currentCase\.boardOrder\)/);
+  assert.match(source, /clues\.sort\(\(a, b\) =>/);
+});
