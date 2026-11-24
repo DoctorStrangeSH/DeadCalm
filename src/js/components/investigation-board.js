@@ -24,7 +24,10 @@ export class InvestigationBoard {
   async render() {
     await Investigation.init();
     this.focusedHypothesisId = null;
-    var clues = GameState.currentCase.clues;
+    var clues = [...(GameState.currentCase.clues || [])];
+    const savedBoardOrder = Array.isArray(GameState.currentCase.boardOrder) ? GameState.currentCase.boardOrder : [];
+    const boardOrderIndex = new Map(savedBoardOrder.map((id, index) => [id, index]));
+    clues.sort((a, b) => (boardOrderIndex.get(a.id) ?? Number.MAX_SAFE_INTEGER) - (boardOrderIndex.get(b.id) ?? Number.MAX_SAFE_INTEGER));
     const archiveDigest = getOldCaseBoardDigest(clues, GameState.flags);
     const socialTies = Array.isArray(GameState.socialGraph?.ties) ? GameState.socialGraph.ties : [];
     const socialEvents = Array.isArray(GameState.socialGraph?.events) ? GameState.socialGraph.events : [];
@@ -179,6 +182,7 @@ export class InvestigationBoard {
     `;
 
     this._setupDragAndDrop();
+    this._setupTouchReordering();
     this._setupClickHandlers();
     this._setupClueSearch(clues);
     this._drawConnectionLines();
@@ -521,6 +525,80 @@ export class InvestigationBoard {
           self._drawConnectionLines();
         }
       });
+    });
+  }
+
+  _setupTouchReordering() {
+    const canvas = this.container.querySelector('.board-clues');
+    if (!canvas) return;
+    let active = null;
+
+    canvas.querySelectorAll('.board-clue-card').forEach(card => {
+      card.addEventListener('pointerdown', event => {
+        if (event.pointerType === 'mouse' || event.button !== 0) return;
+        active = {
+          card,
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          moved: false
+        };
+        card.setPointerCapture?.(event.pointerId);
+      });
+
+      card.addEventListener('pointermove', event => {
+        if (!active || active.card !== card || active.pointerId !== event.pointerId) return;
+        const dx = event.clientX - active.startX;
+        const dy = event.clientY - active.startY;
+        if (Math.abs(dx) + Math.abs(dy) > 8) active.moved = true;
+        if (!active.moved) return;
+        card.style.transform = `translate(${dx}px, ${dy}px) scale(1.03)`;
+        card.style.zIndex = '20';
+      });
+
+      const finish = event => {
+        if (!active || active.card !== card || active.pointerId !== event.pointerId) return;
+        const drag = active;
+        active = null;
+        card.style.transform = '';
+        card.style.zIndex = '';
+        if (!drag.moved) return;
+
+        const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.board-clue-card');
+        if (!target || target === card || !canvas.contains(target)) return;
+
+        const ids = [...canvas.querySelectorAll('.board-clue-card')].map(item => item.dataset.clueId);
+        const from = ids.indexOf(card.dataset.clueId);
+        const to = ids.indexOf(target.dataset.clueId);
+        if (from < 0 || to < 0) return;
+        [ids[from], ids[to]] = [ids[to], ids[from]];
+
+        const previousOrder = GameState.currentCase.boardOrder;
+        GameState.currentCase.boardOrder = ids;
+        if (GameState.save() === false) {
+          if (previousOrder === undefined) delete GameState.currentCase.boardOrder;
+          else GameState.currentCase.boardOrder = previousOrder;
+          this.container.querySelector('#board-hint').textContent = 'Не удалось сохранить расположение. Изменения отменены.';
+          this.container.querySelector('#board-hint').className = 'board-hint board-hint-fail';
+          return;
+        }
+        this.render();
+      };
+
+      card.addEventListener('pointerup', finish);
+      card.addEventListener('pointercancel', event => {
+        if (active?.card === card && active.pointerId === event.pointerId) {
+          active = null;
+          card.style.transform = '';
+          card.style.zIndex = '';
+        }
+      });
+      card.addEventListener('click', event => {
+        if (card.dataset.touchDragged === 'true') {
+          delete card.dataset.touchDragged;
+          event.stopImmediatePropagation();
+        }
+      }, true);
     });
   }
 
