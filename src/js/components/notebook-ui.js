@@ -170,7 +170,7 @@ export class NotebookUI {
     };
 
     return `
-      <button type="button" class="notebook-card ${note.pinned ? 'notebook-card-pinned' : ''}" data-title="${escapeHtml(note.title || 'Без названия')}" ${note.isClue ? `data-clue-id="${escapeHtml(note.id || '')}"` : ''} data-kind="${note.isClue ? 'clue' : 'note'}" aria-label="Открыть: ${escapeHtml(note.title || 'Без названия')}">
+      <button type="button" class="notebook-card ${note.pinned ? 'notebook-card-pinned' : ''}" data-title="${escapeHtml(note.title || 'Без названия')}" ${!note.isClue && note.id ? `data-note-id="${escapeHtml(note.id)}"` : ''} ${note.isClue ? `data-clue-id="${escapeHtml(note.id || '')}"` : ''} data-kind="${note.isClue ? 'clue' : 'note'}" aria-label="Открыть: ${escapeHtml(note.title || 'Без названия')}">
         <div class="notebook-card-header">
           <span class="notebook-category ${categoryColors[note.category] || ''}">${escapeHtml(note.category || 'Общее')}</span>
           ${note.pinned ? '<span class="notebook-pin">◆ ЗАКРЕПЛЕНО</span>' : ''}
@@ -370,14 +370,14 @@ export class NotebookUI {
     overlay.querySelector('.close-detail').focus();
 
     overlay.querySelector('.btn-pin').addEventListener('click', function() {
-      Notebook.togglePin(title);
+      Notebook.togglePin(note.id || note.title);
       close(false);
       self.render();
     });
 
     overlay.querySelector('.delete-note').addEventListener('click', function() {
       if (confirm('Удалить заметку "' + note.title + '"?')) {
-        Notebook.removeNote(title);
+        Notebook.removeNote(note.id || note.title);
         close(false);
         self.render();
       }
