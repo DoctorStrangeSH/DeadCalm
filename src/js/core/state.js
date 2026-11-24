@@ -489,9 +489,26 @@ export var GameState = {
   getNpcOccurrences(npcId) { return getNpcOccurrences(this.npcDailyLife, npcId); },
 
   recordMiniGameResult(input) {
+    const type = input?.type;
+    const previous = type ? this.miniGameProgress?.[type] : undefined;
+    const previousSnapshot = previous ? { ...previous } : null;
     const result = recordMiniGameResult(this.miniGameProgress, input);
     if (!result) return null;
-    this.save();
+
+    let saved = false;
+    try {
+      saved = this.save();
+    } catch (error) {
+      console.error('[State] Не удалось сохранить результат мини-игры:', error);
+    }
+
+    if (saved === false) {
+      if (previousSnapshot) this.miniGameProgress[type] = previousSnapshot;
+      else delete this.miniGameProgress[type];
+      console.warn('[State] Результат мини-игры отменён: сохранение не подтверждено.');
+      return null;
+    }
+
     Events.emit('minigame:result_recorded', result);
     return result;
   },
