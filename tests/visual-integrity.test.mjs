@@ -244,3 +244,12 @@ test('city atlas offers direct dialogue only when the NPC is canonically availab
   assert.match(map, /await dialog\.show\(loc\.npc\)/);
   assert.match(map, /btn-go-location/);
 });
+
+
+test('map pins retain a comfortable touch target on narrow mobile screens', () => {
+  const css = read('src/css/art-direction.css');
+  const mobileMap = css.match(/@media\(max-width:520px\) \{[^}]*\.atlas-pin \{[^}]+\}[^}]*\}/)?.[0];
+  assert.ok(mobileMap, 'mobile map must define a dedicated pin touch target');
+  assert.match(mobileMap, /\.atlas-pin \{[^}]*min-width:44px;[^}]*min-height:44px;/);
+  assert.match(mobileMap, /\.atlas-pin-dot \{ width:32px; height:32px;/);
+});
