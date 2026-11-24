@@ -563,6 +563,7 @@ export class InvestigationBoard {
         card.style.transform = '';
         card.style.zIndex = '';
         if (!drag.moved) return;
+        card.dataset.touchDragged = 'true';
 
         const target = document.elementFromPoint(event.clientX, event.clientY)?.closest('.board-clue-card');
         if (!target || target === card || !canvas.contains(target)) return;
