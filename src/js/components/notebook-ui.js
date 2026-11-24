@@ -170,7 +170,7 @@ export class NotebookUI {
     };
 
     return `
-      <button type="button" class="notebook-card ${note.pinned ? 'notebook-card-pinned' : ''}" data-title="${escapeHtml(note.title || 'Без названия')}" ${!note.isClue && note.id ? `data-note-id="${escapeHtml(note.id)}"` : ''} ${note.isClue ? `data-clue-id="${escapeHtml(note.id || '')}"` : ''} data-kind="${note.isClue ? 'clue' : 'note'}" aria-label="Открыть: ${escapeHtml(note.title || 'Без названия')}">
+      <button type="button" class="notebook-card ${note.pinned ? 'notebook-card-pinned' : ''}" data-title="${escapeHtml(note.title || 'Без названия')}" ${!note.isClue && note.id ? `data-note-id="${escapeHtml(note.id)}"` : ''} ${!note.isClue && note.id ? `data-note-id="${escapeHtml(note.id)}"` : ''} ${note.isClue ? `data-clue-id="${escapeHtml(note.id || '')}"` : ''} data-kind="${note.isClue ? 'clue' : 'note'}" aria-label="Открыть: ${escapeHtml(note.title || 'Без названия')}">
         <div class="notebook-card-header">
           <span class="notebook-category ${categoryColors[note.category] || ''}">${escapeHtml(note.category || 'Общее')}</span>
           ${note.pinned ? '<span class="notebook-pin">◆ ЗАКРЕПЛЕНО</span>' : ''}
@@ -242,7 +242,7 @@ export class NotebookUI {
         if (this.getAttribute('data-kind') === 'clue') {
           self._showClueDetail(this.getAttribute('data-clue-id') || title);
         } else {
-          self._showNoteDetail(title);
+          self._showNoteDetail(this.getAttribute('data-note-id') || title);
         }
       });
     });
@@ -308,9 +308,9 @@ export class NotebookUI {
     overlay.querySelector('.close-detail').focus();
   }
 
-  _showNoteDetail(title) {
+  _showNoteDetail(identifier) {
     var notes = Notebook.getAllNotes();
-    var note = notes.find(function(n) { return n.title === title; });
+    var note = notes.find(function(n) { return n.id === identifier || (!n.id && n.title === identifier); });
     if (!note) return;
 
     var self = this;
