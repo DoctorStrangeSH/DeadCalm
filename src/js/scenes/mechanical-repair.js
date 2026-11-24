@@ -39,7 +39,7 @@ export function render(container) {
           <div class="repair-panel">
             <p class="repair-step">${eyebrow}</p>
             <p class="repair-description">${description}</p>
-            <div class="repair-feedback" aria-live="polite">${message}</div>
+            <div class="repair-feedback" role="status" aria-live="polite" aria-atomic="true">${message}</div>
             <div class="repair-actions">
               ${session.phase === 'inspect' ? '<button data-action="inspect-good">Пружина под натяжением</button><button class="repair-secondary" data-action="inspect-wrong">Ослабленное колесо</button>' : ''}
               ${session.phase === 'release' ? '<button data-action="release-safe">Плавно снять натяжение</button><button class="repair-danger" data-action="release-force">Применить силу</button>' : ''}
@@ -66,6 +66,7 @@ export function render(container) {
       if (action === 'again') { render(container); return; }
       if (action === 'exit') { Events.emit('navigate', { scene: 'office' }); return; }
       paint(feedback);
+      container.querySelector('[data-action]')?.focus();
     }));
   };
   paint();
