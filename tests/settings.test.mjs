@@ -6,7 +6,7 @@ import { Storage } from '../src/js/core/storage.js';
 import { Audio } from '../src/js/core/audio.js';
 
 test('settings normalization clamps volume and rejects unknown text speed', () => {
-  assert.deepEqual(normalizeSettings({ musicVolume: 2, sfxVolume: -1, textSpeed: 'instant' }), {
+  assert.deepEqual(normalizeSettings({ musicVolume: 2, sfxVolume: -1, textSpeed: 'warp-speed' }), {
     musicVolume: 1,
     sfxVolume: 0,
     textSpeed: 'normal'
@@ -23,6 +23,7 @@ test('dialogue speed maps to predictable character delays', () => {
   assert.equal(getTextDelay('slow'), 45);
   assert.equal(getTextDelay('normal'), 25);
   assert.equal(getTextDelay('fast'), 8);
+  assert.equal(getTextDelay('instant'), 0);
   assert.equal(getTextDelay('unknown'), 25);
 });
 
@@ -81,7 +82,7 @@ test('saved settings are sanitized before the game uses them', () => {
   const originalInspect = Storage.inspect;
   const originalSettings = GameState.settings;
   const originalStatus = GameState.saveStatus;
-  const saved = { settings: { musicVolume: 7, sfxVolume: -3, textSpeed: 'instant' } };
+  const saved = { settings: { musicVolume: 7, sfxVolume: -3, textSpeed: 'warp-speed' } };
   try {
     Storage.inspect = () => ({ status: 'valid', data: structuredClone(saved) });
     GameState.init();
