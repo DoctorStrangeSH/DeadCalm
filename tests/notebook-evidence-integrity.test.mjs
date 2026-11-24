@@ -98,3 +98,15 @@ test('new journal notes receive a stable identifier', () => {
     assert.match(GameState.notebook[0].id, /^note-\d+-[a-z0-9]+$/);
   });
 });
+
+
+test('distinct notes may share a title while exact duplicate imports are ignored', () => {
+  withNotebook(() => {
+    assert.equal(Notebook.addNote({ title: 'Показания у двери', text: 'Свидетель слышал шаги.', source: 'Сосед' }), true);
+    assert.equal(Notebook.addNote({ title: 'Показания у двери', text: 'В коридоре погас свет.', source: 'Консьерж' }), true);
+    assert.equal(GameState.notebook.length, 2);
+    assert.notEqual(GameState.notebook[0].id, GameState.notebook[1].id);
+    assert.equal(Notebook.addNote({ title: 'Показания у двери', text: 'Свидетель слышал шаги.', source: 'Сосед' }), false);
+    assert.equal(GameState.notebook.length, 2);
+  });
+});
