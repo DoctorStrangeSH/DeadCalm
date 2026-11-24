@@ -576,3 +576,11 @@ body { background:#071015; color:#d3d5cc; }
 .social-event-entry > p { margin:7px 0 0; color:#c4bcaa; font:12px/1.55 Georgia,serif; }
 .social-event-entry .social-event-time { color:#e0c59a; font-size:11px; }
 .social-event-entry .social-event-source { color:#9e9a8d; font:10px/1.4 'Courier New',monospace; letter-spacing:.06em; }
+
+
+/* Mobile evidence links stay visible when the desktop pin-board lines are hidden. */
+.investigation-board .clue-card-connections { display:none; }
+@media(max-width:900px) {
+  .investigation-board .clue-card-connections { display:block; margin-top:4px; padding-top:6px; border-top:1px dashed #8c795d; color:#65513a; font:11px/1.4 Georgia,serif; overflow-wrap:anywhere; }
+  .investigation-board .board-clue-card { min-height:136px; }
+}
