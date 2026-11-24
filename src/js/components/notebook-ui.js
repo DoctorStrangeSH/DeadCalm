@@ -327,7 +327,7 @@ export class NotebookUI {
     });
 
     overlay.innerHTML = `
-      <div class="dialog-modal" role="dialog" aria-modal="true" aria-label="Запись дневника">
+      <div class="dialog-modal notebook-note-detail" role="dialog" aria-modal="true" aria-label="Запись дневника">
         <div class="dialog-content">
           <div class="flex justify-between items-start mb-4">
             <div>
@@ -341,9 +341,9 @@ export class NotebookUI {
             </div>
           </div>
 
-          <p class="text-gray-400 text-sm leading-relaxed mb-4">${escapeHtml(note.text || '')}</p>
+          <p class="notebook-note-detail-text">${escapeHtml(note.text || 'Текст записи отсутствует.')}</p>
 
-          <div class="text-gray-600 text-xs space-y-1 mb-4">
+          <div class="notebook-note-detail-meta">
             <p>Дата: ${escapeHtml(dateStr)}</p>
             <p>Источник: ${escapeHtml(note.source)}</p>
           </div>
