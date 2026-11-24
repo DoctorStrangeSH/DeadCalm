@@ -82,14 +82,24 @@ export class InvestigationBoard {
           <!-- Улики -->
           <div class="board-clues" id="board-clues">
             ${clues.map(function(clue, index) {
+              const linkedNames = self.connections
+                .filter(connection => connection.clue1 === clue.id || connection.clue2 === clue.id)
+                .map(connection => {
+                  const linkedId = connection.clue1 === clue.id ? connection.clue2 : connection.clue1;
+                  return clues.find(item => item.id === linkedId)?.name;
+                })
+                .filter(Boolean);
+              const linkedSummary = linkedNames.length
+                ? `Связано: ${linkedNames.join(', ')}`
+                : 'Связей пока нет';
               return `
                 <button type="button" class="board-clue-card category-${self._safeCategory(clue.category)}"
                      data-clue-id="${clue.id}" 
                      style="left: ${5 + (index % 3) * 32}%; top: ${28 + Math.floor(index / 3) * 155}px;"
-                     draggable="true" aria-label="${self._escapeHtml(clue.name)}. Выберите для проверки связи с другой уликой">
+                     draggable="true" aria-label="${self._escapeHtml(clue.name)}. ${self._escapeHtml(linkedSummary)}. Выберите для проверки связи с другой уликой">
                   <span class="clue-card-pin" aria-hidden="true"></span>
                   <span class="clue-card-icon">${self._getIcon(clue.category)}</span>
-                  <span class="clue-card-content"><span class="clue-card-label">УЛИКА · ${String(index + 1).padStart(2, '0')}</span><span class="clue-card-name">${self._escapeHtml(clue.name)}</span><span class="clue-card-source">${self._escapeHtml(clue.source || 'Источник неизвестен')}</span></span>
+                  <span class="clue-card-content"><span class="clue-card-label">УЛИКА · ${String(index + 1).padStart(2, '0')}</span><span class="clue-card-name">${self._escapeHtml(clue.name)}</span><span class="clue-card-source">${self._escapeHtml(clue.source || 'Источник неизвестен')}</span><span class="clue-card-connections" aria-label="Связанные материалы">${self._escapeHtml(linkedSummary)}</span></span>
                 </button>
               `;
             }).join('')}
