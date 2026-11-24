@@ -21,7 +21,7 @@ test('journal cards safely render incomplete legacy records', () => {
 });
 
 test('long journal entries use a dedicated responsive detail layout', () => {
-  assert.match(source, /class="notebook-note-detail" role="dialog"/);
+  assert.match(source, /class="dialog-modal notebook-note-detail" role="dialog"/);
   assert.match(source, /class="notebook-note-detail-text"/);
   assert.match(source, /class="notebook-note-detail-meta"/);
   const styles = readFileSync(new URL('../src/css/art-direction.css', import.meta.url), 'utf8');
