@@ -248,7 +248,7 @@ test('city atlas offers direct dialogue only when the NPC is canonically availab
 
 test('map pins retain a comfortable touch target on narrow mobile screens', () => {
   const css = read('src/css/art-direction.css');
-  const mobileMapRule = css.split('@media(max-width:520px)').at(-1);
+  const mobileMapRule = css.split('\n').find(line => line.includes('@media(max-width:520px)') && line.includes('.blackford-atlas'));
   assert.ok(mobileMapRule, 'mobile map breakpoint must exist');
   assert.ok(mobileMapRule.includes('.atlas-pin { min-width:44px; min-height:44px;'), 'map pins must expose a 44px touch target');
   assert.ok(mobileMapRule.includes('.atlas-pin-dot { width:32px; height:32px;'), 'visible map marker must remain compact');
