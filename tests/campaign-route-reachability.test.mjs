@@ -215,5 +215,5 @@ test('day-five finale offers a safe film replay when only full-disclosure qualit
   assert.match(portScene, /!fullDisclosureReady && canAccessCase001MiniGame\('film-restoration', GameState\)/);
   assert.match(portScene, /querySelector\('#btn-retry-finale-film'\)[\s\S]*?scene: 'film-restoration'/);
   assert.match(portScene, /btn-ending-open[\s\S]*?disabled/);
-  assert.match(access, /case 'film-restoration':[\\s\\S]*?hasClue\('markus_watch_key'\)/);
+  assert.match(access, /case 'film-restoration':\s*return hasClue\('markus_watch_key'\)/);
 });
