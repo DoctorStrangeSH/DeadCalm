@@ -170,14 +170,14 @@ export class NotebookUI {
     };
 
     return `
-      <button type="button" class="notebook-card ${note.pinned ? 'notebook-card-pinned' : ''}" data-title="${escapeHtml(note.title)}" data-kind="${note.isClue ? 'clue' : 'note'}">
+      <button type="button" class="notebook-card ${note.pinned ? 'notebook-card-pinned' : ''}" data-title="${escapeHtml(note.title || 'Без названия')}" ${note.isClue ? `data-clue-id="${escapeHtml(note.id || '')}"` : ''} data-kind="${note.isClue ? 'clue' : 'note'}" aria-label="Открыть: ${escapeHtml(note.title || 'Без названия')}">
         <div class="notebook-card-header">
-          <span class="notebook-category ${categoryColors[note.category] || ''}">${escapeHtml(note.category)}</span>
+          <span class="notebook-category ${categoryColors[note.category] || ''}">${escapeHtml(note.category || 'Общее')}</span>
           ${note.pinned ? '<span class="notebook-pin">◆ ЗАКРЕПЛЕНО</span>' : ''}
           <span class="notebook-day">${note.isClue ? 'УЛИКА' : `День ${note.day || 1}`}</span>
         </div>
         <p class="notebook-card-title">${escapeHtml(note.title)}</p>
-        <p class="notebook-card-text">${escapeHtml(note.text.substring(0, 180))}${note.text.length > 180 ? '…' : ''}</p>
+        <p class="notebook-card-text">${escapeHtml(String(note.text || '').substring(0, 180))}${String(note.text || '').length > 180 ? '…' : ''}</p>
         <div class="notebook-card-footer">
           <span class="notebook-date">${escapeHtml(dateStr)}</span>
           <span class="notebook-source">${escapeHtml(note.source || 'Не указан')}</span>
@@ -215,7 +215,7 @@ export class NotebookUI {
     });
 
     // Поиск
-    var searchInput = document.getElementById('notebook-search-input');
+    var searchInput = this.container.querySelector('#notebook-search-input');
     if (searchInput) {
       searchInput.addEventListener('input', function() {
         const caret = this.selectionStart;
@@ -239,13 +239,16 @@ export class NotebookUI {
     this.container.querySelectorAll('.notebook-card').forEach(function(card) {
       card.addEventListener('click', function() {
         var title = this.getAttribute('data-title');
-        if (this.getAttribute('data-kind') === 'clue') self._showClueDetail(title);
-        else self._showNoteDetail(title);
+        if (this.getAttribute('data-kind') === 'clue') {
+          self._showClueDetail(this.getAttribute('data-clue-id') || title);
+        } else {
+          self._showNoteDetail(title);
+        }
       });
     });
 
     // Экспорт
-    var exportBtn = document.getElementById('btn-export-notes');
+    var exportBtn = this.container.querySelector('#btn-export-notes');
     if (exportBtn) {
       exportBtn.addEventListener('click', function() {
         var text = Notebook.exportToText();
