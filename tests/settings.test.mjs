@@ -97,3 +97,12 @@ test('saved settings are sanitized before the game uses them', () => {
     GameState.saveStatus = originalStatus;
   }
 });
+
+
+test('instant dialogue speed is a supported preference and maps to zero delay', () => {
+  assert.deepEqual(normalizeSettings({ textSpeed: 'instant' }), {
+    ...DEFAULT_SETTINGS,
+    textSpeed: 'instant'
+  });
+  assert.equal(getTextDelay('instant'), 0);
+});
