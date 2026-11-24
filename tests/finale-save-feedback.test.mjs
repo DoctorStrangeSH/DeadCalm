@@ -10,8 +10,8 @@ test('both finale choices explain a failed save without showing a completed endi
   assert.match(portScene, /message\.setAttribute\('aria-live', 'assertive'\)/);
   assert.match(portScene, /Ваш выбор не потерян/);
 
-  const openHandler = portScene.match(/btn-ending-open[\s\S]*?addEventListener\('click', \(\) => \{([\s\S]*?)\n  \}\);/);
-  const silenceHandler = portScene.match(/btn-ending-silence[\s\S]*?addEventListener\('click', \(\) => \{([\s\S]*?)\n  \}\);/);
+  const openHandler = portScene.match(/querySelector\('#btn-ending-open'\)[\s\S]*?addEventListener\('click', \(\) => \{([\s\S]*?)\n  \}\);/);
+  const silenceHandler = portScene.match(/querySelector\('#btn-ending-silence'\)[\s\S]*?addEventListener\('click', \(\) => \{([\s\S]*?)\n  \}\);/);
   assert.ok(openHandler, 'open-case button must have a click handler');
   assert.ok(silenceHandler, 'compromise button must have a click handler');
   assert.match(openHandler[1], /else showFinaleSaveError\(container\)/);
