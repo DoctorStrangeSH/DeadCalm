@@ -16,7 +16,7 @@ const INITIAL_CAMPAIGN = Object.freeze({
 });
 
 const DEFAULT_SETTINGS = Object.freeze({ musicVolume: 0.5, sfxVolume: 0.7, textSpeed: 'normal' });
-const TEXT_SPEEDS = new Set(['slow', 'normal', 'fast']);
+const TEXT_SPEEDS = new Set(['slow', 'normal', 'fast', 'instant']);
 
 function normalizeSettings(settings) {
   const source = settings && typeof settings === 'object' ? settings : {};
