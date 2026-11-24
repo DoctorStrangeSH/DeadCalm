@@ -199,7 +199,7 @@ test('main-menu settings are accessible, persistent and wired to dialogue pacing
   assert.ok(state.includes('function normalizeSettings(settings)'), 'saved settings must be normalized');
   assert.ok(audio.includes('this._musicGain.gain.value = this._musicVolume'), 'music mixer must apply its saved level');
   assert.ok(audio.includes('this._sfxGain.gain.value = this._sfxVolume'), 'SFX mixer must apply its saved level');
-  assert.ok(dialog.includes('textDelays') && dialog.includes('GameState.settings?.textSpeed'), 'dialogue typewriter must use the selected text speed');
+  assert.ok(dialog.includes("import { getTextDelay } from '../systems/settings.js'") && dialog.includes('getTextDelay(GameState.settings?.textSpeed)'), 'dialogue typewriter must use the shared selected text speed');
   assert.ok(css.includes('.settings-panel') && css.includes('.settings-control :focus-visible'), 'settings must use the project style and visible keyboard focus');
   assert.ok(!menu.includes('alert(message)'), 'settings placeholder alert must be removed');
 });
@@ -248,8 +248,8 @@ test('city atlas offers direct dialogue only when the NPC is canonically availab
 
 test('map pins retain a comfortable touch target on narrow mobile screens', () => {
   const css = read('src/css/art-direction.css');
-  const mobileMap = css.match(/@media\(max-width:520px\) \{[^}]*\.atlas-pin \{[^}]+\}[^}]*\}/)?.[0];
-  assert.ok(mobileMap, 'mobile map must define a dedicated pin touch target');
-  assert.match(mobileMap, /\.atlas-pin \{[^}]*min-width:44px;[^}]*min-height:44px;/);
-  assert.match(mobileMap, /\.atlas-pin-dot \{ width:32px; height:32px;/);
+  const mobileMapRule = css.split('@media(max-width:520px)').at(-1);
+  assert.ok(mobileMapRule, 'mobile map breakpoint must exist');
+  assert.ok(mobileMapRule.includes('.atlas-pin { min-width:44px; min-height:44px;'), 'map pins must expose a 44px touch target');
+  assert.ok(mobileMapRule.includes('.atlas-pin-dot { width:32px; height:32px;'), 'visible map marker must remain compact');
 });
